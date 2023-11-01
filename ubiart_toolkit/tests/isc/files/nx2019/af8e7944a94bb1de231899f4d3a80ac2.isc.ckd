@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<root>
+	<Scene ENGINE_VERSION="284652" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sweat_playlist_save" MARKER="patchsetup" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/screens/sweat_playlist_save/sweat_playlist_save.tpl">
+				<COMPONENTS NAME="PropertyPatcher">
+					<PropertyPatcher applyOnActivation="0" ignoreActorsInSubScenes="0">
+						<propertyPatches>
+							<PropertyPatch marker="playlist_name" invertActivationApply="0">
+								<action NAME="PropertyPatchAction_Text">
+									<PropertyPatchAction_Text duplicationCount="1" duplicationSeperator=" " />
+								</action>
+								<values NAME="PropertyPatchValue_String">
+									<PropertyPatchValue_String VALUE="" />
+								</values>
+							</PropertyPatch>
+						</propertyPatches>
+						<propertyPatches>
+							<PropertyPatch marker="playlist_duration" invertActivationApply="0">
+								<action NAME="PropertyPatchAction_FormattedText">
+									<PropertyPatchAction_FormattedText formatLocId="4294967295" formatRawText="{1;H}:{1;MM}:{1;SS}" varOpeningBracket="{" varClosingBracket="}" />
+								</action>
+								<values NAME="PropertyPatchValue_Float">
+									<PropertyPatchValue_Float VALUE="0.000000" />
+								</values>
+							</PropertyPatch>
+						</propertyPatches>
+						<propertyPatches>
+							<PropertyPatch marker="playlist_song_count" invertActivationApply="0">
+								<action NAME="PropertyPatchAction_FormattedText">
+									<PropertyPatchAction_FormattedText formatLocId="4294967295" formatRawText="{1}" varOpeningBracket="{" varClosingBracket="}" />
+								</action>
+								<values NAME="PropertyPatchValue_Int">
+									<PropertyPatchValue_Int VALUE="0" />
+								</values>
+							</PropertyPatch>
+						</propertyPatches>
+						<propertyPatches>
+							<PropertyPatch marker="playlist_sweatestimation" invertActivationApply="0">
+								<action NAME="PropertyPatchAction_FormattedText">
+									<PropertyPatchAction_FormattedText formatLocId="12917" formatRawText="" varOpeningBracket="{" varClosingBracket="}" />
+								</action>
+								<values NAME="PropertyPatchValue_Float">
+									<PropertyPatchValue_Float VALUE="0.000000" />
+								</values>
+							</PropertyPatch>
+						</propertyPatches>
+					</PropertyPatcher>
+				</COMPONENTS>
+				<COMPONENTS NAME="UIScreenComponent">
+					<UIScreenComponent allowDpadNavigation="1" soundContext="" shortcutConfig="BACK_ONLY" shortcutShift="0">
+						<ENUM NAME="cursorActivation" SEL="0" />
+						<phoneSetupUiData>
+							<PhoneSetupData isPopup="0" hasVisibleActions="0">
+								<ENUM NAME="carouselBuild" SEL="2" />
+								<userFriendlyBindings VAL="dialog_row" />
+							</PhoneSetupData>
+						</phoneSetupUiData>
+					</UIScreenComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.100000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_instruction" MARKER="" DEFAULTENABLE="1" POS2D="-34.980579 176.967407" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/textbox.tpl">
+				<parentBind>
+					<Bind parentPath="sweat_playlist_save" typeData="0" offsetPos="-34.980579 176.967407 0.100000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="0" overridingFontSize="26.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="1.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="200.000000 -1.000000" rawText="" useLinesMaxCount="0" linesMaxCount="1" locId="12334" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" autoScrollSharpAlignMinimum="0.000000" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="autoScrollSharpAlign" SEL="-1" />
+						<ENUM NAME="overridingBlendMode" SEL="2" />
+						<ENUM NAME="overridingHAlignment" SEL="2" />
+						<ENUM NAME="overridingVAlignment" SEL="0" />
+						<ENUM NAME="overridingAnchor" SEL="5" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="line" MARKER="" DEFAULTENABLE="1" POS2D="-14.464432 103.987213" ANGLE="280.999908" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="sweat_playlist_save" typeData="0" offsetPos="-14.464432 103.987213 1.000000" offsetAngle="280.999908" localScale="8.471090 3.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x16_line.atl" shaderPath="world/ui/materials/alpha_g.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="SubSceneActor">
+			<SubSceneActor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="main_bkg" MARKER="main_bkg" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui.tpl" RELATIVEPATH="world/ui/objects/bkg/bkg.isc" EMBED_SCENE="1" IS_SINGLE_PIECE="0" ZFORCED="1" DIRECT_PICKING="1" IGNORE_SAVE="1">
+				<parentBind>
+					<Bind parentPath="sweat_playlist_save" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIComponent">
+					<UIComponent />
+				</COMPONENTS>
+				<ENUM NAME="viewType" SEL="0" />
+				<SCENE>
+					<Scene ENGINE_VERSION="284652" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/bkg/bkg.tpl">
+								<COMPONENTS NAME="UIRootComponent">
+									<UIRootComponent snapOffset="0.000000 0.000000">
+										<Collision>
+											<UIWidgetCollisionBox Width="100.000000" Height="100.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+										</Collision>
+									</UIRootComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="640.000000 360.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/bkg_2018_main.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_quart.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/grad_linear_v.tga" diffuse_4="world/ui/textures/grad_reflect_2.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<sceneConfigs>
+							<SceneConfigs activeSceneConfig="0">
+								<sceneConfigs NAME="JD_MapSceneConfig">
+									<JD_MapSceneConfig name="" soundContext="" hud="0" phoneTitleLocId="4294967295" phoneImage="">
+										<ENUM NAME="Pause_Level" SEL="6" />
+										<ENUM NAME="type" SEL="2" />
+										<ENUM NAME="musicscore" SEL="2" />
+									</JD_MapSceneConfig>
+								</sceneConfigs>
+							</SceneConfigs>
+						</sceneConfigs>
+					</Scene>
+				</SCENE>
+			</SubSceneActor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.250000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="textfield_name" MARKER="playlist_name" DEFAULTENABLE="1" POS2D="7.533466 68.933456" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/textfield.tpl">
+				<parentBind>
+					<Bind parentPath="sweat_playlist_save" typeData="0" offsetPos="7.533466 68.933456 0.250000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIItemTextField">
+					<UIItemTextField isPassword="0" dialogMaxChar="16" dialogNameRaw="" dialogNameLoc="4294967295">
+						<ENUM NAME="style" SEL="0" />
+					</UIItemTextField>
+				</COMPONENTS>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="1" overridingFontSize="72.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="1.000000" maxWidth="720.000000" maxHeight="-1.000000" area="1000.000000 -1.000000" rawText="" useLinesMaxCount="1" linesMaxCount="1" locId="4294967295" autoScrollSpeed="60.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="item_song" autoScrollResetOnInactive="0" scrollOnce="0" autoScrollSharpAlignMinimum="0.000000" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="autoScrollSharpAlign" SEL="-1" />
+						<ENUM NAME="overridingBlendMode" SEL="0" />
+						<ENUM NAME="overridingHAlignment" SEL="0" />
+						<ENUM NAME="overridingVAlignment" SEL="-1" />
+						<ENUM NAME="overridingAnchor" SEL="2" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="SubSceneActor">
+			<SubSceneActor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="dialog_row" MARKER="playlist_save_dialog" DEFAULTENABLE="1" POS2D="-37.067177 -106.651260" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/carousel.tpl" RELATIVEPATH="world/ui/objects/dialog_row/dialog_row.isc" EMBED_SCENE="1" IS_SINGLE_PIECE="0" ZFORCED="1" DIRECT_PICKING="1" IGNORE_SAVE="1">
+				<parentBind>
+					<Bind parentPath="sweat_playlist_save" typeData="0" offsetPos="-37.067177 -106.651260 1.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UICarousel">
+					<UICarousel mainAnchor="4" validateAction="menu_valid" carouselDataID="playlist_save_dialog" manageCarouselHistory="0" initialBehaviour="navigation" soundContext="Carousel" minNbItemsToLoop="0" forceLoop="0">
+						<behaviours NAME="CarouselBehaviour_Navigation" KEY="navigation">
+							<VAL>
+								<CarouselBehaviour_Navigation soundContext="" soundNotifGoNext="Next" soundNotifGoPrev="Prev" animSetupID="sweat_playlist_save" decelTapeLabel="decel" timeBetweenStep="0.150000">
+									<ENUM NAME="scrollMode" SEL="1" />
+									<nextActions VAL="menu_lstick_right" />
+									<nextActions VAL="menu_dpad_right" />
+									<nextActions VAL="menu_phone_right" />
+									<prevActions VAL="menu_lstick_left" />
+									<prevActions VAL="menu_dpad_left" />
+									<prevActions VAL="menu_phone_left" />
+								</CarouselBehaviour_Navigation>
+							</VAL>
+						</behaviours>
+						<behaviours NAME="CarouselBehaviour_GoToElement" KEY="gotodefault">
+							<VAL>
+								<CarouselBehaviour_GoToElement soundContext="" soundNotifGoNext="Next" soundNotifGoPrev="Prev" animSetupID="sweat_playlist_save" decelTapeLabel="decel" timeBetweenStep="0.150000" idxToReach="7340544">
+									<stopConditions>
+										<StopCondition waitingTime="0.000000" countToReach="0" nextBehaviour="navigation">
+											<ENUM NAME="condition" SEL="2" />
+											<ENUM NAME="animState" SEL="1" />
+										</StopCondition>
+									</stopConditions>
+									<ENUM NAME="scrollMode" SEL="2" />
+								</CarouselBehaviour_GoToElement>
+							</VAL>
+						</behaviours>
+						<animItemsDesc>
+							<CarouselAnimItemsDesc enable="0" showItemsAtInit="0" enableCarouselOnAnimEnds="1" checkItemsVisibilityOnAnimEnds="1" />
+						</animItemsDesc>
+					</UICarousel>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+				<ENUM NAME="viewType" SEL="0" />
+				<SCENE>
+					<Scene ENGINE_VERSION="284652" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="root_dialog_row" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/dialog_row/dialog_row.tpl">
+								<COMPONENTS NAME="UIRootComponent">
+									<UIRootComponent snapOffset="0.000000 0.000000">
+										<Collision>
+											<UIWidgetCollisionBox Width="1500.000000" Height="100.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+										</Collision>
+									</UIRootComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="4294967295" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="PropertyPatcher">
+									<PropertyPatcher applyOnActivation="1" ignoreActorsInSubScenes="0" />
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@0" MARKER="" DEFAULTENABLE="1" POS2D="-828.308044 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-828.308044 0.000000 0.000122" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="0" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@1" MARKER="" DEFAULTENABLE="1" POS2D="-597.012390 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-597.012390 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="1" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@2" MARKER="" DEFAULTENABLE="1" POS2D="-363.242615 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-363.242615 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="2" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@3" MARKER="" DEFAULTENABLE="1" POS2D="-123.949295 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-123.949295 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="3" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@4" MARKER="" DEFAULTENABLE="1" POS2D="112.316078 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="112.316078 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="4" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@5" MARKER="" DEFAULTENABLE="1" POS2D="372.108459 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="372.108459 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="5" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@6" MARKER="" DEFAULTENABLE="1" POS2D="729.822327 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="729.822327 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="6" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<sceneConfigs>
+							<SceneConfigs activeSceneConfig="0" />
+						</sceneConfigs>
+					</Scene>
+				</SCENE>
+			</SubSceneActor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.200000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_input" MARKER="" DEFAULTENABLE="1" POS2D="-12.650978 64.655457" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="sweat_playlist_save" typeData="0" offsetPos="-12.650978 64.655457 0.200000" offsetAngle="0.000000" localScale="55.073593 55.073593" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="0.388235 0.000000 0.031373 0.694118">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="2" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x4_shear_sharp.atl" shaderPath="world/ui/materials/alpha_g.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_linear_h_inv.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="2" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<sceneConfigs>
+			<SceneConfigs activeSceneConfig="0">
+				<sceneConfigs NAME="JD_MapSceneConfig">
+					<JD_MapSceneConfig name="" soundContext="" hud="0" phoneTitleLocId="4294967295" phoneImage="">
+						<ENUM NAME="Pause_Level" SEL="6" />
+						<ENUM NAME="type" SEL="2" />
+						<ENUM NAME="musicscore" SEL="0" />
+					</JD_MapSceneConfig>
+				</sceneConfigs>
+			</SceneConfigs>
+		</sceneConfigs>
+	</Scene>
+</root>

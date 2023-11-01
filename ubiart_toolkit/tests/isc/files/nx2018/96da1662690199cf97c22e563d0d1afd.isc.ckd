@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<root>
+	<Scene ENGINE_VERSION="273069" GRIDUNIT="0.500000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="root_collectible_element" isEnabled="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/collectibles/collectibles_types/collectibles_type_mojo/value_01/element.tpl">
+				<COMPONENTS NAME="UIRootComponent">
+					<UIRootComponent snapOffset="0.000000 0.000000">
+						<Collision>
+							<UIWidgetCollisionBox Width="100.000000" Height="100.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+						</Collision>
+					</UIRootComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="PropertyPatcher">
+					<PropertyPatcher applyOnActivation="0" ignoreActorsInSubScenes="0">
+						<propertyPatches>
+							<PropertyPatch marker="root_collectible_element" invertActivationApply="0">
+								<action NAME="PropertyPatchAction_TapeSwitch">
+									<PropertyPatchAction_TapeSwitch>
+										<TapeSwitch KEY="0" VAL="is_locked" />
+										<TapeSwitch KEY="1" VAL="unlock" />
+										<TapeSwitch KEY="2" VAL="is_unlocked" />
+									</PropertyPatchAction_TapeSwitch>
+								</action>
+								<values NAME="PropertyPatchValue_Int">
+									<PropertyPatchValue_Int VALUE="0" />
+								</values>
+							</PropertyPatch>
+						</propertyPatches>
+					</PropertyPatcher>
+				</COMPONENTS>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.300000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="fx_discover" MARKER="" isEnabled="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/fx/fx_unlock_collectible_elements/mojo/fx_unlock_collectible_mojo.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.299878" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="FXControllerComponent">
+					<FXControllerComponent allowBusMixEvents="0" allowMusicEvents="0" />
+				</COMPONENTS>
+				<COMPONENTS NAME="FxBankComponent">
+					<FxBankComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" drawDebug="0" drawDebugTextOffset="0.000000 0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+					</FxBankComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_00_main" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="3.001528 -2.050941 0.999878" offsetAngle="0.000000" localScale="71.505653 71.505653" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.900000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_01" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="353.999908" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="353.999878" localScale="0.704502 0.704502" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.800000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_02" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="3.999999" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.200000" offsetAngle="3.999999" localScale="0.822146 0.822146" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.900000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_03" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="8.999999" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="8.999999" localScale="0.704502 0.704502" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.900000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_04" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="4.999999" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="5.000000" localScale="0.819580 0.819580" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.900000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_05" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="348.999908" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="348.999878" localScale="0.522290 0.522290" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.500000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_06" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="356.999939" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.500000" offsetAngle="356.999939" localScale="0.631464 0.631464" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.900000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_07" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="353.999908" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="353.999878" localScale="0.541680 0.541680" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.800000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_08" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="338.999969" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.200000" offsetAngle="338.999939" localScale="0.822146 0.822146" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.900000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_09" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="8.999999" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="8.999999" localScale="0.704502 0.704502" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.900000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_10" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="337.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="337.000000" localScale="0.724409 0.724409" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.500000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_11" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="348.999969" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.500000" offsetAngle="348.999939" localScale="0.522290 0.522290" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.500000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_mojo_12" MARKER="" isEnabled="1" POS2D="3.001528 -2.050941" ANGLE="6.999997" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="ico_mojo_00_main" typeData="0" offsetPos="0.000000 0.000000 -0.500000" offsetAngle="6.999997" localScale="0.631464 0.631464" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="-0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_mojo.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_coin_mojo_color.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/rays_circ.tga" diffuse_4="world/ui/textures/ico_coin_mojo_color.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.400122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_mojo_count" MARKER="mojo_count" isEnabled="1" POS2D="-2.960169 172.697693" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/textbox.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="-2.960169 172.697693 0.400000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="1" overridingFontSize="150.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="+500[icon:MOJO]" useLinesMaxCount="0" linesMaxCount="1" locId="4294967295" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="overridingBlendMode" SEL="0" />
+						<ENUM NAME="overridingHAlignment" SEL="1" />
+						<ENUM NAME="overridingVAlignment" SEL="1" />
+						<ENUM NAME="overridingAnchor" SEL="1" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<sceneConfigs>
+			<SceneConfigs activeSceneConfig="0">
+				<sceneConfigs NAME="JD_MapSceneConfig">
+					<JD_MapSceneConfig name="" soundContext="" hud="0" phoneTitleLocId="4294967295" phoneImage="">
+						<ENUM NAME="Pause_Level" SEL="6" />
+						<ENUM NAME="type" SEL="2" />
+						<ENUM NAME="musicscore" SEL="2" />
+					</JD_MapSceneConfig>
+				</sceneConfigs>
+			</SceneConfigs>
+		</sceneConfigs>
+	</Scene>
+</root>

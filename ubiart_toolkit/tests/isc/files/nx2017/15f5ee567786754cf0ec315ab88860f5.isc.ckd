@@ -1,0 +1,3553 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<root>
+	<Scene ENGINE_VERSION="257489" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="credits" MARKER="" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/screens/credits/credits.tpl">
+				<COMPONENTS NAME="UIScreenComponent">
+					<UIScreenComponent allowDpadNavigation="1" soundContext="Credits" shortcutConfig="">
+						<ENUM NAME="cursorActivation" SEL="0" />
+						<phoneSetupUiData>
+							<PhoneSetupData isPopup="0" hasVisibleActions="0">
+								<ENUM NAME="carouselBuild" SEL="2" />
+								<userFriendlyBindings VAL="phone_button" />
+							</PhoneSetupData>
+						</phoneSetupUiData>
+					</UIScreenComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="SubSceneActor">
+			<SubSceneActor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="main_bkg" MARKER="" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui.tpl" RELATIVEPATH="world/ui/objects/bkg_gen/bkg_gen.isc" EMBED_SCENE="1" IS_SINGLE_PIECE="0" ZFORCED="1" DIRECT_PICKING="1" IGNORE_SAVE="1">
+				<parentBind>
+					<Bind parentPath="credits" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIComponent">
+					<UIComponent />
+				</COMPONENTS>
+				<ENUM NAME="viewType" SEL="0" />
+				<SCENE>
+					<Scene ENGINE_VERSION="257489" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="" POS2D="0.000000 -800.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/bkg_gen/bkg_gen.tpl">
+								<COMPONENTS NAME="UIRootComponent">
+									<UIRootComponent snapOffset="0.000000 0.000000">
+										<Collision>
+											<UIWidgetCollisionBox Width="100.000000" Height="100.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+										</Collision>
+									</UIRootComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg" MARKER="" POS2D="0.000000 -800.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="640.000000 360.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/bkg_gen.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_reflect.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/grad_linear_v.tga" diffuse_4="world/ui/textures/grad_linear_v.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.005000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_fx_bottom" MARKER="" POS2D="-640.000000 -1133.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-640.000000 -333.000000 0.005000" offsetAngle="0.000000" localScale="1279.998047 222.539597" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="7" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x1_gradient_v_top.atl" shaderPath="world/ui/materials/bkg_gen_screen_borders.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/sinus_wave_1.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/sinus_wave_1.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/sinus_wave_1.tga" diffuse_4="world/ui/textures/sinus_wave_1.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="7" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.002000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="spectrum_wave_1" MARKER="" POS2D="-640.000122 -958.329285" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/_prefabs/spectrum_wave_1.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-640.000122 -158.329285 0.002000" offsetAngle="0.000000" localScale="320.823395 320.823395" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="2" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x4.atl" shaderPath="world/ui/materials/spectrum_wave_1.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/sinus_wave_1.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/sinus_wave_1.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/sinus_wave_1.tga" diffuse_4="world/ui/textures/sinus_wave_1.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="2" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.010000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="fx_blink" MARKER="" POS2D="0.000000 -995.764038" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/fx/fx_blink/fx_blink.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 -195.764038 0.010000" offsetAngle="0.000000" localScale="1.546378 1.546378" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="FXControllerComponent">
+									<FXControllerComponent allowBusMixEvents="0" allowMusicEvents="0" />
+								</COMPONENTS>
+								<COMPONENTS NAME="FxBankComponent">
+									<FxBankComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" drawDebug="0" drawDebugTextOffset="0.000000 0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+									</FxBankComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.010000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_color_1_flash" MARKER="" POS2D="-640.000000 -973.591003" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-640.000000 -173.591003 0.010000" offsetAngle="0.000000" localScale="1279.999023 297.773102" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="2" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x1_v_gradient_mirror.atl" shaderPath="world/ui/materials/bkg_wave_flash.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/sinus_wave_2.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/sinus_wave_2.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/sinus_wave_2.tga" diffuse_4="world/ui/textures/grad_multi.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="2" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.001000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_color_1_metal" MARKER="" POS2D="-640.000000 -953.250183" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-640.000000 -153.250183 0.001000" offsetAngle="0.000000" localScale="320.000000 320.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="2" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x4_v_gradient_mirror.atl" shaderPath="world/ui/materials/bkg_metal_1.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/mosaik_64_4channels.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaik_64_4channels.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaik_64_4channels.tga" diffuse_4="world/ui/textures/mosaik_64_4channels.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="2" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.005000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_fx_top" MARKER="" POS2D="-640.000000 -440.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-640.000000 360.000000 0.005000" offsetAngle="0.000000" localScale="1280.000000 -282.260193" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="7" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x1_gradient_v_top.atl" shaderPath="world/ui/materials/bkg_gen_screen_borders.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/sinus_wave_1.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/sinus_wave_1.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/sinus_wave_1.tga" diffuse_4="world/ui/textures/sinus_wave_1.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="7" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.200000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="particles_bottom" MARKER="" POS2D="-425.697205 -1087.781738" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-425.697205 -287.781738 0.200000" offsetAngle="0.000000" localScale="123.883499 123.883499" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/particles_sharp_starfield_wide.atl" shaderPath="world/ui/materials/particles_sharp_starfield_wide.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/particles_sharp_starfield_2.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/particles_sharp_starfield_2.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/particles_sharp_starfield_2.tga" diffuse_4="world/ui/textures/particles_sharp_starfield_2.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.200000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="particles_top" MARKER="" POS2D="444.931000 -506.983398" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="444.931000 293.016602 0.200000" offsetAngle="0.000000" localScale="108.743599 108.743599" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/particles_sharp_starfield_wide.atl" shaderPath="world/ui/materials/particles_sharp_starfield_wide.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/particles_sharp_starfield_2.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/particles_sharp_starfield_2.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/particles_sharp_starfield_2.tga" diffuse_4="world/ui/textures/particles_sharp_starfield_2.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<sceneConfigs>
+							<SceneConfigs activeSceneConfig="0">
+								<sceneConfigs NAME="JD_MapSceneConfig">
+									<JD_MapSceneConfig name="" soundContext="" hud="0" phoneTitleLocId="4294967295" phoneImage="">
+										<ENUM NAME="Pause_Level" SEL="6" />
+										<ENUM NAME="type" SEL="2" />
+										<ENUM NAME="musicscore" SEL="2" />
+									</JD_MapSceneConfig>
+								</sceneConfigs>
+							</SceneConfigs>
+						</sceneConfigs>
+					</Scene>
+				</SCENE>
+			</SubSceneActor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="2.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_big_title" MARKER="" POS2D="-242.271896 256.656097" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/textbox.tpl">
+				<parentBind>
+					<Bind parentPath="credits" typeData="0" offsetPos="-242.271896 256.656097 2.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="1" overridingFontSize="60.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="1.000000" maxWidth="300.000000" maxHeight="-1.000000" area="800.000000 -1.000000" rawText="[LOC]credits ares very longs" useLinesMaxCount="1" linesMaxCount="1" locId="8856" autoScrollSpeed="10.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="fadeRightAlign" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="2" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="overridingBlendMode" SEL="7" />
+						<ENUM NAME="overridingHAlignment" SEL="2" />
+						<ENUM NAME="overridingVAlignment" SEL="2" />
+						<ENUM NAME="overridingAnchor" SEL="8" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="2.100122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="title_line" MARKER="" POS2D="-739.550171 266.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="credits" typeData="0" offsetPos="-739.550171 266.000000 2.100122" offsetAngle="0.000000" localScale="248.016907 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="0" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/alpha_g_add.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="0" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="SubSceneActor">
+			<SubSceneActor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="continue" MARKER="" POS2D="127.966698 -289.864594" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui.tpl" RELATIVEPATH="world/ui/objects/continue/continue.isc" EMBED_SCENE="1" IS_SINGLE_PIECE="0" ZFORCED="1" DIRECT_PICKING="1" IGNORE_SAVE="1">
+				<parentBind>
+					<Bind parentPath="credits" typeData="0" offsetPos="127.966698 -289.864594 1.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIComponent">
+					<UIComponent />
+				</COMPONENTS>
+				<ENUM NAME="viewType" SEL="0" />
+				<SCENE>
+					<Scene ENGINE_VERSION="257489" GRIDUNIT="0.500000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="ROOT_CONTINUE" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/continue/continue.tpl">
+								<COMPONENTS NAME="UIRootComponent">
+									<UIRootComponent snapOffset="0.000000 0.000000">
+										<Collision>
+											<UIWidgetCollisionBox Width="100.000000" Height="100.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+										</Collision>
+									</UIRootComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="PropertyPatcher">
+									<PropertyPatcher applyOnActivation="0">
+										<propertyPatches>
+											<PropertyPatch marker="TXT_MAIN" invertActivationApply="0">
+												<action NAME="PropertyPatchAction_Text">
+													<PropertyPatchAction_Text duplicationCount="1" duplicationSeperator=" " />
+												</action>
+												<values NAME="PropertyPatchValue_String">
+													<PropertyPatchValue_String VALUE="loc ID + ICON" />
+												</values>
+											</PropertyPatch>
+										</propertyPatches>
+										<propertyPatches>
+											<PropertyPatch marker="ROOT_CONTINUE" invertActivationApply="0">
+												<action NAME="PropertyPatchAction_TapeSwitch">
+													<PropertyPatchAction_TapeSwitch>
+														<TapeSwitch KEY="0" VAL="SET_MESSAGE" />
+														<TapeSwitch KEY="1" VAL="SET_WAIT" />
+														<TapeSwitch KEY="2" VAL="SET_TIMER" />
+														<TapeSwitch KEY="3" VAL="HIDE" />
+														<TapeSwitch KEY="4" VAL="HIDE_INSTANT" />
+														<TapeSwitch KEY="5" VAL="SET_CANSTART" />
+														<TapeSwitch KEY="6" VAL="SET_CONTINUE" />
+														<TapeSwitch KEY="7" VAL="SET_LOADING" />
+														<TapeSwitch KEY="8" VAL="SET_SELECT" />
+														<TapeSwitch KEY="9" VAL="SET_START" />
+														<TapeSwitch KEY="10" VAL="SET_TIMER_NOSKIP" />
+														<TapeSwitch KEY="11" VAL="SET_TIMER_NOSKIP_MESSAGE" />
+														<TapeSwitch KEY="12" VAL="SET_WAIT_NOTEXT" />
+														<TapeSwitch KEY="13" VAL="SET_WAIT_NOTEXT_NOSYNC" />
+														<TapeSwitch KEY="14" VAL="SET_WAIT_TEXT_NOSYNC" />
+														<TapeSwitch KEY="15" VAL="SHOW" />
+													</PropertyPatchAction_TapeSwitch>
+												</action>
+											</PropertyPatch>
+										</propertyPatches>
+									</PropertyPatcher>
+								</COMPONENTS>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_controller" MARKER="" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_timer" MARKER="timer" POS2D="0.000000 23.948090" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/countdown.tpl">
+								<parentBind>
+									<Bind parentPath="txt_controller" typeData="0" offsetPos="0.000000 23.948090 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UICountdown">
+									<UICountdown delay="5.000000" />
+								</COMPONENTS>
+								<COMPONENTS NAME="UITextBox">
+									<UITextBox style="1" overridingFontSize="50.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="[var:timer]" useLinesMaxCount="0" linesMaxCount="1" locId="11952" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+										<ENUM NAME="textCase" SEL="-1" />
+										<ENUM NAME="autoScrollType" SEL="-1" />
+										<ENUM NAME="autoScrollDirection" SEL="0" />
+										<ENUM NAME="overridingBlendMode" SEL="0" />
+										<ENUM NAME="overridingHAlignment" SEL="0" />
+										<ENUM NAME="overridingVAlignment" SEL="-1" />
+										<ENUM NAME="overridingAnchor" SEL="2" />
+									</UITextBox>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_start_wdf" MARKER="" POS2D="-2.531937 151.752304" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/countdown.tpl">
+								<parentBind>
+									<Bind parentPath="txt_controller" typeData="0" offsetPos="-2.531937 151.752304 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UICountdown">
+									<UICountdown delay="5.000000" />
+								</COMPONENTS>
+								<COMPONENTS NAME="UITextBox">
+									<UITextBox style="0" overridingFontSize="35.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="550.000000 -1.000000" rawText="[loc]start wdf" useLinesMaxCount="0" linesMaxCount="1" locId="13741" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="-10.000000" adapteFontSize="0" overridingFontSizeMin="10.000000" endingDots="0">
+										<ENUM NAME="textCase" SEL="-1" />
+										<ENUM NAME="autoScrollType" SEL="-1" />
+										<ENUM NAME="autoScrollDirection" SEL="0" />
+										<ENUM NAME="overridingBlendMode" SEL="2" />
+										<ENUM NAME="overridingHAlignment" SEL="0" />
+										<ENUM NAME="overridingVAlignment" SEL="2" />
+										<ENUM NAME="overridingAnchor" SEL="7" />
+									</UITextBox>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_timer_notext" MARKER="TIMER_NOTEXT" POS2D="0.000000 23.948090" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/countdown.tpl">
+								<parentBind>
+									<Bind parentPath="txt_controller" typeData="0" offsetPos="0.000000 23.948090 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UICountdown">
+									<UICountdown delay="5.000000" />
+								</COMPONENTS>
+								<COMPONENTS NAME="UITextBox">
+									<UITextBox style="1" overridingFontSize="50.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="[var:timer]" useLinesMaxCount="0" linesMaxCount="1" locId="13091" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+										<ENUM NAME="textCase" SEL="-1" />
+										<ENUM NAME="autoScrollType" SEL="-1" />
+										<ENUM NAME="autoScrollDirection" SEL="0" />
+										<ENUM NAME="overridingBlendMode" SEL="0" />
+										<ENUM NAME="overridingHAlignment" SEL="0" />
+										<ENUM NAME="overridingVAlignment" SEL="-1" />
+										<ENUM NAME="overridingAnchor" SEL="2" />
+									</UITextBox>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="10.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_main" MARKER="TXT_MAIN" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/textbox.tpl">
+								<parentBind>
+									<Bind parentPath="txt_controller" typeData="0" offsetPos="0.000000 0.000000 10.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UITextBox">
+									<UITextBox style="0" overridingFontSize="26.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="460.000000" maxHeight="-1.000000" area="2000.000000 -1.000000" rawText="loc ID + ICON" useLinesMaxCount="1" linesMaxCount="1" locId="4294967295" autoScrollSpeed="10.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="fadeLeftAlign" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+										<ENUM NAME="textCase" SEL="-1" />
+										<ENUM NAME="autoScrollType" SEL="2" />
+										<ENUM NAME="autoScrollDirection" SEL="0" />
+										<ENUM NAME="overridingBlendMode" SEL="0" />
+										<ENUM NAME="overridingHAlignment" SEL="0" />
+										<ENUM NAME="overridingVAlignment" SEL="-1" />
+										<ENUM NAME="overridingAnchor" SEL="2" />
+									</UITextBox>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_skip" MARKER="" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/textbox.tpl">
+								<parentBind>
+									<Bind parentPath="txt_controller" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UITextBox">
+									<UITextBox style="0" overridingFontSize="26.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="[icon:GEN-VALIDATE] Skip" useLinesMaxCount="0" linesMaxCount="1" locId="12214" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+										<ENUM NAME="textCase" SEL="-1" />
+										<ENUM NAME="autoScrollType" SEL="-1" />
+										<ENUM NAME="autoScrollDirection" SEL="0" />
+										<ENUM NAME="overridingBlendMode" SEL="0" />
+										<ENUM NAME="overridingHAlignment" SEL="0" />
+										<ENUM NAME="overridingVAlignment" SEL="-1" />
+										<ENUM NAME="overridingAnchor" SEL="2" />
+									</UITextBox>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="-0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="line" MARKER="" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 -0.000122" offsetAngle="0.000000" localScale="327.852905 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="2" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/alpha_g_add.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="2" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_spectrum" MARKER="" POS2D="190.332581 0.463135" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/_prefabs/spectrum_triangle.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="190.332581 0.463135 0.000000" offsetAngle="0.000000" localScale="87.689636 102.965546" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="6" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x4.atl" shaderPath="world/ui/materials/spectrum_triangle.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/spectrum_triangle.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/spectrum_triangle.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/spectrum_triangle.tga" diffuse_4="world/ui/textures/spectrum_triangle.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="6" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.500000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="lens_reflect" MARKER="" POS2D="0.000015 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000015 0.000000 0.500000" offsetAngle="0.000000" localScale="174.437302 174.437302" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/lens_reflection_square_1.atl" shaderPath="world/ui/materials/lens_reflexion_simple.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_color_0.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/lens_reflection_square_1.tga" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="lens_reflect_bright_1" MARKER="" POS2D="299.997375 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="lens_reflect" typeData="0" offsetPos="-0.000015 0.000000 -0.499878" offsetAngle="0.000000" localScale="0.610465 0.610465" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="4294967295" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/lens_reflection_square_1.atl" shaderPath="world/ui/materials/lens_reflexion_bright.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/lens_reflection_square_1.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/lens_reflection_square_1.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/grad_linear_grey.tga" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="effect_1" MARKER="" POS2D="-0.906631 0.658752" ANGLE="4.999998" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-0.906631 0.658752 0.000000" offsetAngle="4.999998" localScale="40.000000 40.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="2" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x16_low_to_high.atl" shaderPath="world/ui/materials/continue_chevrons_top.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/sinus_wave_1.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/sinus_wave_1.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/sinus_wave_1.tga" diffuse_4="world/ui/textures/sinus_wave_1.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="2" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000126" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="chevrons_bottom" MARKER="" POS2D="655.429382 0.296143" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="655.429382 0.296143 0.000126" offsetAngle="0.000000" localScale="31.688663 30.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="5" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x16_alpha_l.atl" shaderPath="world/ui/materials/continue_chevrons_bottom.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_linear_h.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/grad_multi.tga" diffuse_4="world/ui/textures/grad_linear_h.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="5" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="lens_reflect_chevrons_1" MARKER="" POS2D="244.958588 0.019043" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="244.958588 0.019043 0.000122" offsetAngle="0.000000" localScale="260.714600 54.541988" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="4294967295" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/lens_reflection_square_1.atl" shaderPath="world/ui/materials/lens_reflect_colorizable.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_quart.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/lens_reflection_square_1.tga" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="particles_chevrons" MARKER="" POS2D="564.680115 0.985687" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/_prefabs/particles_sharp_starfield_2.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="564.680115 0.985687 0.000122" offsetAngle="0.000000" localScale="148.643600 148.643600" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/particles_sharp_starfield_wide.atl" shaderPath="world/ui/materials/particles_sharp_starfield_wide.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/particles_sharp_starfield_2.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/particles_sharp_starfield_2.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/particles_sharp_starfield_2.tga" diffuse_4="world/ui/textures/particles_sharp_starfield_2.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="lens_reflect_chevrons_2" MARKER="" POS2D="385.833649 -28.632172" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="385.833649 -28.632172 0.000122" offsetAngle="0.000000" localScale="319.786194 115.538879" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/lens_reflection_square_1.atl" shaderPath="world/ui/materials/lens_reflexion_simple.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_color_0.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/lens_reflection_square_1.tga" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000122" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="light_beam" MARKER="" POS2D="752.855713 1.971161" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="752.855713 1.971161 0.000122" offsetAngle="0.000000" localScale="699.320496 49.578239" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="3" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/light_beam.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_beam.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/grad_multi.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/grad_beam.tga" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="3" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="effect_2" MARKER="" POS2D="657.935974 -30.266937" ANGLE="185.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="657.935974 -30.266937 0.000000" offsetAngle="185.000000" localScale="61.758930 61.758930" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="2" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x16_low_to_high.atl" shaderPath="world/ui/materials/continue_chevrons_top.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/sinus_wave_1.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/sinus_wave_1.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/sinus_wave_1.tga" diffuse_4="world/ui/textures/sinus_wave_1.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="2" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_timer_wdf" MARKER="TIMER_WDF" POS2D="-2.531937 167.648895" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/countdown.tpl">
+								<parentBind>
+									<Bind parentPath="txt_controller" typeData="0" offsetPos="-2.531937 167.648895 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UICountdown">
+									<UICountdown delay="5.000000" />
+								</COMPONENTS>
+								<COMPONENTS NAME="UITextBox">
+									<UITextBox style="1" overridingFontSize="50.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="[var:timer]" useLinesMaxCount="0" linesMaxCount="1" locId="13091" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+										<ENUM NAME="textCase" SEL="-1" />
+										<ENUM NAME="autoScrollType" SEL="-1" />
+										<ENUM NAME="autoScrollDirection" SEL="0" />
+										<ENUM NAME="overridingBlendMode" SEL="7" />
+										<ENUM NAME="overridingHAlignment" SEL="0" />
+										<ENUM NAME="overridingVAlignment" SEL="-1" />
+										<ENUM NAME="overridingAnchor" SEL="2" />
+									</UITextBox>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<sceneConfigs>
+							<SceneConfigs activeSceneConfig="0">
+								<sceneConfigs NAME="JD_MapSceneConfig">
+									<JD_MapSceneConfig name="" soundContext="" hud="0" phoneTitleLocId="4294967295" phoneImage="">
+										<ENUM NAME="Pause_Level" SEL="2" />
+										<ENUM NAME="type" SEL="2" />
+										<ENUM NAME="musicscore" SEL="2" />
+									</JD_MapSceneConfig>
+								</sceneConfigs>
+							</SceneConfigs>
+						</sceneConfigs>
+					</Scene>
+				</SCENE>
+			</SubSceneActor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="2.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="glow_soft" MARKER="" POS2D="-2.201285 -44.880840" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="credits" typeData="0" offsetPos="-2.201285 -44.880840 2.000000" offsetAngle="0.000000" localScale="547.159485 547.159485" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="4294967295" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x1_quart_mirror.atl" shaderPath="world/ui/materials/alpha_r_add.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_quart.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="creditscomponent" MARKER="" POS2D="0.445082 -246.544800" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/creditscomponent.tpl">
+				<parentBind>
+					<Bind parentPath="credits" typeData="0" offsetPos="0.445082 -246.544800 1.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="JD_CreditsComponent">
+					<JD_CreditsComponent linesNumber="13" nameFontSize="25.000000" titleFontSize="30.000000" bigTitleFontSize="40.000000" veryBigTitleFontSize="50.000000" animDuration="0.500000" linesPosOffset="40.000000">
+						<creditsLines VAL="[verybig]Just Dance® 2017" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Published by Ubisoft®" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Developed by" />
+						<creditsLines VAL="Ubisoft® Paris Studio" />
+						<creditsLines VAL="&amp;" />
+						<creditsLines VAL="Ubisoft® Pune" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Producer" />
+						<creditsLines VAL="Karim Khabir" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Brand Creative Director" />
+						<creditsLines VAL="Alkis Argyriadis" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Director of Business and Brand Development" />
+						<creditsLines VAL="Marine de la Seiglière" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Creative Director" />
+						<creditsLines VAL="Véronique Halbrey" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Art Director" />
+						<creditsLines VAL="Stéphane Bachelet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Paris Studio" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Producers" />
+						<creditsLines VAL="Aida Gochgarian" />
+						<creditsLines VAL="Selma Berkani" />
+						<creditsLines VAL="Sophie Goldstein" />
+						<creditsLines VAL="Salomé Jugan" />
+						<creditsLines VAL="Emmanuel Djobet" />
+						<creditsLines VAL="Théo Grimoud" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Content Directors" />
+						<creditsLines VAL="Franck Chapelat" />
+						<creditsLines VAL="Nicholas Beetlestone" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Production Coordinator" />
+						<creditsLines VAL="Sophie Haïun" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Brand Development and Monetization Manager" />
+						<creditsLines VAL="Samuel Naccache" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Engine Programming" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Programmers" />
+						<creditsLines VAL="Sylvain Glaize" />
+						<creditsLines VAL="Emmanuel Astier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Engine Programmers" />
+						<creditsLines VAL="Christophe Roguet" />
+						<creditsLines VAL="Mathieu Olivier" />
+						<creditsLines VAL="Yann Valère" />
+						<creditsLines VAL="Mathieu Pavageau" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Mobile Developers" />
+						<creditsLines VAL="Rémi 'wsmind' Papillié" />
+						<creditsLines VAL="Stéphane Clotilde" />
+						<creditsLines VAL="Sophie 'MiniSoff' Remy" />
+						<creditsLines VAL="Badr Meski" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Online Programming" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Technical Director" />
+						<creditsLines VAL="Joël Grégoire" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Programmers" />
+						<creditsLines VAL="Ishan Aditya" />
+						<creditsLines VAL="Gautier Tanguy" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Web Developer" />
+						<creditsLines VAL="Benoît Longeat" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Tools Programming &amp; Data Managers" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tools Technical Lead" />
+						<creditsLines VAL="Jonathan T-Delorme" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tools Programmers" />
+						<creditsLines VAL="Gwenegan Hudin" />
+						<creditsLines VAL="Nathaël Goudreau" />
+						<creditsLines VAL="Jérôme Martin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Data Managers" />
+						<creditsLines VAL="Eric Berkani" />
+						<creditsLines VAL="Typhanie Caballonga" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Gameplay Programming" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Gameplay Programmer" />
+						<creditsLines VAL="Emmanuel Astier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Gameplay Programmers" />
+						<creditsLines VAL="Thomas Mainnemare" />
+						<creditsLines VAL="Laurent Chiarazzo" />
+						<creditsLines VAL="Manou Vandy" />
+						<creditsLines VAL="Florent Allera" />
+						<creditsLines VAL="Anne Wuebbenhorst" />
+						<creditsLines VAL="Olivier Lavalley" />
+						<creditsLines VAL="Lucas Brisard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Live Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Live Producer" />
+						<creditsLines VAL="Romain 'Dedesch' Deschamps" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Live Operations Manager" />
+						<creditsLines VAL="Astrid Pivot" />
+						<creditsLines VAL="Olivia Tamet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Active Game Manager" />
+						<creditsLines VAL="Victor Evrard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Producer" />
+						<creditsLines VAL="Elodie Chevalier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Community Developers" />
+						<creditsLines VAL="Moustapha N'Dome" />
+						<creditsLines VAL="Paolo Ruffa" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Data Manager Assistant" />
+						<creditsLines VAL="Valentin Esmieu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Live Tester" />
+						<creditsLines VAL="Mathieu Renard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Game Design" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Game Designer" />
+						<creditsLines VAL="Olivier Adelh" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Game Designers" />
+						<creditsLines VAL="Meng Wang" />
+						<creditsLines VAL="Rémi 'Mr White' Blanc" />
+						<creditsLines VAL="Benjamin 'Moualler' Lemaire" />
+						<creditsLines VAL="Lucas De Gaigneron" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]UI" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UI Director" />
+						<creditsLines VAL="Antoine 'TOY' Le Clainche" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UI Artists" />
+						<creditsLines VAL="Marie-Cerise Denisot" />
+						<creditsLines VAL="Boris Vigouroux" />
+						<creditsLines VAL="Julia Vereenoghe" />
+						<creditsLines VAL="Mickaël Dell'Ova" />
+						<creditsLines VAL="Léa Gaudron" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Level Design" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Level Designer" />
+						<creditsLines VAL="Brahim El Belqasmi" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Level Designers" />
+						<creditsLines VAL="Eugénie Rossi" />
+						<creditsLines VAL="Gauthier Tang" />
+						<creditsLines VAL="Roger Liuu" />
+						<creditsLines VAL="Léo Hervillard" />
+						<creditsLines VAL="Guillaume Habans" />
+						<creditsLines VAL="Julien Calvo" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technical Level Designer" />
+						<creditsLines VAL="Bertrand Huet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Playtest Coordinator" />
+						<creditsLines VAL="Guillaume Habans" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Art" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Costume Managers" />
+						<creditsLines VAL="Sarrah El-Meddeb" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Costume Designer" />
+						<creditsLines VAL="Patrick Cavalié" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Choreography Directors" />
+						<creditsLines VAL="Barbara Chane Kane" />
+						<creditsLines VAL="Sandrine Pistolet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Pipeline Manager" />
+						<creditsLines VAL="Jessie Bulteel" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Concept Artists" />
+						<creditsLines VAL="Arsène Grimaud" />
+						<creditsLines VAL="Ghislain Aubry" />
+						<creditsLines VAL="Maud Leclancher" />
+						<creditsLines VAL="Pauline Le Lann" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Video Artist" />
+						<creditsLines VAL="Emilie Besson" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Video Artists" />
+						<creditsLines VAL="Matthieu Ferroud" />
+						<creditsLines VAL="Kevin Marchand" />
+						<creditsLines VAL="Anaïs Dumas" />
+						<creditsLines VAL="Faysal Boukari" />
+						<creditsLines VAL="Pierre Tolmer" />
+						<creditsLines VAL="Maxime Brau" />
+						<creditsLines VAL="David Delèglise" />
+						<creditsLines VAL="Tristan Bossy" />
+						<creditsLines VAL="Michel Portuese" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Keying/Tracking Expert" />
+						<creditsLines VAL="Guilian Vaisset" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technical Video Artist" />
+						<creditsLines VAL="Stéphane Ripé" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Audio" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Sound Designer" />
+						<creditsLines VAL="Gilles Camous" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Sound Designers" />
+						<creditsLines VAL="Romuald Testier" />
+						<creditsLines VAL="Slimane Dellaoui" />
+						<creditsLines VAL="Adrien Maljournal" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Music Supervisor" />
+						<creditsLines VAL="Manu Bachet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Voice" />
+						<creditsLines VAL="Jeanne Chartier" />
+						<creditsLines VAL="Guillaume Darnault " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Quality Control" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Paris Studio Test Manager" />
+						<creditsLines VAL="Bartosz Wlodek" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Development Tester" />
+						<creditsLines VAL="Thierry Huguenin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Multi-site QC Coordinator" />
+						<creditsLines VAL="Omkar Wagh" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Multi-site Compliance Coordinator" />
+						<creditsLines VAL="Irina Gabriela Popa" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Development Tester Online Specialist" />
+						<creditsLines VAL="Joris 'Moualler' Four" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Development Testers" />
+						<creditsLines VAL="Michel 'Le Taulier' Topuzoglu" />
+						<creditsLines VAL="Loïc Teurua" />
+						<creditsLines VAL="Helena 'bah yeah' Westerberg" />
+						<creditsLines VAL="Matthieu Malmezac" />
+						<creditsLines VAL="Virginie Hourmagnou" />
+						<creditsLines VAL="Antoine Pastou" />
+						<creditsLines VAL="Christophe Hennes" />
+						<creditsLines VAL="Matthieu Rougier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Marketing Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]International Brand Manager" />
+						<creditsLines VAL="Lisa Pendse" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]International Product Managers" />
+						<creditsLines VAL="Anthony Solaire" />
+						<creditsLines VAL="Hélène Jeannin" />
+						<creditsLines VAL="Rosanna Selles" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Marketing Artists" />
+						<creditsLines VAL="Yoann Le Gris" />
+						<creditsLines VAL="Matthieu Corade" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Player Analytics" />
+						<creditsLines VAL="Yves Robin" />
+						<creditsLines VAL="Arnaud Legendre" />
+						<creditsLines VAL="Siva Veloumourougane" />
+						<creditsLines VAL="Rémi Labory" />
+						<creditsLines VAL="Hugo Portefaix" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]CMK Senior Analysts" />
+						<creditsLines VAL="Elisabeth Dien" />
+						<creditsLines VAL="Louis-Gabriel Le Foyer" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Dance Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Dancers/Choreographers" />
+						<creditsLines VAL="Alexis 'Alexinho' Mougeolle" />
+						<creditsLines VAL="Andrea Condorelli" />
+						<creditsLines VAL="Anissa 'Anisha' Thaï" />
+						<creditsLines VAL="Antonin Cattaruzza" />
+						<creditsLines VAL="Audrey 'Audjyan' Alcide" />
+						<creditsLines VAL="Audrey 'Darkley' Hurtis" />
+						<creditsLines VAL="Aurélie Sériné" />
+						<creditsLines VAL="Cain Kitsais" />
+						<creditsLines VAL="Céline Baron" />
+						<creditsLines VAL="Céline Rotsen" />
+						<creditsLines VAL="Claude Cormier" />
+						<creditsLines VAL="Daniel Park" />
+						<creditsLines VAL="Elodie Murciano" />
+						<creditsLines VAL="Emmanuelle Soum" />
+						<creditsLines VAL="Eva Ndiaye" />
+						<creditsLines VAL="Grace Bolebe" />
+						<creditsLines VAL="Guillaume Lorentz" />
+						<creditsLines VAL="Inès Vandamme" />
+						<creditsLines VAL="Jessie Perot" />
+						<creditsLines VAL="Jovany Fordant" />
+						<creditsLines VAL="Juliana Casas Herrera" />
+						<creditsLines VAL="Julien Durand" />
+						<creditsLines VAL="Kenjy Cyrille" />
+						<creditsLines VAL="Jessy 'Jerky' Osseux" />
+						<creditsLines VAL="Kyf-Franck Ekamé" />
+						<creditsLines VAL="Laure Dary" />
+						<creditsLines VAL="Laure Traventhal" />
+						<creditsLines VAL="Leila Medour" />
+						<creditsLines VAL="Léonie Mauger" />
+						<creditsLines VAL="Lionel 'Layo' Leyre" />
+						<creditsLines VAL="Marianne Campos" />
+						<creditsLines VAL="Marie Surzur" />
+						<creditsLines VAL="Marion Champmartin" />
+						<creditsLines VAL="Mehdi Kerkouche" />
+						<creditsLines VAL="Nathalie 'Cogno' Léon" />
+						<creditsLines VAL="Nicolas Huchard" />
+						<creditsLines VAL="Nordine Ezzahr" />
+						<creditsLines VAL="Pauline Viard" />
+						<creditsLines VAL="Ralph Beaubrun" />
+						<creditsLines VAL="Sabine Petit" />
+						<creditsLines VAL="Sarah Magassa" />
+						<creditsLines VAL="Scarlett Avedikian" />
+						<creditsLines VAL="Shirley Domoison" />
+						<creditsLines VAL="Shirley Henault" />
+						<creditsLines VAL="Sophia Biza" />
+						<creditsLines VAL="Théophile Bensusan" />
+						<creditsLines VAL="Thibaut Orsoni" />
+						<creditsLines VAL="William Domiquin" />
+						<creditsLines VAL="Yohann Daher" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Costume &amp; Accessory Makers" />
+						<creditsLines VAL="Anne De Vains" />
+						<creditsLines VAL="Anne-Laure Fériot" />
+						<creditsLines VAL="Catherine Garrigue" />
+						<creditsLines VAL="Céline Frécon" />
+						<creditsLines VAL="Dorothée Tarel" />
+						<creditsLines VAL="Emily Martin" />
+						<creditsLines VAL="Fanny Garrigue" />
+						<creditsLines VAL="Hélène Caillet" />
+						<creditsLines VAL="Jean-Mathieu Fourt" />
+						<creditsLines VAL="Laetitia Berrou" />
+						<creditsLines VAL="Lola Fournier" />
+						<creditsLines VAL="Marion Lassort" />
+						<creditsLines VAL="Mathilde Fontaine" />
+						<creditsLines VAL="Mélina Vaysset" />
+						<creditsLines VAL="Patrick Cavalié" />
+						<creditsLines VAL="Ridvan Mjaku" />
+						<creditsLines VAL="Sabine Cayet" />
+						<creditsLines VAL="Vjollce Bega" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Make-up Artists" />
+						<creditsLines VAL="Alexia Genty" />
+						<creditsLines VAL="Alice Bourlanges" />
+						<creditsLines VAL="Clarisse Waquet" />
+						<creditsLines VAL="Jennifer Mestdagh" />
+						<creditsLines VAL="Laetitia Quillery" />
+						<creditsLines VAL="Marion Chevance" />
+						<creditsLines VAL="Rosalie Fouchet" />
+						<creditsLines VAL="Violeta Cuadra" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Hair Stylists" />
+						<creditsLines VAL="Céline Mougel" />
+						<creditsLines VAL="Nadine Mateky" />
+						<creditsLines VAL="Olivia Carron" />
+						<creditsLines VAL="Silène Tonello" />
+						<creditsLines VAL="Virginie Seffar" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Dance Agencies" />
+						<creditsLines VAL="Jamais Vu" />
+						<creditsLines VAL="Pierre-Henri Louzeau" />
+						<creditsLines VAL="Marie Louzeau" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Shooting Studios" />
+						<creditsLines VAL="Plateaux Carnot 34" />
+						<creditsLines VAL="François Coquillay" />
+						<creditsLines VAL="Emmanuel Roussille" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Chief Operators" />
+						<creditsLines VAL="Edouard Obeniche" />
+						<creditsLines VAL="Valentin Bourdiol" />
+						<creditsLines VAL="Margaux Fairfort" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Catering" />
+						<creditsLines VAL="Pin-up Butter" />
+						<creditsLines VAL="Leslie Maynard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Ubisoft® Paris Studio Staff" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Managing Director, French Studios" />
+						<creditsLines VAL="Xavier Poix" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Financial Planning" />
+						<creditsLines VAL="Julien Mayeux" />
+						<creditsLines VAL="Thibaut Coudeville" />
+						<creditsLines VAL="Xavier Babiarz" />
+						<creditsLines VAL="Claire Boussemart" />
+						<creditsLines VAL="Lucile Cayssials" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Human Resources" />
+						<creditsLines VAL="Marie-Sophie De Waubert" />
+						<creditsLines VAL="Florence Maille" />
+						<creditsLines VAL="Audrey Chatelet" />
+						<creditsLines VAL="Claire Defosse-O'Donnell" />
+						<creditsLines VAL="Astrid D'Albiousse" />
+						<creditsLines VAL="Amandine Dobrowolski" />
+						<creditsLines VAL="Maxime Gauthier" />
+						<creditsLines VAL="Joanna Couffrand" />
+						<creditsLines VAL="Vanessa Feiller" />
+						<creditsLines VAL="Catherine Regis" />
+						<creditsLines VAL="Sarah Haji-Bazin" />
+						<creditsLines VAL="Morgane Grange" />
+						<creditsLines VAL="Alizée Landel" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]French Studios Support" />
+						<creditsLines VAL="Sandrine Maigret" />
+						<creditsLines VAL="Judith Paschal" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Corporate Communications" />
+						<creditsLines VAL="Laetitia Jauze" />
+						<creditsLines VAL="Florence Marvingt" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Office Management" />
+						<creditsLines VAL="Emilie Cozette" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]French Studios Assistant" />
+						<creditsLines VAL="Mathilde Auvin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]IT" />
+						<creditsLines VAL="Sebastien Mary" />
+						<creditsLines VAL="Christopher Payet" />
+						<creditsLines VAL="Martial Dubreuil" />
+						<creditsLines VAL="Laetitia Lesouef" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Corporate Travel Services" />
+						<creditsLines VAL="Marie Simonian" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Music Licensing Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Music Director" />
+						<creditsLines VAL="Didier Lord" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Music Business &amp; Publishing Director" />
+						<creditsLines VAL="Jeremy Blechet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Music Marketing Manager" />
+						<creditsLines VAL="Elodie Sok" />
+						<creditsLines VAL="Camille Bertini" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Music Licensing Manager" />
+						<creditsLines VAL="Nikolaos Bardanis" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Music Licensing Specialist" />
+						<creditsLines VAL="Louis-Philippe Caron" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Licensing-Music Licensing Specialist" />
+						<creditsLines VAL="Lori Cromwell" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Music Department Coordinator" />
+						<creditsLines VAL="Judith Chartrand" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Pune Studio" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Producer" />
+						<creditsLines VAL="Syed Abbas" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Producers" />
+						<creditsLines VAL="Annu Koul" />
+						<creditsLines VAL="Anand Chinurkar" />
+						<creditsLines VAL="Rahim Dinani" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technical Manager" />
+						<creditsLines VAL="Nirav Faldu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Content Director" />
+						<creditsLines VAL="Germain Geny" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Choreography Designer" />
+						<creditsLines VAL="Khushboo Rupareliya" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Production Coordinator" />
+						<creditsLines VAL="Megha Awale" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Character Designers" />
+						<creditsLines VAL="Devika Nimbalkar" />
+						<creditsLines VAL="Georgy Sunny" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Engine Programming" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Engine Programmers" />
+						<creditsLines VAL="Akshat Srivastava" />
+						<creditsLines VAL="Abhishek Porwal" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tools Programmers" />
+						<creditsLines VAL="Vishesh Gupta" />
+						<creditsLines VAL="Nitin Khosla" />
+						<creditsLines VAL="Vaishvik Nakhashi " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Online Programming" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Lead Programmer" />
+						<creditsLines VAL="Gaurav Singh" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Programmers" />
+						<creditsLines VAL="Amit Purwat" />
+						<creditsLines VAL="Shanker Sharma" />
+						<creditsLines VAL="Sudipto Chatterjee" />
+						<creditsLines VAL="Canute Crasto" />
+						<creditsLines VAL="Akshay Arlikatti" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Gameplay Programming" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Programmer" />
+						<creditsLines VAL="Avinash Damodhare" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Gameplay Programmers" />
+						<creditsLines VAL="Vibhore Jindal" />
+						<creditsLines VAL="Harshada Kothari" />
+						<creditsLines VAL="Anand Sekar" />
+						<creditsLines VAL="Umesh Patil" />
+						<creditsLines VAL="Poonam Bodake" />
+						<creditsLines VAL="Krunal Gandhi" />
+						<creditsLines VAL="Ashutosh Morwal" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Data Management" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Data Manager" />
+						<creditsLines VAL="Rohit Bamnote" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Data Managers" />
+						<creditsLines VAL="Devashish Kulkarni" />
+						<creditsLines VAL="Manish Rajora" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Quality Assurance" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Development Testers" />
+						<creditsLines VAL="Abubakar Bijapure" />
+						<creditsLines VAL="Jasjeet Dhaliwal" />
+						<creditsLines VAL="Supriyo Garnaik" />
+						<creditsLines VAL="Nishant Gupta" />
+						<creditsLines VAL="Prasanna Nangare" />
+						<creditsLines VAL="Sachin Rodge" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Engine/Pre tester" />
+						<creditsLines VAL="Devraj Choudhury" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Game Design" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Intern Game Designer" />
+						<creditsLines VAL="Sameep Kumar" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Capture/Moderation team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Lead" />
+						<creditsLines VAL="Niranjan Tipnis" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Level Designer" />
+						<creditsLines VAL="Viren Kullur" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Score Designers" />
+						<creditsLines VAL="Pooja Priolkar" />
+						<creditsLines VAL="Ikhlas Lokhandwala" />
+						<creditsLines VAL="Rohit Kataria" />
+						<creditsLines VAL="Esha Mahadkar" />
+						<creditsLines VAL="Ashley Mascarenhas" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Picto Designers" />
+						<creditsLines VAL="Arcchies Mallhar" />
+						<creditsLines VAL="Rahul Khanapurkar" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Junior Playtest Coordinator" />
+						<creditsLines VAL="Prahas Mulchandi" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Dancers" />
+						<creditsLines VAL="Gaurav Kadam" />
+						<creditsLines VAL="Raksha Shetty" />
+						<creditsLines VAL="Lalit Potdar" />
+						<creditsLines VAL="Sweatha Shetty" />
+						<creditsLines VAL="Dhiraj Waghmare" />
+						<creditsLines VAL="Sanjana Akud" />
+						<creditsLines VAL="Sabaa Maini" />
+						<creditsLines VAL="Harshwardhan Wankhede" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Lead Moderation" />
+						<creditsLines VAL="Aamer Kazi" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Moderators" />
+						<creditsLines VAL="Yashwant Kulal" />
+						<creditsLines VAL="Aniket Narawade" />
+						<creditsLines VAL="Prakash Kachane" />
+						<creditsLines VAL="Niketan Kharat" />
+						<creditsLines VAL="Anurag Kamnapure" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Art" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Art Directors" />
+						<creditsLines VAL="Melinda Esponda-Diaz" />
+						<creditsLines VAL="Vincent Maury" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Concept Artists" />
+						<creditsLines VAL="Rishiraj Singh Shekhawat" />
+						<creditsLines VAL="Akshay Misra" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Video Expert" />
+						<creditsLines VAL="Pierre-Sylvain Gires" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Video Artists" />
+						<creditsLines VAL="Abrar Khan" />
+						<creditsLines VAL="Vijaykirti Chougule" />
+						<creditsLines VAL="Vinoth Krishnan" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technical Artists" />
+						<creditsLines VAL="Dinesh Salunke" />
+						<creditsLines VAL="Santosh Bijur" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Sound Design" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Audio Integrator and Sound Designer" />
+						<creditsLines VAL="Hrishikesh Dani" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Sound Designer" />
+						<creditsLines VAL="Sohan Jagtap" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Pune Quality Control" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]QC Manager" />
+						<creditsLines VAL="Rahul Khatal" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] QC Technical Unit Manager" />
+						<creditsLines VAL="Amol More" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Compliance Lead" />
+						<creditsLines VAL="Vipin Trisal" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Compliance Project Leads" />
+						<creditsLines VAL="Deepak Bairagee" />
+						<creditsLines VAL="Ritesh  Bokil" />
+						<creditsLines VAL="Sarbeswar  Sahoo" />
+						<creditsLines VAL="Shahezad  Syed" />
+						<creditsLines VAL="Shree Patil" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Compliance Specialists" />
+						<creditsLines VAL="Aditya Prakash" />
+						<creditsLines VAL="Ajay Chouhan" />
+						<creditsLines VAL="Arun Gupta" />
+						<creditsLines VAL="Ashish Ingale" />
+						<creditsLines VAL="Gaurav Bhoite" />
+						<creditsLines VAL="Gaurav Sorot" />
+						<creditsLines VAL="Himanshu Kathal" />
+						<creditsLines VAL="Neha Ekal" />
+						<creditsLines VAL="Nilesh Giri" />
+						<creditsLines VAL="Priyanka Hawaldar" />
+						<creditsLines VAL="Rahul Tope" />
+						<creditsLines VAL="Saurabh Warade" />
+						<creditsLines VAL="Shaharyar Shaikh" />
+						<creditsLines VAL="Shashvat Huddar" />
+						<creditsLines VAL="Sneha Kumari" />
+						<creditsLines VAL="Tomal Banerjee" />
+						<creditsLines VAL="Yogesh Sawkar" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] QC Coordinator" />
+						<creditsLines VAL="Navid Shaikh" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] QC Leads" />
+						<creditsLines VAL="Sarang  Pai Vaidya" />
+						<creditsLines VAL="Chaitanya Girme" />
+						<creditsLines VAL="Ashish Chavan" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] QC Testers" />
+						<creditsLines VAL="Abhijeet Jain" />
+						<creditsLines VAL="Abhilash Narayana" />
+						<creditsLines VAL="Aditya Bhosale" />
+						<creditsLines VAL="Aditya Kulkarni" />
+						<creditsLines VAL="Ajinkya Thakre" />
+						<creditsLines VAL="Akash Wankhade" />
+						<creditsLines VAL="Akshat Kushwah" />
+						<creditsLines VAL="Akshay Wanjari" />
+						<creditsLines VAL="Ambar Chouhan" />
+						<creditsLines VAL="Ambarish Patankar" />
+						<creditsLines VAL="Anand Bhokare" />
+						<creditsLines VAL="Ankit Singh" />
+						<creditsLines VAL="Anurag Wasnik" />
+						<creditsLines VAL="Ashish Gaikwad" />
+						<creditsLines VAL="Ashok Choudhary" />
+						<creditsLines VAL="Asma Mulla" />
+						<creditsLines VAL="Bibhu Nayak" />
+						<creditsLines VAL="Priyank Bangar" />
+						<creditsLines VAL="Chetan Kale" />
+						<creditsLines VAL="Chirag Rathod" />
+						<creditsLines VAL="Craig Chandran" />
+						<creditsLines VAL="Dattatray Jadhav" />
+						<creditsLines VAL="Dhananjay Tandle" />
+						<creditsLines VAL="Farman Khan" />
+						<creditsLines VAL="Harsh Karkera" />
+						<creditsLines VAL="Karan Malviya" />
+						<creditsLines VAL="Latish Bhanarkar" />
+						<creditsLines VAL="Manisha  Maity" />
+						<creditsLines VAL="Manoj Sutar" />
+						<creditsLines VAL="Mayur Vibhandik" />
+						<creditsLines VAL="Milind Dhakre" />
+						<creditsLines VAL="Nachiket Butala" />
+						<creditsLines VAL="Nihal Subandh" />
+						<creditsLines VAL="Nikhil Golegaonkar" />
+						<creditsLines VAL="Nikhil Jagtap" />
+						<creditsLines VAL="Nikhil Upadhyaya" />
+						<creditsLines VAL="Nikhil Vispute" />
+						<creditsLines VAL="Nikita Dhote" />
+						<creditsLines VAL="Nirmal Mojidra" />
+						<creditsLines VAL="Nityanand Upadhyay" />
+						<creditsLines VAL="Pooja Jagtap" />
+						<creditsLines VAL="Prashant Phalak" />
+						<creditsLines VAL="Prathamesh Bhavsar" />
+						<creditsLines VAL="Pratiksha Ingle" />
+						<creditsLines VAL="Preet Mokha" />
+						<creditsLines VAL="Rahul Ghosh" />
+						<creditsLines VAL="Rahul Jagtap" />
+						<creditsLines VAL="Rahul Kumar Singh" />
+						<creditsLines VAL="Ramanpreet Singh" />
+						<creditsLines VAL="Richard Peter" />
+						<creditsLines VAL="Rikki Sharma" />
+						<creditsLines VAL="Rohan Naik" />
+						<creditsLines VAL="Rubin Philip" />
+						<creditsLines VAL="Sahil Khenat" />
+						<creditsLines VAL="Sameer Kalaskar" />
+						<creditsLines VAL="Sanket Gavale" />
+						<creditsLines VAL="Sarvesh Parab" />
+						<creditsLines VAL="Saurabh Gope" />
+						<creditsLines VAL="Shubham Bhavsar" />
+						<creditsLines VAL="Shubham Karande" />
+						<creditsLines VAL="Shweta Deo Pujan Ram" />
+						<creditsLines VAL="Smruti Ranjan Das" />
+						<creditsLines VAL="Snehal Relekar" />
+						<creditsLines VAL="Sonali Pandhure" />
+						<creditsLines VAL="Swapnali Wasnik" />
+						<creditsLines VAL="Swarnima Singh" />
+						<creditsLines VAL=" Sumit Nanaware" />
+						<creditsLines VAL="Tanmay Dureja" />
+						<creditsLines VAL="Tejas Satam" />
+						<creditsLines VAL="Utkarsh Goel" />
+						<creditsLines VAL="Utkarsha Washimkar" />
+						<creditsLines VAL="Vijay Phate" />
+						<creditsLines VAL="Vikram Bankar" />
+						<creditsLines VAL="Vikrant Dhawad" />
+						<creditsLines VAL="Vinay Agrawal" />
+						<creditsLines VAL="Vineet Kumar" />
+						<creditsLines VAL="Vinod Wethekar" />
+						<creditsLines VAL="Viraj Kirad" />
+						<creditsLines VAL="Vishal Sanap" />
+						<creditsLines VAL="Vikas Gavade" />
+						<creditsLines VAL="Vrushali Durge" />
+						<creditsLines VAL="Yogesh Sahu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Post-Launch Testers" />
+						<creditsLines VAL="Saurabh Kahare" />
+						<creditsLines VAL="Utkarsh Shastri" />
+						<creditsLines VAL="Kapil Pathak" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Audio-Video Test Team" />
+						<creditsLines VAL="Vinit Shetty" />
+						<creditsLines VAL="Tanveer Shaikh" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]External Resources &amp; Vendors" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Director of Photography" />
+						<creditsLines VAL="Harshad Gaikwad" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Choreographers" />
+						<creditsLines VAL="Amit Rokade" />
+						<creditsLines VAL="Deepak Sahu" />
+						<creditsLines VAL="Rohan Rokade" />
+						<creditsLines VAL="Shweta Poojary" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Dancers" />
+						<creditsLines VAL="Abhilash Mulay" />
+						<creditsLines VAL="Amit Rokade" />
+						<creditsLines VAL="Angela Nair" />
+						<creditsLines VAL="Ankhi Das" />
+						<creditsLines VAL="Anna ilmi" />
+						<creditsLines VAL="Ashish Negi" />
+						<creditsLines VAL="Debanshi Shah" />
+						<creditsLines VAL="Deepak Sahu" />
+						<creditsLines VAL="Lalit Potdar" />
+						<creditsLines VAL="Milind Bhatt" />
+						<creditsLines VAL="Mohit Mathur" />
+						<creditsLines VAL="NavjyotSingh Prajapati" />
+						<creditsLines VAL="Neelam Salve" />
+						<creditsLines VAL="Nikhil Rajemahadik" />
+						<creditsLines VAL="Parth Sethi" />
+						<creditsLines VAL="Pranalini Atul" />
+						<creditsLines VAL="Rupali Kantharia" />
+						<creditsLines VAL="Shahifa Shaikh" />
+						<creditsLines VAL="Shweta Poojary" />
+						<creditsLines VAL="Siddhi Tambe" />
+						<creditsLines VAL="Uditta Bhalla" />
+						<creditsLines VAL="Viraj Pandya" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Costume Makers" />
+						<creditsLines VAL="Saachi Vijaywargia &amp; Team" />
+						<creditsLines VAL="Ken Fernandez &amp; Team" />
+						<creditsLines VAL="Aslam Shaikh &amp; Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Make-up Team" />
+						<creditsLines VAL="Jitendra Mhatre" />
+						<creditsLines VAL="Nitin" />
+						<creditsLines VAL="Rakesh Jagtap" />
+						<creditsLines VAL="Prasad" />
+						<creditsLines VAL="Julien" />
+						<creditsLines VAL="Tarunjeet Roy" />
+						<creditsLines VAL="Siddhesh" />
+						<creditsLines VAL="Indrajeet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Hair Stylists" />
+						<creditsLines VAL="Laxmi Patel" />
+						<creditsLines VAL="Mansi" />
+						<creditsLines VAL="Diwas" />
+						<creditsLines VAL="Geeta Jagtap" />
+						<creditsLines VAL="Sonu" />
+						<creditsLines VAL="Pallavi" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Production Support Teams" />
+						<creditsLines VAL="Accord Equipment’s" />
+						<creditsLines VAL="Ubisoft® Admin Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Ubisoft® Pune Staff" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Managing Director, Pune Studio" />
+						<creditsLines VAL="Jean-Philippe Pieuchot" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Human Resources Director" />
+						<creditsLines VAL="Samira Chabani" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]HR Team" />
+						<creditsLines VAL="Sheetal Mane" />
+						<creditsLines VAL="Neha Chobitkar" />
+						<creditsLines VAL="Rony Mathai" />
+						<creditsLines VAL="Kiran Kumar Giri" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Purchasing &amp; Admin" />
+						<creditsLines VAL="Amol Potdar" />
+						<creditsLines VAL="Karimm Khan" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]IT Team" />
+						<creditsLines VAL="Manik Dongarwar" />
+						<creditsLines VAL="Milind Tanksale" />
+						<creditsLines VAL="Yogesh Vibhute" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Finance Team" />
+						<creditsLines VAL="Kedar Chitre" />
+						<creditsLines VAL="Prashant Dongre" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Corporate Communication" />
+						<creditsLines VAL="Harsha Shree" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Bucharest Studio" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Quality Control" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Quality Control Director" />
+						<creditsLines VAL="Razvan Rotunjanu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Quality Control Coordinator" />
+						<creditsLines VAL="Mircea Nutu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide Quality Control Manager" />
+						<creditsLines VAL="Ioan Turcanu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]QC Unit Manager" />
+						<creditsLines VAL="George Stercu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Compliance Specialist" />
+						<creditsLines VAL="Dan Cocosila" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Compliance Project Leads" />
+						<creditsLines VAL="Georgiana Gheta" />
+						<creditsLines VAL="Radu  Ilica" />
+						<creditsLines VAL="Ruxandra-Agata Dosuleanu " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Compliance Specialist" />
+						<creditsLines VAL="Ionut-Adrian Dachin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]QC Project Lead" />
+						<creditsLines VAL="Remus-Catalin Burticel " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]QC Testers" />
+						<creditsLines VAL="Bogdan-Calin-Alexandru Ionescu " />
+						<creditsLines VAL="Bogdan-Cristian Filip " />
+						<creditsLines VAL="Florin-Daniel Matanie " />
+						<creditsLines VAL="Stefan Alexandru Ivan " />
+						<creditsLines VAL="Vasile-Constantin Cristea " />
+						<creditsLines VAL="Alexandru-Catalin Matache" />
+						<creditsLines VAL="Antonio Octavian Birsan " />
+						<creditsLines VAL="Ionut Motofei " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Bucharest Audio-Video Test Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Test Studio Manager" />
+						<creditsLines VAL="Emil  Gheorghe" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Audio-Video Lead" />
+						<creditsLines VAL="Andrei Begu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Audio-Video Specialists" />
+						<creditsLines VAL="Emil Draganescu" />
+						<creditsLines VAL="Florian Alungulesa" />
+						<creditsLines VAL="Stefan Valentin Negulescu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Bucharest Tracking Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tracking Lead" />
+						<creditsLines VAL="Bogdan Preda" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Tracking Specialists" />
+						<creditsLines VAL="Alexandru Alin Albu" />
+						<creditsLines VAL="Ana Maria Sofroni" />
+						<creditsLines VAL="Cosmin Dumitrescu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Bucharest UOR/Networking" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]TSD QC Manager" />
+						<creditsLines VAL="George Stercu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UOR / Networking Lead " />
+						<creditsLines VAL="Alexandru Bontu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate UOR / Networking Leads" />
+						<creditsLines VAL="Catalin Daniel Balan" />
+						<creditsLines VAL="Mihai Sorin Cazangiu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UOR/Networking Project Coordinator " />
+						<creditsLines VAL="Cristina Gheorghe" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UOR / Networking Specialists " />
+						<creditsLines VAL="Adrian Tila" />
+						<creditsLines VAL="Alexandru Ivan" />
+						<creditsLines VAL="Alexandru-Laurentiu Gurita" />
+						<creditsLines VAL="Andrei Vladimir Georgescu" />
+						<creditsLines VAL="Cosmin Ionut Popa" />
+						<creditsLines VAL="Dragos-Valentin Burlacu" />
+						<creditsLines VAL="Florian Mihai" />
+						<creditsLines VAL="Gabriela Ramona Hera" />
+						<creditsLines VAL="Gina-Lavinia Benedic" />
+						<creditsLines VAL="Ion-Alexandru-Gabriel Bunescu" />
+						<creditsLines VAL="Liviu-Ioan Ciobotaru" />
+						<creditsLines VAL="Nelu Vale" />
+						<creditsLines VAL="Nicolae Ovidiu Vlad" />
+						<creditsLines VAL="Robert-Alexandru Bria-Cretu" />
+						<creditsLines VAL="Sebastian Dumitrascu" />
+						<creditsLines VAL="Valentin George Nicolaie" />
+						<creditsLines VAL="Vladimir Gaitan" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Bucharest PC Compliance/Compatibility" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]PC Requirements Lead" />
+						<creditsLines VAL="Marius Tudorache" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]PC Requirements Associate Lead" />
+						<creditsLines VAL="Victor Pop" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]PC Requirements Team" />
+						<creditsLines VAL="Alexandru Teodor" />
+						<creditsLines VAL="Alin-Eduard Rotaru" />
+						<creditsLines VAL="Andrei Costin Alexe" />
+						<creditsLines VAL="Andrei Mihai" />
+						<creditsLines VAL="Codrut Catargiu" />
+						<creditsLines VAL="Constantin Fotea" />
+						<creditsLines VAL="Cosmin-Andrei Popescu" />
+						<creditsLines VAL="Cristina Mihaela Aldea" />
+						<creditsLines VAL="Daniel-Mihai Mitoi" />
+						<creditsLines VAL="Horatiu Bradeanu" />
+						<creditsLines VAL="Marius Enciu" />
+						<creditsLines VAL="Silviu-Iulian Stoica" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Montreal UOR/Networking" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Montreal Quality Control Manager" />
+						<creditsLines VAL="Yanick Beaudet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UOR/Networking Lead" />
+						<creditsLines VAL="Christopher Sokalski" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UOR/Networking Specialists" />
+						<creditsLines VAL="Olivier Guilbault" />
+						<creditsLines VAL="Akil Roberts" />
+						<creditsLines VAL="Christopher Normandeau" />
+						<creditsLines VAL="Kassandra Girard" />
+						<creditsLines VAL="Mathieu Beaucage" />
+						<creditsLines VAL="Jean-Charles Bernier" />
+						<creditsLines VAL="Alejandro Sepulveda" />
+						<creditsLines VAL="David Francoeur Boissonneault" />
+						<creditsLines VAL="Etienne Shank" />
+						<creditsLines VAL="Joan Manuel Galaz-Garcia" />
+						<creditsLines VAL="Dany Lacoste" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]International Localization" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Localization Project Managers" />
+						<creditsLines VAL="Abigaïl Goudjo" />
+						<creditsLines VAL="Antoine Avalle" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Localization Project Managers - Marketing" />
+						<creditsLines VAL="Maïté Lerebours" />
+						<creditsLines VAL="Thibault Cortes" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]English Quality Assurance" />
+						<creditsLines VAL="Jason Whittaker" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Translations" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]French Version" />
+						<creditsLines VAL="Christophe Pallarès" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Italian Version" />
+						<creditsLines VAL="SYNTHESIS" />
+						<creditsLines VAL="[title]Project Manager" />
+						<creditsLines VAL="Elisa Leanza" />
+						<creditsLines VAL="[title]Translator" />
+						<creditsLines VAL="Emanuele Mattei" />
+						<creditsLines VAL="[title]Reviewer " />
+						<creditsLines VAL="Luisa Reina" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]German Version" />
+						<creditsLines VAL="[title]Head of Localization " />
+						<creditsLines VAL="Stefan Dinger" />
+						<creditsLines VAL="[title]Senior Localization Manager " />
+						<creditsLines VAL="Dieter Pfeil" />
+						<creditsLines VAL="[title]Translator" />
+						<creditsLines VAL="Anja Weiligmann" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Spanish Version " />
+						<creditsLines VAL="UISCE MASSMEDIA" />
+						<creditsLines VAL="[title]Project Manager" />
+						<creditsLines VAL="Esperanza Hernandez" />
+						<creditsLines VAL="[title]Spanish Translator" />
+						<creditsLines VAL="Aurelio Saiz" />
+						<creditsLines VAL="[title]Latin-American Spanish Translator" />
+						<creditsLines VAL="Alejandra Medina" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Brazilian Version" />
+						<creditsLines VAL="SYNTHESIS IBERIA" />
+						<creditsLines VAL="[title]Project Manager" />
+						<creditsLines VAL="Mauro Bossetti" />
+						<creditsLines VAL="[title]Translator" />
+						<creditsLines VAL="Leonardo Orloski" />
+						<creditsLines VAL="[title]Reviewer" />
+						<creditsLines VAL="Monique Pereira" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Dutch &amp; Nordic Project Manager " />
+						<creditsLines VAL="Jelle de Vaal" />
+						<creditsLines VAL="[title]Danish Version" />
+						<creditsLines VAL="Local Heroes Worldwide B.V." />
+						<creditsLines VAL="Troels Høegh" />
+						<creditsLines VAL="Louise Bang" />
+						<creditsLines VAL="Dan Ponce" />
+						<creditsLines VAL="[title]Dutch Version" />
+						<creditsLines VAL="Local Heroes Worldwide B.V." />
+						<creditsLines VAL="Inouchka Kreuning" />
+						<creditsLines VAL="Charlaine Kreuning" />
+						<creditsLines VAL="Rutger ‘Rubber Legs’ Smit" />
+						<creditsLines VAL="[title]Finnish Version" />
+						<creditsLines VAL="Local Heroes Worldwide B.V." />
+						<creditsLines VAL="Simo 'Speedy' Autio" />
+						<creditsLines VAL="[title]Norwegian Version" />
+						<creditsLines VAL="Local Heroes Worldwide B.V." />
+						<creditsLines VAL="Stian Schultz" />
+						<creditsLines VAL="[title]Swedish Version" />
+						<creditsLines VAL="Local Heroes Worldwide B.V." />
+						<creditsLines VAL="Alexander Katourgi" />
+						<creditsLines VAL="Andreas Pajarinen" />
+						<creditsLines VAL="Andreas Lundgren" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Russian Version" />
+						<creditsLines VAL="Roboto" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Simplified Chinese Version" />
+						<creditsLines VAL="iCentech Language Services" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Traditional Chinese Version" />
+						<creditsLines VAL="UBISOFT® LIMITED" />
+						<creditsLines VAL="[title]Managing Director" />
+						<creditsLines VAL="Keith Chan" />
+						<creditsLines VAL="[title]Marketing Director" />
+						<creditsLines VAL="Titus Ou" />
+						<creditsLines VAL="[title]Marketing Manager" />
+						<creditsLines VAL="Leon Chang" />
+						<creditsLines VAL="[title]Local Brand Managers" />
+						<creditsLines VAL="Duck Chiang" />
+						<creditsLines VAL="Disc Tang" />
+						<creditsLines VAL="Rika Fung" />
+						<creditsLines VAL="Seven Lee" />
+						<creditsLines VAL="[title]Localization Project Manager" />
+						<creditsLines VAL="Jacky Lin" />
+						<creditsLines VAL="[title]Translator" />
+						<creditsLines VAL="Jason Tsai" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Linguistic Testing" />
+						<creditsLines VAL="Enzyme Testing Labs " />
+						<creditsLines VAL="[title]Head of Production" />
+						<creditsLines VAL="Steve Paquin" />
+						<creditsLines VAL="[title]Project Manager" />
+						<creditsLines VAL="David Watts" />
+						<creditsLines VAL="[title]Team Manager" />
+						<creditsLines VAL="Julien Waroux " />
+						<creditsLines VAL="[title]Lead Tester" />
+						<creditsLines VAL="Jay Lee" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]GNS Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]GNS Project Manager" />
+						<creditsLines VAL="Dzuy Dao" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]GNS Client Managers" />
+						<creditsLines VAL="Jacques Anthore" />
+						<creditsLines VAL="Jean-Francis Tetreault" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Linux Systems Administrator" />
+						<creditsLines VAL="Michael Gwin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]GNS Architect" />
+						<creditsLines VAL="Cristian Ender" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Technology Group Teams" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Montreal TG Management Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technology Group Director" />
+						<creditsLines VAL="Chadi Lebbos" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technology Group Online Director" />
+						<creditsLines VAL="Jimmy Boulianne" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Deputy Director" />
+						<creditsLines VAL="Martin Lavoie" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Product Director" />
+						<creditsLines VAL="Steve Desjarlais" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Development Directors" />
+						<creditsLines VAL="Carl Dionne" />
+						<creditsLines VAL="Jesse Henderson" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Service Directors " />
+						<creditsLines VAL="Alex Dandurand" />
+						<creditsLines VAL="Jean-François Allard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tools &amp; Middleware Engineering Leads" />
+						<creditsLines VAL="François Martel" />
+						<creditsLines VAL="Cyrille Gauclin" />
+						<creditsLines VAL="Thomas Félix" />
+						<creditsLines VAL="Laurent Chouinard" />
+						<creditsLines VAL="Nicolas Landron" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tools &amp; Middleware Product Managers" />
+						<creditsLines VAL="Alexandre Piché" />
+						<creditsLines VAL="Alexandre Pichette" />
+						<creditsLines VAL="Michel Gaudreault" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Product Manager" />
+						<creditsLines VAL="Bernard Desmons" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Product Specialist" />
+						<creditsLines VAL="Justin Wong" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Tool Support Specialist" />
+						<creditsLines VAL="Martin Tavernier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Strategic Partner Managers" />
+						<creditsLines VAL="Romain Amichaud" />
+						<creditsLines VAL="Stéphane Grenier" />
+						<creditsLines VAL="Thomas Fortier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technology Group  Coordinator" />
+						<creditsLines VAL="Roger Saindon" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Boomboom Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead" />
+						<creditsLines VAL="Cyrille Gauclin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Product Specialist" />
+						<creditsLines VAL="Jaroslaw Iwanczuk" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technical Lead" />
+						<creditsLines VAL="Ouamer Dahmani" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Programmers" />
+						<creditsLines VAL="Geoffrey Harding" />
+						<creditsLines VAL="Ludovic Mainguy" />
+						<creditsLines VAL="Marc Vendette" />
+						<creditsLines VAL="Raffaele Magliocco" />
+						<creditsLines VAL="Stéphane Parent" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tool Support Specialists" />
+						<creditsLines VAL="Alina-Diana Milasan" />
+						<creditsLines VAL="Victor-Cristian Popa" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Flare Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead" />
+						<creditsLines VAL="Benoit Gagnon" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Product Specialist" />
+						<creditsLines VAL="Magali Sonnet-Debard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Programmers" />
+						<creditsLines VAL="Benoit Moniere" />
+						<creditsLines VAL="Karim Besbes" />
+						<creditsLines VAL="Cedric Bonnaffoux" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Gear Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead" />
+						<creditsLines VAL="Daniel Fleury" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technical Lead" />
+						<creditsLines VAL="Ludovic Ducas" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Gear Programmers" />
+						<creditsLines VAL="David Knott" />
+						<creditsLines VAL="Mathieu Moretti" />
+						<creditsLines VAL="Sylvain Fortin" />
+						<creditsLines VAL="Paul Baudron" />
+						<creditsLines VAL="Andrei Alexandru" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Gear Studio Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead" />
+						<creditsLines VAL="François Chartrand" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Gear Programmers" />
+						<creditsLines VAL="Antoine Pecatikov" />
+						<creditsLines VAL="Jean-François Richard" />
+						<creditsLines VAL="Jean-François Tremblay" />
+						<creditsLines VAL="Maxime Godin" />
+						<creditsLines VAL="Yannick Cholette" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tool Support Specialist" />
+						<creditsLines VAL="Jean-François Lemay" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Oasis Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead" />
+						<creditsLines VAL="Raphaël St-Pierre" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Product Specialist" />
+						<creditsLines VAL="Anamaria Musca" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Programmers" />
+						<creditsLines VAL="Jean-Philippe Turcot" />
+						<creditsLines VAL="Marie Duhaime-Major" />
+						<creditsLines VAL="Sébastien Hivon" />
+						<creditsLines VAL="Sébastien Giffon" />
+						<creditsLines VAL="Thomas Dupuis" />
+						<creditsLines VAL="Mario Sirois" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Ergonomes" />
+						<creditsLines VAL="Anaëlle Baubinnec" />
+						<creditsLines VAL="Karine Thériault" />
+						<creditsLines VAL="Sarah Provencher Bordeleau" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UX Designer " />
+						<creditsLines VAL="Mathieu Preston" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tool Support Specialist" />
+						<creditsLines VAL="Octavian-Mihai Velicu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Ubisoft Club™ Montreal" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Producer" />
+						<creditsLines VAL="Thomas Belmont" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Producer " />
+						<creditsLines VAL="Julie Paulin-Tardif" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Product Manager" />
+						<creditsLines VAL="Jean-François Renaud" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Production Manager" />
+						<creditsLines VAL="Martin Leclerc" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Programming" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Project Lead" />
+						<creditsLines VAL="Victor Zachev" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Leads" />
+						<creditsLines VAL="Charles-Simon Viau" />
+						<creditsLines VAL="Heather MacLaren" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title] Engine Programmers" />
+						<creditsLines VAL="Damien Gleizes" />
+						<creditsLines VAL="David Lapointe" />
+						<creditsLines VAL="Diane Gnimadi" />
+						<creditsLines VAL="Frankie Chan" />
+						<creditsLines VAL="Vincent Domela" />
+						<creditsLines VAL="Xu Li" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Craiova Team  " />
+						<creditsLines VAL="Andrei-Daniel Andreiana" />
+						<creditsLines VAL="Radu Victor Carlig" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Services Programmers" />
+						<creditsLines VAL="Cyril Lucaiano Tovena" />
+						<creditsLines VAL="Benyamin Mehr" />
+						<creditsLines VAL="Sepehr Hedayat" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]User Interface Programmers" />
+						<creditsLines VAL="Abedenour Azzedine" />
+						<creditsLines VAL="Hyun Cho" />
+						<creditsLines VAL="Jean-Charles Fontaine" />
+						<creditsLines VAL="Paolo Di Stefano" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Business Intelligence Programmer " />
+						<creditsLines VAL="Fabien Simon" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Art &amp; Design" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UX Director" />
+						<creditsLines VAL="Guillaume Thoreau" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Game Designer" />
+						<creditsLines VAL="Philippe Baude" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead Graphics" />
+						<creditsLines VAL="Mauricio Guimaraes" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Designers" />
+						<creditsLines VAL="Gabriel Gendron" />
+						<creditsLines VAL="Ghina El-Chemali" />
+						<creditsLines VAL="Guillaume Gauthier" />
+						<creditsLines VAL="Roxanne Angers" />
+						<creditsLines VAL="Pascal Allancon" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Quality Assurance" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tool Support Specialists" />
+						<creditsLines VAL="Francis Quintal" />
+						<creditsLines VAL="Laurie Poirier " />
+						<creditsLines VAL="Olivier Dignard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Bucharest QC Team" />
+						<creditsLines VAL="[title]Unit Manager" />
+						<creditsLines VAL="Andrei Verzea" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Project Lead" />
+						<creditsLines VAL="Catalin Marius Constantin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Game Testers" />
+						<creditsLines VAL="Alexandru Bitulescu" />
+						<creditsLines VAL="Cosmin-Gabriel Dobra " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Live Operations" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Operations Support Specialists" />
+						<creditsLines VAL="Alexandre Pelletier" />
+						<creditsLines VAL="Claudio Marricco" />
+						<creditsLines VAL="Jean-François Gauthier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]DNA Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Programmer" />
+						<creditsLines VAL="Sébastien Hinse" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead" />
+						<creditsLines VAL="Étienne Borel" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Tech Lead" />
+						<creditsLines VAL="Francis Dallaire" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Product Manager" />
+						<creditsLines VAL="Pierre Bourgault" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Product Specialist" />
+						<creditsLines VAL="Luc Gagnon" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Programmers" />
+						<creditsLines VAL="Boris Fersing" />
+						<creditsLines VAL="Cyrille Karmann" />
+						<creditsLines VAL="Éric Germain" />
+						<creditsLines VAL="Éric Landry" />
+						<creditsLines VAL="Olivier LHeureux" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]BI Developers" />
+						<creditsLines VAL="Olivier Régimbald-Brière" />
+						<creditsLines VAL="Antoine Zieger" />
+						<creditsLines VAL="Robert Baxter" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Web Developers" />
+						<creditsLines VAL="Renzo Calderon " />
+						<creditsLines VAL="Hadi Bassil" />
+						<creditsLines VAL="Tayana Jacques" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Ubi Services Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Product Manager" />
+						<creditsLines VAL="Frédéric Pichette" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Programmer" />
+						<creditsLines VAL="Alain Cormier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Database Administrator" />
+						<creditsLines VAL="Serge Adourian" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Leads" />
+						<creditsLines VAL="Behrang Khoshnood" />
+						<creditsLines VAL="Patrick du Boucher" />
+						<creditsLines VAL="Robert Langlois" />
+						<creditsLines VAL="Stéphane St-Arnauld" />
+						<creditsLines VAL="Sylvain Demers" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Programmers" />
+						<creditsLines VAL="Anh Bang Bui" />
+						<creditsLines VAL="Carl Venne" />
+						<creditsLines VAL="Carlos Andres Vargas Farfan" />
+						<creditsLines VAL="Charles-Étienne Théberge" />
+						<creditsLines VAL="David Charbonneau" />
+						<creditsLines VAL="Dominique Doucet" />
+						<creditsLines VAL="Felipe Cardoso Gonçalves " />
+						<creditsLines VAL="Francis Beauchesne" />
+						<creditsLines VAL="Gabriel Federico Reyes Baldó" />
+						<creditsLines VAL="Gabriel Espinoza Lahore " />
+						<creditsLines VAL="Hector Salazar" />
+						<creditsLines VAL="Hervé Grosdemanche " />
+						<creditsLines VAL="Hjörtur Líndal Stefánsson " />
+						<creditsLines VAL="Jean-François Durand " />
+						<creditsLines VAL="Kate Patterson " />
+						<creditsLines VAL="Nicolas Heynen" />
+						<creditsLines VAL="Partha Dhar" />
+						<creditsLines VAL="Philippe Mercure" />
+						<creditsLines VAL="Pier-Luc Théberge" />
+						<creditsLines VAL="Samuel Verreault" />
+						<creditsLines VAL="Shao Hang He" />
+						<creditsLines VAL="Steven Ball" />
+						<creditsLines VAL="Tristan Moreaux" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Release &amp; Build Specialists" />
+						<creditsLines VAL="Joshua Heath" />
+						<creditsLines VAL="Lan Wang (Angela)" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]PC Webstore " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead Web Design" />
+						<creditsLines VAL="Gabriela Covali " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Project Manager" />
+						<creditsLines VAL="Irina Dica " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Team Lead Development" />
+						<creditsLines VAL="Atul Sharma " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Web Developers" />
+						<creditsLines VAL="Ravi Lakhotiya " />
+						<creditsLines VAL="Gaurang Rajvir " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Web Designer" />
+						<creditsLines VAL="Andrei-Lucian Ghenea " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Integration Managers" />
+						<creditsLines VAL="Arnaud Boucherie " />
+						<creditsLines VAL="Guillaume Pasco " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Software Tester" />
+						<creditsLines VAL="Sohel Khan " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Uplay PC Development Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Development Director" />
+						<creditsLines VAL="Pierre Escaich" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Technical Director" />
+						<creditsLines VAL="Olof Naessén" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Operations Manager" />
+						<creditsLines VAL="Anders Kapusta-Lejczak" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Producers" />
+						<creditsLines VAL="Alexander Strandberg" />
+						<creditsLines VAL="Sergey Golubkin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead Programmer" />
+						<creditsLines VAL="Jon Lilja" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Infrastructure Architect" />
+						<creditsLines VAL="Mattias Erichsén " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Programmers" />
+						<creditsLines VAL="Fedor Chinarev" />
+						<creditsLines VAL="Kostiantyn Bondar" />
+						<creditsLines VAL="Gustaf Ekberg" />
+						<creditsLines VAL="Mathias Fredriksson" />
+						<creditsLines VAL="Igor Khlepitko" />
+						<creditsLines VAL="Hlib Maksymenko" />
+						<creditsLines VAL="Christian Morgenstern" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Account Managers" />
+						<creditsLines VAL="Morag Doig-Granito" />
+						<creditsLines VAL="Christophe Grandjean" />
+						<creditsLines VAL="Veith Hellmich" />
+						<creditsLines VAL="Markus Holmberg" />
+						<creditsLines VAL="Cain Sinopoulos" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead UI Designer" />
+						<creditsLines VAL="Timur Kondrakov" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]UI Developer" />
+						<creditsLines VAL="Maria Rundqvist" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior UX Designer" />
+						<creditsLines VAL="Paulo César Marques " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Marketing Intelligence Analyst" />
+						<creditsLines VAL="Jakob Brynte" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Lead QC" />
+						<creditsLines VAL="Magnus Hallenborg" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]QC" />
+						<creditsLines VAL="Andrii Velychko" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]QC Team Ubisoft Bucharest" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Studio Manager" />
+						<creditsLines VAL="Emil Gheorghe" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]QC Unit Manager" />
+						<creditsLines VAL="Andrei Voicu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay PC Coordinator" />
+						<creditsLines VAL="Daniel Verban" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay PC Testers" />
+						<creditsLines VAL="Madalina-Ioana Marin" />
+						<creditsLines VAL="Adrian Benedic" />
+						<creditsLines VAL="Daniel-Nicolae Capatina" />
+						<creditsLines VAL="Adina Pavilcu" />
+						<creditsLines VAL="Alexandru-Stelian Rotaru" />
+						<creditsLines VAL="Petre-Cristian Turlea" />
+						<creditsLines VAL="Marian-Florin Ignat" />
+						<creditsLines VAL="Robert-Costin Zamfir" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]International Game Credits" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Publisher" />
+						<creditsLines VAL="Ubisoft® Entertainment" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]President and CEO" />
+						<creditsLines VAL="Yves Guillemot" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Executive Director, Worldwide Studios" />
+						<creditsLines VAL="Christine Burgess-Quémard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Chief Creative Officer" />
+						<creditsLines VAL="Serge Hascoët" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]VP Uplay™ &amp; Casual Games" />
+						<creditsLines VAL="Stéphanie Perotti" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Casual Line Producer" />
+						<creditsLines VAL="Thomas Baillet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Line Producer" />
+						<creditsLines VAL="Julie Chevallier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Certification" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Project Support Manager" />
+						<creditsLines VAL="Corentin François" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Certification 1st Party Manager" />
+						<creditsLines VAL="Anis Boujaouane" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Certification Coordinator - Age Rating" />
+						<creditsLines VAL="Jean-Marie Mogentale" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Certification Specialists" />
+						<creditsLines VAL="Guillermo Araque" />
+						<creditsLines VAL="Guillaume Boussinesq" />
+						<creditsLines VAL="Bruno Gaugain" />
+						<creditsLines VAL="Paul Lim" />
+						<creditsLines VAL="Tatjana Stojkovic" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Strategic Planning Manager" />
+						<creditsLines VAL="Vicky Lagarre" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]ONLINE" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Technology Manager" />
+						<creditsLines VAL="Philippe Bayle" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Services Manager" />
+						<creditsLines VAL="Julien Hummer" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Services Line Producer" />
+						<creditsLines VAL="Codrut Cosmescu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Online Technical Coordination Manager" />
+						<creditsLines VAL="Fabrice Pierre-Elien" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]UPLAY™" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay™ Brand Director" />
+						<creditsLines VAL="Damien Moret" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay™ Business Developper" />
+						<creditsLines VAL="Sebastien Courmont" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]International Product Manager" />
+						<creditsLines VAL="Catherine Duda" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Event Communication Manager" />
+						<creditsLines VAL="Audrey Couyras" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Communication Manager Assistant" />
+						<creditsLines VAL="Claire Gentilhomme" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Social Media Manager" />
+						<creditsLines VAL="Vincent Le Jamtel" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay™ Program Manager" />
+						<creditsLines VAL="Olivier Duffort" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay™ Associate Line Producer" />
+						<creditsLines VAL="Stéphanie Madelin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Web Services Manager" />
+						<creditsLines VAL="Cyril Beaudaux" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Games Services Group Manager" />
+						<creditsLines VAL="Susan Papoz" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Player Services Group Manager" />
+						<creditsLines VAL="Emmanuel Dru" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay™ Web Project Manager" />
+						<creditsLines VAL="Luc Sarlandie" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Uplay™ Web Associate Project Manager" />
+						<creditsLines VAL="Alexandre Ristic" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Signup Project Manager" />
+						<creditsLines VAL="Silviana Socu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Integration Manager" />
+						<creditsLines VAL="Arnaud Boucherie" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Games Services Project Manager" />
+						<creditsLines VAL="Jean-Camille Martin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Application Manager" />
+						<creditsLines VAL="Mathew Jordan" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Web Services Technical Manager" />
+						<creditsLines VAL="Georg Iliopoulos" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Brand Development Strategy" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Brand Development Director" />
+						<creditsLines VAL="Thomas Petersen" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Event Content Coordinator" />
+						<creditsLines VAL="Thibault Jacquet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Editorial Event Assistant" />
+						<creditsLines VAL="Céline Akef" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Legal Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate General Counsel" />
+						<creditsLines VAL="Virginie Gringarten" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Legal Counsels Music" />
+						<creditsLines VAL="Florent Boisneault" />
+						<creditsLines VAL="Adrien Crestey" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Legal Counsel" />
+						<creditsLines VAL="Perrine Bouhot" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Studio Operations" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]VP, Studio Operations &amp; Financial Planning" />
+						<creditsLines VAL="Nicolas Martin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Director Studio Operations" />
+						<creditsLines VAL="Johanne Grange" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Studio Operations Manager" />
+						<creditsLines VAL="Mathieu Peyronnet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Studio Operations Coordinator - Collaboration" />
+						<creditsLines VAL="Aurore Perrin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Worldwide QC" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]QC &amp; User Research Director" />
+						<creditsLines VAL="Pierre Jouen" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide QC Director" />
+						<creditsLines VAL="Razvan Rotunjanu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Worldwide QC Managers" />
+						<creditsLines VAL="Mircea Nutu" />
+						<creditsLines VAL="Ioan Turcanu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Procurement Team" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Procurement Managers" />
+						<creditsLines VAL="Franz Pinto" />
+						<creditsLines VAL="Abdesamad Bekkali" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Procurement Specialists" />
+						<creditsLines VAL="Monica Tudorache" />
+						<creditsLines VAL="Thomas Jauneault" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]IT Buyers" />
+						<creditsLines VAL="Quentin Lamome" />
+						<creditsLines VAL="Grace Prouveur" />
+						<creditsLines VAL="Thomas Bruel" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Ubisoft® EMEA" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Executive Director" />
+						<creditsLines VAL="Alain Corre" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Senior Vice-President Sales &amp; Marketing" />
+						<creditsLines VAL="Geoffroy Sardin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Vice-President Marketing" />
+						<creditsLines VAL="Guillaume Carmona" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Vice-President Sales" />
+						<creditsLines VAL="Sabine Berthier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Strategic Planning &amp; E-Sport Director" />
+						<creditsLines VAL="Julien Delalande" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Associate Marketing Director" />
+						<creditsLines VAL="Sophie Blandin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Brand Manager" />
+						<creditsLines VAL="Sébastien Ratto" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Digital Marketing Manager" />
+						<creditsLines VAL="Mathieu Willem" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Brand Manager Assistant" />
+						<creditsLines VAL="Patricia Cao - Camille Caux" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Local Group Brand Managers &amp; EMEA Local Brand Managers" />
+						<creditsLines VAL="Australia: Chad Acers - Cally Jackson" />
+						<creditsLines VAL="Austria: Eugen Knippel" />
+						<creditsLines VAL="Benelux: Marcel Keij - Annemieke Boelen - Julien Petruio" />
+						<creditsLines VAL="France: Laurie Besse - Vincent Dellier" />
+						<creditsLines VAL="Germany: Thorsten Kapp - Stefanie Lüftner" />
+						<creditsLines VAL="Hong Kong: Leon Chang - Rika Fung" />
+						<creditsLines VAL="Italy: Valeria Zaffina - Marta Alvari" />
+						<creditsLines VAL="Poland: Rafal Adasiak - Grzegorz Rogowski" />
+						<creditsLines VAL="Russia: Olga Lazareva - Andrey Yakovlev" />
+						<creditsLines VAL="Scan: Morten Ryberg - Sebastian Østfeldt" />
+						<creditsLines VAL="Spain: Roberto Rollón - Esther Solanas" />
+						<creditsLines VAL="Switzerland: Gil Grandjean - Christelle Cotting" />
+						<creditsLines VAL="United Kingdom: Louise Marchant - Oliver Coe" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Marketing Coordination" />
+						<creditsLines VAL="Elodie Palloix - Antoine Poulet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Public Relation Director" />
+						<creditsLines VAL="Tiphaine Locqueneux-Bianchi" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Group PR Manager" />
+						<creditsLines VAL="Lucía Guzmán" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA PR Manager" />
+						<creditsLines VAL="Zohra Hamiche" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Digital Influence &amp; Social Media Manager" />
+						<creditsLines VAL="Pierre Worgague" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Social Media Manager" />
+						<creditsLines VAL="Amélie Huyghe" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Media &amp; Engagement Director" />
+						<creditsLines VAL="Jean Guerin" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Media &amp; Analytics Manger" />
+						<creditsLines VAL="Kim Minh Nguyen" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Web Producer Manager " />
+						<creditsLines VAL="Mickaël Lagarde" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Webmaster" />
+						<creditsLines VAL="Floriane Charles" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Vice President Customer Management" />
+						<creditsLines VAL="Stéphane Catherine" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Head of CRM and Community Development" />
+						<creditsLines VAL="Damien Glorieux" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA CRM Group Manager" />
+						<creditsLines VAL="Gwenn Berhault" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Community Development Group Manager" />
+						<creditsLines VAL="Christophe Zerathe" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Lead Community Developer" />
+						<creditsLines VAL="Alexis Van De Kerkhove" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Community Developer" />
+						<creditsLines VAL="Moustapha N'Dome" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Retail Sales Director" />
+						<creditsLines VAL="Rémi Perreault" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Trade Marketing Group Manager" />
+						<creditsLines VAL="Elisabeth Torre-Vincent" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Trade Marketing  Manager" />
+						<creditsLines VAL="Heidi Etcheverry" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Digital Sales Director" />
+						<creditsLines VAL="Emmanuel Fauchez" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Digital Sales Managers" />
+						<creditsLines VAL="Karima Touali" />
+						<creditsLines VAL="Raphaël Rodriguez" />
+						<creditsLines VAL="Sergio Dos Santos " />
+						<creditsLines VAL="Guillaume Lambert" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Paperparts &amp; Graphic Studio Manager" />
+						<creditsLines VAL="Vincent Hamet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Paperparts Specialist" />
+						<creditsLines VAL="Jihanne Boughou" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Supply Chain Director" />
+						<creditsLines VAL="Lionel Care" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Manufacturing Manager" />
+						<creditsLines VAL="Laurent Gaudy" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]EMEA Communication Tools Purchasing &amp; Manufacturing Manager" />
+						<creditsLines VAL="Guillaume Mammi" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]NCSA Operations" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Vice-President Operations" />
+						<creditsLines VAL="Rich Kubiszewski" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Director Operations" />
+						<creditsLines VAL="Josiane Valverde" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Manager Production Planning" />
+						<creditsLines VAL="Shannon Kokoska " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Manager Production Planning" />
+						<creditsLines VAL="Udo Richter" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Production Specialists" />
+						<creditsLines VAL="Joseph Chasan" />
+						<creditsLines VAL="Jade Kraus" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Production Coordinator" />
+						<creditsLines VAL="Ocie Henderson" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]North American Age Rating Specialists" />
+						<creditsLines VAL="Andres Chirino" />
+						<creditsLines VAL="Ben White" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Purchasing Managers " />
+						<creditsLines VAL="Katrina Medema" />
+						<creditsLines VAL="Peter Stalsky" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Manufacturing Manager" />
+						<creditsLines VAL="Scranton Stichal " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Manufacturing Specialists" />
+						<creditsLines VAL="Jennifer Martinis" />
+						<creditsLines VAL="Emmy Lee" />
+						<creditsLines VAL="Rachel Reyes" />
+						<creditsLines VAL="Ryan Van Fleet" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Ubisoft® North America" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]President &amp; CEO" />
+						<creditsLines VAL="Laurent Detoc" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Vice-President Sales and Marketing" />
+						<creditsLines VAL="Tony Key" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Vice-President Marketing" />
+						<creditsLines VAL="Adam Novickas" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Director Marketing" />
+						<creditsLines VAL="Alexis Bodard" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Marketing Director" />
+						<creditsLines VAL="Carrie Feigel Bischke" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Brand Director" />
+						<creditsLines VAL="Linda Murphy" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Brand Manager" />
+						<creditsLines VAL="Kristina Drown" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Public Relations Director" />
+						<creditsLines VAL="Michael Beadle" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Public Relations Manager" />
+						<creditsLines VAL="Kimberly Kaspar" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Vice President Media and Promotions" />
+						<creditsLines VAL="Jill Steinberg" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Media Director" />
+						<creditsLines VAL="Natalie Ochoa" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Manager Digital Media" />
+						<creditsLines VAL="Joshua Morris" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Online Media Manager" />
+						<creditsLines VAL="Davis Tiblier" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Media Manager" />
+						<creditsLines VAL="Samantha Diaz" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Director Promotions" />
+						<creditsLines VAL="Jeff Dandurand" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Promotions Manager" />
+						<creditsLines VAL="Jaime Gonzales" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Promotions Manager" />
+						<creditsLines VAL="Andrew Robinson" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Director Events" />
+						<creditsLines VAL="Calvin Kwan" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Events Manager" />
+						<creditsLines VAL="Gabriela Gucho-Oliva " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Vice-President Digital Marketing" />
+						<creditsLines VAL="Justin Landskron" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Directors Digital Marketing" />
+						<creditsLines VAL="David Macachor " />
+						<creditsLines VAL="Ben Swanson" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Director Digital Marketing " />
+						<creditsLines VAL=" Lindsay Cohen" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Digital Marketing Manager" />
+						<creditsLines VAL="Brittney Schaeffer" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Digital Marketing Manager" />
+						<creditsLines VAL="Grace Shen" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Web Producer" />
+						<creditsLines VAL="Caroleen Beatty" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior CRM Manager" />
+						<creditsLines VAL="Katie McGuigan" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]CRM Specialist" />
+						<creditsLines VAL="Alexis Beverly" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Director Digital Sales" />
+						<creditsLines VAL="Jean Raymond" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Vice President Sales" />
+						<creditsLines VAL="Mike Eisenberg" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Director Sales" />
+						<creditsLines VAL="Ana Raphael" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Director Sales" />
+						<creditsLines VAL="Jodi Bland" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Account Managers" />
+						<creditsLines VAL="Teresa Gorman" />
+						<creditsLines VAL="John Carey" />
+						<creditsLines VAL="Heather Bartfield" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Account Managers" />
+						<creditsLines VAL="Raleigh Welch" />
+						<creditsLines VAL="Thomas Geoffroy" />
+						<creditsLines VAL="Wendy Perry" />
+						<creditsLines VAL="Sara Hummel" />
+						<creditsLines VAL="Whitney Freese" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Director Sales Strategy and Planning " />
+						<creditsLines VAL="Scott Sappenfield" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Retail Programs Manager" />
+						<creditsLines VAL="Cherrie Chiu" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Shopper Marketing Managers" />
+						<creditsLines VAL="Scott Horowitz" />
+						<creditsLines VAL="Paul Audino" />
+						<creditsLines VAL="Lindsey Poto" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Shopper Marketing Managers" />
+						<creditsLines VAL="Katherine Stanton" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Shopper Insights Manager" />
+						<creditsLines VAL="Patricia Bilka" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Shopper Marketing Coordinator" />
+						<creditsLines VAL=" Mallory Craig" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Consumer Products Specialist" />
+						<creditsLines VAL="Trey Williamson" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Creative Director" />
+						<creditsLines VAL="Michael Hammond" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Art Director" />
+						<creditsLines VAL="Jasmine Ianneo" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Project Manager" />
+						<creditsLines VAL="Oliver Fernandez" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Senior Graphic Designer" />
+						<creditsLines VAL="Golshid Zadafshar" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Manager Copy Editing " />
+						<creditsLines VAL="Ian Golder" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Copy Editor II" />
+						<creditsLines VAL="Andrew McKeon" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Localization Project Manager" />
+						<creditsLines VAL="Alicia Gimenez Ruiz " />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Associate Director Broadcast Production" />
+						<creditsLines VAL="Michelle Barta" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Broadcast Producer" />
+						<creditsLines VAL="Shannon Densmore" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[title]Broadcast Manager" />
+						<creditsLines VAL="Debra Trotz" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Thanks" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="Jason Altman" />
+						<creditsLines VAL="Nicolas Hunsinger" />
+						<creditsLines VAL="Far Cry® Team" />
+						<creditsLines VAL="Ghost Recon® Team" />
+						<creditsLines VAL="Nick Bygrave for Soundwich" />
+						<creditsLines VAL="Theo Dari - The Laser Man Experience" />
+						<creditsLines VAL="Frederic Saclier" />
+						<creditsLines VAL="Sophie Penziki" />
+						<creditsLines VAL="Charlie Davoine" />
+						<creditsLines VAL="Dheeraj Rai" />
+						<creditsLines VAL="Jonathan Sly" />
+						<creditsLines VAL="Fabrice Pierre-Elien" />
+						<creditsLines VAL="Robert Pearce" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[verybig]Special Thanks" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="Bruno and the Respawn Staff" />
+						<creditsLines VAL="Our families for their patience" />
+						<creditsLines VAL="All playtests participants!" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="ALL RIGHTS OF THE PRODUCER AND OTHER RIGHTHOLDERS " />
+						<creditsLines VAL="TO THE RECORDED WORK RESERVED.  " />
+						<creditsLines VAL="UNLESS OTHERWISE AUTHORIZED, THE DUPLICATION," />
+						<creditsLines VAL=" RENTAL, LOAN, EXCHANGE OR USE " />
+						<creditsLines VAL="OF THIS VIDEO GAME FOR PUBLIC PERFORMANCE, BROADCASTING " />
+						<creditsLines VAL="AND ONLINE DISTRIBUTION  TO THE PUBLIC ARE PROHIBITED" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="[big]Menu Music" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="Composed, produced and performed by Tom Salta." />
+						<creditsLines VAL="Music edited and mixed by Gilles Camous and Romuald Testier." />
+						<creditsLines VAL="Music Supervision - Gilles Camous, Romuald Testier and Manu Bachet" />
+						<creditsLines VAL="Cosmic Swag' composed and produced by Tom Cosm" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="© 2016 Ubisoft® Entertainment." />
+						<creditsLines VAL=" All Rights Reserved." />
+						<creditsLines VAL=" Just Dance®, Ubisoft® and the " />
+						<creditsLines VAL="Ubisoft® logo are trademarks " />
+						<creditsLines VAL="of Ubisoft® Entertainment" />
+						<creditsLines VAL=" in the U.S. and/or other countries." />
+						<creditsLines VAL="" />
+						<creditsLines VAL="VP8 Bitstream Specification License" />
+						<creditsLines VAL="Google hereby grants to You a perpetual, worldwide, non-exclusive, " />
+						<creditsLines VAL="no-charge, royalty-free, irrevocable (except as stated in this section)" />
+						<creditsLines VAL="patent license to make, have made, use, offer to sell, sell, import, " />
+						<creditsLines VAL="and otherwise transfer implementations of this specification" />
+						<creditsLines VAL="where such license applies only to those patent claims, " />
+						<creditsLines VAL="both currently owned by Google and acquired in the future, " />
+						<creditsLines VAL="licensable by Google that are necessarily infringed by" />
+						<creditsLines VAL="implementation of this specification." />
+						<creditsLines VAL="If You or your agent or exclusive licensee institute or order" />
+						<creditsLines VAL="or agree to the institution of patent litigation against any entity" />
+						<creditsLines VAL="(including a cross-claim or counterclaim in a lawsuit)" />
+						<creditsLines VAL="alleging that any implementation of this specification constitutes direct" />
+						<creditsLines VAL="or contributory patent infringement, " />
+						<creditsLines VAL="then any rights granted to You under the License" />
+						<creditsLines VAL="for this specification shall terminate" />
+						<creditsLines VAL="as of the date such litigation is filed." />
+						<creditsLines VAL="" />
+						<creditsLines VAL="Based on Matroska Specifications" />
+						<creditsLines VAL="[icon:LOGO_MATROSKA]" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+						<creditsLines VAL="" />
+					</JD_CreditsComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="SubSceneActor">
+			<SubSceneActor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="phone_button" MARKER="" POS2D="410.357788 -495.627014" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/control.tpl" RELATIVEPATH="world/ui/objects/button/button.isc" EMBED_SCENE="1" IS_SINGLE_PIECE="0" ZFORCED="1" DIRECT_PICKING="1" IGNORE_SAVE="1">
+				<parentBind>
+					<Bind parentPath="credits" typeData="0" offsetPos="410.357788 -495.627014 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="PropertyPatcher">
+					<PropertyPatcher applyOnActivation="1">
+						<propertyPatches>
+							<PropertyPatch marker="txt_action" invertActivationApply="0">
+								<action NAME="PropertyPatchAction_Text">
+									<PropertyPatchAction_Text duplicationCount="1" duplicationSeperator=" " />
+								</action>
+								<values NAME="PropertyPatchValue_Int">
+									<PropertyPatchValue_Int VALUE="7013" />
+								</values>
+							</PropertyPatch>
+						</propertyPatches>
+					</PropertyPatcher>
+				</COMPONENTS>
+				<COMPONENTS NAME="UIPhoneData">
+					<UIPhoneData phoneLocId="7013" phoneImage="world/ui/textures/phone/dialog_items_continue.png" />
+				</COMPONENTS>
+				<COMPONENTS NAME="UIControl">
+					<UIControl isDpadSensitive="1" isCursorSensitive="1" validateAction="" cursorDpadLeft="" cursorDpadRight="" cursorDpadUp="" cursorDpadDown="" />
+				</COMPONENTS>
+				<ENUM NAME="viewType" SEL="0" />
+				<SCENE>
+					<Scene ENGINE_VERSION="257489" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1">
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/button/button.tpl">
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+								<COMPONENTS NAME="UIRootComponent">
+									<UIRootComponent snapOffset="40.000000 0.000000">
+										<Collision>
+											<UIWidgetCollisionBox Width="525.000000" Height="50.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+										</Collision>
+									</UIRootComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.100000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt" MARKER="txt_action" POS2D="-24.996910 -4.994568" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/textbox.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="-24.996910 -4.994568 0.100000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UITextBox">
+									<UITextBox style="0" overridingFontSize="-1.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="1.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="rawText" useLinesMaxCount="0" linesMaxCount="1" locId="4294967295" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="0.000000 0.000000 0.000000 0.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0">
+										<ENUM NAME="textCase" SEL="-1" />
+										<ENUM NAME="autoScrollType" SEL="-1" />
+										<ENUM NAME="autoScrollDirection" SEL="0" />
+										<ENUM NAME="overridingBlendMode" SEL="0" />
+										<ENUM NAME="overridingHAlignment" SEL="-1" />
+										<ENUM NAME="overridingVAlignment" SEL="-1" />
+										<ENUM NAME="overridingAnchor" SEL="-1" />
+									</UITextBox>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg" MARKER="" POS2D="1.995117 -2.999466" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="1.995117 -2.999466 0.000000" offsetAngle="0.000000" localScale="240.000000 28.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="4294967295" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/alpha_g.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/grad_linear_h.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.100000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico" MARKER="icon" POS2D="200.890594 -3.635018" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/elements/graphic.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="200.890594 -3.635018 0.100000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="4294967295" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/alpha_g.msh" stencilTest="0" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_arrow.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<sceneConfigs>
+							<SceneConfigs activeSceneConfig="0" />
+						</sceneConfigs>
+					</Scene>
+				</SCENE>
+			</SubSceneActor>
+		</ACTORS>
+		<sceneConfigs>
+			<SceneConfigs activeSceneConfig="0">
+				<sceneConfigs NAME="JD_MapSceneConfig">
+					<JD_MapSceneConfig name="" soundContext="TitlePage" hud="0" phoneTitleLocId="4294967295" phoneImage="">
+						<ENUM NAME="Pause_Level" SEL="6" />
+						<ENUM NAME="type" SEL="2" />
+						<ENUM NAME="musicscore" SEL="2" />
+					</JD_MapSceneConfig>
+				</sceneConfigs>
+			</SceneConfigs>
+		</sceneConfigs>
+	</Scene>
+</root>

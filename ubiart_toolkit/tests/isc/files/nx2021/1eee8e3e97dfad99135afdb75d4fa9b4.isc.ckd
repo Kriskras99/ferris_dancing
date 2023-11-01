@@ -1,0 +1,996 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<root>
+	<Scene ENGINE_VERSION="317118" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1" isPopup="0">
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="ORBIS">
+				<objects VAL="txt_player_name" />
+				<objects VAL="txt_switch_profile" />
+				<objects VAL="txt_press_ggp" />
+				<objects VAL="button_login_ggp" />
+				<objects VAL="txt_validate_ggp" />
+				<objects VAL="txt_login_ggp" />
+				<objects VAL="ico_wait_prosperoscarlett" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="PC">
+				<objects VAL="txt_player_name" />
+				<objects VAL="txt_switch_profile" />
+				<objects VAL="txt_press_ggp" />
+				<objects VAL="button_login_ggp" />
+				<objects VAL="txt_validate_ggp" />
+				<objects VAL="txt_login_ggp" />
+				<objects VAL="ico_wait_prosperoscarlett" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="NX">
+				<objects VAL="txt_player_name" />
+				<objects VAL="txt_switch_profile" />
+				<objects VAL="txt_press_ggp" />
+				<objects VAL="button_login_ggp" />
+				<objects VAL="txt_validate_ggp" />
+				<objects VAL="txt_login_ggp" />
+				<objects VAL="ico_wait_prosperoscarlett" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="DURANGO">
+				<objects VAL="txt_press_ggp" />
+				<objects VAL="button_login_ggp" />
+				<objects VAL="txt_validate_ggp" />
+				<objects VAL="txt_login_ggp" />
+				<objects VAL="ico_wait_prosperoscarlett" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="GGP">
+				<objects VAL="txt_switch_profile" />
+				<objects VAL="txt_press_to_continue" />
+				<objects VAL="ico_wait_prosperoscarlett" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="PROSPERO">
+				<objects VAL="txt_player_name" />
+				<objects VAL="txt_switch_profile" />
+				<objects VAL="txt_press_ggp" />
+				<objects VAL="button_login_ggp" />
+				<objects VAL="txt_validate_ggp" />
+				<objects VAL="txt_login_ggp" />
+				<objects VAL="ico_wait" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="SCARLETT">
+				<objects VAL="txt_press_ggp" />
+				<objects VAL="button_login_ggp" />
+				<objects VAL="txt_validate_ggp" />
+				<objects VAL="txt_login_ggp" />
+				<objects VAL="ico_wait" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<PLATFORM_FILTER>
+			<TargetFilterList platform="invalidplatform">
+				<objects VAL="txt_press_ggp" />
+				<objects VAL="button_login_ggp" />
+				<objects VAL="txt_validate_ggp" />
+				<objects VAL="txt_login_ggp" />
+				<objects VAL="ico_wait_prosperoscarlett" />
+			</TargetFilterList>
+		</PLATFORM_FILTER>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="start" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/screens/start/start.tpl">
+				<COMPONENTS NAME="UIScreenComponent">
+					<UIScreenComponent allowDpadNavigation="1" soundContext="TitlePage" shortcutsConfig_DEFAULT="-" shortcutsConfig_SWITCH="-" shortcutsConfig_PS4="-" shortcutsConfig_XB1="-" shortcutsConfig_PC="-" shortcutsConfig_GGP="-" shortcutsConfig_PROSPERO="-" shortcutsConfig_SCARLETT="-" shortcutsFromCenterInsteadFromLeft="0" shortcutsHorizontalShift="0">
+						<ENUM NAME="cursorActivation" SEL="0" />
+						<phoneSetupUiData>
+							<PhoneSetupData isPopup="0" hasVisibleActions="1">
+								<ENUM NAME="carouselBuild" SEL="0" />
+							</PhoneSetupData>
+						</phoneSetupUiData>
+					</UIScreenComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.300000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="dummy_login_ggp" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 -288.587189" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.000000 -288.587189 0.300000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="-0.100000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="fx_cta_calm" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/fx/fx_cta/fx_cta.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.000000 0.000000 -0.100000" offsetAngle="0.000000" localScale="4.201660 4.201659" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="FXControllerComponent">
+					<FXControllerComponent allowBusMixEvents="0" allowMusicEvents="0" />
+				</COMPONENTS>
+				<COMPONENTS NAME="FxBankComponent">
+					<FxBankComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" drawDebug="0" drawDebugTextOffset="0.000000 0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+					</FxBankComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.020000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_11" MARKER="" DEFAULTENABLE="1" POS2D="-477.506226 -170.508667" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="-477.506226 66.496460 0.020000" offsetAngle="0.000000" localScale="282.588837 282.588837" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_yellow.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_11.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.010000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_12" MARKER="" DEFAULTENABLE="1" POS2D="-451.311279 -48.136749" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="-451.311279 188.868378 0.010000" offsetAngle="0.000000" localScale="242.945282 242.945282" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_yellow.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_12.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.300000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_press_to_continue" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 -262.998108" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/textbox.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.000000 -262.998108 0.300000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="2" overridingFontSize="24.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="" useLinesMaxCount="0" linesMaxCount="1" locId="10227" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" autoScrollSharpAlignMinimum="0.000000" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="0.341176 0.341176 0.341176 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0" colorizeIcons="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="autoScrollSharpAlign" SEL="-1" />
+						<ENUM NAME="overridingBlendMode" SEL="0" />
+						<ENUM NAME="overridingHAlignment" SEL="1" />
+						<ENUM NAME="overridingVAlignment" SEL="1" />
+						<ENUM NAME="overridingAnchor" SEL="4" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="-0.200000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_white" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.000000 0.000000 -0.200000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/16x9_screen.atl" shaderPath="world/ui/materials/bkg_white.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="ico_wait" MARKER="" DEFAULTENABLE="1" POS2D="0.172648 -301.688507" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/graphic_autopatcher.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.172648 -301.688507 1.000000" offsetAngle="0.000000" localScale="17.417391 17.417391" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="0.341176 0.341176 0.341176 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/ico_waiting.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/ico_waiting.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/ico_waiting.tga" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="PropertyPatcher">
+					<PropertyPatcher applyOnActivation="1" ignoreActorsInSubScenes="0" />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.010000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_09" MARKER="" DEFAULTENABLE="1" POS2D="473.460846 224.193604" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="473.460846 461.198730 0.010000" offsetAngle="0.000000" localScale="354.213654 354.213654" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_yellow.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_09.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.300000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="txt_wait" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 -258.469330" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/textbox.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.000000 -258.469330 0.300000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="2" overridingFontSize="25.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="" useLinesMaxCount="0" linesMaxCount="1" locId="12323" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" autoScrollSharpAlignMinimum="0.000000" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="0.341176 0.341176 0.341176 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0" colorizeIcons="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="autoScrollSharpAlign" SEL="-1" />
+						<ENUM NAME="overridingBlendMode" SEL="0" />
+						<ENUM NAME="overridingHAlignment" SEL="1" />
+						<ENUM NAME="overridingVAlignment" SEL="0" />
+						<ENUM NAME="overridingAnchor" SEL="4" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.010000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_08" MARKER="" DEFAULTENABLE="1" POS2D="373.371246 266.049927" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="373.371246 503.055054 0.010000" offsetAngle="0.000000" localScale="311.605927 311.605927" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_yellow.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_08.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.060000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="coach_05" MARKER="" DEFAULTENABLE="1" POS2D="331.558014 -266.655212" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="sliver_05" typeData="0" offsetPos="0.392914 0.584991 -0.010000" offsetAngle="0.000000" localScale="0.926459 0.926459" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/title_screen/coaches/coach_07.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.070000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_05" MARKER="" DEFAULTENABLE="1" POS2D="331.165100 -267.240204" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="331.165100 -30.235077 0.070000" offsetAngle="0.000000" localScale="277.751495 277.751495" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_yellow.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_10.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="dummy_sliver" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 -237.005127" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.000000 -237.005127 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.300000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="Logo" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 -19.000744" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="start" typeData="0" offsetPos="0.000000 -19.000744 0.300000" offsetAngle="0.000000" localScale="145.970200 145.970200" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/logo/jd21_logo.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.020000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_01" MARKER="" DEFAULTENABLE="1" POS2D="-121.447464 197.497559" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="-121.447464 434.502686 0.020000" offsetAngle="0.000000" localScale="304.945648 304.945648" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_pink.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_02.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.020000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_02" MARKER="" DEFAULTENABLE="1" POS2D="108.391769 197.980591" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="108.391769 434.985718 0.020000" offsetAngle="0.000000" localScale="322.309814 322.309814" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_blue.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_03.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.050000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="coach_02" MARKER="" DEFAULTENABLE="1" POS2D="108.383026 198.032074" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="sliver_02" typeData="0" offsetPos="-0.008743 0.051483 0.030000" offsetAngle="0.000000" localScale="0.397352 0.397352" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/title_screen/coaches/coach_02.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.030000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_06" MARKER="" DEFAULTENABLE="1" POS2D="-183.166046 -100.324722" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="-183.166046 136.680405 0.030000" offsetAngle="0.000000" localScale="312.114319 312.114319" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_blue.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_07.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.010000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_07" MARKER="" DEFAULTENABLE="1" POS2D="-360.697021 149.960541" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="-360.697021 386.965668 0.010000" offsetAngle="0.000000" localScale="300.663513 300.663513" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_orange.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_left.tga" diffuse_4="world/ui/textures/title_screen/sliver_01.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.050000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="coach_01" MARKER="" DEFAULTENABLE="1" POS2D="-121.343597 197.514862" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="sliver_01" typeData="0" offsetPos="0.103867 0.017303 0.030000" offsetAngle="0.000000" localScale="0.469074 0.469074" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/title_screen/coaches/coach_01.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.020000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_03" MARKER="" DEFAULTENABLE="1" POS2D="189.153412 80.699646" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="189.153412 317.704773 0.020000" offsetAngle="0.000000" localScale="320.030334 320.030334" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_green.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_04.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.020000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_04" MARKER="" DEFAULTENABLE="1" POS2D="287.953003 -136.209839" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="287.953003 100.795288 0.020000" offsetAngle="0.000000" localScale="342.000000 342.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_orange.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_05.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.050000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="coach_03" MARKER="" DEFAULTENABLE="1" POS2D="189.143982 80.689171" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="sliver_03" typeData="0" offsetPos="-0.009430 -0.010475 0.030000" offsetAngle="0.000000" localScale="0.474122 0.474122" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/title_screen/coaches/coach_03.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.020000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="sliver_10" MARKER="" DEFAULTENABLE="1" POS2D="-75.715431 -161.124161" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_sliver" typeData="0" offsetPos="-75.715431 75.880966 0.020000" offsetAngle="0.000000" localScale="279.655609 279.655609" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x2.atl" shaderPath="world/ui/materials/mosaic/mosaic_titlescreen_pink.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/mosaic/mosaic_left.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/mosaic/mosaic_right.tga" diffuse_4="world/ui/textures/title_screen/sliver_06.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.050000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="coach_04" MARKER="" DEFAULTENABLE="1" POS2D="287.697052 -136.202087" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="sliver_04" typeData="0" offsetPos="-0.255951 0.007751 0.030000" offsetAngle="0.000000" localScale="0.539310 0.539310" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/title_screen/coaches/coach_04.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.050000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="coach_06" MARKER="" DEFAULTENABLE="1" POS2D="-183.181702 -100.187263" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="sliver_06" typeData="0" offsetPos="-0.015656 0.137459 0.020000" offsetAngle="0.000000" localScale="0.528584 0.528584" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/title_screen/coaches/coach_05.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.015000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="coach_07" MARKER="" DEFAULTENABLE="1" POS2D="-360.871338 149.826797" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="sliver_07" typeData="0" offsetPos="-0.174316 -0.133743 0.005000" offsetAngle="0.000000" localScale="0.692657 0.692657" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/title_screen/coaches/coach_06.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<sceneConfigs>
+			<SceneConfigs activeSceneConfig="0">
+				<sceneConfigs NAME="JD_MapSceneConfig">
+					<JD_MapSceneConfig name="" soundContext="" hud="0">
+						<ENUM NAME="Pause_Level" SEL="6" />
+						<ENUM NAME="type" SEL="2" />
+						<ENUM NAME="musicscore" SEL="2" />
+					</JD_MapSceneConfig>
+				</sceneConfigs>
+			</SceneConfigs>
+		</sceneConfigs>
+	</Scene>
+</root>

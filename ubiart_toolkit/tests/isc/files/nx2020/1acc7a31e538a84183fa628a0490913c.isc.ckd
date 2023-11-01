@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<root>
+	<Scene ENGINE_VERSION="284652" GRIDUNIT="0.500000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1" isPopup="1">
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="root" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/screens/exposition_home_article/exposition_home_article.tpl">
+				<COMPONENTS NAME="JD_ScrollingTextComponent">
+					<JD_ScrollingTextComponent />
+				</COMPONENTS>
+				<COMPONENTS NAME="PropertyPatcher">
+					<PropertyPatcher applyOnActivation="0" ignoreActorsInSubScenes="0">
+						<propertyPatches>
+							<PropertyPatch marker="title" invertActivationApply="0" patchedOnDataStatusChanged="">
+								<action NAME="PropertyPatchAction_Text">
+									<PropertyPatchAction_Text duplicationCount="1" duplicationSeperator=" " />
+								</action>
+							</PropertyPatch>
+						</propertyPatches>
+						<propertyPatches>
+							<PropertyPatch marker="text" invertActivationApply="0" patchedOnDataStatusChanged="">
+								<action NAME="PropertyPatchAction_Text">
+									<PropertyPatchAction_Text duplicationCount="1" duplicationSeperator=" " />
+								</action>
+							</PropertyPatch>
+						</propertyPatches>
+						<propertyPatches>
+							<PropertyPatch marker="paging" invertActivationApply="0" patchedOnDataStatusChanged="">
+								<action NAME="PropertyPatchAction_Text">
+									<PropertyPatchAction_Text duplicationCount="1" duplicationSeperator=" " />
+								</action>
+							</PropertyPatch>
+						</propertyPatches>
+						<propertyPatches>
+							<PropertyPatch marker="tile_thumbnail" invertActivationApply="0" patchedOnDataStatusChanged="">
+								<action NAME="PropertyPatchAction_Texture">
+									<PropertyPatchAction_Texture MaterialIndex="0">
+										<TexturePatches VAL="diffuse" />
+									</PropertyPatchAction_Texture>
+								</action>
+							</PropertyPatch>
+						</propertyPatches>
+					</PropertyPatcher>
+				</COMPONENTS>
+				<COMPONENTS NAME="UIScreenComponent">
+					<UIScreenComponent allowDpadNavigation="1" soundContext="Popup" shortcutsConfig_DEFAULT="TIPS_PREVIOUS/TIPS_NEXT/BACK" shortcutsConfig_SWITCH="-" shortcutsConfig_PS4="-" shortcutsConfig_XB1="-" shortcutsConfig_PC="-" shortcutsConfig_GGP="-" shortcutsFromCenterInsteadFromLeft="1" shortcutsHorizontalShift="0">
+						<ENUM NAME="cursorActivation" SEL="0" />
+						<phoneSetupUiData>
+							<PhoneSetupData isPopup="0" hasVisibleActions="0">
+								<ENUM NAME="carouselBuild" SEL="2" />
+							</PhoneSetupData>
+						</phoneSetupUiData>
+					</UIScreenComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="2.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="dummy_popup" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 2.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="4.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="title" MARKER="title" DEFAULTENABLE="1" POS2D="0.000000 296.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/textbox.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="0.000000 296.000000 2.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="3" overridingFontSize="40.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="1.000000" maxWidth="980.000000" maxHeight="82.000000" area="980.000000 82.000000" rawText="#title #title #title" useLinesMaxCount="0" linesMaxCount="2" locId="4294967295" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.200000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" autoScrollSharpAlignMinimum="2.000000" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="1.000000 1.000000 1.000000 1.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="-5.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0" colorizeIcons="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="autoScrollSharpAlign" SEL="0" />
+						<ENUM NAME="overridingBlendMode" SEL="0" />
+						<ENUM NAME="overridingHAlignment" SEL="1" />
+						<ENUM NAME="overridingVAlignment" SEL="1" />
+						<ENUM NAME="overridingAnchor" SEL="1" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="3.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="thumbnail" MARKER="tile_thumbnail" DEFAULTENABLE="1" POS2D="-273.911621 179.999969" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_uinineslicecomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="-273.911621 179.999969 1.000000" offsetAngle="0.000000" localScale="395.520508 277.288513" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UINineSliceComponent">
+					<UINineSliceComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000" TopSlice="0.500000" BottomSlice="0.500000" LeftSlice="0.500000" RightSlice="0.500000" TopSliceScale="15.000000" BottomSliceScale="15.000000" LeftSliceScale="15.000000" RightSliceScale="15.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="4" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/alpha_g_9slice_home_article_popup.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/blank.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/blank.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/blank.tga" diffuse_4="world/ui/textures/circle_disc.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="4" />
+					</UINineSliceComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="3.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="text" DEFAULTENABLE="1" POS2D="-40.000000 190.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/textbox.tpl">
+				<MARKERS VAL="text" />
+				<MARKERS VAL="scrolling_text" />
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="-40.000000 190.000000 1.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="2" overridingFontSize="26.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="0.000000" maxWidth="500.000000" maxHeight="450.000000" area="500.000000 4000.000000" rawText="Welcome to Just Dance 2019!\nYour favourite dancing game is back, with the biggest hits of the year on the tracklist!\nDance to hits by Bruno Mars, Camilla Cabello, Dua Lipa and many others!As always, you can compete with other Just Dancers around the world in World Dancefloor, discover crazy renditions of the songs you know so well and be surprised with others, that you might not be expecting...\n\nSo what's new about Just Dance 2019 ? \nJust Dance 2019 learns your music tastes and dancing patterns, so it can suggest you maps that you might like, that match your favourite music type, intensity, length and style, the number of friends you're dancing with - so you can diversify your dancing playlist more easily!\nWe created multiple playlists for every mood and every occasion, so whenever you don't know which songs to just dance to - we got you covered!\nKids Mode is also back!Just Dance 2019 features new 8 maps that we designed especially for our younger just dancers in cooperation with children's experts.\nJust Dance 2019 also comes with free month of Just Dance Unlimited* access.In case you didn't know, Just Dance Unlimited is a live service allowing you to access over 400 different tracks you can dance to!It's certainly a real treat for Just Dance lovers.\n\nJoin us for this dance!\n - Just Dance Team" useLinesMaxCount="0" linesMaxCount="1" locId="4294967295" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" autoScrollSharpAlignMinimum="0.000000" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="0.000000 0.000000 0.000000 0.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="6.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0" colorizeIcons="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="1" />
+						<ENUM NAME="autoScrollSharpAlign" SEL="-1" />
+						<ENUM NAME="overridingBlendMode" SEL="0" />
+						<ENUM NAME="overridingHAlignment" SEL="0" />
+						<ENUM NAME="overridingVAlignment" SEL="0" />
+						<ENUM NAME="overridingAnchor" SEL="0" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="SubSceneActor">
+			<SubSceneActor RELATIVEZ="5.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="scrollbar" MARKER="" DEFAULTENABLE="1" POS2D="493.992096 178.173782" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui_graphic.tpl" RELATIVEPATH="world/ui/objects/scrollbar/scrollbar_exposition_home_article.isc" EMBED_SCENE="1" IS_SINGLE_PIECE="0" ZFORCED="1" DIRECT_PICKING="1" IGNORE_SAVE="1">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="493.992096 178.173782 3.000000" offsetAngle="0.000000" localScale="1.000000 0.600000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIComponent">
+					<UIComponent />
+				</COMPONENTS>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+				<ENUM NAME="viewType" SEL="0" />
+				<SCENE>
+					<Scene ENGINE_VERSION="284652" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1" isPopup="0">
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/scrollbar/scrollbar.tpl">
+								<COMPONENTS NAME="UIRootComponent">
+									<UIRootComponent snapOffset="0.000000 0.000000">
+										<Collision>
+											<UIWidgetCollisionBox Width="100.000000" Height="100.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+										</Collision>
+									</UIRootComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="MaterialGraphicComponent">
+									<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+												<outlinedMaskParams>
+													<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+												</outlinedMaskParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</MaterialGraphicComponent>
+								</COMPONENTS>
+								<COMPONENTS NAME="JD_ScrollBarComponent">
+									<JD_ScrollBarComponent MinCursorHalfSize="13.300000" MaxCursorHalfSize="100.000000" />
+								</COMPONENTS>
+								<COMPONENTS NAME="TapeCase_Component">
+									<TapeCase_Component />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui_graphic_nineslice.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="10.000000 729.008362" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UINineSliceComponent">
+									<UINineSliceComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000" TopSlice="0.380000" BottomSlice="0.380000" LeftSlice="0.380000" RightSlice="0.380000" TopSliceScale="11.000000" BottomSliceScale="11.000000" LeftSliceScale="11.000000" RightSliceScale="11.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="0.000000 0.000000 0.000000 0.098039">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="4" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/alpha_g_scrollbar.msh" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/solid_white.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/solid_white.tga" diffuse_4="world/ui/textures/round_corner_slice_01.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+												<outlinedMaskParams>
+													<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+												</outlinedMaskParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="4" />
+									</UINineSliceComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="scrollbar_bottom" MARKER="scrollbar_bottom" DEFAULTENABLE="1" POS2D="0.000000 -729.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/anchor.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 -729.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UIAnchor">
+									<UIAnchor anchorIdx="1" />
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<ACTORS NAME="Actor">
+							<Actor RELATIVEZ="0.001000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="cursor" MARKER="scrollbar_cursor" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui_graphic_nineslice.tpl">
+								<parentBind>
+									<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.001000" offsetAngle="0.000000" localScale="10.000000 26.666000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+										<ENUM NAME="type" SEL="0" />
+										<ENUM NAME="scaleInheritProp" SEL="2" />
+									</Bind>
+								</parentBind>
+								<COMPONENTS NAME="UINineSliceComponent">
+									<UINineSliceComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000" TopSlice="0.380000" BottomSlice="0.380000" LeftSlice="0.380000" RightSlice="0.380000" TopSliceScale="11.000000" BottomSliceScale="11.000000" LeftSliceScale="11.000000" RightSliceScale="11.000000">
+										<PrimitiveParameters>
+											<GFXPrimitiveParam colorFactor="0.517647 0.498039 0.576471 1.000000">
+												<ENUM NAME="gfxOccludeInfo" SEL="0" />
+											</GFXPrimitiveParam>
+										</PrimitiveParameters>
+										<ENUM NAME="anchor" SEL="1" />
+										<material>
+											<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/alpha_g_scrollbar.msh" alphaTest="4294967295" alphaRef="4294967295">
+												<textureSet>
+													<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/solid_white.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/solid_white.tga" diffuse_4="world/ui/textures/round_corner_slice_01.tga" />
+												</textureSet>
+												<materialParams>
+													<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+												</materialParams>
+												<outlinedMaskParams>
+													<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+												</outlinedMaskParams>
+											</GFXMaterialSerializable>
+										</material>
+										<ENUM NAME="oldAnchor" SEL="1" />
+									</UINineSliceComponent>
+								</COMPONENTS>
+							</Actor>
+						</ACTORS>
+						<sceneConfigs>
+							<SceneConfigs activeSceneConfig="0">
+								<sceneConfigs NAME="JD_MapSceneConfig">
+									<JD_MapSceneConfig name="" soundContext="" hud="0">
+										<ENUM NAME="Pause_Level" SEL="2" />
+										<ENUM NAME="type" SEL="2" />
+										<ENUM NAME="musicscore" SEL="2" />
+									</JD_MapSceneConfig>
+								</sceneConfigs>
+							</SceneConfigs>
+						</sceneConfigs>
+					</Scene>
+				</SCENE>
+			</SubSceneActor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="fx_background" MARKER="" DEFAULTENABLE="1" POS2D="0.359100 -345.058289" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/fx/fx_background/fx_background.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="0.359100 -345.058289 1.000000" offsetAngle="0.000000" localScale="2.000000 2.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="FXControllerComponent">
+					<FXControllerComponent allowBusMixEvents="0" allowMusicEvents="0" />
+				</COMPONENTS>
+				<COMPONENTS NAME="FxBankComponent">
+					<FxBankComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" drawDebug="0" drawDebugTextOffset="0.000000 0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+					</FxBankComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="3.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="paging" MARKER="paging" DEFAULTENABLE="1" POS2D="-472.000000 -128.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/textbox.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="-472.000000 -128.000000 1.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UITextBox">
+					<UITextBox style="2" overridingFontSize="26.000000" offset="0.000000 0.000000" scale="1.000000 1.000000" alpha="1.000000" maxWidth="-1.000000" maxHeight="-1.000000" area="-1.000000 -1.000000" rawText="1/20" useLinesMaxCount="0" linesMaxCount="1" locId="4294967295" autoScrollSpeed="0.000000" autoScrollSpeedY="0.000000" autoScrollWaitTime="0.000000" autoScrollWaitTimeY="0.000000" autoScrollFontEffectName="" autoScrollResetOnInactive="0" scrollOnce="0" autoScrollSharpAlignMinimum="0.000000" linesBetweenLoopingText="-1.000000" numberOfCharactersToForceBreak="0" overridingColor="0.000000 0.000000 0.000000 0.000000" overridingShadowColor="0.000000 0.000000 0.000000 0.000000" overridingShadowOffset="0.000000 0.000000" overridingLineSpacing="0.000000" adapteFontSize="0" overridingFontSizeMin="-1.000000" endingDots="0" colorizeIcons="0">
+						<ENUM NAME="textCase" SEL="-1" />
+						<ENUM NAME="autoScrollType" SEL="-1" />
+						<ENUM NAME="autoScrollDirection" SEL="0" />
+						<ENUM NAME="autoScrollSharpAlign" SEL="-1" />
+						<ENUM NAME="overridingBlendMode" SEL="0" />
+						<ENUM NAME="overridingHAlignment" SEL="0" />
+						<ENUM NAME="overridingVAlignment" SEL="-1" />
+						<ENUM NAME="overridingAnchor" SEL="2" />
+					</UITextBox>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="4.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bottom_line" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 -280.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="enginedata/actortemplates/tpl_materialgraphiccomponent.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="0.000000 -280.000000 2.000000" offsetAngle="0.000000" localScale="940.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="0.901961 0.901961 0.901961 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="6" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/1x1.atl" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="6" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_container_glow" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 -10.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui_graphic_nineslice.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="0.000000 -10.000000 -1.000000" offsetAngle="0.000000" localScale="1230.000000 830.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UINineSliceComponent">
+					<UINineSliceComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000" TopSlice="0.500000" BottomSlice="0.500000" LeftSlice="0.500000" RightSlice="0.500000" TopSliceScale="256.000000" BottomSliceScale="256.000000" LeftSliceScale="256.000000" RightSliceScale="256.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="0.145098 0.486275 0.929412 0.501961">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha_b_9slice_nomulti.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/9slice_rounded_15/glow.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</UINineSliceComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="2.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_container" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui_graphic_nineslice.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="1114.226929 720.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UINineSliceComponent">
+					<UINineSliceComponent colorComputerTagId="0" renderInTarget="0" disableLight="1" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000" TopSlice="0.500000" BottomSlice="0.500000" LeftSlice="0.500000" RightSlice="0.500000" TopSliceScale="64.000000" BottomSliceScale="64.000000" LeftSliceScale="64.000000" RightSliceScale="64.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/_common/alpha_b_9slice_nomulti.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/9slice_rounded_15/bkg_inner_thin.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</UINineSliceComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="3.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="bkg_title" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 305.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui_graphic_nineslice.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_popup" typeData="0" offsetPos="0.000000 305.000000 1.000000" offsetAngle="0.000000" localScale="1114.000000 110.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UINineSliceComponent">
+					<UINineSliceComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000" TopSlice="0.500000" BottomSlice="0.500000" LeftSlice="0.500000" RightSlice="0.500000" TopSliceScale="64.000000" BottomSliceScale="0.000000" LeftSliceScale="64.000000" RightSliceScale="64.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="world/ui/materials/liquid_gradient/liquid_gradient_title_home_article.msh" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="world/ui/textures/liquid_gradient/liquid_gradient_1.tga" back_light_2="" anim_impostor="" diffuse_3="world/ui/textures/liquid_gradient/liquide_gradient_horizontal_0.tga" diffuse_4="world/ui/textures/9slice_rounded_15/bkg_inner_thin.tga" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</UINineSliceComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="dummy_blur" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 1.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="1.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="afxpostprocess_blur" MARKER="" DEFAULTENABLE="1" POS2D="497.262512 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/_common/vfx/afx/components/afxpostprocess.tpl">
+				<parentBind>
+					<Bind parentPath="dummy_blur" typeData="0" offsetPos="497.262512 0.000000 1.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="0" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="BoxInterpolatorComponent">
+					<BoxInterpolatorComponent>
+						<innerBox>
+							<AABB MIN="-41.902882 -57.344070" MAX="49.280319 75.077888" />
+						</innerBox>
+						<outerBox>
+							<AABB MIN="-401.146515 -65.025658" MAX="64.018387 85.167191" />
+						</outerBox>
+					</BoxInterpolatorComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="AFXPostProcessComponent">
+					<AFXPostProcessComponent>
+						<blur>
+							<AFX_BlurParam use="1" pixelSize="4" quality="20" />
+						</blur>
+					</AFXPostProcessComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="back_screen" MARKER="" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/graphic.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 0.992157 0.800000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="world/ui/atlas/16x9_screen.atl" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="world/ui/textures/solid_white.tga" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<sceneConfigs>
+			<SceneConfigs activeSceneConfig="0">
+				<sceneConfigs NAME="JD_MapSceneConfig">
+					<JD_MapSceneConfig name="" soundContext="" hud="0">
+						<ENUM NAME="Pause_Level" SEL="2" />
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="musicscore" SEL="2" />
+					</JD_MapSceneConfig>
+				</sceneConfigs>
+			</SceneConfigs>
+		</sceneConfigs>
+	</Scene>
+</root>

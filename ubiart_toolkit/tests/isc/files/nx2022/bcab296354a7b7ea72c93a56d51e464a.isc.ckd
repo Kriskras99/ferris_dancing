@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<root>
+	<Scene ENGINE_VERSION="326704" GRIDUNIT="1.000000" DEPTH_SEPARATOR="0" NEAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" FAR_SEPARATOR="1.000000 0.000000 0.000000 0.000000, 0.000000 1.000000 0.000000 0.000000, 0.000000 0.000000 1.000000 0.000000, 0.000000 0.000000 0.000000 1.000000" viewFamily="1" isPopup="0">
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="root" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/objects/exposition_grid_items/item_search_grid/item_search_grid.tpl">
+				<MARKERS VAL="root" />
+				<MARKERS VAL="search_grid_root_marker" />
+				<COMPONENTS NAME="UIRootComponent">
+					<UIRootComponent snapOffset="0.000000 0.000000">
+						<Collision>
+							<UIWidgetCollisionBox Width="200.000000" Height="200.000000" CenterOffsetX="0.000000" CenterOffsetY="0.000000" />
+						</Collision>
+					</UIRootComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="PropertyPatcher">
+					<PropertyPatcher applyOnActivation="1" ignoreActorsInSubScenes="0">
+						<propertyPatches>
+							<PropertyPatch marker="icon" invertActivationApply="0" patchedOnDataStatusChanged="">
+								<action NAME="PropertyPatchAction_Texture">
+									<PropertyPatchAction_Texture MaterialIndex="0">
+										<TexturePatches VAL="diffuse" />
+									</PropertyPatchAction_Texture>
+								</action>
+								<values NAME="PropertyPatchValue_Path">
+									<PropertyPatchValue_Path VALUE="world/ui/textures/ico_tab_home.tga" />
+								</values>
+							</PropertyPatch>
+						</propertyPatches>
+					</PropertyPatcher>
+				</COMPONENTS>
+				<COMPONENTS NAME="MaterialGraphicComponent">
+					<MaterialGraphicComponent colorComputerTagId="0" renderInTarget="0" disableLight="0" disableShadow="1" AtlasIndex="0" customAnchor="0.000000 0.000000" SinusAmplitude="0.000000 0.000000 0.000000" SinusSpeed="1.000000" AngleX="0.000000" AngleY="0.000000">
+						<PrimitiveParameters>
+							<GFXPrimitiveParam colorFactor="1.000000 1.000000 1.000000 0.000000">
+								<ENUM NAME="gfxOccludeInfo" SEL="0" />
+							</GFXPrimitiveParam>
+						</PrimitiveParameters>
+						<ENUM NAME="anchor" SEL="1" />
+						<material>
+							<GFXMaterialSerializable ATL_Channel="0" ATL_Path="" shaderPath="" alphaTest="4294967295" alphaRef="4294967295">
+								<textureSet>
+									<GFXMaterialTexturePathSet diffuse="" back_light="" normal="" separateAlpha="" diffuse_2="" back_light_2="" anim_impostor="" diffuse_3="" diffuse_4="" />
+								</textureSet>
+								<materialParams>
+									<GFXMaterialSerializableParam Reflector_factor="0.000000" />
+								</materialParams>
+								<outlinedMaskParams>
+									<OutlinedMaskMaterialParams maskColor="0.000000 0.000000 0.000000 0.000000" outlineColor="0.000000 0.000000 0.000000 0.000000" thickness="1.000000" />
+								</outlinedMaskParams>
+							</GFXMaterialSerializable>
+						</material>
+						<ENUM NAME="oldAnchor" SEL="1" />
+					</MaterialGraphicComponent>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.010000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="search_grid" MARKER="search_grid" DEFAULTENABLE="1" POS2D="0.000000 0.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/ui_grid_regular_patterned.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="0.000000 0.000000 0.010000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="JD_Grid_RegularPatterned">
+					<JD_Grid_RegularPatterned mainAnchor="0" validateAction="menu_valid" carouselDataID="grid_search_dataId" manageCarouselHistory="1" switchSpeed="2.000000" shortcutsConfig_DEFAULT="DANCE/BACK/SHOW_IN_SONGS_TAB/ACTIVATE_SWEAT/ADD_TO_PLAYLIST" shortcutsConfig_SWITCH="-" shortcutsConfig_PS4="-" shortcutsConfig_XB1="-" shortcutsConfig_PC="-" shortcutsConfig_GGP="-" shortcutsConfig_Prospero="-" shortcutsConfig_Scarlett="-" shortcutsFromCenterInsteadFromLeft="0" shortcutsHorizontalShift="243" initialBehaviour="navigationgrid_v1" soundContext="ExpoGrid" gridArea_topLeftMarker="gridarea_topleft_search" gridArea_bottomRightMarker="gridarea_bottomright_search" cursorArea_topLeftMarker="cursorarea_topleft_search" cursorArea_bottomRightMarker="cursorarea_bottomright_search" centerGrid="0">
+						<behaviours NAME="CarouselBehaviour_NavigationGrid" KEY="navigationgrid_v2">
+							<VAL>
+								<CarouselBehaviour_NavigationGrid soundContext="" soundNotifGoNext="Next" soundNotifGoPrev="Next" animSetupID="navigation_search_grid_v2" decelTapeLabel="decel" timeBetweenStep="0.200000">
+									<stopConditions>
+										<StopCondition waitingTime="0.000000" countToReach="0" nextBehaviour="navigationgrid_v1">
+											<ENUM NAME="condition" SEL="2" />
+											<ENUM NAME="animState" SEL="5" />
+										</StopCondition>
+									</stopConditions>
+									<ENUM NAME="scrollMode" SEL="2" />
+									<nextActions VAL="menu_lstick_right" />
+									<nextActions VAL="menu_dpad_right" />
+									<nextActions VAL="menu_phone_right" />
+									<prevActions VAL="menu_lstick_left" />
+									<prevActions VAL="menu_dpad_left" />
+									<prevActions VAL="menu_phone_left" />
+									<ENUM NAME="gridNavigationAxis" SEL="2" />
+									<upActions VAL="menu_lstick_up" />
+									<upActions VAL="menu_dpad_up" />
+									<upActions VAL="menu_phone_up" />
+									<downActions VAL="menu_lstick_down" />
+									<downActions VAL="menu_dpad_down" />
+									<downActions VAL="menu_phone_down" />
+								</CarouselBehaviour_NavigationGrid>
+							</VAL>
+						</behaviours>
+						<behaviours NAME="CarouselBehaviour_NavigationGrid" KEY="navigationgrid_v1">
+							<VAL>
+								<CarouselBehaviour_NavigationGrid soundContext="" soundNotifGoNext="Next" soundNotifGoPrev="Next" animSetupID="navigation_search_grid_v1" decelTapeLabel="decel" timeBetweenStep="0.200000">
+									<stopConditions>
+										<StopCondition waitingTime="1.200000" countToReach="0" nextBehaviour="navigationgrid_v2">
+											<ENUM NAME="condition" SEL="4" />
+											<ENUM NAME="animState" SEL="0" />
+										</StopCondition>
+									</stopConditions>
+									<ENUM NAME="scrollMode" SEL="2" />
+									<nextActions VAL="menu_lstick_right" />
+									<nextActions VAL="menu_dpad_right" />
+									<nextActions VAL="menu_phone_right" />
+									<prevActions VAL="menu_lstick_left" />
+									<prevActions VAL="menu_dpad_left" />
+									<prevActions VAL="menu_phone_left" />
+									<ENUM NAME="gridNavigationAxis" SEL="2" />
+									<upActions VAL="menu_lstick_up" />
+									<upActions VAL="menu_dpad_up" />
+									<upActions VAL="menu_phone_up" />
+									<downActions VAL="menu_lstick_down" />
+									<downActions VAL="menu_dpad_down" />
+									<downActions VAL="menu_phone_down" />
+								</CarouselBehaviour_NavigationGrid>
+							</VAL>
+						</behaviours>
+						<animItemsDesc>
+							<BrowserAnimItemsDesc enable="0" showItemsAtInit="0" enableBrowserOnAnimEnds="1" checkItemsVisibilityOnAnimEnds="1" />
+						</animItemsDesc>
+					</JD_Grid_RegularPatterned>
+				</COMPONENTS>
+				<COMPONENTS NAME="TapeCase_Component">
+					<TapeCase_Component />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@SearchGridTopLeft" MARKER="gridarea_topleft_search" DEFAULTENABLE="1" POS2D="-20.000031 278.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/anchor.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="-20.000031 278.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIAnchor">
+					<UIAnchor anchorIdx="0" />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@SearchGridBottomRight" MARKER="gridarea_bottomright_search" DEFAULTENABLE="1" POS2D="561.000000 -339.999908" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/anchor.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="561.000000 -339.999908 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIAnchor">
+					<UIAnchor anchorIdx="0" />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@SearchCursorTopLeft" MARKER="cursorarea_topleft_search" DEFAULTENABLE="1" POS2D="-10.000030 276.000000" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/anchor.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="-10.000030 276.000000 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIAnchor">
+					<UIAnchor anchorIdx="0" />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<ACTORS NAME="Actor">
+			<Actor RELATIVEZ="0.000000" SCALE="1.000000 1.000000" xFLIPPED="0" USERFRIENDLY="anchor@SearchCursorBottomRight" MARKER="cursorarea_bottomright_search" DEFAULTENABLE="1" POS2D="545.000000 -135.979858" ANGLE="0.000000" INSTANCEDATAFILE="" LUA="world/ui/components/anchor.tpl">
+				<parentBind>
+					<Bind parentPath="root" typeData="0" offsetPos="545.000000 -135.979858 0.000000" offsetAngle="0.000000" localScale="1.000000 1.000000" useParentFlip="1" useParentAlpha="1" useParentColor="0" removeWithParent="0">
+						<ENUM NAME="type" SEL="0" />
+						<ENUM NAME="scaleInheritProp" SEL="2" />
+					</Bind>
+				</parentBind>
+				<COMPONENTS NAME="UIAnchor">
+					<UIAnchor anchorIdx="0" />
+				</COMPONENTS>
+			</Actor>
+		</ACTORS>
+		<sceneConfigs>
+			<SceneConfigs activeSceneConfig="0">
+				<sceneConfigs NAME="JD_MapSceneConfig">
+					<JD_MapSceneConfig name="" soundContext="" hud="0">
+						<ENUM NAME="Pause_Level" SEL="2" />
+						<ENUM NAME="type" SEL="2" />
+						<ENUM NAME="musicscore" SEL="2" />
+					</JD_MapSceneConfig>
+				</sceneConfigs>
+			</SceneConfigs>
+		</sceneConfigs>
+	</Scene>
+</root>

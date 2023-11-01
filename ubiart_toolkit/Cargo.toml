@@ -1,0 +1,96 @@
+[package]
+name = "ubiart_toolkit"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/kriskras99/ferris_dancing"
+description = "Library and CLI tools for working with UbiArt Engine file formats"
+keywords = ["ubiart", "ipk"]
+categories = ["command-line-utilities", "parser-implementations"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { version = "1.0.75", features = ["std", "backtrace"], default-features = false}
+byteorder = { version = "1.5.0", features = ["std"], default-features = false}
+clap = { version = "4.4.7", features = ["std", "help", "usage", "suggestions", "derive"], default-features = false}
+dotstar_toolkit_utils = { version = "0.1.0", path = "../dotstar_toolkit_utils" }
+flate2 = { version = "1.0.28", features = ["rust_backend"], default-features = false}
+image = { version = "0.24.7", features = ["png"], default-features = false }
+memmap2 = { version = "0.9.0", features = ["stable_deref_trait"], default-features = false}
+nohash-hasher = { version = "0.2.0", features = ["std"], default-features = false }
+oxipng = { version = "9.0.0", optional = true, default-features = false, features = ["zopfli"] }
+quick-xml = { version = "0.31.0", features = ["serialize", "overlapped-lists"], default-features = false}
+serde = { version = "1.0", features = ["std", "derive"], default-features = false }
+serde_json = { version = "1.0.108", features = ["std", "float_roundtrip"], default-features = false }
+serde_with = { version = "3.4.0", features = ["std", "macros"], default-features = false }
+stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false}
+texpresso = { version = "2.0.1", features = [], default-features = false}
+yoke = { version = "0.7.2", features = ["alloc", "derive"], default-features = false}
+zopfli = { version = "0.8.0", optional = true, default-features = false, features = ["zlib"]}
+
+[dev-dependencies]
+datatest-stable = "0.2.3"
+
+[features]
+default = []
+oxipng = ["dep:oxipng"]
+zopfli = ["dep:zopfli", "oxipng?/zopfli"]
+full_json_types = []
+
+[[test]]
+name = "act"
+harness = false
+
+[[test]]
+name = "alias8"
+harness = false
+
+[[test]]
+name = "dtape"
+harness = false
+
+[[test]]
+name = "isc"
+harness = false
+
+[[test]]
+name = "isg"
+harness = false
+
+[[test]]
+name = "ktape"
+harness = false
+
+[[test]]
+name = "json"
+harness = false
+
+[[test]]
+name = "loc8"
+harness = false
+
+[[test]]
+name = "msh"
+harness = false
+
+[[test]]
+name = "frt"
+harness = false
+
+[[test]]
+name = "sgs"
+harness = false
+
+[[test]]
+name = "stape"
+harness = false
+
+[[test]]
+name = "tape"
+harness = false
+
+[[test]]
+name = "tpl"
+harness = false
