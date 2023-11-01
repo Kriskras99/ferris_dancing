@@ -25,6 +25,7 @@ Supports the following formats (Nintendo Switch games only!)
 | .png.ckd       | xtxtool    | Supports decoding to png         |
 | .tga.ckd       | xtxtool    | Supports decoding to png         |
 | secure_fat.gf  | sfattool   | Only lists files                 |
+
 It also has the tools `stringidtool` and `ubicrctool` for easy creation of ids as used in the UbiArt engine
 
 ## [Dolphin Toolkit](dolphin_toolkit/README.md)
