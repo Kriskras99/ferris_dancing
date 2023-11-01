@@ -1,0 +1,283 @@
+//! # Video Building
+//! Build the video scenes, actors, and video
+use std::{borrow::Cow, ffi::OsStr, path::PathBuf};
+
+use anyhow::{Context, Error};
+use dotstar_toolkit_utils::testing::test;
+use ubiart_toolkit::{cooked, utils::SplitPath};
+
+use crate::build::BuildFiles;
+
+use super::SongExportState;
+
+/// Build the video scenes, actors, and video
+pub fn build(
+    ses: &SongExportState<'_>,
+    bf: &mut BuildFiles,
+) -> Result<cooked::isc::WrappedScene<'static>, Error> {
+    let map_path = ses.map_path;
+    let cache_map_path = ses.cache_map_path;
+    let lower_map_name = ses.lower_map_name;
+    let videoscoach_cache_dir = format!("{cache_map_path}/videoscoach");
+    let videoscoach_dir = format!("{map_path}/videoscoach");
+
+    // .mpd.ckd is always the same
+    let mpd_vec = vec![
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x42, 0x4b, 0xae, 0x14, 0x3f, 0x80, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00,
+    ];
+
+    // video player actors
+    let video_player_main_act_vec = video_player_actor(ses, false)?;
+    let video_player_map_preview_act_vec = video_player_actor(ses, true)?;
+
+    // video player scenes
+    let video_scene = video_scene(ses);
+    let video_scene_vec = cooked::isc::create_vec_with_capacity_hint(&video_scene, 2700)?;
+    let video_map_preview_scene_vec =
+        cooked::isc::create_vec_with_capacity_hint(&video_map_preview_scene(ses), 1100)?;
+
+    // the actual video
+    let video_path = ses.dirs.song().join(ses.song.videofile.as_ref());
+    assert!(
+        video_path.extension().and_then(OsStr::to_str) == Some("webm"),
+        "Video file is not a webm! Transcoding is not supported: {video_path:?}"
+    );
+    test(&video_path.exists(), &true)
+        .with_context(|| format!("Video file does not exist at {video_path:?}!"))?;
+
+    bf.generated_files.add_file(
+        format!("{videoscoach_cache_dir}/{lower_map_name}.mpd.ckd"),
+        mpd_vec,
+    );
+    bf.generated_files.add_file(
+        format!("{videoscoach_cache_dir}/video_player_main.act.ckd"),
+        video_player_main_act_vec,
+    );
+    bf.generated_files.add_file(
+        format!("{videoscoach_cache_dir}/video_player_map_preview.act.ckd"),
+        video_player_map_preview_act_vec,
+    );
+    bf.generated_files.add_file(
+        format!("{videoscoach_cache_dir}/{lower_map_name}_video.isc.ckd"),
+        video_scene_vec,
+    );
+    bf.generated_files.add_file(
+        format!("{videoscoach_cache_dir}/{lower_map_name}_video_map_preview.isc.ckd"),
+        video_map_preview_scene_vec,
+    );
+
+    bf.static_files.add_file(
+        video_path,
+        PathBuf::from(format!("{videoscoach_dir}/{lower_map_name}.vp9.720.webm")),
+    )?;
+
+    Ok(cooked::isc::WrappedScene {
+        scene: video_scene.scene,
+    })
+}
+
+/// Build the video player actor
+///
+/// If `map_preview` is true it will build the preview version of the actor
+fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Vec<u8>, Error> {
+    let map_path = ses.map_path;
+    let lower_map_name = ses.lower_map_name;
+    let actor = cooked::act::Actor {
+        tpl: SplitPath {
+            path: Cow::Borrowed("world/_common/videoscreen/"),
+            filename: Cow::Borrowed("video_player_main.tpl"),
+        },
+        unk1: 0,
+        unk2: 0x3f80_0000,
+        unk2_5: 0x3f80_0000,
+        templates: vec![cooked::act::Template {
+            the_type: cooked::act::TemplateType::PleoComponent,
+            data: cooked::act::TemplateData::PleoComponent(cooked::act::PleoComponent {
+                video: Some(SplitPath {
+                    path: Cow::Owned(format!("{map_path}/videoscoach/")),
+                    filename: Cow::Owned(format!("{lower_map_name}.webm")),
+                }),
+                dash_mpd: Some(SplitPath {
+                    path: Cow::Owned(format!("{map_path}/videoscoach/")),
+                    filename: Cow::Owned(format!("{lower_map_name}.mpd")),
+                }),
+                channel_id: map_preview.then(|| ses.song.map_name.clone()),
+            }),
+        }],
+    };
+
+    cooked::act::create_vec(&actor)
+}
+
+/// Build the video scene
+fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
+    let map_path = ses.map_path;
+    let lower_map_name = ses.lower_map_name;
+    cooked::isc::Root {
+        scene: cooked::isc::Scene {
+            engine_version: ses.engine_version,
+            gridunit: 0.5,
+            depth_separator: 0,
+            near_separator: [
+                (1.0, 0.0, 0.0, 0.0),
+                (0.0, 1.0, 0.0, 0.0),
+                (0.0, 0.0, 1.0, 0.0),
+                (0.0, 0.0, 0.0, 1.0),
+            ],
+            far_separator: [
+                (1.0, 0.0, 0.0, 0.0),
+                (0.0, 1.0, 0.0, 0.0),
+                (0.0, 0.0, 1.0, 0.0),
+                (0.0, 0.0, 0.0, 1.0),
+            ],
+            view_family: false,
+            is_popup: false,
+            platform_filters: Vec::new(),
+            actors: vec![
+                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: cooked::isc::Actor {
+                    relativez: -1.0,
+                    userfriendly: Cow::Borrowed("VideoScreen"),
+                    pos2d: (0.0, -4.5),
+                    lua: Cow::Borrowed("world/_common/videoscreen/video_player_main.tpl"),
+                    components: vec![cooked::isc::WrappedComponent::Pleo(cooked::isc::WrappedPleoComponent{ pleo_component: cooked::isc::PleoComponent {
+                        video: Cow::Owned(format!("{map_path}/videoscoach/{lower_map_name}.webm")),
+                        dash_mpd: Cow::Owned(format!("{map_path}/videoscoach/{lower_map_name}.mpd")),
+                        channel_id: Cow::Borrowed(""),
+                    }})],
+                    ..Default::default()
+                }}),
+                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: cooked::isc::Actor {
+                    scale: (3.941_238, 2.22),
+                    userfriendly: Cow::Borrowed("VideoOutput"),
+                    lua: Cow::Borrowed("world/_common/videoscreen/video_output_main.tpl"),
+                    components: vec![
+                        cooked::isc::WrappedComponent::PleoTextureGraphic(
+                            cooked::isc::WrappedPleoTextureGraphicComponent {
+                                pleo_texture_graphic_component: cooked::isc::PleoTextureGraphicComponent {
+                                    color_computer_tag_id: 0,
+                                    render_in_target: false,
+                                    disable_light: false,
+                                    disable_shadow: 4_294_967_295,
+                                    atlas_index: 0,
+                                    custom_anchor: (0.0, 0.0),
+                                    sinus_amplitude: (0.0, 0.0, 0.0),
+                                    sinus_speed: 1.0,
+                                    angle_x: 0.0,
+                                    angle_y: 0.0,
+                                    channel_id: Cow::Borrowed(""),
+                                    primitive_parameters: cooked::isc::PrimitiveParameters {
+                                        gfx_primitive_param: cooked::isc::GFXPrimitiveParam {
+                                            color_factor: (1.0, 1.0, 1.0, 1.0),
+                                            enums: vec![cooked::isc::Enum {
+                                                name: Cow::Borrowed("gfxOccludeInfo"),
+                                                selection: 1,
+                                            }],
+                                        },
+                                    },
+                                    enums: vec![
+                                        cooked::isc::Enum {
+                                            name: Cow::Borrowed("anchor"),
+                                            selection: 1,
+                                        },
+                                        cooked::isc::Enum {
+                                            name: Cow::Borrowed("oldAnchor"),
+                                            selection: 1,
+                                        },
+                                    ],
+                                    material: cooked::isc::Material {
+                                        gfx_material_serializable: cooked::isc::GFXMaterialSerializable {
+                                            atl_channel: 0,
+                                            atl_path: Cow::Borrowed(""),
+                                            shader_path: Cow::Borrowed("world/_common/matshader/pleofullscreen.msh"),
+                                            stencil_test: None,
+                                            alpha_test: 4_294_967_295,
+                                            alpha_ref: 4_294_967_295,
+                                            texture_set: cooked::isc::TextureSet::default(),
+                                            material_params: cooked::isc::MaterialParams::default(),
+                                            outlined_mask_params: Some(cooked::isc::OutlinedMaskParams {
+                                                outline_mask_material_params:
+                                                    cooked::isc::OutlinedMaskMaterialParams {
+                                                        mask_color: (0.0, 0.0, 0.0, 0.0),
+                                                        outline_color: (0.0, 0.0, 0.0, 0.0),
+                                                        thickness: 1.0,
+                                                    },
+                                            }),
+                                        },
+                                    },
+                                }
+                            },
+                        )
+                    ],
+                    ..Default::default()
+                }}),
+            ],
+            scene_configs: cooked::isc::WrappedSceneConfigs {
+                scene_configs: cooked::isc::SceneConfigs {
+                    active_scene_config: 0,
+                    jd_scene_config: Vec::new(),
+                },
+            },
+        },
+    }
+}
+
+/// Build the video map preview scene
+fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'a> {
+    let map_path = ses.map_path;
+    let lower_map_name = ses.lower_map_name;
+    cooked::isc::Root {
+        scene: cooked::isc::Scene {
+            engine_version: 326_704,
+            gridunit: 0.5,
+            depth_separator: 0,
+            near_separator: [
+                (1.0, 0.0, 0.0, 0.0),
+                (0.0, 1.0, 0.0, 0.0),
+                (0.0, 0.0, 1.0, 0.0),
+                (0.0, 0.0, 0.0, 1.0),
+            ],
+            far_separator: [
+                (1.0, 0.0, 0.0, 0.0),
+                (0.0, 1.0, 0.0, 0.0),
+                (0.0, 0.0, 1.0, 0.0),
+                (0.0, 0.0, 0.0, 1.0),
+            ],
+            view_family: false,
+            is_popup: false,
+            platform_filters: Vec::new(),
+            actors: vec![cooked::isc::WrappedActors::Actor(
+                cooked::isc::WrappedActor {
+                    actor: cooked::isc::Actor {
+                        relativez: -1.0,
+                        userfriendly: Cow::Borrowed("VideoScreen"),
+                        pos2d: (0.0, -4.5),
+                        lua: Cow::Borrowed(
+                            "world/_common/videoscreen/video_player_map_preview.tpl",
+                        ),
+                        components: vec![cooked::isc::WrappedComponent::Pleo(
+                            cooked::isc::WrappedPleoComponent {
+                                pleo_component: cooked::isc::PleoComponent {
+                                    video: Cow::Owned(format!(
+                                        "{map_path}/videoscoach/{lower_map_name}.webm"
+                                    )),
+                                    dash_mpd: Cow::Owned(format!(
+                                        "{map_path}/videoscoach/{lower_map_name}.mpd"
+                                    )),
+                                    channel_id: ses.song.map_name.clone(),
+                                },
+                            },
+                        )],
+                        ..Default::default()
+                    },
+                },
+            )],
+            scene_configs: cooked::isc::WrappedSceneConfigs {
+                scene_configs: cooked::isc::SceneConfigs {
+                    active_scene_config: 0,
+                    jd_scene_config: Vec::new(),
+                },
+            },
+        },
+    }
+}

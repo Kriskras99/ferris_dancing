@@ -1,0 +1,276 @@
+//! Various utilities like texture encoding/decoding and dealing with paths
+use std::{borrow::Cow, path::Path};
+
+use anyhow::{anyhow, Error};
+use image::{imageops, EncodableLayout, ImageBuffer, RgbaImage};
+use regex::Regex;
+use texpresso::Format;
+use ubiart_toolkit::{
+    cooked::{
+        self,
+        png::Png,
+        xtx::{Image, TextureHeader},
+    },
+    utils::Platform,
+};
+
+/// Cook a path so it stars with 'cache/itf_cooked/...'
+pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
+    let path = path.strip_prefix('/').unwrap_or(path);
+
+    if path.ends_with('/') {
+        return Err(anyhow!("No filename specified! Path: {path}"));
+    }
+
+    // Just return if it is already cooked
+    if path.starts_with("cache/itf_cooked/") {
+        return Ok(path.to_string());
+    }
+
+    // Reserve enough memory for the entire cooked path: original path + cooked prefix + .ckd + max platform name
+    let mut cooked =
+        String::with_capacity(path.len() + "cache/itf_cooked/".len() + 4 + "durango".len());
+    cooked.push_str("cache/itf_cooked/");
+
+    match platform {
+        Platform::Nx => cooked.push_str("nx/"),
+        _ => Err(anyhow!("Not yet implemented for {path}"))?,
+    };
+
+    cooked.push_str(path);
+
+    if let Some((_, extension)) = path.rsplit_once('.') {
+        match extension {
+            "tpl" | "tape" | "ktape" | "dtape" | "wav" | "png" | "tga" | "isg" | "isc" | "sgs"
+            | "json" | "act" => cooked.push_str(".ckd"),
+            _ => Err(anyhow!(
+                "Cooking extension '{extension}' not yet implemented! Full path: {cooked}"
+            ))?,
+        };
+    } else {
+        match path {
+            "sgscontainer" => cooked.push_str(".ckd"),
+            _ => Err(anyhow!("Don't know how to cook: {path}!"))?,
+        }
+    }
+
+    Ok(cooked)
+}
+
+/// With this macro you can create a Regex that is only compiled once.
+#[macro_export]
+macro_rules! regex {
+    ($re:literal $(,)?) => {{
+        static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+    }};
+}
+
+/// Decode a XTX texture into an image buffer
+pub fn decode_texture(src: &[u8]) -> Result<RgbaImage, Error> {
+    let png = cooked::png::parse(src)?;
+
+    let png_height = u32::from(png.height);
+    let png_width = u32::from(png.width);
+
+    assert!(
+        png.xtx.images.len() == 1,
+        "More than one image in texture, not supported!"
+    );
+
+    let big_image = &png.xtx.images[0];
+    let header = &big_image.header;
+    let data_compressed = &big_image.data[0];
+    let width = usize::try_from(header.width)?;
+    let height = usize::try_from(header.height)?;
+
+    let data_decompressed = match header.format {
+        cooked::xtx::Format::DXT1 => {
+            // TODO: Replace with Vec::with_capacity
+            let mut data_decompressed = vec![0xFF; width * height * 4];
+            Format::Bc1.decompress(data_compressed, width, height, &mut data_decompressed);
+            data_decompressed
+        }
+        cooked::xtx::Format::DXT3 => {
+            // TODO: Replace with Vec::with_capacity
+            let mut data_decompressed = vec![0xFF; width * height * 4];
+            Format::Bc2.decompress(data_compressed, width, height, &mut data_decompressed);
+            data_decompressed
+        }
+        cooked::xtx::Format::DXT5 => {
+            // TODO: Replace with Vec::with_capacity
+            let mut data_decompressed = vec![0xFF; width * height * 4];
+            Format::Bc3.decompress(data_compressed, width, height, &mut data_decompressed);
+            data_decompressed
+        }
+        cooked::xtx::Format::NvnFormatRGBA8 => data_compressed.clone(),
+        _ => unimplemented!("{:?}", header.format),
+    };
+
+    let mut buffer: RgbaImage =
+        ImageBuffer::from_vec(header.width, header.height, data_decompressed)
+            .ok_or_else(|| anyhow!("Failure decoding!"))?;
+
+    if png_width != header.width || png_height != header.height {
+        buffer = imageops::resize(
+            &buffer,
+            png_width,
+            png_height,
+            imageops::FilterType::Lanczos3,
+        );
+    }
+
+    Ok(buffer)
+}
+
+// TODO: Create mipmaps if requested
+// TODO: Use better codecs
+/// Encode a image at `image_path` as an XTX texture
+///
+/// If the file has no alpha (alpha is all 1), then the BC1 codec is used.
+/// Otherwise the BC3 codec is used.
+pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
+    // let mipmaps = false;
+    let img = image::io::Reader::open(image_path)?.decode()?;
+    let img = img.into_rgba8();
+
+    let width = u16::try_from(img.height())?;
+    let height = u16::try_from(img.width())?;
+
+    if img.pixels().all(|p| p.0[3] == u8::MAX) {
+        // Image has no transparency, so encode as BC1/DXT1
+
+        let mut new_picto = Png {
+            height,
+            width,
+            unk5: 0x1800,
+            ..Default::default()
+        };
+
+        // TODO: Use Vec::with_capacity
+        let mut data = vec![
+            0;
+            texpresso::Format::Bc1
+                .compressed_size(usize::from(width), usize::from(height))
+        ];
+
+        texpresso::Format::Bc1.compress(
+            img.as_bytes(),
+            usize::from(width),
+            usize::from(height),
+            texpresso::Params {
+                algorithm: texpresso::Algorithm::IterativeClusterFit,
+                weights: texpresso::COLOUR_WEIGHTS_PERCEPTUAL,
+                weigh_colour_by_alpha: false,
+            },
+            &mut data,
+        );
+
+        let width = u32::from(width);
+        let height = u32::from(height);
+
+        let image = Image {
+            header: TextureHeader {
+                // TODO! Check these values!
+                image_size: u64::try_from(data.len()).unwrap(),
+                alignment: 0x200,
+                width,
+                height,
+                depth: 1,
+                target: 1,
+                format: cooked::xtx::Format::DXT1,
+                mipmaps: 1,
+                slice_size: u32::try_from(data.len()).unwrap(),
+                mipmap_offsets: [0; 0x10],
+                unk1: 0x4_0000_0000,
+            },
+            data: vec![data],
+        };
+        // if mipmaps {
+        //     image.data.reserve_exact(0xf);
+        //     for i in 1..=0x10 {
+        //         if width >> i == 0 || height >> i == 0 {
+        //             break;
+        //         }
+        //         let mipmap = imageops::resize(&img, width >> i, height >> i, imageops::FilterType::Triangle);
+
+        //     }
+        // }
+
+        new_picto.xtx.images.push(image);
+
+        Ok(new_picto)
+    } else {
+        // Image has transparency, so encode as BC3/DXT5
+
+        let mut new_picto = Png {
+            height,
+            width,
+            unk5: 0x2000,
+            ..Default::default()
+        };
+
+        // TODO: Use Vec::with_capacity
+        let mut data = vec![
+            0;
+            texpresso::Format::Bc3
+                .compressed_size(usize::from(width), usize::from(height))
+        ];
+
+        texpresso::Format::Bc3.compress(
+            img.as_bytes(),
+            usize::from(width),
+            usize::from(height),
+            texpresso::Params {
+                algorithm: texpresso::Algorithm::IterativeClusterFit,
+                weights: texpresso::COLOUR_WEIGHTS_PERCEPTUAL,
+                weigh_colour_by_alpha: true,
+            },
+            &mut data,
+        );
+
+        let image = Image {
+            header: TextureHeader {
+                // TODO! Check these values!
+                image_size: u64::try_from(data.len()).unwrap(),
+                alignment: 0x200,
+                width: u32::try_from(width)?,
+                height: u32::try_from(height)?,
+                depth: 1,
+                target: 1,
+                format: cooked::xtx::Format::DXT5,
+                mipmaps: 1,
+                slice_size: u32::try_from(data.len()).unwrap(),
+                mipmap_offsets: [0; 0x10],
+                unk1: 0x4_0000_0000,
+            },
+            data: vec![data],
+        };
+        new_picto.xtx.images.push(image);
+
+        Ok(new_picto)
+    }
+}
+
+/// Efficient implementation of (_, [needle]) = regex.captures(haystack).extract() for Cow
+pub fn cow_regex_single_capture<'a>(
+    regex: &Regex,
+    haystack: Cow<'a, str>,
+) -> Result<Cow<'a, str>, Error> {
+    match haystack {
+        Cow::Borrowed(haystack) => {
+            let (_, [needle]) = regex
+                .captures(haystack)
+                .ok_or_else(|| anyhow!("No needle found! Haystack: {haystack}, regex: {regex:?}"))?
+                .extract();
+            Ok(Cow::Borrowed(needle))
+        }
+        Cow::Owned(haystack) => {
+            let (_, [needle]) = regex
+                .captures(&haystack)
+                .ok_or_else(|| anyhow!("No needle found! Haystack: {haystack}, regex: {regex:?}"))?
+                .extract();
+            Ok(Cow::Owned(String::from(needle)))
+        }
+    }
+}

@@ -1,0 +1,26 @@
+[package]
+name = "dolphin_toolkit"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/kriskras99/ferris_dancing"
+description = "Library and CLI tools for working with Nintendo Wii file formats"
+keywords = ["wii", "wad"]
+categories = ["command-line-utilities", "parser-implementations"]
+rust-version = "1.70.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aes = { version = "0.8.3", default-features = false}
+anyhow = { version = "1.0.75", features = ["std", "backtrace"], default-features = false}
+byteorder = { version = "1.5.0", features = ["std"], default-features = false}
+cbc = { version = "0.1.2", features = ["std", "block-padding"], default-features = false}
+cipher = { version = "0.4.4", features = ["std"], default-features = false}
+clap = { version = "4.4.7", features = ["std", "help", "usage", "suggestions", "derive"], default-features = false}
+dotstar_toolkit_utils = { version = "0.1.0", path = "../dotstar_toolkit_utils" }
+memmap2 = { version = "0.9.0", features = ["stable_deref_trait"], default-features = false}
+sha1 = { version = "0.10.6", features = ["std"], default-features = false}
+stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false}
+yoke = { version = "0.7.2", features = ["alloc", "derive"], default-features = false}
