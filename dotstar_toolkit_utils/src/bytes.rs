@@ -1,7 +1,63 @@
 //! # Bytes
 //! Contains functions to read integers and strings from byte slices.
-use anyhow::{anyhow, Context, Error};
-pub use byteorder::ByteOrder;
+use std::str::Utf8Error;
+
+pub use byteorder::{BigEndian, ByteOrder, LittleEndian};
+use thiserror::Error;
+
+/// Errors returend when the test* functions fail
+#[derive(Error, Debug)]
+pub enum ReadError {
+    /// Trying to read outside source
+    #[error("source is not large enough, attempted to read {n} bytes at {position} but source is only {size} bytes")]
+    SourceTooSmall {
+        /// Amount of bytes that were needed
+        n: usize,
+        /// Position in the source
+        position: usize,
+        /// The total size of the source
+        size: usize,
+    },
+    /// Encountered invalid UTF-8 when trying to read a string from source
+    #[error("invalid UTF-8 encountered, attempted to read a string of length {n} at {position}")]
+    InvalidUTF8 {
+        /// Amount of bytes that were needed
+        n: usize,
+        /// Position in the source
+        position: usize,
+        /// Original UTF-8 error
+        error: Utf8Error,
+    },
+    #[error("no null-byte for null terminated string, attempted to read a string at {position}")]
+    /// Encountered no null byte when trying to read a null-terminated string
+    NoNullByte {
+        /// Position in the source
+        position: usize,
+    },
+}
+
+impl ReadError {
+    /// Create the [`ReadError::SourceTooSmall`] error
+    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
+    #[allow(clippy::missing_const_for_fn)]
+    fn source_too_small(n: usize, position: usize, size: usize) -> Self {
+        Self::SourceTooSmall { n, position, size }
+    }
+
+    /// Create the [`ReadError::InvalidUTF8`] error
+    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
+    #[allow(clippy::missing_const_for_fn)]
+    fn invalid_utf8(n: usize, position: usize, error: Utf8Error) -> Self {
+        Self::InvalidUTF8 { n, position, error }
+    }
+
+    /// Create the [`ReadError::NoNullByte`] error
+    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
+    #[allow(clippy::missing_const_for_fn)]
+    fn no_null_byte(position: usize) -> Self {
+        Self::NoNullByte { position }
+    }
+}
 
 /// Read a `u8` from `source` at position `position`
 ///
@@ -12,10 +68,10 @@ pub use byteorder::ByteOrder;
 ///
 /// # Panics
 /// Will panic if the addition would overflow
-pub fn read_u8_at(source: &[u8], position: &mut usize) -> Result<u8, Error> {
+pub fn read_u8_at(source: &[u8], position: &mut usize) -> Result<u8, ReadError> {
     let new_position = position.checked_add(1).expect("Overflow occurred!");
     if source.len() < (new_position) {
-        Err(anyhow!("Source is not large enough! Attempted to read 1 byte at {position} but file is only {} bytes!", source.len()))
+        Err(ReadError::source_too_small(1, *position, source.len()))
     } else {
         let data = source[*position];
         *position = new_position;
@@ -32,10 +88,10 @@ pub fn read_u8_at(source: &[u8], position: &mut usize) -> Result<u8, Error> {
 ///
 /// # Panics
 /// Will panic if the addition would overflow
-pub fn read_u16_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u16, Error> {
+pub fn read_u16_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u16, ReadError> {
     let new_position = position.checked_add(2).expect("Overflow occurred!");
     if source.len() < (new_position) {
-        Err(anyhow!("Source is not large enough! Attempted to read 2 bytes at {position} but file is only {} bytes!", source.len()))
+        Err(ReadError::source_too_small(2, *position, source.len()))
     } else {
         let data = T::read_u16(&source[*position..new_position]);
         *position = new_position;
@@ -52,10 +108,10 @@ pub fn read_u16_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 ///
 /// # Panics
 /// Will panic if the addition would overflow
-pub fn read_u24_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u32, Error> {
+pub fn read_u24_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u32, ReadError> {
     let new_position = position.checked_add(3).expect("Overflow occurred!");
     if source.len() < (new_position) {
-        Err(anyhow!("Source is not large enough! Attempted to read 3 bytes at {position} but file is only {} bytes!", source.len()))
+        Err(ReadError::source_too_small(3, *position, source.len()))
     } else {
         let data = T::read_u24(&source[*position..new_position]);
         *position = new_position;
@@ -72,10 +128,10 @@ pub fn read_u24_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 ///
 /// # Panics
 /// Will panic if the addition would overflow
-pub fn read_u32_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u32, Error> {
+pub fn read_u32_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u32, ReadError> {
     let new_position = position.checked_add(4).expect("Overflow occurred!");
     if source.len() < (new_position) {
-        Err(anyhow!("Source is not large enough! Attempted to read 4 bytes at {position} but file is only {} bytes!", source.len()))
+        Err(ReadError::source_too_small(4, *position, source.len()))
     } else {
         let data = T::read_u32(&source[*position..new_position]);
         *position = new_position;
@@ -92,10 +148,10 @@ pub fn read_u32_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 ///
 /// # Panics
 /// Will panic if the addition would overflow
-pub fn read_u64_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u64, Error> {
+pub fn read_u64_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u64, ReadError> {
     let new_position = position.checked_add(8).expect("Overflow occurred!");
     if source.len() < (new_position) {
-        Err(anyhow!("Source is not large enough! Attempted to read 8 bytes at {position} but file is only {} bytes!", source.len()))
+        Err(ReadError::source_too_small(8, *position, source.len()))
     } else {
         let data = T::read_u64(&source[*position..new_position]);
         *position = new_position;
@@ -116,17 +172,28 @@ pub fn read_u64_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 pub fn read_string_at<'b, T: ByteOrder>(
     source: &'b [u8],
     position: &mut usize,
-) -> Result<&'b str, Error> {
-    let len = usize::try_from(read_u32_at::<T>(source, position)?)?;
+) -> Result<&'b str, ReadError> {
+    let len = usize::try_from(read_u32_at::<T>(source, position)?)
+        .expect("Attempted to read more bytes than can fit in a usize");
     let new_position = position.checked_add(len).expect("Overflow occurred!");
     if source.len() < (new_position) {
-        Err(anyhow!("Source is not large enough! Attempted to read {len} bytes at {position} but file is only {} bytes!", source.len()))
+        // Reset the read position
+        *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
+        Err(ReadError::source_too_small(len, *position, source.len()))
     } else {
-        let str = std::str::from_utf8(&source[*position..new_position]).with_context(|| {
-            format!("Invalid UTF-8, attempting to read {len} bytes at {position}!")
-        })?;
-        *position = new_position;
-        Ok(str)
+        match std::str::from_utf8(&source[*position..new_position])
+            .map_err(|error| ReadError::invalid_utf8(len, *position, error))
+        {
+            Ok(str) => {
+                *position = new_position;
+                Ok(str)
+            }
+            Err(error) => {
+                // Reset the read position
+                *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
+                Err(error)
+            }
+        }
     }
 }
 
@@ -140,16 +207,25 @@ pub fn read_string_at<'b, T: ByteOrder>(
 pub fn read_null_terminated_string_at<'b>(
     source: &'b [u8],
     position: &mut usize,
-) -> Result<&'b str, Error> {
+) -> Result<&'b str, ReadError> {
+    // Find the null byte, starting at `position`
     let null_pos = source.iter().skip(*position).position(|b| b == &0);
     if let Some(null_pos) = null_pos {
-        let start = *position;
-        #[allow(clippy::arithmetic_side_effects)]
-        let end = null_pos - 1; // Exclude the null byte
-        *position = null_pos;
-        Ok(std::str::from_utf8(&source[start..end])?)
+        match std::str::from_utf8(&source[*position..null_pos]) {
+            Ok(str) => {
+                *position = null_pos.checked_add(1).unwrap_or_else(|| unreachable!());
+                Ok(str)
+            }
+            Err(error) => Err(ReadError::invalid_utf8(
+                null_pos
+                    .checked_sub(*position)
+                    .unwrap_or_else(|| unreachable!()),
+                *position,
+                error,
+            )),
+        }
     } else {
-        Err(anyhow!("Null byte not found for null terminated string!"))
+        Err(ReadError::no_null_byte(*position))
     }
 }
 
@@ -165,14 +241,34 @@ pub fn read_null_terminated_string_at<'b>(
 pub fn read_slice_at<'b, const N: usize>(
     source: &'b [u8],
     position: &mut usize,
-) -> Result<&'b [u8; N], Error> {
+) -> Result<&'b [u8; N], ReadError> {
     let new_position = position.checked_add(N).expect("Overflow occurred");
     if source.len() < (new_position) {
-        Err(anyhow!("Source is not large enough! Attempted to read {N} bytes at {position} but file is only {} bytes!", source.len()))
+        Err(ReadError::source_too_small(N, *position, source.len()))
     } else {
         let result: Result<&[u8; N], _> = TryFrom::try_from(&source[*position..new_position]);
         *position = new_position;
         // SAFETY: Slice will always be of size N
         Ok(unsafe { result.unwrap_unchecked() })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read_null_terminated_string_at;
+
+    #[test]
+    fn test_empty_null_terminated_string() {
+        let data = [0x0];
+        assert_eq!(read_null_terminated_string_at(&data, &mut 0).unwrap(), "")
+    }
+
+    #[test]
+    fn test_null_terminated_string() {
+        let data = b"HelloWorld\0";
+        assert_eq!(
+            read_null_terminated_string_at(data, &mut 0).unwrap(),
+            "HelloWorld"
+        )
     }
 }

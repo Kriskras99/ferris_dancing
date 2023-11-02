@@ -8,12 +8,12 @@ repository = "https://github.com/kriskras99/ferris_dancing"
 description = "Utility functions and VFS implementation useful for parsers"
 keywords = ["vfs", "utilities"]
 categories = ["filesystem", "parsing"]
-rust-version = "1.65.0"
+rust-version = "1.60.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { version = "1.0.75", features = ["std", "backtrace"], default-features = false}
-byteorder = { version = "1.5.0", features = ["std"], default-features = false}
-memmap2 = { version = "0.9.0", features = ["stable_deref_trait"], default-features = false}
-stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false}
+byteorder = { version = "1.5.0", features = ["std"], default-features = false }
+memmap2 = { version = "0.9.0", features = ["stable_deref_trait"], default-features = false }
+stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false }
+thiserror = { version = "1.0.50", features = [], default-features = false }
