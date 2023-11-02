@@ -1,14 +1,14 @@
 # Ferris Dancing🦀
 Tools and libraries for working with Just Dance games.
 
-## [JDMod](jdmod/README.md)
+## [JDMod](jdmod)
 Application for modding Just Dance games.
 The goal is to be able to import every Just Dance game ever made and to be made, and be able to export to Just Dance 2022 Switch.
 
 Currently supported are Just Dance 2017-2022 for the Switch.
 It can import and export songs, playlists, quests/objectives, avatars, aliases, portraitborders, gacha machine, and search labels.
 
-## [UbiArt Toolkit](ubiart_toolkit/README.md)
+## [UbiArt Toolkit](ubiart_toolkit)
 Tools and library for parsing and writing various UbiArt files.
 
 Supports the following formats (Nintendo Switch games only!)
@@ -28,7 +28,7 @@ Supports the following formats (Nintendo Switch games only!)
 
 It also has the tools `stringidtool` and `ubicrctool` for easy creation of ids as used in the UbiArt engine
 
-## [Dolphin Toolkit](dolphin_toolkit/README.md)
+## [Dolphin Toolkit](dolphin_toolkit)
 Tools and library for parsing Nintendo Wii file formats.
 
 Supports the following formats
@@ -37,7 +37,7 @@ Supports the following formats
 | .app           | u8tool  | Supports extraction                     |
 | .wad           | wadtool | Supports extraction of Installable WADs |
 
-## [.* Toolkit Utils](dotstar_toolkit_utils/README.md)
+## [.* Toolkit Utils](dotstar_toolkit_utils)
 Library with various utilities for writing parsers.
 It contains three sections:
 1. `bytes`: contains Byteorder like functions for reading integers and strings from byte slices.
