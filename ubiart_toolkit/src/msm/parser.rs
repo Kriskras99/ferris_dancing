@@ -50,6 +50,7 @@ pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, Error> {
 
     let buffer: &[u8; 64] = read_slice_at(src, &mut position)?;
     let device = read_null_terminated_string_at(buffer, &mut 0)?;
+    test(&device, &"Acc_Dev_Dir_NP")?;
 
     let unk3 = read_u32_at::<BigEndian>(src, &mut position)?;
     let unk4 = read_u32_at::<BigEndian>(src, &mut position)?;
@@ -68,8 +69,16 @@ pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, Error> {
     test(&unk12, &0x2)?;
     let unk13 = read_u32_at::<BigEndian>(src, &mut position)?;
     test(&unk13, &0x0)?;
+    
+    let unk14 = read_u32_at::<BigEndian>(src, &mut position)?;
+    let unk15 = read_u32_at::<BigEndian>(src, &mut position)?;
 
-    let data = &src[position..];
+    let mut data = Vec::with_capacity(usize::try_from(points)?);
+    for _ in 0..points {
+        let x = read_u32_at::<BigEndian>(src, &mut position)?;
+        let y = read_u32_at::<BigEndian>(src, &mut position)?;
+        data.push((x, y));
+    }
 
     Ok(MovementSpaceMove {
         name,
@@ -83,5 +92,7 @@ pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, Error> {
         unk6,
         unk7,
         unk10,
+        unk14,
+        unk15,
     })
 }
