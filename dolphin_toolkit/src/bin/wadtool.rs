@@ -49,9 +49,6 @@ fn main() {
                 hasher.update(&buffer);
                 let result = hasher.finalize();
 
-                // println!("{:x?}", content.metadata.sha1_hash);
-                // println!("{:x?}", result.as_slice());
-
                 assert!(
                     content.metadata.sha1_hash == result.as_slice(),
                     "SHA-1 hashes don't match!"
