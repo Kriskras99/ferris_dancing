@@ -25,7 +25,7 @@ pub struct MovementSpaceMove<'a> {
     pub name: &'a str,
     pub map: &'a str,
     pub device: &'a str,
-    pub data: &'a [u8],
+    pub data: Vec<(u32, u32)>,
     pub points: u32,
     pub unk3: u32,
     pub unk4: u32,
@@ -33,6 +33,8 @@ pub struct MovementSpaceMove<'a> {
     pub unk6: u32,
     pub unk7: u32,
     pub unk10: u32,
+    pub unk14: u32,
+    pub unk15: u32,
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
