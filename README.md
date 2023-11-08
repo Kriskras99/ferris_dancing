@@ -28,7 +28,7 @@ Supports the following formats (Nintendo Switch games only!)
 
 It also has the tools `stringidtool` and `ubicrctool` for easy creation of ids as used in the UbiArt engine
 
-## [Dolphin Toolkit](dolphin_toolkit)
+## [Wii Toolkit](wii_toolkit)
 Tools and library for parsing Nintendo Wii file formats.
 
 Supports the following formats

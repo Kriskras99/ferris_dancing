@@ -5,7 +5,7 @@ use std::{
 };
 
 use clap::Parser;
-use dolphin_toolkit::wad::{self, types::WadArchive};
+use wii_toolkit::wad::{self, types::WadArchive};
 use sha1::{Digest, Sha1};
 
 #[derive(Parser)]

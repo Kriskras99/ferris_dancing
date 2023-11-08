@@ -1,4 +1,4 @@
-# Dolphin Toolkit
+# Wii Toolkit
 A library and CLI tools for parsing Nintendo Wii file formats.
 
 Currently supported file formats are:
