@@ -15,7 +15,7 @@
 // If an overflow or underflow occurs it's a good indication of a broken file
 #![deny(clippy::arithmetic_side_effects)]
 
-//! # Dolphin Toolkit
+//! # Wii Toolkit
 //!
 //! This is a library for parsing Nintendo Wii files.
 //! Currently supported are:

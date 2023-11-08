@@ -5,7 +5,7 @@ use std::{
 };
 
 use clap::Parser;
-use dolphin_toolkit::u8a;
+use wii_toolkit::u8a;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
