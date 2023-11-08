@@ -1,7 +1,7 @@
 //! # Song Database
 //! Imports all songs in the song database using [`song::import`]
 use anyhow::Error;
-use ubiart_toolkit::cooked::{self, isc::WrappedComponent};
+use ubiart_toolkit::{cooked::{self, isc::WrappedComponent}, utils::{Game, Platform}};
 
 use crate::{import::song, types::ImportState, utils::cook_path};
 
@@ -21,6 +21,13 @@ pub fn import(is: &ImportState<'_>, songdb_scene: &str) -> Result<(), Error> {
             .any(|c| matches!(c, WrappedComponent::SongDesc))
         {
             song::import(is, &actor.lua)?;
+        }
+    }
+
+    if is.game == Game::JustDance2019 && is.platform != Platform::Wii && is.platform != Platform::X360 {
+        // Nice For What by Drake was removed from the songdb on 8th gen consoles
+        if let Err(err) = song::import(is, "world/maps/niceforwhat/songdesc.tpl") {
+            println!("Warning! Importing Nice For What by Drake failed! {err:?}");
         }
     }
 
