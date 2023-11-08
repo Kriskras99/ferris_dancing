@@ -244,9 +244,9 @@ impl Translation<'_> {
             false
         } else {
             // They have some overlap
-            for (index, bit) in (self.not_empty & other.not_empty).iter().enumerate() {
-                if *bit && self.inner[index] != other.inner[index] {
-                    return false;
+            for (bit, (left, right)) in (self.not_empty & other.not_empty).iter().zip(self.inner.iter().zip(other.inner.iter())) {
+                if *bit && left != right {
+                    return false
                 }
             }
             true
@@ -255,7 +255,7 @@ impl Translation<'_> {
 
     /// Get the translation for a `language`
     pub fn get(&self, language: Language) -> &'_ str {
-        let index = usize::try_from(u32::from(language)).unwrap_or_else(|_| unreachable!());
+        let index = usize::try_from(u32::from(language)).expect("Don't run this on a 16-bit machine!");
         self.inner[index].as_ref()
     }
 }
@@ -272,13 +272,12 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
         } else {
             let mut translation = Translation::default();
             // They have some overlap
-            for (index, (one, two)) in self
+            for (new, (one, two)) in translation.inner.iter_mut().zip(self
                 .inner
                 .into_iter()
-                .zip(other.inner.into_iter())
-                .enumerate()
+                .zip(other.inner.into_iter()))
             {
-                translation.inner[index] = merge_string(one, two)?;
+                *new = merge_string(one, two)?;
             }
             translation.not_empty = self.not_empty | other.not_empty;
             Ok(translation)
@@ -287,15 +286,20 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
 
     /// Add a translation for `language`
     pub fn add_translation<'d: 'a>(&mut self, language: Language, string: Cow<'d, str>) {
-        let index = usize::try_from(u32::from(language)).unwrap_or_else(|_| unreachable!());
-        if self.inner[index].is_empty() {
-            self.inner[index] = string;
-        } else {
-            assert!(
-                self.inner[index] == string,
-                "Translation does not match! {} {string}",
-                self.inner[index]
-            );
+        // Ignore a translation if it's empty
+        if !string.is_empty() {
+            let index = usize::try_from(u32::from(language)).expect("Don't run this on a 16-bit machine!");
+            if !self.not_empty[index] {
+                debug_assert!(self.inner[index].is_empty(), "not_empty says the string should be empty, but it's not");
+                self.inner[index] = string;
+                *self.not_empty.get_mut(index).unwrap_or_else(|| unreachable!()) = true;
+            } else {
+                assert!(
+                    self.inner[index] == string,
+                    "Translation does not match! {} {string}",
+                    self.inner[index]
+                );
+            }
         }
     }
 }
