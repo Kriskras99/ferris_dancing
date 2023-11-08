@@ -134,8 +134,8 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
     let img = image::io::Reader::open(image_path)?.decode()?;
     let img = img.into_rgba8();
 
-    let width = u16::try_from(img.height())?;
-    let height = u16::try_from(img.width())?;
+    let width = u16::try_from(img.width())?;
+    let height = u16::try_from(img.height())?;
 
     if img.pixels().all(|p| p.0[3] == u8::MAX) {
         // Image has no transparency, so encode as BC1/DXT1
