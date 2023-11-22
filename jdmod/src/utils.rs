@@ -1,7 +1,7 @@
 //! Various utilities like texture encoding/decoding and dealing with paths
 use std::{borrow::Cow, path::Path};
 
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, Context, Error};
 use image::{imageops, EncodableLayout, ImageBuffer, RgbaImage};
 use regex::Regex;
 use texpresso::Format;
@@ -44,7 +44,7 @@ pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
             "tpl" | "tape" | "ktape" | "dtape" | "wav" | "png" | "tga" | "isg" | "isc" | "sgs"
             | "json" | "act" => cooked.push_str(".ckd"),
             _ => Err(anyhow!(
-                "Cooking extension '{extension}' not yet implemented! Full path: {cooked}"
+                "Cooking extension '{extension}' not yet implemented! Full path: {path}"
             ))?,
         };
     } else {
@@ -131,7 +131,9 @@ pub fn decode_texture(src: &[u8]) -> Result<RgbaImage, Error> {
 /// Otherwise the BC3 codec is used.
 pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
     // let mipmaps = false;
-    let img = image::io::Reader::open(image_path)?.decode()?;
+    let img = image::io::Reader::open(image_path)
+        .with_context(|| format!("Failed to open {image_path:?}!"))?
+        .decode()?;
     let img = img.into_rgba8();
 
     let width = u16::try_from(img.width())?;
@@ -234,8 +236,8 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
                 // TODO! Check these values!
                 image_size: u64::try_from(data.len()).unwrap(),
                 alignment: 0x200,
-                width: u32::try_from(width)?,
-                height: u32::try_from(height)?,
+                width: u32::from(width),
+                height: u32::from(height),
                 depth: 1,
                 target: 1,
                 format: cooked::xtx::Format::DXT5,

@@ -2,7 +2,7 @@
 //! All the logic for building a song
 use std::{borrow::Cow, fs::File};
 
-use anyhow::Error;
+use anyhow::{Context, Error};
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{cooked, utils::Platform};
 
@@ -44,7 +44,8 @@ pub fn build(
     bf: &mut BuildFiles,
     dirs: SongDirectoryTree,
 ) -> Result<String, Error> {
-    let song_file = File::open(dirs.song().join("song.json"))?;
+    let song_file = File::open(dirs.song().join("song.json"))
+        .with_context(|| format!("Missing song.json in {:?}", dirs.song()))?;
     let song: Song = serde_json::from_reader(song_file)?;
     let map_name = song.map_name.as_ref();
     let lower_map_name = map_name.to_lowercase();

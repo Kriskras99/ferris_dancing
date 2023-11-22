@@ -28,7 +28,7 @@ pub fn import(vfs: &dyn VirtualFileSystem, dirs: &DirectoryTree) -> Result<Local
     for loc8_file in &loc8_files {
         if let Ok(loc) = loc8::parse(loc8_file) {
             let lang = loc.language;
-    
+
             for (id, translation) in loc.strings {
                 game_locale
                     .entry(id)
