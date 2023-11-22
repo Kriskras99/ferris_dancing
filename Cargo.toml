@@ -11,3 +11,24 @@ resolver = "2"
 
 [profile.release]
 debug = true
+
+[profile.dev.package.ubiart_toolkit]
+opt-level = 3
+[profile.dev.package.dotstar_toolkit_utils]
+opt-level = 3
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[lints.clippy]
+all = "deny"
+pedantic = "warn"
+nursery = "warn"
+cargo = "warn"
+# If an integer doesn't fit it's a good indication that something broke
+as_conversions = "deny"
+empty_structs_with_brackets = "deny"
+get_unwrap = "deny"
+if_then_some_else_none = "deny"
+lossy_float_literal = "deny"
+missing_assert_message = "deny"
