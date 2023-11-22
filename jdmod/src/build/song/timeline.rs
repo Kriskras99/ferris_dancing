@@ -100,15 +100,13 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                 // Classifier path does not include platform specifier
                 let to = MotionClip::fix_classifier_path(&new_clip.classifier_path, ses.platform)?;
 
-                match bf.static_files.add_file(from, PathBuf::from(to)) {
-                    Ok(()) => {}
-                    Err(error) => {
-                        if error.kind() == std::io::ErrorKind::NotFound {
-                            println!("{:?}", error.get_ref());
-                        } else {
-                            Err(error)?;
-                        }
-                    }
+                if from.exists() {
+                    bf.static_files.add_file(from, PathBuf::from(to))?;
+                } else {
+                    println!(
+                        "Warning! Missing {} for {lower_map_name}!",
+                        orig_clip.classifier_filename
+                    );
                 }
 
                 Some(json_types::Clip::Motion(new_clip))
@@ -120,10 +118,17 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                 // A picto will be used multiple times, so only create it once
                 if !bf.generated_files.exists(to.as_ref()) {
                     let from = ses.dirs.pictos().join(orig_clip.picto_filename.as_ref());
-                    let encoded = encode_texture(&from)?;
-                    let encoded_vec = cooked::png::create_vec(&encoded)?;
+                    if from.exists() {
+                        let encoded = encode_texture(&from)?;
+                        let encoded_vec = cooked::png::create_vec(&encoded)?;
 
-                    bf.generated_files.add_file(to, encoded_vec);
+                        bf.generated_files.add_file(to, encoded_vec);
+                    } else {
+                        println!(
+                            "Warning! Missing {} for {lower_map_name}!",
+                            orig_clip.picto_filename
+                        );
+                    }
                 }
 
                 Some(json_types::Clip::Pictogram(new_clip))

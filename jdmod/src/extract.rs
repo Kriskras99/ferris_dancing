@@ -9,8 +9,6 @@ use std::{
 use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
-use flate2::read::ZlibDecoder;
-use memmap2::Mmap;
 use ubiart_toolkit::{ipk, secure_fat};
 
 use crate::FileConflictStrategy;
@@ -28,8 +26,8 @@ pub struct Extract {
     /// Determines how file conflicts are handled
     #[arg(value_enum, short, long, default_value_t=FileConflictStrategy::OverwriteWithWarning)]
     conflicts: FileConflictStrategy,
-    /// Ignore many errors in files, usefull for extracting modded IPKs
-    #[arg(short, long, default_value_t = false)]
+    /// Ignore mistakes in the file format (useful for modded files)
+    #[arg(long, default_value_t = false)]
     lax: bool,
 }
 
@@ -60,7 +58,7 @@ pub fn main(extract: Extract) -> Result<(), Error> {
 
     match extension {
         "ipk" => extract_ipk(&source, &destination, files, conflicts, lax),
-        "gf" => extract_secure_fat(&source, &destination, files, conflicts),
+        "gf" => extract_secure_fat(&source, &destination, files, conflicts, lax),
         _ => Err(anyhow!(
             "Unknown file extension '{extension}', expected 'ipk' or 'gf'!"
         )),
@@ -80,6 +78,7 @@ pub fn extract_secure_fat(
     destination: &Path,
     files: Option<&[&str]>,
     conflicts: FileConflictStrategy,
+    lax: bool,
 ) -> Result<(), Error> {
     // Split source in directory and filename
     let source_directory = source
@@ -94,7 +93,7 @@ pub fn extract_secure_fat(
     );
     // Open the sfat as a vfs using the native filesystem as base
     let native_vfs = Native::new(source_directory)?;
-    let fat_vfs = secure_fat::vfs::VfsSfatFilesystem::new(&native_vfs, &source_filename)?;
+    let fat_vfs = secure_fat::vfs::VfsSfatFilesystem::new(&native_vfs, &source_filename, lax)?;
     extract_vfs(&fat_vfs, destination, files, conflicts)
 }
 
@@ -113,40 +112,22 @@ pub fn extract_ipk(
     conflicts: FileConflictStrategy,
     lax: bool,
 ) -> Result<(), Error> {
-    if lax {
-        let ipk_file = File::open(source)?;
-        let ipk_mmap = unsafe { Mmap::map(&ipk_file)? };
-        let files = ipk::parse_lax(&ipk_mmap)?;
-        for file in files {
-            let path = destination.join(file.path.to_string());
-            std::fs::create_dir_all(path.parent().expect("File needs to have a parent!"))?;
-            let mut save_file = File::create(path)?;
-            match file.data {
-                ipk::Data::Uncompressed(data) => save_file.write_all(data.data)?,
-                ipk::Data::Compressed(data) => {
-                    let mut decoder = ZlibDecoder::new(data.data);
-                    std::io::copy(&mut decoder, &mut save_file)?;
-                }
-            }
-        }
-    } else {
-        // Split source in directory and filename
-        let source_directory = source
-            .parent()
-            .ok_or_else(|| anyhow!("Source file has no parent directory!"))?;
-        let source_filename = PathBuf::from(
-            source
-                .file_name()
-                .ok_or_else(|| anyhow!("Source does not have a filename!"))?
-                .to_str()
-                .ok_or_else(|| anyhow!("Source filename is invalid!"))?,
-        );
+    // Split source in directory and filename
+    let source_directory = source
+        .parent()
+        .ok_or_else(|| anyhow!("Source file has no parent directory!"))?;
+    let source_filename = PathBuf::from(
+        source
+            .file_name()
+            .ok_or_else(|| anyhow!("Source does not have a filename!"))?
+            .to_str()
+            .ok_or_else(|| anyhow!("Source filename is invalid!"))?,
+    );
 
-        // Open the sfat as a vfs using the native filesystem as base
-        let native_vfs = Native::new(source_directory)?;
-        let ipk_vfs = ipk::vfs::VfsIpkFilesystem::new(&native_vfs, &source_filename)?;
-        extract_vfs(&ipk_vfs, destination, files, conflicts)?;
-    }
+    // Open the sfat as a vfs using the native filesystem as base
+    let native_vfs = Native::new(source_directory)?;
+    let ipk_vfs = ipk::vfs::VfsIpkFilesystem::new(&native_vfs, &source_filename, lax)?;
+    extract_vfs(&ipk_vfs, destination, files, conflicts)?;
     Ok(())
 }
 
@@ -193,18 +174,18 @@ fn save_file(
             .parent()
             .expect("File should have a parent directory!"),
     )?;
-    if destination.exists() && conflicts != FileConflictStrategy::Error {
-        if conflicts == FileConflictStrategy::OverwriteWithWarning {
+    match (destination.exists(), conflicts) {
+        (true, FileConflictStrategy::Error) => Err(anyhow!("{destination:?} already exists!")),
+        (true, FileConflictStrategy::OverwriteWithWarning) => {
             println!("Warning! Overwriting {destination:?}!");
+            let mut file = File::create(destination)?;
+            file.write_all(data)?;
+            Ok(())
         }
-        let mut file = File::open(destination)?;
-        file.write_all(data)?;
-        Ok(())
-    } else if destination.exists() {
-        Err(anyhow!("{destination:?} already exists!"))
-    } else {
-        let mut file = File::create(destination)?;
-        file.write_all(data)?;
-        Ok(())
+        (_, _) => {
+            let mut file = File::create(destination)?;
+            file.write_all(data)?;
+            Ok(())
+        }
     }
 }

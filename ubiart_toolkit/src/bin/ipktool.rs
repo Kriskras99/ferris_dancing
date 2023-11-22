@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     fs::{create_dir_all, File},
-    io::{self, Cursor, Write},
+    io::Write,
     path::{Path, PathBuf},
 };
 
@@ -9,7 +9,6 @@ use anyhow::Error;
 use clap::Parser;
 
 use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
-use flate2::read::ZlibDecoder;
 use memmap2::Mmap;
 use ubiart_toolkit::{
     ipk::{self, Bundle},
@@ -31,6 +30,8 @@ struct Cli {
     check: bool,
     #[arg(long, default_value_t = false)]
     overwrite: bool,
+    #[arg(long, default_value_t = false)]
+    lax: bool,
 }
 
 fn main() -> Result<(), Error> {
@@ -48,7 +49,7 @@ fn main() -> Result<(), Error> {
     } else {
         let file = File::open(source)?;
         let mmap = unsafe { Mmap::map(&file)? };
-        let ipk = ipk::parse(&mmap)?;
+        let ipk = ipk::parse(&mmap, cli.lax)?;
 
         if cli.check {
             check_ipk(&ipk, source);
@@ -109,11 +110,15 @@ pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(
                     // Copy all the packed data into the file
                     file.write_all(unc.data)?;
                 }
-                ipk::Data::Compressed(com) => {
-                    let cursor = Cursor::new(com.data);
-                    let mut decoder = ZlibDecoder::new(cursor);
-                    // Copy all the packed data into the file
-                    io::copy(&mut decoder, &mut file)?;
+                ipk::Data::Compressed(data) => {
+                    let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
+                    let mut decompress = flate2::Decompress::new(true);
+                    decompress.decompress_vec(
+                        data.data,
+                        &mut vec,
+                        flate2::FlushDecompress::Finish,
+                    )?;
+                    file.write_all(&vec)?;
                 }
             }
         } else {
@@ -124,6 +129,7 @@ pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(
 }
 
 pub fn check_ipk(ipk: &Bundle, filename: &Path) {
+    println!("GamePlatform: {:#?}", ipk.game_platform);
     if ipk.version != 5 {
         println!("{filename:?}: Unknown IPK version!: 0x{:x}", ipk.version);
     }
@@ -132,12 +138,12 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
         if packed_file.is_cooked && !packed_file.path.path.contains("itf_cooked") {
             println!(
                 "  Metadata says cooked but PackedFile does not have 'itf_cooked' in path!: {} {}",
-                packed_file.is_cooked, packed_file.path.path
+                packed_file.is_cooked, packed_file.path
             );
         } else if !packed_file.is_cooked && packed_file.path.path.contains("itf_cooked") {
             println!(
                 "  Metadata says not cooked but PackedFile does have 'itf_cooked' in path!: {} {}",
-                packed_file.is_cooked, packed_file.path.path
+                packed_file.is_cooked, packed_file.path
             );
         }
     }

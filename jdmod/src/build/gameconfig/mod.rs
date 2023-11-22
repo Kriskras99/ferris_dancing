@@ -38,7 +38,7 @@ pub fn build(bs: &BuildState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
         bs.platform,
     )?;
     let gameconfig_file = bs.patched_base_vfs.open(gameconfig_path.as_ref())?;
-    let gameconfig_template = cooked::json::parse_v22(&gameconfig_file)?;
+    let gameconfig_template = cooked::json::parse_v22(&gameconfig_file, false)?;
     let mut gameconfig = Box::new(gameconfig_template.game_manager_config()?.clone());
 
     scheduled_quests::build(bs, bf, &mut gameconfig)?;

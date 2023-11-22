@@ -17,7 +17,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
     let dance_timeline_file = sis
         .vfs
         .open(cook_path(dance_timeline_path, sis.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&dance_timeline_file)?.actor()?;
+    let mut actor = cooked::json::parse_v22(&dance_timeline_file, sis.lax)?.actor()?;
     assert!(
         actor.components.len() == 1,
         "More than one component in actor!"
@@ -33,7 +33,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
     let dance_tml_path = cook_path(tape_case_path, sis.platform)?;
 
     let tape_file = sis.vfs.open(dance_tml_path.as_ref())?;
-    let template = cooked::json::parse_v22(&tape_file)?;
+    let template = cooked::json::parse_v22(&tape_file, sis.lax)?;
     let tape = template.tape()?;
 
     let mut timeline = Timeline {
@@ -82,12 +82,16 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                         vec.push(new_picto.picto_filename.clone());
                     }
                 } else {
-                    let from = sis
-                        .vfs
-                        .open(cook_path(&picto_path, sis.platform)?.as_ref())?;
-                    let decooked_picto = decode_texture(&from)?;
-                    let path = sis.dirs.pictos().join(new_picto.picto_filename.as_ref());
-                    decooked_picto.save(path)?;
+                    let cooked_path = cook_path(&picto_path, sis.platform)?;
+                    match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
+                        (Ok(from), _) => {
+                            let decooked_picto = decode_texture(&from)?;
+                            let path = sis.dirs.pictos().join(new_picto.picto_filename.as_ref());
+                            decooked_picto.save(path)?;
+                        }
+                        (Err(error), true) => println!("Warning! {error}"),
+                        (Err(error), false) => return Err(error.into()),
+                    };
                 }
                 Clip::Pictogram(new_picto)
             }

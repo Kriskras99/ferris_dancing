@@ -51,7 +51,9 @@ pub fn build(
     // preview audio file
     let from = ses.dirs.audio().join("autodance.ogg");
     let to = PathBuf::from(format!("{autodance_dir}/{lower_map_name}.ogg"));
-    bf.static_files.add_file(from, to)?;
+    if bf.static_files.add_file(from, to).is_err() {
+        println!("Warning! Missing autodance.ogg for {lower_map_name}!");
+    }
 
     Ok(cooked::isc::WrappedScene {
         scene: autodance_scene.scene,
@@ -129,7 +131,7 @@ fn autodance_template(ses: &SongExportState<'_>, autodance: &Autodance) -> Resul
                         song_start_position: autodance.song_start_position,
                         duration: autodance.duration,
                         thumbnail_time: 0,
-                        fade_out_duration: 3,
+                        fade_out_duration: 3.0,
                         ground_plane_path: Cow::Borrowed("invalid "),
                         first_layer_triple_background_path: Cow::Borrowed("invalid "),
                         second_layer_triple_background_path: Cow::Borrowed("invalid "),

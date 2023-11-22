@@ -10,11 +10,11 @@ use crate::{types::song::MusicTrack, utils::cook_path};
 use super::SongImportState;
 
 /// Imports the main sequence and audio file
-pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<&'static str, Error> {
+pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String, Error> {
     let mainsequence_file = sis
         .vfs
         .open(cook_path(musictrack_path, sis.platform)?.as_ref())?;
-    let template = cooked::json::parse_v22(&mainsequence_file)?;
+    let template = cooked::json::parse_v22(&mainsequence_file, sis.lax)?;
     let mut actor = template.actor()?;
     assert!(
         actor.components.len() == 1,
@@ -26,13 +26,23 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<&'stat
         .musictrack_component()?
         .track_data;
 
+    let path = track_data.path.as_ref();
+
     // TODO: Decook WAV!
-    let audio_filename = "musictrack.wav.ckd";
-    let from = sis
-        .vfs
-        .open(cook_path(&track_data.path, sis.platform)?.as_ref())?;
-    let mut to = File::create(sis.dirs.audio().join(audio_filename))?;
-    to.write_all(&from)?;
+    let audio_filename = if sis.vfs.exists(path.as_ref()) {
+        let audio_filename = path.rsplit_once('/').unwrap().1.to_string();
+        let from = sis.vfs.open(path.as_ref())?;
+        let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
+        to.write_all(&from)?;
+        audio_filename
+    } else {
+        let cooked_path = cook_path(&path, sis.platform)?;
+        let audio_filename = cooked_path.rsplit_once('/').unwrap().1.to_string();
+        let from = sis.vfs.open(cooked_path.as_ref())?;
+        let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
+        to.write_all(&from)?;
+        audio_filename
+    };
 
     let structure = track_data.structure;
 

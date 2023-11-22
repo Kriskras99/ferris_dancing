@@ -41,6 +41,8 @@ pub struct ImportState<'a> {
     pub locale_id_map: LocaleIdMap,
     /// See [`Alias8`]
     pub aliases: Alias8<'a>,
+    /// Should we be lax with parsing
+    pub lax: bool,
 }
 
 /// The directory tree of a mod

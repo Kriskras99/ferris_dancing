@@ -135,12 +135,26 @@ impl<'a> Scene<'a> {
     pub fn get_subscene_by_userfriendly_end(
         &self,
         userfriendly: &str,
+        lax: bool,
     ) -> Result<&SubSceneActor, anyhow::Error> {
+        let userfriendly = if lax {
+            Cow::Owned(userfriendly.to_lowercase())
+        } else {
+            Cow::Borrowed(userfriendly)
+        };
         self.actors
             .iter()
             .map(WrappedActors::sub_scene_actor)
             .filter_map(Result::ok)
-            .find(|a| a.userfriendly.ends_with(userfriendly))
+            .find(|a| {
+                if lax {
+                    a.userfriendly
+                        .to_lowercase()
+                        .ends_with(userfriendly.as_ref())
+                } else {
+                    a.userfriendly.ends_with(&userfriendly.as_ref())
+                }
+            })
             .ok_or_else(|| {
                 anyhow!(
                     "SubSceneActor ending in '{userfriendly}' not found! SubSceneActors: {:?}",
@@ -160,12 +174,26 @@ impl<'a> Scene<'a> {
     pub fn get_actor_by_userfriendly_end(
         &self,
         userfriendly: &str,
+        lax: bool,
     ) -> Result<&Actor, anyhow::Error> {
+        let userfriendly = if lax {
+            Cow::Owned(userfriendly.to_lowercase())
+        } else {
+            Cow::Borrowed(userfriendly)
+        };
         self.actors
             .iter()
             .map(WrappedActors::actor)
             .filter_map(Result::ok)
-            .find(|a| a.userfriendly.ends_with(userfriendly))
+            .find(|a| {
+                if lax {
+                    a.userfriendly
+                        .to_lowercase()
+                        .ends_with(userfriendly.as_ref())
+                } else {
+                    a.userfriendly.ends_with(&userfriendly.as_ref())
+                }
+            })
             .ok_or_else(|| {
                 anyhow!(
                     "Actor ending in '{userfriendly}' not found! Actors: {:?}",
@@ -2653,7 +2681,9 @@ where
             .map_err(|_| D::Error::custom(format!("Could not parse '{fourth}' as a float!")))?;
         max_i = i;
     }
-    test(&max_i, &3).map_err(|e| D::Error::custom(e.to_string()))?;
+    test(&max_i, &3)
+        .result()
+        .map_err(|e| D::Error::custom(e.to_string()))?;
     Ok(result)
 }
 
@@ -3258,6 +3288,8 @@ mod wrapped_component {
         BezierBranchFx,
         #[serde(rename = "BezierTreeComponent")]
         BezierTree(WrappedBezierTreeComponent<'a>),
+        #[serde(rename = "JD_BlockFlowComponent")]
+        BlockFlowComponent,
         #[serde(rename = "BoxInterpolatorComponent")]
         BoxInterpolator(WrappedBoxInterpolatorComponent),
         #[serde(rename = "JD_Carousel")]
@@ -4313,6 +4345,7 @@ mod wrapped_component {
         ("FXControllerComponent" => FXController(WrappedFXControllerComponent)),
         ("JD_AutodanceComponent" => Autodance),
         ("JD_AvatarDescComponent" => AvatarDesc),
+        ("JD_BlockFlowComponent" => BlockFlowComponent),
         ("JD_Carousel" => Carousel(WrappedCarousel)),
         ("JD_CMU_GenericStage_Component" => CMUGenericStage),
         ("JD_CreditsComponent" => Credits(WrappedCreditsComponent)),

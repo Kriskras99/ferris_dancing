@@ -87,7 +87,7 @@ fn build_carousel(
 ) -> Result<(), Error> {
     let carousel_rules_path = cook_path(carousel_rules, bs.platform)?;
     let template_file = bs.patched_base_vfs.open(carousel_rules_path.as_ref())?;
-    let mut carousel_rules = cooked::json::parse_v22(&template_file)?
+    let mut carousel_rules = cooked::json::parse_v22(&template_file, false)?
         .carousel_rules()?
         .clone();
 

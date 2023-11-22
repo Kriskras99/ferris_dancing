@@ -2,7 +2,7 @@
 //! Build the audio and musictrack
 use std::{borrow::Cow, fs::File, path::PathBuf};
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, json_types};
 
 use crate::{build::BuildFiles, types::song::MusicTrack, utils::cook_path};
@@ -20,8 +20,32 @@ pub fn build(
     let audio_cache_dir = format!("{cache_map_path}/audio");
     let audio_dir = format!("{map_path}/audio");
 
+    // audio file
+    let from = ses.dirs.audio().join(ses.song.audiofile.as_ref());
+    let extension = from
+        .extension()
+        .and_then(|e| e.to_str())
+        .ok_or_else(|| anyhow!("Invalid extension! {from:?}"))?;
+    let (to, extension) = match extension {
+        "ckd" => {
+            assert!(from.to_str().unwrap().ends_with("wav.ckd"), "{from:?}");
+            (
+                PathBuf::from(cook_path(
+                    &format!("{audio_dir}/{lower_map_name}.wav"),
+                    ses.platform,
+                )?),
+                "wav",
+            )
+        }
+        _ => (
+            PathBuf::from(&format!("{audio_dir}/{lower_map_name}.{extension}")),
+            extension,
+        ),
+    };
+    bf.static_files.add_file(from.clone(), to)?;
+
     // musictrack template
-    let musictrack_template_vec = musictrack_template(ses)?;
+    let musictrack_template_vec = musictrack_template(ses, extension)?;
 
     // sequence template
     let sequence_template_vec = sequence_template()?;
@@ -52,14 +76,6 @@ pub fn build(
         format!("{audio_cache_dir}/{lower_map_name}_audio.isc.ckd"),
         audio_scene_vec,
     );
-
-    // audio file
-    let from = ses.dirs.audio().join(ses.song.audiofile.as_ref());
-    let to = PathBuf::from(cook_path(
-        &format!("{audio_dir}/{lower_map_name}.wav"),
-        ses.platform,
-    )?);
-    bf.static_files.add_file(from, to)?;
 
     Ok(cooked::isc::WrappedScene {
         scene: audio_scene.scene,
@@ -103,7 +119,7 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
 }
 
 /// Build the musictrack template
-fn musictrack_template(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
+fn musictrack_template(ses: &SongExportState<'_>, extension: &str) -> Result<Vec<u8>, Error> {
     let map_path = ses.map_path;
     let lower_map_name = ses.lower_map_name;
     let map_name = ses.song.map_name.as_ref();
@@ -146,7 +162,7 @@ fn musictrack_template(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
                         fade_out_type: 0,
                         entry_points: Vec::new(),
                     },
-                    path: Cow::Owned(format!("{map_path}/audio/{lower_map_name}.wav")),
+                    path: Cow::Owned(format!("{map_path}/audio/{lower_map_name}.{extension}")),
                     url: Cow::Owned(format!("jmcs://jd-contents/{map_name}/{map_name}.ogg")),
                 },
             },

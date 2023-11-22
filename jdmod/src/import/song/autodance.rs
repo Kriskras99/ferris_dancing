@@ -2,7 +2,7 @@
 //! Imports the autodance settings and preview audio file
 use std::{borrow::Cow, fs::File, io::Write};
 
-use anyhow::{Context, Error};
+use anyhow::Error;
 use ubiart_toolkit::cooked;
 
 use crate::{types::song::Autodance, utils::cook_path};
@@ -14,7 +14,7 @@ pub fn import(sis: &SongImportState<'_>, autodance_path: &str) -> Result<(), Err
     let autodance_file = sis
         .vfs
         .open(cook_path(autodance_path, sis.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&autodance_file)?.actor()?;
+    let mut actor = cooked::json::parse_v22(&autodance_file, sis.lax)?.actor()?;
     assert!(
         actor.components.len() == 1,
         "More than one component in actor!"
@@ -24,12 +24,12 @@ pub fn import(sis: &SongImportState<'_>, autodance_path: &str) -> Result<(), Err
     let data = &autodance.autodance_data;
     let audiofile_rel_path = "autodance.ogg";
     let audiofile_path = sis.dirs.audio().join(audiofile_rel_path);
-    let audiofile = sis
-        .vfs
-        .open(data.autodance_sound_path.as_ref().as_ref())
-        .with_context(|| format!("Could not open {}!", data.autodance_sound_path))?;
-    let mut new_audiofile = File::create(audiofile_path)?;
-    new_audiofile.write_all(&audiofile)?;
+    if let Ok(audiofile) = sis.vfs.open(data.autodance_sound_path.as_ref().as_ref()) {
+        let mut new_audiofile = File::create(audiofile_path)?;
+        new_audiofile.write_all(&audiofile)?;
+    } else {
+        println!("Warning! {} not found!", data.autodance_sound_path);
+    }
 
     let autodance = Autodance {
         record: data

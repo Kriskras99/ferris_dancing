@@ -970,15 +970,19 @@ pub struct AutoDanceEffectData<'a> {
 pub struct AutodanceVideoStructure<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub song_start_position: u32,
+    pub song_start_position: i32,
     pub duration: f32,
     pub thumbnail_time: u32,
-    pub fade_out_duration: u32,
+    pub fade_out_duration: f32,
     pub ground_plane_path: Cow<'a, str>,
     pub first_layer_triple_background_path: Cow<'a, str>,
     pub second_layer_triple_background_path: Cow<'a, str>,
     pub third_layer_triple_background_path: Cow<'a, str>,
-    #[serde(rename = "playback_events")]
+    #[serde(
+        rename = "playback_events",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub playback_events: Vec<PlaybackEvent<'a>>,
     #[serde(rename = "background_effect")]
     pub background_effect: Box<AutoDanceFxDesc<'a>>,

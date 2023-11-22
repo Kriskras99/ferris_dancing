@@ -27,7 +27,7 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
     let playlists_file = is
         .vfs
         .open(cook_path(playlist_path, is.platform)?.as_ref())?;
-    let parsed_json = cooked::json::parse_v22(&playlists_file)?;
+    let parsed_json = cooked::json::parse_v22(&playlists_file, is.lax)?;
     let playlist_database = parsed_json.playlists_database()?;
 
     for (name, playlist) in &playlist_database.playlists {
