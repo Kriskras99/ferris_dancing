@@ -1,44 +1,44 @@
 use std::path::Path;
 
-use ubiart_toolkit::{cooked::json, utils::Game};
+use ubiart_toolkit::cooked::json;
 
 fn msh_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDance2017).unwrap();
+    json::open_v17(input, false).unwrap();
     Ok(())
 }
 
 fn msh_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDance2018).unwrap();
+    json::open_v18(input, false).unwrap();
     Ok(())
 }
 
 fn msh_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDance2019).unwrap();
+    json::open_v19(input, false).unwrap();
     Ok(())
 }
 
 fn msh_parse_nx2020(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDance2020).unwrap();
+    json::open_v20(input, false).unwrap();
     Ok(())
 }
 
 fn msh_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDanceChina).unwrap();
+    json::open_v20c(input, false).unwrap();
     Ok(())
 }
 
 fn msh_parse_nx2020_japan(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDance2020).unwrap();
+    json::open_v20(input, false).unwrap();
     Ok(())
 }
 
 fn msh_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDance2021).unwrap();
+    json::open_v21(input, false).unwrap();
     Ok(())
 }
 
 fn msh_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
-    json::open(input, Game::JustDance2022).unwrap();
+    json::open_v22(input, false).unwrap();
     Ok(())
 }
 

@@ -1,4 +1,4 @@
-use std::{path::PathBuf, fs::File};
+use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use ubiart_toolkit::msm;
@@ -20,7 +20,7 @@ fn main() {
 
     let moves = msm::open(&cli.source).unwrap();
     let msm = moves.msm();
-    
+
     if !cli.quiet {
         println!("name: {}", msm.name);
         println!("map: {}", msm.map);
@@ -34,7 +34,6 @@ fn main() {
         println!("unk10: {:x}", msm.unk10);
         println!("unk14: {:x}", msm.unk14);
         println!("unk15: {:x}", msm.unk15);
-
     }
 
     if let Some(path) = cli.output {

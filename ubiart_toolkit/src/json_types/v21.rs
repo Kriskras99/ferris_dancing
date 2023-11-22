@@ -530,5 +530,5 @@ pub struct Actor21<'a> {
     pub startpaused: u32,
     pub forceisenvironment: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub components: Vec<Template22<'a>>,
+    pub components: Vec<Template21<'a>>,
 }
