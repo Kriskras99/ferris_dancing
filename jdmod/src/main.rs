@@ -1,14 +1,3 @@
-#![deny(clippy::all)]
-#![warn(clippy::pedantic)]
-#![warn(clippy::nursery)]
-#![warn(clippy::cargo)]
-// If an integer doesn't fit it's a good indication that something broke
-#![deny(clippy::as_conversions)]
-#![deny(clippy::empty_structs_with_brackets)]
-#![deny(clippy::get_unwrap)]
-#![deny(clippy::if_then_some_else_none)]
-#![deny(clippy::lossy_float_literal)]
-#![deny(clippy::missing_assert_message)]
 // Everything should be documented
 #![deny(missing_docs)]
 #![deny(clippy::missing_docs_in_private_items)]
