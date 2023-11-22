@@ -2,7 +2,7 @@
 //! Contains functionality for importing songs
 use std::{borrow::Cow, fs::File};
 
-use anyhow::{Context, Error};
+use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
@@ -43,6 +43,8 @@ pub struct SongImportState<'a> {
     pub platform: Platform,
     /// The map from game locale id to mod locale id
     pub locale_id_map: &'a LocaleIdMap,
+    /// Should we be lax with parsing
+    pub lax: bool,
 }
 
 /// Import the song described at `songdesc_path``
@@ -50,7 +52,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let songdesc_file = is
         .vfs
         .open(cook_path(songdesc_path, is.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&songdesc_file)?.actor()?;
+    let mut actor = cooked::json::parse_v22(&songdesc_file, is.lax)?.actor()?;
     let songdesc = actor.components.swap_remove(0).song_description()?;
 
     let map_name = &songdesc.map_name;
@@ -86,6 +88,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         game: is.game,
         platform: is.platform,
         locale_id_map: &is.locale_id_map,
+        lax: is.lax,
     };
 
     println!("Parsing {map_name}");
@@ -93,52 +96,49 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         &format!("world/maps/{lower_map_name}/{lower_map_name}_main_scene.isc"),
         is.platform,
     )?;
-    let main_scene_file = is
-        .vfs
-        .open(main_scene_path.as_ref())
-        .with_context(|| format!("Failed to open {main_scene_path}!"))?;
+    let main_scene_file = is.vfs.open(main_scene_path.as_ref())?;
     let main_scene = cooked::isc::parse(&main_scene_file)?.scene;
 
     // Import the audio preview
     let autodance_path = main_scene
-        .get_subscene_by_userfriendly_end("_AUTODANCE")?
+        .get_subscene_by_userfriendly_end("_AUTODANCE", sis.lax)?
         .wrapped_scene
         .scene
-        .get_actor_by_userfriendly_end("_autodance")?
+        .get_actor_by_userfriendly_end("_autodance", sis.lax)?
         .lua
         .as_ref();
     autodance::import(&sis, autodance_path)?;
 
     // Prepare for importing the timelines
     let timeline_scene = &main_scene
-        .get_subscene_by_userfriendly_end("_TML")?
+        .get_subscene_by_userfriendly_end("_TML", sis.lax)?
         .wrapped_scene
         .scene;
 
     // Import the dance timeline
     let dance_timeline_path = &timeline_scene
-        .get_actor_by_userfriendly_end("_tml_dance")?
+        .get_actor_by_userfriendly_end("_tml_dance", sis.lax)?
         .lua;
     dance_timeline::import(&sis, dance_timeline_path)?;
 
     // Import the karaoke timeline
     let karaoke_timeline_path = &timeline_scene
-        .get_actor_by_userfriendly_end("_tml_karaoke")?
+        .get_actor_by_userfriendly_end("_tml_karaoke", sis.lax)?
         .lua;
     karaoke_timeline::import(&sis, karaoke_timeline_path)?;
 
     // Import the mainsequence
     let mainsequence_path = &main_scene
-        .get_subscene_by_userfriendly_end("_CINE")?
+        .get_subscene_by_userfriendly_end("_CINE", sis.lax)?
         .wrapped_scene
         .scene
-        .get_actor_by_userfriendly_end("_MainSequence")?
+        .get_actor_by_userfriendly_end("_MainSequence", sis.lax)?
         .lua;
     mainsequence::import(&sis, mainsequence_path)?;
 
     // Import the audio
     let musictrack_path = &main_scene
-        .get_subscene_by_userfriendly_end("_AUDIO")?
+        .get_subscene_by_userfriendly_end("_AUDIO", sis.lax)?
         .wrapped_scene
         .scene
         .get_actor_by_userfriendly("MusicTrack")?
@@ -147,18 +147,36 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
 
     // Import the video
     let video_actor = &main_scene
-        .get_subscene_by_userfriendly_end("_VIDEO")?
+        .get_subscene_by_userfriendly_end("_VIDEO", sis.lax)?
         .wrapped_scene
         .scene
         .get_actor_by_userfriendly("VideoScreen")?;
     let videofile = video::import(&sis, video_actor)?;
 
     // Import menuart
-    let menuart_scene = &main_scene
-        .get_subscene_by_userfriendly_end("_menuart")?
-        .wrapped_scene
-        .scene;
-    menuart::import(&sis, menuart_scene, &songdesc.phone_images)?;
+    match (
+        main_scene.get_subscene_by_userfriendly_end("_menuart", sis.lax),
+        sis.lax,
+    ) {
+        (Ok(subscene), _) => {
+            let menuart_scene = &subscene.wrapped_scene.scene;
+            menuart::import(&sis, menuart_scene, &songdesc.phone_images)?;
+        }
+        (Err(_), true) => {
+            println!("Warning! Could not find menuart subscene, trying to use scene file!");
+            let cooked_path = cook_path(
+                &format!(
+                    "world/maps/{}/menuart/{}_menuart.isc",
+                    sis.lower_map_name, sis.lower_map_name
+                ),
+                sis.platform,
+            )?;
+            let scene_file = sis.vfs.open(cooked_path.as_ref())?;
+            let scene = cooked::isc::parse(&scene_file)?.scene;
+            menuart::import(&sis, &scene, &songdesc.phone_images)?;
+        }
+        (Err(error), false) => return Err(error),
+    }
 
     let song_path = sis.dirs.song().join("song.json");
 
@@ -183,7 +201,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
             .collect::<Result<_, _>>()?,
         subtitle: is.locale_id_map.get(songdesc.locale_id).unwrap_or_default(),
         default_colors: (&songdesc.default_colors).into(),
-        audiofile: Cow::Borrowed(audiofile),
+        audiofile: Cow::Owned(audiofile),
         videofile: Cow::Borrowed(videofile),
     };
 

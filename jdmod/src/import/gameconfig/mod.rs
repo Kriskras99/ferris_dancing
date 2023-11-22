@@ -47,7 +47,7 @@ pub fn import(is: &ImportState<'_>) -> Result<(), Error> {
 /// Import anything supported in the enginedata/gameconfig folder (Just Dance 2022)
 fn import_v22(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-    let parsed_json = cooked::json::parse_v22(&gameconfig_file)?;
+    let parsed_json = cooked::json::parse_v22(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
 
     // Parse objectives
@@ -100,7 +100,7 @@ fn import_v22(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 /// Import anything supported in the enginedata/gameconfig folder (Just Dance 2021)
 fn import_v21(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-    let parsed_json = cooked::json::parse_v21(&gameconfig_file)?;
+    let parsed_json = cooked::json::parse_v21(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
 
     // Parse objectives
@@ -153,7 +153,7 @@ fn import_v21(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 /// Import anything supported in the enginedata/gameconfig folder (Just Dance 2020)
 fn import_v20(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-    let parsed_json = cooked::json::parse_v20(&gameconfig_file)?;
+    let parsed_json = cooked::json::parse_v20(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
 
     // Parse objectives
@@ -206,7 +206,7 @@ fn import_v20(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 /// Import anything supported in the enginedata/gameconfig folder (Just Dance 2020 China)
 fn import_v20c(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-    let parsed_json = cooked::json::parse_v20c(&gameconfig_file)?;
+    let parsed_json = cooked::json::parse_v20c(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
 
     // Parse objectives
@@ -259,7 +259,7 @@ fn import_v20c(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error>
 /// Import anything supported in the enginedata/gameconfig folder (Just Dance 2019)
 fn import_v19(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-    let parsed_json = cooked::json::parse_v19(&gameconfig_file)?;
+    let parsed_json = cooked::json::parse_v19(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
 
     // Parse scheduled quests
@@ -289,7 +289,7 @@ fn import_v19(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 /// Import anything supported in the enginedata/gameconfig folder (Just Dance 2018)
 fn import_v18(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-    let parsed_json = cooked::json::parse_v18(&gameconfig_file)?;
+    let parsed_json = cooked::json::parse_v18(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
 
     // Parse scheduled quests
@@ -310,7 +310,7 @@ fn import_v18(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 /// Import anything supported in the enginedata/gameconfig folder (Just Dance 2017)
 fn import_v17(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-    let parsed_json = cooked::json::parse_v17(&gameconfig_file)?;
+    let parsed_json = cooked::json::parse_v17(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
 
     // Parse the songdb

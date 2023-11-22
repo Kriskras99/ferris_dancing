@@ -2,7 +2,7 @@
 //! Build the video scenes, actors, and video
 use std::{borrow::Cow, ffi::OsStr, path::PathBuf};
 
-use anyhow::{Context, Error};
+use anyhow::Error;
 use dotstar_toolkit_utils::testing::test;
 use ubiart_toolkit::{cooked, utils::SplitPath};
 

@@ -7,6 +7,7 @@
 #![allow(clippy::option_if_let_else)]
 // Not reliable enough
 #![allow(clippy::doc_markdown)]
+#![feature(try_trait_v2)]
 
 //! # .* Toolkit Utils
 //! This library contains various utilities for writing parsers.

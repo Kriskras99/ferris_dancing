@@ -231,7 +231,7 @@ pub struct PictogramClip<'a> {
     /// Not used in nx2019 or later
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub atl_index: Option<u32>,
-    pub coach_count: u32,
+    pub coach_count: i64,
 }
 
 pub type Color = (f32, f32, f32, f32);
@@ -251,6 +251,7 @@ pub struct MotionClip<'a> {
     pub coach_id: u8,
     pub move_type: u8,
     pub color: Color,
+    #[serde(default)]
     pub motion_platform_specifics: HashMap<Cow<'a, str>, MotionPlatformSpecific<'a>>,
 }
 
@@ -279,6 +280,7 @@ pub struct GoldEffectClip<'a> {
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
+    #[serde(default)]
     pub effect_type: u8,
 }
 
@@ -298,7 +300,7 @@ pub struct KaraokeClip<'a> {
     pub content_type: u8,
     pub start_time_tolerance: u8,
     pub end_time_tolerance: u8,
-    pub semitone_tolerance: u8,
+    pub semitone_tolerance: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -312,7 +314,7 @@ pub struct SoundSetClip<'a> {
     pub start_time: i32,
     pub duration: u32,
     pub sound_set_path: Cow<'a, str>,
-    pub sound_channel: u32,
+    pub sound_channel: i32,
     #[serde(default)]
     pub start_offset: u32,
     pub stops_on_end: u32,

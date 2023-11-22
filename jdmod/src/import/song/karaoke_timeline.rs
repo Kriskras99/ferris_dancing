@@ -14,7 +14,7 @@ pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<
     let karaoke_timeline_file = sis
         .vfs
         .open(cook_path(karaoke_timeline_path, sis.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&karaoke_timeline_file)?.actor()?;
+    let mut actor = cooked::json::parse_v22(&karaoke_timeline_file, sis.lax)?.actor()?;
     assert!(
         actor.components.len() == 1,
         "More than one component in actor!"
@@ -34,7 +34,7 @@ pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<
         let karaoke_tml_path = cook_path(karaoke_tml_path, sis.platform)?;
 
         let tape_file = sis.vfs.open(karaoke_tml_path.as_ref())?;
-        let template = cooked::json::parse_v22(&tape_file)?;
+        let template = cooked::json::parse_v22(&tape_file, sis.lax)?;
         let tape = template.tape()?;
 
         let timeline = Timeline {

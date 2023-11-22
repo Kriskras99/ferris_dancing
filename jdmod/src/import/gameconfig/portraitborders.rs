@@ -20,7 +20,7 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
     let new_portraitborders = is
         .vfs
         .open(cook_path(portraitborders_path, is.platform)?.as_ref())?;
-    let template = cooked::json::parse_v22(&new_portraitborders)?;
+    let template = cooked::json::parse_v22(&new_portraitborders, is.lax)?;
     let portrait_borders_database = template.portrait_borders_database()?;
 
     // Load existing avatars in the mod

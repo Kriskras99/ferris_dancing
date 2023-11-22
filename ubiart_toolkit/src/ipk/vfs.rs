@@ -1,17 +1,12 @@
 #![allow(clippy::module_name_repetitions)]
 
-use std::{
-    io::{self, Cursor, ErrorKind},
-    ops::Deref,
-    path::Path,
-};
+use std::{io::ErrorKind, ops::Deref, path::Path};
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{
     VirtualFile, VirtualFileInner, VirtualFileMetadata, VirtualFileSystem,
 };
-use flate2::read::ZlibDecoder;
-use memmap2::{Mmap, MmapMut};
+use memmap2::Mmap;
 use stable_deref_trait::StableDeref;
 use yoke::Yoke;
 
@@ -45,9 +40,13 @@ impl<'f> VfsIpkFilesystem<'f> {
     ///
     /// # Errors
     /// Will error if the parsing of the IPK file fails or the file fails to open
-    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path) -> Result<VfsIpkFilesystem<'f>, Error> {
+    pub fn new(
+        fs: &'f dyn VirtualFileSystem,
+        path: &Path,
+        lax: bool,
+    ) -> Result<VfsIpkFilesystem<'f>, Error> {
         let ipk_file = fs.open(path)?;
-        let yoke = Yoke::try_attach_to_cart(ipk_file, |data: &[u8]| super::parse(data))?;
+        let yoke = Yoke::try_attach_to_cart(ipk_file, |data: &[u8]| super::parse(data, lax))?;
         let ipk = crate::ipk::BundleOwned::from(yoke);
         Ok(Self { ipk })
     }
@@ -86,7 +85,7 @@ impl VirtualFileMetadata for VfsIpkMetadata {
         self.size
     }
 
-    fn created(&self) -> io::Result<u64> {
+    fn created(&self) -> std::io::Result<u64> {
         Ok(self.timestamp)
     }
 }
@@ -105,19 +104,19 @@ impl From<&IpkFile<'_>> for VfsIpkMetadata {
 impl<'fs> VirtualFileSystem for VfsIpkFilesystem<'fs> {
     fn open<'f>(&'f self, path: &Path) -> std::io::Result<VirtualFile<'f>> {
         let path_id = path_id(path);
-        let file = self
-            .ipk
-            .get_file(&path_id)
-            .ok_or_else(|| io::Error::from(ErrorKind::NotFound))?;
+        let file = self.ipk.get_file(&path_id).ok_or_else(|| {
+            std::io::Error::new(
+                ErrorKind::NotFound,
+                format!("Could not open {path:?}, file not found!"),
+            )
+        })?;
         match file.data {
             super::Data::Uncompressed(data) => Ok(VirtualFile::from(data.data)),
             super::Data::Compressed(data) => {
-                let mut mmap = MmapMut::map_anon(data.uncompressed_size)?;
-                let mut decoder = ZlibDecoder::new(data.data);
-                let mut cursor = Cursor::new(&mut *mmap);
-                io::copy(&mut decoder, &mut cursor)?;
-                let mmap = mmap.make_read_only()?;
-                let trait_object: Box<dyn VirtualFileInner> = Box::new(mmap);
+                let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
+                let mut decompress = flate2::Decompress::new(true);
+                decompress.decompress_vec(data.data, &mut vec, flate2::FlushDecompress::Finish)?;
+                let trait_object: Box<dyn VirtualFileInner> = Box::new(vec);
                 Ok(VirtualFile::from(trait_object))
             }
         }
@@ -128,11 +127,14 @@ impl<'fs> VirtualFileSystem for VfsIpkFilesystem<'fs> {
         let file = self.ipk.get_file(&path_id);
         match file {
             Some(file) => Ok(Box::new(VfsIpkMetadata::from(file))),
-            None => Err(ErrorKind::NotFound.into()),
+            None => Err(std::io::Error::new(
+                ErrorKind::NotFound,
+                format!("Could not get metadata for {path:?}, file not found!"),
+            )),
         }
     }
 
-    fn list_files(&self, path: &Path) -> io::Result<Vec<String>> {
+    fn list_files(&self, path: &Path) -> std::io::Result<Vec<String>> {
         let mut files = self.ipk.list_files();
         let path = path.strip_prefix("/").unwrap_or(path);
         files.retain(|s| path.to_str().is_some_and(|p| s.starts_with(p)));

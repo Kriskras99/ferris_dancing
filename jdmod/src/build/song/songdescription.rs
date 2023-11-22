@@ -66,6 +66,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
                 double_scoring_type: None,
                 paths: None,
                 energy: None,
+                score_with_both_controllers: None,
                 jdm_attributes: None,
             },
         )],

@@ -63,8 +63,8 @@ pub fn export(dir_root: &Path, dir_export: &Path) -> Result<(), Error> {
 
     // Load bundle_nx.ipk and patch_nx.ipk to use as a base
     let base_native_vfs = Native::new(dir_tree.base())?;
-    let bundle_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref())?;
-    let patch_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref())?;
+    let bundle_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref(), false)?;
+    let patch_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref(), false)?;
     let patched_base_vfs = OverlayFs::new(&patch_nx_vfs, &bundle_nx_vfs);
     let borrowed_patched_base_vfs = &patched_base_vfs;
 

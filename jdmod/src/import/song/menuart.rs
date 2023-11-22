@@ -44,17 +44,24 @@ pub fn import(
                 .ok_or_else(|| anyhow!("No components in actor"))?
                 .material_graphic_component()?;
 
-            let from = sis.vfs.open(
-                cook_path(
-                    &mgc.material
-                        .gfx_material_serializable
-                        .texture_set
-                        .gfx_material_texture_path_set
-                        .diffuse,
-                    sis.platform,
-                )?
-                .as_ref(),
+            let cooked_path = cook_path(
+                &mgc.material
+                    .gfx_material_serializable
+                    .texture_set
+                    .gfx_material_texture_path_set
+                    .diffuse,
+                sis.platform,
             )?;
+
+            let from = match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
+                (Ok(from), _) => from,
+                (Err(err), true) => {
+                    println!("Warning! {err}");
+                    continue;
+                }
+                (Err(err), false) => return Err(err.into()),
+            };
+
             let decooked_picto = decode_texture(&from)?;
             let to_filename = format!("{name}.png");
             let path = sis.dirs.menuart().join(&to_filename);
@@ -76,7 +83,14 @@ pub fn import(
     }
 
     for (name, filename) in phone_images {
-        let from = sis.vfs.open(filename.as_ref().as_ref())?;
+        let from = match (sis.vfs.open(filename.as_ref().as_ref()), sis.lax) {
+            (Ok(from), _) => from,
+            (Err(err), true) => {
+                println!("Warning! {err}");
+                continue;
+            }
+            (Err(err), false) => return Err(err.into()),
+        };
         let mut new_filename = name.to_lowercase();
         new_filename.push_str("_phone.");
         new_filename.push_str(

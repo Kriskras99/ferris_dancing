@@ -61,7 +61,7 @@ impl<'f> VfsSfatFilesystem<'f> {
     ///
     /// # Panics
     /// Will panic if the secure_fat.gf file does not reference any IPKs
-    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path) -> Result<Self, Error> {
+    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path, lax: bool) -> Result<Self, Error> {
         let sfat_file = fs
             .open(path)
             .with_context(|| format!("Failed to open {path:?}"))?;
@@ -78,13 +78,13 @@ impl<'f> VfsSfatFilesystem<'f> {
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             let filename = super::bundle_name_to_filename(name, sfat.game_platform().platform);
             let path = parent.with_file_name(&filename);
-            let ipk = VfsIpkFilesystem::new(fs, &path)
+            let ipk = VfsIpkFilesystem::new(fs, &path, lax)
                 .with_context(|| format!("Failed to open or parse {path:?}"))?;
             bundles.insert(*bundle_id, ipk);
         }
         let filename = super::bundle_name_to_filename("patch", sfat.game_platform().platform);
         let path = parent.with_file_name(filename);
-        let patch = VfsIpkFilesystem::new(fs, &path).ok();
+        let patch = VfsIpkFilesystem::new(fs, &path, lax).ok();
         if patch.is_none() {
             println!("Warning! No patch file found!");
         }
@@ -112,12 +112,12 @@ impl<'fs> VirtualFileSystem for VfsSfatFilesystem<'fs> {
                             return Ok(file);
                         }
                     }
-                    println!(
-                        "File found in secure_fat.gf but does not exist in the specified bundles!"
-                    );
-                    Err(ErrorKind::NotFound.into())
+                    Err(std::io::Error::new(ErrorKind::NotFound, format!("Could not open {path:?}, file is listed in file table but does not exist in bundle!")))
                 }
-                None => Err(ErrorKind::NotFound.into()),
+                None => Err(std::io::Error::new(
+                    ErrorKind::NotFound,
+                    format!("Could not open {path:?}, file not found!"),
+                )),
             }
         }
     }
@@ -136,12 +136,12 @@ impl<'fs> VirtualFileSystem for VfsSfatFilesystem<'fs> {
                             return Ok(metadata);
                         }
                     }
-                    println!(
-                        "File found in secure_fat.gf but does not exist in the specified bundles!"
-                    );
-                    Err(ErrorKind::NotFound.into())
+                    Err(std::io::Error::new(ErrorKind::NotFound, format!("Could not get metadata for {path:?}, file is listed in file table but does not exist in bundle!")))
                 }
-                None => Err(ErrorKind::NotFound.into()),
+                None => Err(std::io::Error::new(
+                    ErrorKind::NotFound,
+                    format!("Could not get metadata for {path:?}, file not found!"),
+                )),
             }
         }
     }

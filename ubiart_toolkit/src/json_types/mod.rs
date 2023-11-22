@@ -29,36 +29,6 @@ pub use v1719::*;
 use serde::{Deserialize, Serialize};
 use yoke::{Yoke, Yokeable};
 
-use self::{
-    v17::{Template17, Template17Owned},
-    v18::{Template18, Template18Owned},
-    v19::{Template19, Template19Owned},
-    v20::{Template20, Template20Owned},
-    v20c::{Template20C, Template20COwned},
-    v21::{Template21, Template21Owned},
-    v22::{Template22, Template22Owned},
-};
-
-pub enum TemplateOwned<C: StableDeref> {
-    V17(Template17Owned<C>),
-    V18(Template18Owned<C>),
-    V19(Template19Owned<C>),
-    V20(Template20Owned<C>),
-    V20C(Template20COwned<C>),
-    V21(Template21Owned<C>),
-    V22(Template22Owned<C>),
-}
-
-pub enum Template<'a> {
-    V17(Template17<'a>),
-    V18(Template18<'a>),
-    V19(Template19<'a>),
-    V20(Template20<'a>),
-    V20C(Template20C<'a>),
-    V21(Template21<'a>),
-    V22(Template22<'a>),
-}
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Empty<'a> {

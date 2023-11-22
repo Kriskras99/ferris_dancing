@@ -513,9 +513,9 @@ pub struct MusicTrackStructure<'a> {
     #[serde(default)]
     pub use_fade_end_beat: bool,
     pub video_start_time: f32,
-    pub preview_entry: u32,
-    pub preview_loop_start: u32,
-    pub preview_loop_end: u32,
+    pub preview_entry: f32,
+    pub preview_loop_start: f32,
+    pub preview_loop_end: f32,
     pub volume: f32,
     #[serde(default)]
     pub fade_in_duration: u32,
@@ -538,8 +538,10 @@ impl MusicTrackStructure<'_> {
 pub struct MusicSignature<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub marker: i32,
+    pub marker: f32,
     pub beats: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<Cow<'a, str>>,
 }
 
 impl MusicSignature<'_> {
@@ -551,7 +553,7 @@ impl MusicSignature<'_> {
 pub struct MusicSection<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub marker: u32,
+    pub marker: f32,
     pub section_type: u32,
     pub comment: Cow<'a, str>,
 }

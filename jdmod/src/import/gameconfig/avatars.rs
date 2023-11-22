@@ -53,7 +53,7 @@ pub fn import_v18v22(
         let file = is
             .vfs
             .open(cook_path(actor.lua.as_ref(), is.platform)?.as_ref())?;
-        let template = cooked::json::parse_v22(&file)?;
+        let template = cooked::json::parse_v22(&file, is.lax)?;
         let actor_template = template.actor()?;
         assert!(
             actor_template.components.len() == 2,

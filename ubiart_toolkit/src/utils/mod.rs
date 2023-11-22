@@ -61,18 +61,16 @@ pub struct SplitPath<'a> {
     pub filename: Cow<'a, str>,
 }
 
-impl From<&SplitPath<'_>> for PathId {
-    fn from(value: &SplitPath<'_>) -> Self {
-        Self(string_id_2(&value.path, &value.filename))
+impl Display for SplitPath<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.path)?;
+        f.write_str(&self.filename)
     }
 }
 
-impl ToString for SplitPath<'_> {
-    fn to_string(&self) -> String {
-        let mut string = String::with_capacity(self.path.len() + self.filename.len());
-        string.push_str(&self.path);
-        string.push_str(&self.filename);
-        string
+impl From<&SplitPath<'_>> for PathId {
+    fn from(value: &SplitPath<'_>) -> Self {
+        Self(string_id_2(&value.path, &value.filename))
     }
 }
 
@@ -349,6 +347,7 @@ pub fn string_id_2(one: &str, two: &str) -> u32 {
 }
 
 #[must_use]
+/// Implementation of the UbiArt CRC function
 pub fn ubi_crc(data: &[u8]) -> u32 {
     let length = data.len();
     let mut a: u32 = 0x9E37_79B9;
@@ -416,6 +415,7 @@ pub fn ubi_crc(data: &[u8]) -> u32 {
 #[allow(clippy::as_conversions)]
 #[allow(clippy::cast_possible_truncation)]
 #[must_use]
+/// Convenience function for wrapping add
 const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
     let mod_rhs = (rhs % (u32::MAX as usize)) as u32;
     lhs.wrapping_add(mod_rhs)
@@ -429,10 +429,12 @@ const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
 #[allow(clippy::as_conversions)]
 #[allow(clippy::cast_possible_truncation)]
 #[must_use]
+/// Convenience function for wrapping add
 const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
     lhs.wrapping_add(rhs as u32)
 }
 
+/// Shifting implementation for ubicrc
 const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
     a = (a.wrapping_sub(b).wrapping_sub(c)) ^ (c >> 0xd);
     b = (b.wrapping_sub(a).wrapping_sub(c)) ^ (a << 0x8);

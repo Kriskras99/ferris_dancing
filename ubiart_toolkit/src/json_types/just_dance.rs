@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
@@ -134,6 +134,7 @@ impl AutodanceData<'_> {
 pub struct AutodanceRecordingStructure<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub records: Vec<Record<'a>>,
 }
 
@@ -183,13 +184,13 @@ pub struct AutoDanceFxDesc<'a> {
     pub colored_shiva_color_0: GFXVector4<'a>,
     pub colored_shiva_color_1: GFXVector4<'a>,
     pub colored_shiva_color_2: GFXVector4<'a>,
-    pub saturation_modifier: u32,
-    pub slime_factor: u32,
+    pub saturation_modifier: f32,
+    pub slime_factor: f32,
     pub slime_color: GFXVector4<'a>,
     pub slime_opacity: f32,
     pub slime_ambient: f32,
     pub slime_normal_tiling: u32,
-    pub slime_light_angle: u32,
+    pub slime_light_angle: f32,
     pub slime_refraction: f32,
     pub slime_refraction_index: f32,
     pub slime_specular: f32,
@@ -198,7 +199,7 @@ pub struct AutoDanceFxDesc<'a> {
     pub overlay_blend_color: GFXVector4<'a>,
     pub background_sobel_factor: f32,
     pub background_sobel_color: GFXVector4<'a>,
-    pub player_glow_factor: u32,
+    pub player_glow_factor: f32,
     pub player_glow_color: GFXVector4<'a>,
     pub swap_head_with_player: (u32, u32, u32, u32, u32, u32),
     pub animate_player_head: (u32, u32, u32, u32, u32, u32),
@@ -226,10 +227,10 @@ pub struct AutoDanceFxDesc<'a> {
     pub end_radius: f32,
     pub radius_variance: f32,
     pub radius_noise_rate: u32,
-    pub radius_noise_amp: u32,
+    pub radius_noise_amp: f32,
     pub min_spin: f32,
     pub max_spin: f32,
-    pub dir_angle: u32,
+    pub dir_angle: f32,
     pub min_wander_rate: f32,
     pub max_wander_rate: f32,
     pub min_wander_amp: f32,
@@ -369,8 +370,8 @@ impl Default for AutoDanceFxDesc<'_> {
                 z: 1.0,
                 w: 1.0,
             },
-            saturation_modifier: 0,
-            slime_factor: 0,
+            saturation_modifier: 0.0,
+            slime_factor: 0.0,
             slime_color: GFXVector4 {
                 class: Some(GFXVector4::CLASS),
                 x: 0.49902,
@@ -381,7 +382,7 @@ impl Default for AutoDanceFxDesc<'_> {
             slime_opacity: 0.2,
             slime_ambient: 0.2,
             slime_normal_tiling: 7,
-            slime_light_angle: 0,
+            slime_light_angle: 0.0,
             slime_refraction: 0.0913,
             slime_refraction_index: 1.0837,
             slime_specular: 1.0,
@@ -402,7 +403,7 @@ impl Default for AutoDanceFxDesc<'_> {
                 z: 1.0,
                 w: 1.0,
             },
-            player_glow_factor: 0,
+            player_glow_factor: 0.0,
             player_glow_color: GFXVector4 {
                 class: Some(GFXVector4::CLASS),
                 x: 0.0,
@@ -447,10 +448,10 @@ impl Default for AutoDanceFxDesc<'_> {
             end_radius: 2.0,
             radius_variance: 0.5,
             radius_noise_rate: 0,
-            radius_noise_amp: 0,
+            radius_noise_amp: 0.0,
             min_spin: -4.0,
             max_spin: 4.0,
-            dir_angle: 0,
+            dir_angle: 0.0,
             min_wander_rate: 2.0,
             max_wander_rate: 3.0,
             min_wander_amp: 0.1,
@@ -665,16 +666,16 @@ pub struct SongDescription<'a> {
     pub title: Cow<'a, str>,
     pub credits: Cow<'a, str>,
     /// Only in Chinese version
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_title: Option<Cow<'a, str>>,
     /// Only in Chinese version
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_credits: Option<Cow<'a, str>>,
     pub phone_images: PhoneImages<'a>,
     pub num_coach: u8,
     pub main_coach: i8,
     /// Only in versions before nx2020
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub double_scoring_type: Option<i8>,
     pub difficulty: u8,
     #[serde(default = "default_sweat_difficulty")]
@@ -683,11 +684,11 @@ pub struct SongDescription<'a> {
     pub background_type: u8,
     pub lyrics_type: i8,
     /// Only in nx2017, always 1
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub energy: Option<u8>,
     pub tags: Vec<Cow<'a, str>>,
     /// Only in nx2017
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub jdm_attributes: Option<Vec<Cow<'a, str>>>,
     pub status: u8,
     #[serde(rename = "LocaleID")]
@@ -698,9 +699,20 @@ pub struct SongDescription<'a> {
     /// Not present in nx2017
     #[serde(default)]
     pub video_preview_path: Cow<'a, str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub score_with_both_controllers: Option<usize>,
     /// Only in versions before nx2020
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub paths: Option<HashMap<Cow<'a, str>, Option<Cow<'a, str>>>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub paths: Option<Paths>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct Paths {
+    #[serde(alias = "AsyncPlayers")]
+    pub asyncplayers: Option<Vec<String>>,
+    #[serde(alias = "Avatars")]
+    pub avatars: Option<Vec<String>>,
 }
 
 const fn default_sweat_difficulty() -> u8 {
@@ -712,14 +724,14 @@ const fn default_sweat_difficulty() -> u8 {
 pub struct DefaultColors {
     pub theme: (f32, f32, f32, f32),
     pub lyrics: (f32, f32, f32, f32),
-    #[serde(alias = "songColor_1A")]
-    pub songcolor_1a: (f32, f32, f32, f32),
-    #[serde(alias = "songColor_1B")]
-    pub songcolor_1b: (f32, f32, f32, f32),
-    #[serde(alias = "songColor_2A")]
-    pub songcolor_2a: (f32, f32, f32, f32),
-    #[serde(alias = "songColor_2B")]
-    pub songcolor_2b: (f32, f32, f32, f32),
+    #[serde(alias = "songColor_1A", skip_serializing_if = "Option::is_none")]
+    pub songcolor_1a: Option<(f32, f32, f32, f32)>,
+    #[serde(alias = "songColor_1B", skip_serializing_if = "Option::is_none")]
+    pub songcolor_1b: Option<(f32, f32, f32, f32)>,
+    #[serde(alias = "songColor_2A", skip_serializing_if = "Option::is_none")]
+    pub songcolor_2a: Option<(f32, f32, f32, f32)>,
+    #[serde(alias = "songColor_2B", skip_serializing_if = "Option::is_none")]
+    pub songcolor_2b: Option<(f32, f32, f32, f32)>,
 }
 
 impl SongDescription<'_> {

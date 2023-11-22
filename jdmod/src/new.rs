@@ -54,7 +54,7 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
             .parent()
             .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
     )?;
-    let sfat_vfs = VfsSfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"))?;
+    let sfat_vfs = VfsSfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"), false)?;
 
     // Check that the sfat is from the right game
     let game_platform = sfat_vfs.game_platform();
@@ -106,8 +106,12 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
         }
     }
 
+    // Make game and platform easily accessible
+    let platform = sfat_vfs.game_platform().platform;
+    let game = sfat_vfs.game_platform().game;
+
     // Import songs and other content from the game
-    import::import_sfat(&sfat_vfs, dir_root)?;
+    import::import_vfs(&sfat_vfs, dir_root, game, platform, false, false)?;
 
     Ok(())
 }

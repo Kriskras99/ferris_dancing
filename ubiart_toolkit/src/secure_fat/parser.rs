@@ -2,7 +2,7 @@
 
 use std::{fs::File, path::Path};
 
-use anyhow::{Context, Error};
+use anyhow::Error;
 use byteorder::BigEndian;
 use memmap2::Mmap;
 use nohash_hasher::{BuildNoHashHasher, IntMap};

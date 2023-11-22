@@ -104,21 +104,31 @@ pub enum Tag {
     /// Alternate version of a song
     Alternate,
     /// Song that uses a (wheel)chair
+    BringChairTutorial,
+    /// Song that uses a (wheel)chair
     ChairTutorial,
     /// Cool song?
     Cool,
     /// Dance machine map
     DanceMachine,
+    /// ??
+    Exclusive,
     /// Extreme difficulty song
     Extreme,
     /// Intense song
     Intense,
+    /// ??
+    KidsMode,
+    /// ??
+    KidsModeTeaser,
     /// Unknown?
     JdMbs,
     /// Mashup map
     Mashup,
     /// Low intensity song
     NoSweat,
+    /// Unlocked using Uplay
+    Uplay2016,
     /// Unlocked using Uplay
     Uplay2017,
     /// High intensity song
@@ -137,14 +147,19 @@ impl Tag {
             Self::Main => Cow::Borrowed("main"),
             Self::KidsOnly => Cow::Borrowed("kidsonly"),
             Self::Alternate => Cow::Borrowed("alternate"),
+            Self::BringChairTutorial => Cow::Borrowed("bringchairtutorial"),
             Self::ChairTutorial => Cow::Borrowed("chairtutorial"),
             Self::Cool => Cow::Borrowed("cool"),
             Self::DanceMachine => Cow::Borrowed("dancemachine"),
+            Self::Exclusive => Cow::Borrowed("exclusive"),
             Self::Extreme => Cow::Borrowed("extreme"),
             Self::Intense => Cow::Borrowed("intense"),
+            Self::KidsMode => Cow::Borrowed("kidsmode"),
+            Self::KidsModeTeaser => Cow::Borrowed("kidsmodeteaser"),
             Self::JdMbs => Cow::Borrowed("jdmbs"),
             Self::Mashup => Cow::Borrowed("mashup"),
             Self::NoSweat => Cow::Borrowed("nosweat"),
+            Self::Uplay2016 => Cow::Borrowed("uplay2016"),
             Self::Uplay2017 => Cow::Borrowed("uplay2017"),
             Self::Sweat => Cow::Borrowed("sweat"),
             Self::BikeTutorial => Cow::Borrowed("biketutorial"),
@@ -162,14 +177,19 @@ impl TryFrom<&str> for Tag {
             "main" => Ok(Self::Main),
             "kidsonly" => Ok(Self::KidsOnly),
             "alternate" => Ok(Self::Alternate),
+            "bringchairtutorial" => Ok(Self::BringChairTutorial),
             "chairtutorial" => Ok(Self::ChairTutorial),
             "cool" => Ok(Self::Cool),
             "dancemachine" => Ok(Self::DanceMachine),
+            "exclusive" => Ok(Self::Exclusive),
             "extreme" => Ok(Self::Extreme),
             "intense" => Ok(Self::Intense),
+            "kidsmode" => Ok(Self::KidsMode),
+            "kidsmodeteaser" => Ok(Self::KidsModeTeaser),
             "jdmbs" => Ok(Self::JdMbs),
             "mashup" => Ok(Self::Mashup),
             "nosweat" => Ok(Self::NoSweat),
+            "uplay2016" => Ok(Self::Uplay2016),
             "uplay2017" => Ok(Self::Uplay2017),
             "sweat" => Ok(Self::Sweat),
             "biketutorial" => Ok(Self::BikeTutorial),
@@ -262,12 +282,13 @@ pub struct Autodance<'a> {
     /// Soundclip to play
     pub autodance_sound: Cow<'a, str>,
     /// Position in the clip to start at
-    pub song_start_position: u32,
+    pub song_start_position: i32,
     /// Duration to play
     pub duration: f32,
     /// Unknown
     pub record: Vec<Record>,
     /// Unknown
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub playback_events: Vec<PlaybackEvent>,
 }
 
@@ -457,10 +478,10 @@ impl From<&SongColors> for json_types::DefaultColors {
         Self {
             theme: (&colors.theme).into(),
             lyrics: (&colors.lyrics).into(),
-            songcolor_1a: (&colors.one_a).into(),
-            songcolor_1b: (&colors.one_b).into(),
-            songcolor_2a: (&colors.two_a).into(),
-            songcolor_2b: (&colors.two_b).into(),
+            songcolor_1a: Some((&colors.one_a).into()),
+            songcolor_1b: Some((&colors.one_b).into()),
+            songcolor_2a: Some((&colors.two_a).into()),
+            songcolor_2b: Some((&colors.two_b).into()),
         }
     }
 }
@@ -470,10 +491,10 @@ impl From<&json_types::DefaultColors> for SongColors {
         Self {
             theme: (&value.theme).into(),
             lyrics: (&value.lyrics).into(),
-            one_a: (&value.songcolor_1a).into(),
-            one_b: (&value.songcolor_1b).into(),
-            two_a: (&value.songcolor_2a).into(),
-            two_b: (&value.songcolor_2b).into(),
+            one_a: (value.songcolor_1a.as_ref().unwrap_or(&value.theme)).into(),
+            one_b: (value.songcolor_1b.as_ref().unwrap_or(&value.theme)).into(),
+            two_a: (value.songcolor_2a.as_ref().unwrap_or(&value.theme)).into(),
+            two_b: (value.songcolor_2b.as_ref().unwrap_or(&value.theme)).into(),
         }
     }
 }
@@ -482,6 +503,8 @@ impl From<&json_types::DefaultColors> for SongColors {
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum MapStatus {
+    /// Unknown
+    Unknown1 = 1,
     /// Buy it with mojo (JD2018 and earler)
     BuyWithMojo = 2,
     /// Unlocked by default
@@ -524,6 +547,7 @@ impl TryFrom<u8> for MapStatus {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
+            1 => Ok(Self::Unknown1),
             2 => Ok(Self::BuyWithMojo),
             3 => Ok(Self::Unlocked),
             4 => Ok(Self::CodeUnlockable),
@@ -615,11 +639,11 @@ pub struct MusicTrack {
     /// Start of the video
     pub video_start_time: f32,
     /// Unknown
-    pub preview_entry: u32,
+    pub preview_entry: f32,
     /// Preview audio track start
-    pub preview_loop_start: u32,
+    pub preview_loop_start: f32,
     /// Preview audio track end
-    pub preview_loop_end: u32,
+    pub preview_loop_end: f32,
     /// Unknown
     pub signatures: Vec<Signature>,
     /// Unknown
@@ -632,7 +656,7 @@ pub struct MusicTrack {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Signature {
     /// Unknown
-    pub marker: i32,
+    pub marker: f32,
     /// Unknown
     pub beats: u32,
 }
@@ -643,6 +667,7 @@ impl From<Signature> for json_types::MusicSignature<'static> {
             class: Some(Self::CLASS),
             marker: value.marker,
             beats: value.beats,
+            comment: None,
         }
     }
 }
@@ -660,7 +685,7 @@ impl From<json_types::MusicSignature<'_>> for Signature {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Section {
     /// Unknown
-    pub marker: u32,
+    pub marker: f32,
     /// Unknown
     pub section_type: u32,
 }
@@ -1040,7 +1065,7 @@ impl<'a> TryFrom<json_types::MotionClip<'a>> for MotionClip<'a> {
     type Error = Error;
 
     fn try_from(value: json_types::MotionClip<'a>) -> Result<Self, Self::Error> {
-        let regex = regex!(r".*/[a-z0-9]*_(.*\.msm)$");
+        let regex = regex!(r".*/[a-z0-9]*_(.*\.msm|.*\.gesture)$");
         let classifier_filename = cow_regex_single_capture(regex, value.classifier_path)?;
 
         Ok(Self {
@@ -1173,7 +1198,7 @@ impl<'a> From<KaraokeClip<'a>> for json_types::KaraokeClip<'a> {
             content_type: 2,
             start_time_tolerance: 4,
             end_time_tolerance: 4,
-            semitone_tolerance: 5,
+            semitone_tolerance: 5.0,
         }
     }
 }

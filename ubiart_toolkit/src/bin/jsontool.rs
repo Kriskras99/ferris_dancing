@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::Context;
 use clap::Parser;
 
 use ubiart_toolkit::{cooked, utils::Game};
@@ -27,8 +28,42 @@ fn main() {
 
     let path = cli.source;
 
-    let _template = match cooked::json::open(&path, game) {
-        Ok(template) => template,
-        Err(e) => panic!("{path:?}: {e:?}"),
-    };
+    match game {
+        Game::JustDance2017 => {
+            cooked::json::open_v17(&path, false)
+                .with_context(|| format!("{path:?}"))
+                .unwrap();
+        }
+        Game::JustDance2018 => {
+            cooked::json::open_v18(&path, false)
+                .with_context(|| format!("{path:?}"))
+                .unwrap();
+        }
+        Game::JustDance2019 => {
+            cooked::json::open_v19(&path, false)
+                .with_context(|| format!("{path:?}"))
+                .unwrap();
+        }
+        Game::JustDance2020 => {
+            cooked::json::open_v20(&path, false)
+                .with_context(|| format!("{path:?}"))
+                .unwrap();
+        }
+        Game::JustDanceChina => {
+            cooked::json::open_v20c(&path, false)
+                .with_context(|| format!("{path:?}"))
+                .unwrap();
+        }
+        Game::JustDance2021 => {
+            cooked::json::open_v21(&path, false)
+                .with_context(|| format!("{path:?}"))
+                .unwrap();
+        }
+        Game::JustDance2022 => {
+            cooked::json::open_v22(&path, false)
+                .with_context(|| format!("{path:?}"))
+                .unwrap();
+        }
+        _ => panic!("Unsupported game version: {game}"),
+    }
 }
