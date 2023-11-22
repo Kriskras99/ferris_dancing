@@ -69,7 +69,7 @@ pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, Error> {
     test(&unk12, &0x2)?;
     let unk13 = read_u32_at::<BigEndian>(src, &mut position)?;
     test(&unk13, &0x0)?;
-    
+
     let unk14 = read_u32_at::<BigEndian>(src, &mut position)?;
     let unk15 = read_u32_at::<BigEndian>(src, &mut position)?;
 

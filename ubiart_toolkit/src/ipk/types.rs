@@ -73,10 +73,6 @@ impl<'a, C: StableDeref> BundleOwned<C> {
         self.yoke.get().version
     }
 
-    pub fn platform(&self) -> Platform {
-        self.yoke.get().platform
-    }
-
     pub fn unk4(&self) -> u32 {
         self.yoke.get().unk4
     }
