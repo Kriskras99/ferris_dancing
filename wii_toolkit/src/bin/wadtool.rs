@@ -5,8 +5,8 @@ use std::{
 };
 
 use clap::Parser;
-use wii_toolkit::wad::{self, types::WadArchive};
 use sha1::{Digest, Sha1};
+use wii_toolkit::wad::{self, types::WadArchive};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
