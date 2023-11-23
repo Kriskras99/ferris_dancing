@@ -1,39 +1,16 @@
 //! A parser for the secure_fat.gf file format
 
-use std::{fs::File, path::Path};
-
 use anyhow::Error;
 use byteorder::BigEndian;
-use memmap2::Mmap;
+use dotstar_toolkit_utils::testing::{test, test_le, test_not};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use crate::utils::{
     bytes::{read_string_at, read_u32_at, read_u8_at},
-    testing::{test, test_le, test_not},
     GamePlatform, PathId,
 };
 
 use super::{BundleId, SecureFat, MAGIC, UNK1};
-
-/// Check if the source is likely to be a secure_fat.gf
-///
-/// This is currently done by checking for the magic number.
-#[must_use]
-pub fn can_parse(source: [u8; 4]) -> bool {
-    read_u32_at::<BigEndian>(&source, &mut 0).unwrap_or_else(|_| unreachable!()) == MAGIC
-}
-
-/// Open the file at the given path and parse it as a secure_fat.gf
-///
-/// # Errors
-/// In addition to the errors specified by [`parse_ref`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P) -> Result<SecureFat, Error> {
-    let file = File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    parse(&mmap)
-}
 
 /// Parse a bytearray-like source as a secure_fat.gf
 ///

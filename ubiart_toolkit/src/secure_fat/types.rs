@@ -53,19 +53,6 @@ pub struct SecureFat {
 impl SecureFat {
     /// Create a new (empty) secure fat
     #[must_use]
-    pub fn new(game_platform: GamePlatform) -> Self {
-        Self {
-            game_platform,
-            path_id_to_bundle_ids: IntMap::default(),
-            bundle_id_to_bundle_name: IntMap::with_capacity_and_hasher(
-                256,
-                BuildNoHashHasher::default(),
-            ),
-        }
-    }
-
-    /// Create a new (empty) secure fat
-    #[must_use]
     pub fn with_capacity(game_platform: GamePlatform, capacity: usize) -> Self {
         Self {
             game_platform,
@@ -148,11 +135,6 @@ impl SecureFat {
         self.path_id_to_bundle_ids.get(path_id)
     }
 
-    /// An iterator over all the path IDs
-    pub fn path_ids(&self) -> impl Iterator<Item = PathId> + '_ {
-        self.path_id_to_bundle_ids.keys().copied()
-    }
-
     /// An iterator visiting all bundle IDs with their respective name
     pub fn bundle_ids_and_names(&self) -> impl Iterator<Item = (&BundleId, &str)> {
         self.bundle_id_to_bundle_name
@@ -169,12 +151,6 @@ impl SecureFat {
     #[must_use]
     pub fn path_count(&self) -> usize {
         self.path_id_to_bundle_ids.len()
-    }
-
-    /// Returns `true` if there are not path IDs
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.path_id_to_bundle_ids.is_empty()
     }
 }
 

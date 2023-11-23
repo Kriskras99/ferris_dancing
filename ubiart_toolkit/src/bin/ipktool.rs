@@ -161,7 +161,8 @@ pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), anyhow::Error
         0x4fd39,
         ipk::Options {
             compression: ipk::CompressionEffort::Best,
-            // optimize_png: ipk::CompressionEffort::Best,
+            #[cfg(feature = "oxipng")]
+            optimize_png: ipk::CompressionEffort::Best,
         },
         &vfs,
         &files,

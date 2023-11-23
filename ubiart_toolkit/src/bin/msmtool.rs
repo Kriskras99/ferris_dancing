@@ -1,7 +1,7 @@
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
-use ubiart_toolkit::msm;
+use ubiart_toolkit::{msm, utils::bytes::read_to_vec};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -18,8 +18,8 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let moves = msm::open(&cli.source).unwrap();
-    let msm = moves.msm();
+    let data = read_to_vec(&cli.source).unwrap();
+    let msm = msm::parse(&data).unwrap();
 
     if !cli.quiet {
         println!("name: {}", msm.name);
@@ -38,6 +38,6 @@ fn main() {
 
     if let Some(path) = cli.output {
         let file = File::create(path).unwrap();
-        serde_json::to_writer_pretty(file, msm).unwrap();
+        serde_json::to_writer_pretty(file, &msm).unwrap();
     }
 }

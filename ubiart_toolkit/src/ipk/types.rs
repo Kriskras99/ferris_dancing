@@ -1,11 +1,8 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use std::path::PathBuf;
-
 use anyhow::{anyhow, Error};
 use nohash_hasher::IntMap;
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
+use yoke::Yokeable;
 
 use crate::utils::{self, GamePlatform, PathId, SplitPath};
 
@@ -58,47 +55,6 @@ impl Platform {
     }
 }
 
-pub struct BundleOwned<C: StableDeref> {
-    yoke: Yoke<Bundle<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Bundle<'static>, C>> for BundleOwned<C> {
-    fn from(yoke: Yoke<Bundle<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> BundleOwned<C> {
-    pub fn version(&self) -> u32 {
-        self.yoke.get().version
-    }
-
-    pub fn unk4(&self) -> u32 {
-        self.yoke.get().unk4
-    }
-
-    pub fn engine_version(&self) -> u32 {
-        self.yoke.get().engine_version
-    }
-
-    pub fn game_platform(&self) -> GamePlatform {
-        self.yoke.get().game_platform
-    }
-
-    pub fn get_file(&'a self, path_id: &PathId) -> Option<&'a IpkFile<'a>> {
-        self.yoke.get().files.get(path_id)
-    }
-
-    pub fn list_files(&self) -> Vec<String> {
-        let ipk = &self.yoke.get().files;
-        let mut path = Vec::with_capacity(ipk.len());
-        for file in ipk.values() {
-            path.push(format!("{}{}", file.path.path, file.path.filename));
-        }
-        path
-    }
-}
-
 #[derive(Clone, Yokeable)]
 pub struct Bundle<'a> {
     pub version: u32,
@@ -140,7 +96,10 @@ impl Data<'_> {
     /// Check if this file is empty
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        match self {
+            Data::Uncompressed(data) => data.data.is_empty(),
+            Data::Compressed(data) => data.uncompressed_size == 0,
+        }
     }
 }
 
@@ -153,14 +112,4 @@ pub struct Uncompressed<'a> {
 pub struct Compressed<'a> {
     pub uncompressed_size: usize,
     pub data: &'a [u8],
-}
-
-pub struct FileToPack {
-    pub file_path: PathBuf,
-    pub name: String,
-    pub path: String,
-    pub is_cooked: bool,
-    pub compress: bool,
-    pub timestamp: u64,
-    pub checksum: u32,
 }

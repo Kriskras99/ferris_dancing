@@ -1,26 +1,9 @@
 use std::{borrow::Cow, collections::HashMap};
 
+use anyhow::{anyhow, Error};
 use serde::{Deserialize, Serialize};
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
 
-pub struct SgsOwned<C: StableDeref> {
-    yoke: Yoke<Sgs<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Sgs<'static>, C>> for SgsOwned<C> {
-    fn from(yoke: Yoke<Sgs<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> SgsOwned<C> {
-    pub fn sgs(&'a self) -> &'a Sgs<'a> {
-        self.yoke.get()
-    }
-}
-
-#[derive(Serialize, Deserialize, Yokeable)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields, untagged)]
 pub enum Sgs<'a> {
     #[serde(borrow)]
@@ -29,51 +12,37 @@ pub enum Sgs<'a> {
     SceneConfigManager(SceneConfigManager<'a>),
 }
 
-#[derive(Serialize, Deserialize, Yokeable)]
+impl<'a> Sgs<'a> {
+    pub fn as_scene_settings(self) -> Result<SceneSettings<'a>, Error> {
+        if let Sgs::SceneSettings(scene_settings) = self {
+            Ok(scene_settings)
+        } else {
+            Err(anyhow!("Sgs is not a SceneSettings!"))
+        }
+    }
+
+    pub fn as_scene_config_manager(self) -> Result<SceneConfigManager<'a>, Error> {
+        if let Sgs::SceneConfigManager(scene_config_manager) = self {
+            Ok(scene_config_manager)
+        } else {
+            Err(anyhow!("Sgs is not a SceneConfigManager!"))
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SceneSettings<'a> {
     #[serde(borrow)]
     pub settings: Settings<'a>,
 }
 
-pub struct SceneSettingsOwned<C: StableDeref> {
-    yoke: Yoke<SceneSettings<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<SceneSettings<'static>, C>> for SceneSettingsOwned<C> {
-    fn from(yoke: Yoke<SceneSettings<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> SceneSettingsOwned<C> {
-    pub fn scene_settings(&'a self) -> &'a SceneSettings<'a> {
-        self.yoke.get()
-    }
-}
-
-#[derive(Serialize, Deserialize, Yokeable, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SceneConfigManager<'a> {
     pub version: u8,
     #[serde(borrow)]
     pub sgs_map: SgsKey<'a>,
-}
-
-pub struct SceneConfigManagerOwned<C: StableDeref> {
-    yoke: Yoke<SceneConfigManager<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<SceneConfigManager<'static>, C>> for SceneConfigManagerOwned<C> {
-    fn from(yoke: Yoke<SceneConfigManager<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> SceneConfigManagerOwned<C> {
-    pub fn scene_config_manager(&'a self) -> &'a SceneConfigManager<'a> {
-        self.yoke.get()
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]

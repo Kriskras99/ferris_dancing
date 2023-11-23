@@ -1,31 +1,12 @@
 //! Contains the parser implementation
 
-use std::{fs, path::Path};
-
 use anyhow::Error;
 use byteorder::BigEndian;
-use memmap2::Mmap;
-use yoke::Yoke;
 
-use crate::utils::{
-    bytes::{read_null_terminated_string_at, read_slice_at, read_u32_at},
-    testing::{test, test_le},
-};
+use crate::utils::bytes::{read_null_terminated_string_at, read_slice_at, read_u32_at};
+use dotstar_toolkit_utils::testing::{test, test_le};
 
-use super::{MovementSpaceMove, MovementSpaceMoveOwned};
-
-/// Open the file at the given path and parse it as a MovementSpaceMove file
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P) -> Result<MovementSpaceMoveOwned<Mmap>, Error> {
-    let file = fs::File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    let yoke = Yoke::try_attach_to_cart(mmap, |data: &[u8]| parse(data))?;
-    Ok(MovementSpaceMoveOwned::from(yoke))
-}
+use super::MovementSpaceMove;
 
 /// Parse a MovementSpaceMove file
 ///

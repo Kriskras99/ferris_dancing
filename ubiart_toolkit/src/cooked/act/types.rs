@@ -3,28 +3,10 @@
 use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
 
 use crate::utils::SplitPath;
 
-pub struct ActorOwned<C: StableDeref> {
-    yoke: Yoke<Actor<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Actor<'static>, C>> for ActorOwned<C> {
-    fn from(yoke: Yoke<Actor<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> ActorOwned<C> {
-    pub fn actor(&'a self) -> &'a Actor<'a> {
-        self.yoke.get()
-    }
-}
-
-#[derive(Debug, Clone, Yokeable)]
+#[derive(Debug, Clone)]
 pub struct Actor<'a> {
     pub tpl: SplitPath<'a>,
     pub unk1: u32,

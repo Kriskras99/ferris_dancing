@@ -1,32 +1,15 @@
 //! Contains the parser implementation
 
-use std::{fs, path::Path};
-
 use anyhow::Error;
 use byteorder::BigEndian;
-use memmap2::Mmap;
+use dotstar_toolkit_utils::testing::{test, test_any};
 
 use crate::{
     cooked::xtx,
-    utils::{
-        bytes::{read_u16_at, read_u32_at, read_u64_at},
-        testing::{test, test_any},
-    },
+    utils::bytes::{read_u16_at, read_u32_at, read_u64_at},
 };
 
 use super::Png;
-
-/// Open the file at the given path and parse it as a .png.ckd file
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P) -> Result<Png, Error> {
-    let file = fs::File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    parse(&mmap)
-}
 
 /// Parse a .png.ckd file
 ///

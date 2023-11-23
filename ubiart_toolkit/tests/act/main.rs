@@ -1,44 +1,55 @@
 use std::path::Path;
 
-use ubiart_toolkit::{cooked::act, utils::Game};
+use ubiart_toolkit::{
+    cooked::act,
+    utils::{bytes::read_to_vec, Game},
+};
 
 fn act_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDance2017).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDance2017)?;
     Ok(())
 }
 
 fn act_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDance2018).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDance2018)?;
     Ok(())
 }
 
 fn act_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDance2019).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDance2019)?;
     Ok(())
 }
 
 fn act_parse_nx2020(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDance2020).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDance2020)?;
     Ok(())
 }
 
 fn act_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDanceChina).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDanceChina)?;
     Ok(())
 }
 
 fn act_parse_nx2020_japan(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDance2020).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDance2020)?;
     Ok(())
 }
 
 fn act_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDance2021).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDance2021)?;
     Ok(())
 }
 
 fn act_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
-    act::open(input, Game::JustDance2022).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = act::parse(&data, Game::JustDance2022)?;
     Ok(())
 }
 

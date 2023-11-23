@@ -1,44 +1,52 @@
 use std::path::Path;
 
-use ubiart_toolkit::msm;
+use ubiart_toolkit::{msm, utils::bytes::read_to_vec};
 
 fn msm_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 
 fn msm_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 
 fn msm_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 
 fn msm_parse_nx2020(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 
 fn msm_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 
 fn msm_parse_nx2020_japan(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 
 fn msm_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 
 fn msm_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
-    msm::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = msm::parse(&data)?;
     Ok(())
 }
 

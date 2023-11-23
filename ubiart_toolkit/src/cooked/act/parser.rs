@@ -1,35 +1,20 @@
 //! Contains the parser implementation
 
-use std::{borrow::Cow, fs::File, path::Path};
+use std::borrow::Cow;
 
 use anyhow::{anyhow, Context, Error};
 use byteorder::BigEndian;
-use memmap2::Mmap;
-use yoke::Yoke;
 
 use crate::utils::{
     bytes::{read_path_at, read_string_at, read_u32_at, read_u64_at},
-    testing::{test, test_any},
     Game,
 };
+use dotstar_toolkit_utils::testing::{test, test_any};
 
 use super::{
-    Actor, ActorOwned, CreditsComponent, MaterialGraphicComponent, PleoComponent, Template,
-    TemplateData, TemplateType,
+    Actor, CreditsComponent, MaterialGraphicComponent, PleoComponent, Template, TemplateData,
+    TemplateType,
 };
-
-/// Open the file at the given path and parse it as a actor file
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P, game: Game) -> Result<ActorOwned<Mmap>, Error> {
-    let file = File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    let yoke = Yoke::try_attach_to_cart(mmap, |data: &[u8]| parse(data, game));
-    Ok(ActorOwned::from(yoke?))
-}
 
 /// Parse a bytearray-like source as a actor file
 ///

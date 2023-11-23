@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use anyhow::Context;
 use clap::Parser;
 
-use ubiart_toolkit::{cooked, utils::Game};
+use ubiart_toolkit::{
+    cooked,
+    utils::{bytes::read_to_vec, Game},
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -27,40 +30,41 @@ fn main() {
     };
 
     let path = cli.source;
+    let data = read_to_vec(&path).unwrap();
 
     match game {
         Game::JustDance2017 => {
-            cooked::json::open_v17(&path, false)
+            cooked::json::parse_v17(&data, false)
                 .with_context(|| format!("{path:?}"))
                 .unwrap();
         }
         Game::JustDance2018 => {
-            cooked::json::open_v18(&path, false)
+            cooked::json::parse_v18(&data, false)
                 .with_context(|| format!("{path:?}"))
                 .unwrap();
         }
         Game::JustDance2019 => {
-            cooked::json::open_v19(&path, false)
+            cooked::json::parse_v19(&data, false)
                 .with_context(|| format!("{path:?}"))
                 .unwrap();
         }
         Game::JustDance2020 => {
-            cooked::json::open_v20(&path, false)
+            cooked::json::parse_v20(&data, false)
                 .with_context(|| format!("{path:?}"))
                 .unwrap();
         }
         Game::JustDanceChina => {
-            cooked::json::open_v20c(&path, false)
+            cooked::json::parse_v20c(&data, false)
                 .with_context(|| format!("{path:?}"))
                 .unwrap();
         }
         Game::JustDance2021 => {
-            cooked::json::open_v21(&path, false)
+            cooked::json::parse_v21(&data, false)
                 .with_context(|| format!("{path:?}"))
                 .unwrap();
         }
         Game::JustDance2022 => {
-            cooked::json::open_v22(&path, false)
+            cooked::json::parse_v22(&data, false)
                 .with_context(|| format!("{path:?}"))
                 .unwrap();
         }

@@ -4,8 +4,6 @@ use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
 
 use crate::utils::LocaleId;
 
@@ -93,53 +91,9 @@ impl Language {
     pub const fn all() -> &'static [Self] {
         Self::ALL
     }
-
-    #[must_use]
-    pub const fn filename(&self) -> &'static str {
-        match self {
-            Self::English => "localisation.itf_language_english.loc8",
-            Self::French => "localisation.itf_language_french.loc8",
-            Self::Japanese => "localisation.itf_language_japanese.loc8",
-            Self::German => "localisation.itf_language_german.loc8",
-            Self::Spanish => "localisation.itf_language_spanish.loc8",
-            Self::Italian => "localisation.itf_language_italian.loc8",
-            Self::Korean => "localisation.itf_language_korean.loc8",
-            Self::TradChinese => "localisation.itf_language_traditionalchinese.loc8",
-            Self::Portuguese => "localisation.itf_language_portuguese.loc8",
-            Self::SimplChinese => "localisation.itf_language_simplifiedchinese.loc8",
-            Self::Russian => "localisation.itf_language_russian.loc8",
-            Self::Dutch => "localisation.itf_language_dutch.loc8",
-            Self::Danish => "localisation.itf_language_danish.loc8",
-            Self::Norwegian => "localisation.itf_language_norwegian.loc8",
-            Self::Swedish => "localisation.itf_language_swedish.loc8",
-            Self::Finnish => "localisation.itf_language_finnish.loc8",
-            Self::GavChinese => "localisation.itf_language_gavchinese.loc8",
-            Self::DevReference => "localisation.itf_language_dev_reference.loc8",
-        }
-    }
 }
 
-pub struct Loc8Owned<C: StableDeref> {
-    yoke: Yoke<Loc8<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Loc8<'static>, C>> for Loc8Owned<C> {
-    fn from(yoke: Yoke<Loc8<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<C: StableDeref> Loc8Owned<C> {
-    pub fn language(&self) -> Language {
-        self.yoke.get().language
-    }
-
-    pub fn strings(&self) -> &HashMap<LocaleId, Cow<'_, str>> {
-        &self.yoke.get().strings
-    }
-}
-
-#[derive(Clone, Yokeable)]
+#[derive(Clone)]
 pub struct Loc8<'a> {
     pub language: Language,
     pub strings: HashMap<LocaleId, Cow<'a, str>>,

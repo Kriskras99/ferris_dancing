@@ -1,47 +1,23 @@
 //! Contains the parser implementation for IPK bundles
 
-use std::{borrow::Cow, fs, path::Path};
+use std::borrow::Cow;
 
-use anyhow::{anyhow, Error};
+use anyhow::anyhow;
 use byteorder::BigEndian;
 use dotstar_toolkit_utils::testing::TestResult;
-use memmap2::Mmap;
+use dotstar_toolkit_utils::testing::{test, test_any};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
-use yoke::Yoke;
 
 use crate::utils::{
     self,
     bytes::{read_string_at, read_u32_at, read_u64_at},
-    string_id_2,
-    testing::{test, test_any},
-    Game, GamePlatform, PathId, SplitPath,
+    string_id_2, Game, GamePlatform, PathId, SplitPath,
 };
 
 use super::{
-    types::Platform, Bundle, BundleOwned, Compressed, Data, IpkFile, Uncompressed, IS_COOKED,
-    MAGIC, SEPARATOR, UNK1, UNK2, UNK3, UNK6,
+    types::Platform, Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR,
+    UNK1, UNK2, UNK3, UNK6,
 };
-
-/// Check if the source is likely to be a IPK bundle
-///
-/// This is currently done by checking for the magic number.
-#[must_use]
-pub fn can_parse(source: [u8; 4]) -> bool {
-    read_u32_at::<BigEndian>(&source, &mut 0).unwrap_or_else(|_| unreachable!()) == MAGIC
-}
-
-/// Open the file at the given path and parse it as a secure_fat.gf
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P, lax: bool) -> Result<BundleOwned<Mmap>, Error> {
-    let file = fs::File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    let yoke = Yoke::try_attach_to_cart(mmap, |data: &[u8]| parse(data, lax));
-    Ok(BundleOwned::from(yoke?))
-}
 
 /// Parse a bytearray-like source as a IPK bundle
 ///

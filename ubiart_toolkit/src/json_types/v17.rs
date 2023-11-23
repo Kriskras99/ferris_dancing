@@ -6,22 +6,6 @@ use serde_with::{serde_as, DisplayFromStr};
 #[allow(clippy::wildcard_imports)]
 use super::*;
 
-pub struct Template17Owned<C: StableDeref> {
-    yoke: Yoke<Template17<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Template17<'static>, C>> for Template17Owned<C> {
-    fn from(yoke: Yoke<Template17<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> Template17Owned<C> {
-    pub fn template(&'a self) -> &'a Template17<'a> {
-        self.yoke.get()
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize, Yokeable)]
 #[serde(tag = "__class")]
 pub enum Template17<'a> {
