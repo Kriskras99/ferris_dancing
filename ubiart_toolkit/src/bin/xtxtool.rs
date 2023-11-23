@@ -9,10 +9,13 @@ use clap::Parser;
 
 use image::{imageops, ImageBuffer, ImageOutputFormat, Rgba};
 use serde::Serialize;
-use ubiart_toolkit::cooked::{
-    self,
-    png::Png,
-    xtx::{Format, Image, Xtx},
+use ubiart_toolkit::{
+    cooked::{
+        self,
+        png::Png,
+        xtx::{Format, Image, Xtx},
+    },
+    utils::bytes::read_to_vec,
 };
 
 #[derive(Parser)]
@@ -31,7 +34,9 @@ struct Cli {
 fn main() -> Result<(), Error> {
     let cli = Cli::parse();
 
-    let png = cooked::png::open(&cli.source)?;
+    let data = read_to_vec(&cli.source)?;
+    let png = cooked::png::parse(&data)?;
+    drop(data);
     if cli.info {
         println!("Width:            0x{:x}", png.width);
         println!("Height:           0x{:x}", png.height);

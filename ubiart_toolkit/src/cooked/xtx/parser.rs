@@ -1,35 +1,18 @@
 //! Contains the parser implementation
 
-use std::{fs, path::Path};
-
 use anyhow::{anyhow, Error};
 use byteorder::LittleEndian;
-use memmap2::Mmap;
+use dotstar_toolkit_utils::testing::{test, test_any, test_le};
 
 use super::{
     count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Block, BlockData, Format, Image,
     TextureHeader, Xtx,
 };
-use crate::utils::{
-    bytes::{read_u32_at, read_u64_at},
-    testing::{test, test_any, test_le},
-};
+use crate::utils::bytes::{read_u32_at, read_u64_at};
 
 const TEX_HEAD_BLK_TYPE: u32 = 0x2;
 const DATA_BLK_TYPE: u32 = 0x3;
 const UNKNOWN_BLK_TYPE_THREE: u32 = 0x5;
-
-/// Open the file at the given path and parse it as a Nvidia Tegra Texture file
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P) -> Result<Xtx, Error> {
-    let file = fs::File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    parse(&mmap)
-}
 
 /// Parse an Nvidia Tegra Texture file
 ///

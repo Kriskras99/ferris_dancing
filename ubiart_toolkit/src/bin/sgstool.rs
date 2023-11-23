@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
+use anyhow::Context;
 use clap::Parser;
 
-use ubiart_toolkit::cooked;
+use ubiart_toolkit::{cooked, utils::bytes::read_to_vec};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -13,17 +14,8 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
     let path = cli.source;
-    let filename = path.file_name().unwrap().to_str().unwrap();
-
-    if filename == "sgscontainer.ckd" {
-        let _sgs = match cooked::sgs::open_sgscontainer(&path) {
-            Ok(sgs) => sgs,
-            Err(e) => panic!("{path:?}: {e:?}"),
-        };
-    } else {
-        let _sgs = match cooked::sgs::open_sgs(&path) {
-            Ok(sgs) => sgs,
-            Err(e) => panic!("{path:?}: {e:?}"),
-        };
-    }
+    let data = read_to_vec(&path).unwrap();
+    let _sgs = cooked::sgs::parse(&data)
+        .with_context(|| format!("{path:?}"))
+        .unwrap();
 }

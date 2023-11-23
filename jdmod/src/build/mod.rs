@@ -60,7 +60,7 @@ pub fn song_database(
     println!("Building song database...");
     let sgscontainer_path = cook_path("sgscontainer", bs.platform)?;
     let sgscontainer_file = bs.patched_base_vfs.open(sgscontainer_path.as_ref())?;
-    let mut sgscontainer = sgs::parse_sgscontainer(&sgscontainer_file)?.clone();
+    let mut sgscontainer = sgs::parse(&sgscontainer_file)?.as_scene_config_manager()?;
 
     // Remove all maps and map lists from sgscontainer
     sgscontainer.sgs_map.keys.retain(|k, _| {

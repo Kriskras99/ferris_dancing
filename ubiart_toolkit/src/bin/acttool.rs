@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use anyhow::Context;
 use clap::Parser;
 
-use ubiart_toolkit::{cooked::act, utils::Game};
+use ubiart_toolkit::{
+    cooked::act,
+    utils::{bytes::read_to_vec, Game},
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -28,11 +31,12 @@ fn main() {
         _ => panic!("Unrecognized game version: {}", cli.game),
     };
 
-    let actors = act::open(&cli.source, game)
+    let data = read_to_vec(&cli.source).unwrap();
+    let actors = act::parse(&data, game)
         .with_context(|| format!("{:?}", cli.source))
         .unwrap();
 
-    for template in &actors.actor().templates {
+    for template in &actors.templates {
         println!("{template:?}");
     }
 }

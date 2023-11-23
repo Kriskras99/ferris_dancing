@@ -2,32 +2,14 @@ use std::borrow::Cow;
 
 use anyhow::anyhow;
 use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
 
-use crate::utils::testing::test;
+use dotstar_toolkit_utils::testing::test;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Yokeable)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct Root<'a> {
     #[serde(borrow)]
     pub scene: Scene<'a>,
-}
-
-pub struct RootOwned<C: StableDeref> {
-    yoke: Yoke<Root<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Root<'static>, C>> for RootOwned<C> {
-    fn from(yoke: Yoke<Root<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> RootOwned<C> {
-    pub fn root(&'a self) -> &'a Root<'a> {
-        self.yoke.get()
-    }
 }
 
 pub type Color = (f32, f32, f32, f32);

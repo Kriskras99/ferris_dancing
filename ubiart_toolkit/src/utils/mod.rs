@@ -1,5 +1,4 @@
 pub mod bytes;
-pub mod testing;
 
 use anyhow::{anyhow, Error};
 use byteorder::LittleEndian;

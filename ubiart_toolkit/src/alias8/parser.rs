@@ -1,36 +1,16 @@
 //! Contains the parser implementation
 
-use std::{fs, path::Path};
-
 use byteorder::BigEndian;
-use memmap2::Mmap;
-use yoke::Yoke;
 
 use anyhow::Error;
+use dotstar_toolkit_utils::testing::test;
 
 use crate::utils::{
     bytes::{read_string_at, read_u16_at, read_u32_at},
     string_id_2,
-    testing::test,
 };
 
-use super::{
-    types::{Alias, Alias8},
-    Alias8Owned,
-};
-
-/// Open the file at the given path and parse it as a .alias8 file
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P) -> Result<Alias8Owned<Mmap>, Error> {
-    let file = fs::File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    let yoke = Yoke::try_attach_to_cart(mmap, |data: &[u8]| parse(data))?;
-    Ok(Alias8Owned::from(yoke))
-}
+use super::types::{Alias, Alias8};
 
 /// Parse a .loc8 file
 ///

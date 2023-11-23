@@ -1,45 +1,8 @@
-use std::io::{Cursor, Write};
+use std::io::Cursor;
 
 use anyhow::Error;
-use byteorder::WriteBytesExt;
 
 use super::{SceneConfigManager, SceneSettings, Sgs};
-
-/// Write a `Sgs` file to the writer
-///
-/// # Errors
-/// Will error when the JSON serialisation fails or the writer fails
-pub fn create<W: Write>(mut writer: W, sgs: &Sgs) -> Result<(), Error> {
-    writer.write_u8(b'S')?;
-    serde_json::to_writer(&mut writer, sgs)?;
-    writer.write_u8(0x0)?;
-
-    Ok(())
-}
-
-/// Write a `SceneSettings` file to the writer
-///
-/// # Errors
-/// Will error when the JSON serialisation fails or the writer fails
-pub fn create_sgs<W: Write>(mut writer: W, sgs: &SceneSettings) -> Result<(), Error> {
-    writer.write_u8(b'S')?;
-    serde_json::to_writer(&mut writer, sgs)?;
-    writer.write_u8(0x0)?;
-
-    Ok(())
-}
-
-/// Write a `SceneConfigManager` file to the writer
-///
-/// # Errors
-/// Will error when the JSON serialisation fails or the writer fails
-pub fn create_sgscontainer<W: Write>(mut writer: W, sgs: &SceneConfigManager) -> Result<(), Error> {
-    writer.write_u8(b'S')?;
-    serde_json::to_writer(&mut writer, sgs)?;
-    writer.write_u8(0x0)?;
-
-    Ok(())
-}
 
 /// Create a `Sgs` file in a newly allocated `Vec`
 ///

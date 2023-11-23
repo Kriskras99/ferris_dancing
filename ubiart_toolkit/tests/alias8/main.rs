@@ -1,44 +1,52 @@
 use std::path::Path;
 
-use ubiart_toolkit::alias8;
+use ubiart_toolkit::{alias8, utils::bytes::read_to_vec};
 
 fn alias8_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 
 fn alias8_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 
 fn alias8_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 
 fn alias8_parse_nx2020(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 
 fn alias8_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 
 fn alias8_parse_nx2020_japan(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 
 fn alias8_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 
 fn alias8_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
-    alias8::open(input).unwrap();
+    let data = read_to_vec(input)?;
+    let _ = alias8::parse(&data)?;
     Ok(())
 }
 

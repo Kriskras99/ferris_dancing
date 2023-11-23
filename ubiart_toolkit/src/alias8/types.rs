@@ -1,8 +1,5 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
-
 /// Describes a single alias
 #[derive(Debug, Clone)]
 pub struct Alias<'a> {
@@ -18,29 +15,8 @@ pub struct Alias<'a> {
     pub unk3: u16,
 }
 
-pub struct Alias8Owned<C: StableDeref> {
-    /// Internal yoke, always hide from the user
-    yoke: Yoke<Alias8<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Alias8<'static>, C>> for Alias8Owned<C> {
-    fn from(yoke: Yoke<Alias8<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> Alias8Owned<C> {
-    pub fn aliases(&'a self) -> &[Alias<'a>] {
-        &self.yoke.get().aliases
-    }
-
-    pub fn alias8(&'a self) -> &'a Alias8<'a> {
-        self.yoke.get()
-    }
-}
-
 /// Describes the entire file
-#[derive(Debug, Clone, Yokeable)]
+#[derive(Debug, Clone)]
 pub struct Alias8<'a> {
     /// The aliases in this file
     pub aliases: Vec<Alias<'a>>,

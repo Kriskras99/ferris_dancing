@@ -5,32 +5,24 @@ use std::{
     path::Path,
 };
 
-#[cfg(feature = "zopfli")]
-use std::num::NonZeroU8;
-
 use byteorder::{BigEndian, WriteBytesExt};
+use dotstar_toolkit_utils::testing::test;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use flate2::{write::ZlibEncoder, Compression};
 
-use crate::utils::{
-    self, bytes::WriteBytesExtUbiArt, testing::test, Game, GamePlatform, SplitPath,
-};
+use crate::utils::{self, bytes::WriteBytesExtUbiArt, Game, GamePlatform, SplitPath};
 
 use super::{Platform, MAGIC};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
     pub compression: CompressionEffort,
-    #[cfg(feature = "oxipng")]
-    pub optimize_png: CompressionEffort,
 }
 
 impl Default for Options {
     fn default() -> Self {
         Self {
             compression: CompressionEffort::None,
-            #[cfg(feature = "oxipng")]
-            optimize_png: CompressionEffort::None,
         }
     }
 }
@@ -170,56 +162,12 @@ pub fn write<W: Write + Seek>(
             || path.ends_with("jpg")
             || path.ends_with("webm")
             || path.ends_with("ogg")
+            || path.ends_with("png")
         {
             // Skip compression for already compressed files and small files
             writer.write_all(&file)?;
             // No compression thus compressed size is 0
             0
-        } else if path.ends_with("png") {
-            // Compress PNGs with oxipng if enabled
-            #[cfg(feature = "oxipng")]
-            {
-                match options.optimize_png {
-                    CompressionEffort::None => {
-                        // Caller has disabled compression, so write uncompressed content
-                        writer.write_all(&file)?;
-                        // No compression thus compressed size is 0
-                        0
-                    }
-                    CompressionEffort::Best => {
-                        // Compress with libdeflater at best settings (TODO: PR for flate2 support?)
-                        let options = oxipng::Options {
-                            deflate: oxipng::Deflaters::Libdeflater { compression: 12 },
-                            ..Default::default()
-                        };
-                        let optimized = oxipng::optimize_from_memory(&file, &options)?;
-                        writer.write_all(&optimized)?;
-                        // Return compressed size
-                        writer.stream_position()? - raw_offset
-                    }
-                    #[cfg(feature = "zopfli")]
-                    CompressionEffort::Zopfli(options) => {
-                        // Compress with zopfli at specified iteration count (TODO: PR for adding `iterations_without_improvement`)
-                        let options = oxipng::Options {
-                            deflate: oxipng::Deflaters::Zopfli {
-                                iterations: NonZeroU8::try_from(options.iteration_count)?,
-                            },
-                            ..Default::default()
-                        };
-                        let optimized = oxipng::optimize_from_memory(&file, &options)?;
-                        writer.write_all(&optimized)?;
-                        // Return compressed size
-                        writer.stream_position()? - raw_offset
-                    }
-                }
-            }
-            #[cfg(not(feature = "oxipng"))]
-            {
-                // oxipng is not enabled, so write uncompressed content
-                writer.write_all(&file)?;
-                // No compression thus compressed size is 0
-                0
-            }
         } else {
             // Compress if enabled
             match options.compression {
