@@ -3,19 +3,17 @@
 use byteorder::BigEndian;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::{test, test_any};
 
-use crate::utils::{
-    bytes::{read_string_at, read_u16_at, read_u32_at},
-    string_id_2,
-};
+use crate::utils::bytes::{read_path_at, read_string_at, read_u16_at, read_u32_at};
 
 use super::types::{Alias, Alias8};
 
-/// Parse a .loc8 file
+/// Parse an .alias8 file
 ///
 /// # Errors
-/// -  the file is not a loc8 file or the parser encounters an unexpected value.
+///
+/// Returns [`Err`] if the source is corrupt or not an alias8 file
 pub fn parse(src: &[u8]) -> Result<Alias8<'_>, Error> {
     let mut position = 0;
 
@@ -33,23 +31,16 @@ pub fn parse(src: &[u8]) -> Result<Alias8<'_>, Error> {
         // Read the strings
         let first_alias = read_string_at::<BigEndian>(src, &mut position)?;
         let second_alias = read_string_at::<BigEndian>(src, &mut position)?;
-        let filename = read_string_at::<BigEndian>(src, &mut position)?;
-        let path = read_string_at::<BigEndian>(src, &mut position)?;
-
-        // Verify the path id
-        let path_id = read_u32_at::<BigEndian>(src, &mut position)?;
-        test(&path_id, &string_id_2(path, filename))?;
+        let path = read_path_at::<BigEndian>(src, &mut position)?;
 
         // Read the unknown values and check them
-        let unk1 = read_u32_at::<BigEndian>(src, &mut position)?;
         let unk2 = read_u16_at::<BigEndian>(src, &mut position)?;
         let unk3 = read_u16_at::<BigEndian>(src, &mut position)?;
-        test(&unk1, &0x0)?;
         test(&unk2, &0xFFFF)?;
+        test_any(&unk3, Alias::UNK3)?;
         aliases.push(Alias {
             first_alias,
             second_alias,
-            filename,
             path,
             unk3,
         });

@@ -1,10 +1,10 @@
 //! Contains the writer implementation
 use std::io::{Seek, Write};
 
-use anyhow::{anyhow, Error};
+use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
-use crate::utils::string_id;
+use crate::utils::bytes::WriteBytesExtUbiArt;
 
 use super::Alias8;
 
@@ -23,16 +23,7 @@ pub fn create<W: Write + Seek>(mut writer: W, alias8: &Alias8) -> Result<(), Err
         writer.write_all(alias.first_alias.as_bytes())?;
         writer.write_u32::<BigEndian>(u32::try_from(alias.second_alias.as_bytes().len())?)?;
         writer.write_all(alias.second_alias.as_bytes())?;
-        let (path, filename) = alias
-            .path
-            .rsplit_once('/')
-            .ok_or_else(|| anyhow!("Path does not contain '/': {}", alias.path))?;
-        writer.write_u32::<BigEndian>(u32::try_from(filename.as_bytes().len())?)?;
-        writer.write_all(filename.as_bytes())?;
-        writer.write_u32::<BigEndian>(u32::try_from(path.as_bytes().len() + 1)?)?;
-        writer.write_all(path.as_bytes())?;
-        writer.write_u8(b'/')?;
-        writer.write_u32::<BigEndian>(string_id(alias.path))?;
+        writer.write_path::<BigEndian>(&alias.path)?;
         writer.write_u32::<BigEndian>(0)?;
         writer.write_u16::<BigEndian>(0xFFFF)?;
         writer.write_u16::<BigEndian>(alias.unk3)?;
