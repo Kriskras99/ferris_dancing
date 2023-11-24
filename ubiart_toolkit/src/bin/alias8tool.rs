@@ -18,8 +18,8 @@ fn main() {
 
     for alias in alias8.aliases {
         println!(
-            "{:04x} {} {} {} {}",
-            alias.unk3, alias.first_alias, alias.second_alias, alias.filename, alias.path
+            "{:04x} {} {} {}",
+            alias.unk3, alias.first_alias, alias.second_alias, alias.path
         );
     }
 }
