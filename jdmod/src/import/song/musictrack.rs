@@ -36,7 +36,7 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         to.write_all(&from)?;
         audio_filename
     } else {
-        let cooked_path = cook_path(&path, sis.platform)?;
+        let cooked_path = cook_path(path, sis.platform)?;
         let audio_filename = cooked_path.rsplit_once('/').unwrap().1.to_string();
         let from = sis.vfs.open(cooked_path.as_ref())?;
         let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
