@@ -36,8 +36,8 @@
 //! | n + b + 5  | u32      | Length of the name in bytes ( = l)                    |
 //! | n + b + 9  | [str; l] | Name                                                  |
 //!
-//! [IPK bundle]: ipk::IpkArchive
-//! [UbiArt CRC]: utils::string_id
+//! [IPK bundle]: crate::ipk::Bundle
+//! [UbiArt CRC]: crate::utils::string_id
 mod parser;
 mod types;
 pub mod vfs;

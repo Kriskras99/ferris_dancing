@@ -4,7 +4,7 @@ use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Error};
 
-use bitvec::{prelude::BitArray, BitArr};
+use bitvec::BitArr;
 use ubiart_toolkit::loc8::Language;
 pub use ubiart_toolkit::utils::LocaleId;
 
@@ -209,23 +209,12 @@ impl<'a> Localisation<'a> {
 }
 
 /// Contains all translations for a locale id
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Translation<'a> {
     /// The translations, indexed by [`Language`] as usize
     inner: [Cow<'a, str>; 0x18],
     /// Keep track of which strings are not empty (performance optimisation)
     not_empty: BitArr!(for 0x18, in u8),
-}
-
-/// A default for `Cow<str>` that is not owned
-const COW_BORROWED_DEFAULT: Cow<'static, str> = Cow::Borrowed("");
-impl Default for Translation<'_> {
-    fn default() -> Self {
-        Self {
-            inner: [COW_BORROWED_DEFAULT; 0x18],
-            not_empty: BitArray::default(),
-        }
-    }
 }
 
 impl Translation<'_> {

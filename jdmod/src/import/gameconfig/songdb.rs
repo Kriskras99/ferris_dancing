@@ -26,7 +26,10 @@ pub fn import(is: &ImportState<'_>, songdb_scene: &str) -> Result<(), Error> {
             match (song::import(is, &actor.lua), is.lax) {
                 (Ok(_), _) => {}
                 (Err(error), true) => {
-                    println!("Warning! Failed to import {}! Error: {error:?}", actor.userfriendly);
+                    println!(
+                        "Warning! Failed to import {}! Error: {error:?}",
+                        actor.userfriendly
+                    );
                 }
                 (Err(error), false) => return Err(error),
             }
