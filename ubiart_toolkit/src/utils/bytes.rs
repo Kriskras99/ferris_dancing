@@ -31,14 +31,16 @@ pub fn read_to_vec<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 pub fn read_path_at<'b, T: ByteOrder>(
     source: &'b [u8],
     position: &mut usize,
-) -> Result<Option<SplitPath<'b>>, Error> {
+) -> Result<SplitPath<'b>, Error> {
     let filename = read_string_at::<T>(source, position)?;
     let path = read_string_at::<T>(source, position)?;
     let path_id = PathId::from(read_u32_at::<T>(source, position)?);
-    let result = if filename.is_empty() {
-        test(&path.len(), &0)?;
+    let split_path = if path.is_empty() && filename.is_empty() {
         test(&path_id, &PathId::from(0xFFFF_FFFF))?;
-        Ok(None)
+        SplitPath {
+            path: Cow::Borrowed(""),
+            filename: Cow::Borrowed(""),
+        }
     } else {
         let split_path = SplitPath {
             path: Cow::Borrowed(path),
@@ -46,11 +48,11 @@ pub fn read_path_at<'b, T: ByteOrder>(
         };
         let path_id_calc = PathId::from(&split_path);
         test(&path_id, &path_id_calc)?;
-        Ok(Some(split_path))
+        split_path
     };
     let padding = read_u32_at::<T>(source, position)?;
     test(&padding, &0)?;
-    result
+    Ok(split_path)
 }
 
 pub trait WriteBytesExtUbiArt: std::io::Write {
@@ -58,15 +60,15 @@ pub trait WriteBytesExtUbiArt: std::io::Write {
     ///
     /// # Errors
     /// Will error if the individual components are longer than `u32::MAX` or if the writer fails
-    fn write_path<T: ByteOrder>(&mut self, path: Option<&SplitPath<'_>>) -> Result<(), Error> {
-        if let Some(path) = path {
-            self.write_string::<T>(&path.filename)?;
-            self.write_string::<T>(&path.path)?;
-            self.write_u32::<T>(u32::from(PathId::from(path)))?;
-        } else {
+    fn write_path<T: ByteOrder>(&mut self, path: &SplitPath<'_>) -> Result<(), Error> {
+        if path.is_empty() {
             self.write_u32::<T>(0)?; // filename length
             self.write_u32::<T>(0)?; // directory length
             self.write_u32::<T>(0xffff_ffff)?; // crc
+        } else {
+            self.write_string::<T>(&path.filename)?;
+            self.write_string::<T>(&path.path)?;
+            self.write_u32::<T>(u32::from(PathId::from(path)))?;
         }
         Ok(())
     }

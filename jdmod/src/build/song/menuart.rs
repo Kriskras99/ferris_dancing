@@ -132,25 +132,25 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
             data: cooked::act::TemplateData::MaterialGraphicComponent(Box::new(
                 cooked::act::MaterialGraphicComponent {
                     files: [
-                        Some(SplitPath {
+                        SplitPath {
                             path: Cow::Owned(format!(
                                 "world/maps/{lower_map_name}/menuart/textures"
                             )),
                             filename: Cow::Borrowed(tga),
-                        }),
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        Some(SplitPath {
+                        },
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath {
                             path: Cow::Borrowed("world/_common/matshader/"),
                             filename: Cow::Borrowed("multitexture_1layer.msh"),
-                        }),
+                        },
                     ],
                     unk14: if tga.ends_with("_albumcoach.tga") || tga.contains("_coach_") {
                         6

@@ -150,23 +150,23 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
                 cooked::act::MaterialGraphicComponent {
                     // TODO: Check values!
                     files: [
-                        Some(SplitPath {
+                        SplitPath {
                             path: Cow::Borrowed("world/ui/textures/covers/playlists_offline/"),
                             filename: Cow::Borrowed(tga),
-                        }),
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        Some(SplitPath {
+                        },
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath {
                             path: Cow::Borrowed("world/_common/matshader/"),
                             filename: Cow::Borrowed("multitexture_1layer.msh"),
-                        }),
+                        },
                     ],
                     ..Default::default()
                 },

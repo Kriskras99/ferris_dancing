@@ -5,6 +5,8 @@ use std::{borrow::Cow, collections::HashMap, fs::File};
 use anyhow::{anyhow, Context, Error};
 use ubiart_toolkit::cooked::{self, act::TemplateType};
 
+use dotstar_toolkit_utils::testing::test;
+
 use crate::{
     types::{gameconfig::playlists::Playlist, ImportState},
     utils::{cook_path, decode_texture},
@@ -44,10 +46,8 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
             .iter()
             .find(|t| t.the_type == TemplateType::MaterialGraphicComponent)
             .ok_or_else(|| anyhow!("No MaterialGraphicComponent in actor!"))?;
-        let tga_path = template.data.material_graphics_component()?.files[0]
-            .as_ref()
-            .ok_or_else(|| anyhow!("No TGA path at index 0!"))?
-            .to_string();
+        let tga_path = template.data.material_graphics_component()?.files[0].to_string();
+        test(&tga_path.is_empty(), &false)?;
 
         // Open the cover and save it to the mod directory
         let cooked_tga_path = cook_path(&tga_path, is.platform)?;

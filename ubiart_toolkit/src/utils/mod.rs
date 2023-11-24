@@ -54,10 +54,20 @@ impl From<LocaleId> for u32 {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SplitPath<'a> {
     pub path: Cow<'a, str>,
     pub filename: Cow<'a, str>,
+}
+
+impl SplitPath<'_> {
+    pub fn len(&self) -> usize {
+        self.path.len() + self.filename.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.path.is_empty() && self.filename.is_empty()
+    }
 }
 
 impl Display for SplitPath<'_> {

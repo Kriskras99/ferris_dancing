@@ -69,7 +69,7 @@ pub fn export(dir_root: &Path, dir_export: &Path) -> Result<(), Error> {
     let borrowed_patched_base_vfs = &patched_base_vfs;
 
     /*
-    1 thread bundles build files into ipks. It will only bundle song files untill the channel is dropped
+    1 thread bundles build files into ipks. It will only bundle song files until the channel is dropped
     1 thread starts building localisation then receives song jobs
     1 thread starts building gameconfig then receives song jobs
     available_cpus-3 threads receive song jobs

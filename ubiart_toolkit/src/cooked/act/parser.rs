@@ -7,7 +7,7 @@ use byteorder::BigEndian;
 
 use crate::utils::{
     bytes::{read_path_at, read_string_at, read_u32_at, read_u64_at},
-    Game,
+    Game, SplitPath,
 };
 use dotstar_toolkit_utils::testing::{test, test_any};
 
@@ -93,8 +93,8 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
     let unk8 = read_u32_at::<BigEndian>(src, &mut pos)?;
     test(&unk8, &0)?;
 
-    let tpl =
-        read_path_at::<BigEndian>(src, &mut pos)?.ok_or_else(|| anyhow!("No template path!"))?;
+    let tpl = read_path_at::<BigEndian>(src, &mut pos)?;
+    test(&tpl.is_empty(), &false)?;
     let unk9 = read_u32_at::<BigEndian>(src, &mut pos)?;
     test(&unk9, &0)?;
     let actor_amount = read_u32_at::<BigEndian>(src, &mut pos)?;
@@ -383,7 +383,17 @@ fn parse_material_graphic_component<'a>(
     .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
 
     let mut files = [
-        None, None, None, None, None, None, None, None, None, None, None,
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
+        SplitPath::default(),
     ];
 
     for item in files.iter_mut().take(9) {

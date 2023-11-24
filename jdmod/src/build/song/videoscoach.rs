@@ -94,14 +94,14 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         templates: vec![cooked::act::Template {
             the_type: cooked::act::TemplateType::PleoComponent,
             data: cooked::act::TemplateData::PleoComponent(cooked::act::PleoComponent {
-                video: Some(SplitPath {
+                video: SplitPath {
                     path: Cow::Owned(format!("{map_path}/videoscoach/")),
                     filename: Cow::Owned(format!("{lower_map_name}.webm")),
-                }),
-                dash_mpd: Some(SplitPath {
+                },
+                dash_mpd: SplitPath {
                     path: Cow::Owned(format!("{map_path}/videoscoach/")),
                     filename: Cow::Owned(format!("{lower_map_name}.mpd")),
-                }),
+                },
                 channel_id: map_preview.then(|| ses.song.map_name.clone()),
             }),
         }],

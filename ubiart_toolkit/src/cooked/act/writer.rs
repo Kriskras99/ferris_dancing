@@ -25,7 +25,7 @@ pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), Error
     writer.write_u64::<BigEndian>(0)?;
     writer.write_u64::<BigEndian>(0xffff_ffff)?;
     writer.write_u32::<BigEndian>(0)?;
-    writer.write_path::<BigEndian>(Some(&actor.tpl))?;
+    writer.write_path::<BigEndian>(&actor.tpl)?;
     writer.write_u32::<BigEndian>(0)?;
     writer.write_u32::<BigEndian>(0)?;
     writer.write_u32::<BigEndian>(u32::try_from(actor.templates.len())?)?;
@@ -81,12 +81,12 @@ fn write_material_graphic_component<W: Write + Seek>(
     writer.write_u64::<BigEndian>(mgc.unk14)?;
     writer.write_u64::<BigEndian>(mgc.unk15)?;
     for item in mgc.files.iter().take(9) {
-        writer.write_path::<BigEndian>(item.as_ref())?;
+        writer.write_path::<BigEndian>(item)?;
         writer.write_u32::<BigEndian>(0)?;
     }
     writer.write_u32::<BigEndian>(0)?;
     for item in mgc.files.iter().skip(9) {
-        writer.write_path::<BigEndian>(item.as_ref())?;
+        writer.write_path::<BigEndian>(item)?;
         writer.write_u32::<BigEndian>(0)?;
     }
     for _ in 0..4 {
@@ -115,9 +115,9 @@ fn write_pleo_component<W: Write + Seek>(
     writer: &mut W,
     pleo_component: &PleoComponent,
 ) -> Result<(), Error> {
-    writer.write_path::<BigEndian>(pleo_component.video.as_ref())?;
+    writer.write_path::<BigEndian>(&pleo_component.video)?;
     writer.write_u32::<BigEndian>(0)?;
-    writer.write_path::<BigEndian>(pleo_component.dash_mpd.as_ref())?;
+    writer.write_path::<BigEndian>(&pleo_component.dash_mpd)?;
     writer.write_u32::<BigEndian>(0)?;
     writer.write_string::<BigEndian>(pleo_component.channel_id.as_ref().map_or("", Cow::as_ref))?;
 
