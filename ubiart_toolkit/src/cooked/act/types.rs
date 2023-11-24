@@ -152,16 +152,16 @@ pub struct CreditsComponent<'a> {
 #[derive(Debug, Clone)]
 pub struct PleoComponent<'a> {
     /// The filename of the video to play
-    pub video: Option<SplitPath<'a>>,
+    pub video: SplitPath<'a>,
     /// Manifest filename of the video
-    pub dash_mpd: Option<SplitPath<'a>>,
+    pub dash_mpd: SplitPath<'a>,
     pub channel_id: Option<Cow<'a, str>>,
 }
 
 /// Data for textures
 #[derive(Debug, Clone)]
 pub struct MaterialGraphicComponent<'a> {
-    pub files: [Option<SplitPath<'a>>; 11],
+    pub files: [SplitPath<'a>; 11],
     pub unk11_5: u32,
     pub unk13: u32,
     /// Unknown value, 6 for tga with coach, 1 for tga without

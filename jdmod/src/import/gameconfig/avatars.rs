@@ -8,6 +8,8 @@ use std::{borrow::Cow, collections::HashMap, fs::File, io::Write};
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, json_types::AvatarsObjectives};
 
+use dotstar_toolkit_utils::testing::test;
+
 use crate::{
     types::{
         gameconfig::avatars::{Avatar, UnlockType},
@@ -134,13 +136,9 @@ pub fn import_v18v22(
             let mtg = image_actor.data.material_graphics_component()?;
 
             // Save decooked image
-            let cooked_image_path = cook_path(
-                &mtg.files[0]
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("No image path in {:?}", mtg.files))?
-                    .to_string(),
-                is.platform,
-            )?;
+            let image_path = mtg.files[0].to_string();
+            test(&image_path.is_empty(), &false)?;
+            let cooked_image_path = cook_path(&image_path, is.platform)?;
             let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?)?;
             let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
             decooked_image.save(&avatar_image_path)?;

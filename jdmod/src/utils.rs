@@ -254,7 +254,7 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
     }
 }
 
-/// Efficient implementation of (_, [needle]) = regex.captures(haystack).extract() for Cow
+/// Efficient implementation of `(_, [needle]) = regex.captures(haystack).extract()` for `Cow<str>`
 pub fn cow_regex_single_capture<'a>(
     regex: &Regex,
     haystack: Cow<'a, str>,

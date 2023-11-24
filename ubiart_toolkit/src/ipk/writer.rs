@@ -231,7 +231,7 @@ pub fn write<W: Write + Seek>(
         writer.write_u32::<BigEndian>(u32::try_from(metadata.compressed)?)?;
         writer.write_u64::<BigEndian>(metadata.timestamp)?;
         writer.write_u64::<BigEndian>(metadata.offset)?;
-        writer.write_path::<BigEndian>(Some(&path))?;
+        writer.write_path::<BigEndian>(&path)?;
         if path.path.starts_with("cache/itf_cooked") {
             writer.write_u32::<BigEndian>(0x2)?;
         } else {

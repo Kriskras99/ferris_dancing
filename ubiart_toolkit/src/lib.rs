@@ -18,8 +18,9 @@
 //! A library for parsing and writing various UbiArt files.
 //!
 //! ## Features
-//! This crate has one feature that can be enabled:
+//! This crate has the following feature that can be enabled:
 //! - `full_json_types`: Enable all JSON types (will increase compile times)
+//! - `zopfli`: Enable compression with the Zopfli algorithm when creating IPK bundles
 //!
 
 pub mod alias8;

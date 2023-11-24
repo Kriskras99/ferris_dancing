@@ -150,26 +150,26 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
                     cooked::act::MaterialGraphicComponent {
                         // TODO: Check values!
                         files: [
-                            Some(SplitPath {
+                            SplitPath {
                                 path: Cow::Borrowed(avatar_dir),
                                 filename: Cow::Borrowed("avatar.png"),
-                            }),
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            Some(SplitPath {
+                            },
+                            SplitPath::default(),
+                            SplitPath::default(),
+                            SplitPath::default(),
+                            SplitPath::default(),
+                            SplitPath::default(),
+                            SplitPath::default(),
+                            SplitPath::default(),
+                            SplitPath::default(),
+                            SplitPath {
                                 path: Cow::Borrowed("world/ui/atlas/"),
                                 filename: Cow::Borrowed("avatar.atl"),
-                            }),
-                            Some(SplitPath {
+                            },
+                            SplitPath {
                                 path: Cow::Borrowed("world/ui/materials/_common/"),
                                 filename: Cow::Borrowed("alpha.msh"),
-                            }),
+                            },
                         ],
                         ..Default::default()
                     },

@@ -217,7 +217,7 @@ pub struct Translation<'a> {
     not_empty: BitArr!(for 0x18, in u8),
 }
 
-/// A default for Cow<str> that is not owned
+/// A default for `Cow<str>` that is not owned
 const COW_BORROWED_DEFAULT: Cow<'static, str> = Cow::Borrowed("");
 impl Default for Translation<'_> {
     fn default() -> Self {
