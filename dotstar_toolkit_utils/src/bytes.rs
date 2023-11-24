@@ -1,6 +1,6 @@
 //! # Bytes
 //! Contains functions to read integers and strings from byte slices.
-use std::{str::Utf8Error, path::Path, fs::File};
+use std::{fs::File, path::Path, str::Utf8Error};
 
 pub use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use thiserror::Error;

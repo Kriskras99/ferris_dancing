@@ -3,9 +3,7 @@
 use std::{io::ErrorKind, path::Path};
 
 use anyhow::Error;
-use dotstar_toolkit_utils::vfs::{
-    VirtualFile, VirtualFileMetadata, VirtualFileSystem,
-};
+use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 use yoke::Yoke;
 
 use crate::utils::path_id;

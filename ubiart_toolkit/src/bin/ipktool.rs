@@ -98,7 +98,7 @@ pub fn list_ipk(ipk: &Bundle) {
 }
 
 /// Extract a IPK bundle to destination
-/// 
+///
 /// # Errors
 /// Will return an error if the IO fails or the file is corrupt
 pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(), Error> {
@@ -155,7 +155,7 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
 }
 
 /// Create a IPK bundle from all files and directories in `source`
-/// 
+///
 /// # Errors
 /// Will error if the IO fails or there are too many files
 pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), anyhow::Error> {
