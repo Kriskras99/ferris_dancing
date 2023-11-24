@@ -9,7 +9,7 @@ use std::{
 
 use memmap2::Mmap;
 
-use super::{VirtualFile, VirtualFileInner, VirtualFileMetadata, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 
 /// The native filesystem on this device
 pub struct Native {
@@ -69,8 +69,7 @@ impl VirtualFileSystem for Native {
     fn open(&self, path: &Path) -> std::io::Result<VirtualFile<'static>> {
         let path = Self::canonicalize(self, path)?;
         let mmap = unsafe { Mmap::map(&OpenOptions::new().read(true).open(path)?)? };
-        let trait_object: Box<dyn VirtualFileInner> = Box::new(mmap);
-        Ok(VirtualFile::from(trait_object))
+        Ok(VirtualFile::from(mmap))
     }
 
     fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
@@ -103,5 +102,3 @@ impl VirtualFileMetadata for fs::Metadata {
         Ok(duration.as_secs())
     }
 }
-
-impl VirtualFileInner for Mmap {}

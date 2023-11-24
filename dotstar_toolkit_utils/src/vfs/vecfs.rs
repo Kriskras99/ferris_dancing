@@ -3,13 +3,10 @@
 use std::{
     collections::HashMap,
     io::{Error, ErrorKind, Result},
-    ops::Deref,
     path::Path,
 };
 
-use stable_deref_trait::StableDeref;
-
-use super::{VirtualFile, VirtualFileInner, VirtualFileMetadata, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 
 /// A completely in-memory filesystem, storing files as [`Vec`]s.
 #[derive(Debug, Clone, Default)]
@@ -79,8 +76,7 @@ impl IntoIterator for VecFs {
 impl VirtualFileSystem for VecFs {
     fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<VirtualFile<'fs>> {
         if let Some(file) = path.to_str().and_then(|s| self.files.get(s)) {
-            let trait_object: &dyn VirtualFileInner = file;
-            Ok(VirtualFile::Borrowed(trait_object))
+            Ok(VirtualFile::from(file.as_slice()))
         } else {
             Err(ErrorKind::NotFound.into())
         }
@@ -132,19 +128,3 @@ impl VirtualFileMetadata for VecMetadata {
         Err(ErrorKind::Unsupported.into())
     }
 }
-
-/// A file in this filesystem
-pub struct VecFile<'f> {
-    /// A reference to the file in the filesystem
-    inner: &'f Vec<u8>,
-}
-
-impl<'f> Deref for VecFile<'f> {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        self.inner
-    }
-}
-
-unsafe impl<'f> StableDeref for VecFile<'f> {}
