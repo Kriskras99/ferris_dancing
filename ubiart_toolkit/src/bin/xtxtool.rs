@@ -93,7 +93,8 @@ fn main() -> Result<(), Error> {
             .data
             .first()
             .ok_or_else(|| anyhow!("No data for image!"))?;
-        let mut data_decompressed = vec![0xFF; usize::try_from(hdr.width * hdr.height * 4).unwrap()];
+        let mut data_decompressed =
+            vec![0xFF; usize::try_from(hdr.width * hdr.height * 4).unwrap()];
         match hdr.format {
             cooked::xtx::Format::DXT5 => {
                 texpresso::Format::Bc3.decompress(
