@@ -13,6 +13,10 @@ pub enum Sgs<'a> {
 }
 
 impl<'a> Sgs<'a> {
+    /// Use this a `SceneSettings` type
+    /// 
+    /// # Errors
+    /// Will error if this is not a `SceneSettings` type
     pub fn as_scene_settings(self) -> Result<SceneSettings<'a>, Error> {
         if let Sgs::SceneSettings(scene_settings) = self {
             Ok(scene_settings)
@@ -21,6 +25,10 @@ impl<'a> Sgs<'a> {
         }
     }
 
+    /// Use this a `SceneConfigManager` type
+    /// 
+    /// # Errors
+    /// Will error if this is not a `SceneConfigManager` type
     pub fn as_scene_config_manager(self) -> Result<SceneConfigManager<'a>, Error> {
         if let Sgs::SceneConfigManager(scene_config_manager) = self {
             Ok(scene_config_manager)

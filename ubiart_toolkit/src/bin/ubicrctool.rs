@@ -11,5 +11,5 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    println!("{}: 0x{:08x}", cli.string, ubi_crc(cli.string.as_bytes()))
+    println!("{}: 0x{:08x}", cli.string, ubi_crc(cli.string.as_bytes()));
 }

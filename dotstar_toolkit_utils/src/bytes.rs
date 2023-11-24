@@ -1,9 +1,24 @@
 //! # Bytes
 //! Contains functions to read integers and strings from byte slices.
-use std::str::Utf8Error;
+use std::{str::Utf8Error, path::Path, fs::File};
 
 pub use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use thiserror::Error;
+
+/// Read the file at path into a `Vec`
+///
+/// # Errors
+/// - Cannot open the file
+/// - Cannot get metadata for the file
+/// - Filesize is bigger than `usize`
+/// - Cannot read the entire file
+pub fn read_to_vec<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<u8>> {
+    let mut file = File::open(path.as_ref())?;
+    let file_size = usize::try_from(file.metadata()?.len()).map_err(std::io::Error::other)?;
+    let mut buf = Vec::with_capacity(file_size);
+    std::io::Read::read_to_end(&mut file, &mut buf)?;
+    Ok(buf)
+}
 
 /// Errors returend when the test* functions fail
 #[derive(Error, Debug)]

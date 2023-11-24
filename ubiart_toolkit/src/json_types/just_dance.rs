@@ -1,3 +1,4 @@
+//! Contains descriptions of Just Dance types
 use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
@@ -5,8 +6,6 @@ use serde::{Deserialize, Serialize};
 use crate::utils::LocaleId;
 
 use super::{AutodanceVideoStructure, PhoneImages};
-
-/// Contains descriptions of Just Dance types
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]

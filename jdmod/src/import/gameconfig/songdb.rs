@@ -24,7 +24,7 @@ pub fn import(is: &ImportState<'_>, songdb_scene: &str) -> Result<(), Error> {
             .any(|c| matches!(c, WrappedComponent::SongDesc))
         {
             match (song::import(is, &actor.lua), is.lax) {
-                (Ok(_), _) => {}
+                (Ok(()), _) => {}
                 (Err(error), true) => {
                     println!(
                         "Warning! Failed to import {}! Error: {error:?}",

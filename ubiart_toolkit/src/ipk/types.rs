@@ -95,7 +95,7 @@ impl Data<'_> {
 
     /// Check if this file is empty
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         match self {
             Data::Uncompressed(data) => data.data.is_empty(),
             Data::Compressed(data) => data.uncompressed_size == 0,
