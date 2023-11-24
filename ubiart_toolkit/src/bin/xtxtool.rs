@@ -68,8 +68,8 @@ fn main() -> Result<(), Error> {
     }
 
     if let Some(savepath) = cli.output {
-        assert!(png.xtx.images.len() == 1);
-        assert!(savepath.is_dir());
+        assert!(png.xtx.images.len() == 1, "More than one image in texture!");
+        assert!(savepath.is_dir(), "Save path is not a directory!");
 
         let stem = cli
             .source
@@ -93,30 +93,23 @@ fn main() -> Result<(), Error> {
             .data
             .first()
             .ok_or_else(|| anyhow!("No data for image!"))?;
-        let data_decompressed = match hdr.format {
+        let mut data_decompressed = vec![0xFF; usize::try_from(hdr.width * hdr.height * 4).unwrap()];
+        match hdr.format {
             cooked::xtx::Format::DXT5 => {
-                let mut data_decompressed =
-                    vec![0xFF; usize::try_from(hdr.width * hdr.height * 4).unwrap()];
-                // Vec::with_capacity(usize::try_from(hdr.width * hdr.height * 4).unwrap());
                 texpresso::Format::Bc3.decompress(
                     data_compressed,
                     usize::try_from(hdr.width).unwrap(),
                     usize::try_from(hdr.height).unwrap(),
                     &mut data_decompressed,
                 );
-                data_decompressed
             }
             cooked::xtx::Format::DXT1 => {
-                let mut data_decompressed =
-                    vec![0xFF; usize::try_from(hdr.width * hdr.height * 4).unwrap()];
-                // Vec::with_capacity(usize::try_from(hdr.width * hdr.height * 4).unwrap());
                 texpresso::Format::Bc1.decompress(
                     data_compressed,
                     usize::try_from(hdr.width).unwrap(),
                     usize::try_from(hdr.height).unwrap(),
                     &mut data_decompressed,
                 );
-                data_decompressed
             }
             _ => panic!("Format {:?} not yet implemented!", hdr.format),
         };

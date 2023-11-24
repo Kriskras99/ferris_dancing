@@ -60,7 +60,7 @@ pub fn parse(src: &[u8], lax: bool) -> Result<Bundle, anyhow::Error> {
         (Err(_), true) => GamePlatform {
             game: Game::JustDance2022,
             platform: utils::Platform::Nx,
-            id: 0x1ddb2268,
+            id: 0x1ddb_2268,
         },
         (err @ Err(_), false) => err?,
     };

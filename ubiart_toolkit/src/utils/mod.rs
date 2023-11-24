@@ -61,10 +61,14 @@ pub struct SplitPath<'a> {
 }
 
 impl SplitPath<'_> {
+    /// The total length of the path and filename combined
+    #[must_use]
     pub fn len(&self) -> usize {
         self.path.len() + self.filename.len()
     }
 
+    /// Returns `true` if the path and filename are empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.path.is_empty() && self.filename.is_empty()
     }

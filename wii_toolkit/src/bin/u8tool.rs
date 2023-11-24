@@ -20,14 +20,12 @@ fn main() {
     let cli = Cli::parse();
 
     let source = cli.source;
-    let destination = if let Some(destination) = cli.destination {
-        destination
-    } else {
+    let destination = cli.destination.unwrap_or_else(||
         source
             .parent()
             .expect("No parent directory for source!")
             .to_path_buf()
-    };
+    );
 
     let u8a = u8a::parser::open(source).expect("Could not parse file!");
 

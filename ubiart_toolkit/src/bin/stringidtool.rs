@@ -11,5 +11,5 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    println!("{}: 0x{:08x}", cli.string, string_id(&cli.string))
+    println!("{}: 0x{:08x}", cli.string, string_id(&cli.string));
 }

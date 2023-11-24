@@ -21,22 +21,18 @@ fn main() {
     let cli = Cli::parse();
 
     let source = cli.source;
-    let destination = if let Some(destination) = cli.destination {
-        destination
-    } else {
-        source
-            .parent()
-            .expect("No parent directory for source!")
-            .to_path_buf()
-    };
+    let destination = cli.destination.unwrap_or_else(|| source
+        .parent()
+        .expect("No parent directory for source!")
+        .to_path_buf());
 
-    let wwad = wad::parser::open(source).expect("Could not parse file!");
+    let wad_archive = wad::parser::open(source).expect("Could not parse file!");
 
     create_dir_all(&destination).expect("Could not create directory!");
 
-    match wwad.archive() {
-        WadArchive::Installable(wad) => {
-            for content in &wad.content {
+    match wad_archive.archive() {
+        WadArchive::Installable(installable) => {
+            for content in &installable.content {
                 let cid = content.metadata.content_id;
                 let index = content.metadata.index;
                 let cmd_type = u16::from(content.metadata.content_type);

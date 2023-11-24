@@ -17,6 +17,7 @@ use ubiart_toolkit::{
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
+#[allow(clippy::struct_excessive_bools)]
 struct Cli {
     source: PathBuf,
     destination: Option<PathBuf>,
@@ -96,12 +97,16 @@ pub fn list_ipk(ipk: &Bundle) {
     );
 }
 
+/// Extract a IPK bundle to destination
+/// 
+/// # Errors
+/// Will return an error if the IO fails or the file is corrupt
 pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(), Error> {
-    create_dir_all(destination).expect("Could not create directory!");
+    create_dir_all(destination)?;
 
     for fil in ipk.files.values() {
         let path = &destination.join(fil.path.path.as_ref());
-        create_dir_all(path).expect("Could not create directory!");
+        create_dir_all(path)?;
         let filepath = &path.join(fil.path.filename.as_ref());
         if overwrite || !filepath.exists() {
             let mut file = File::create(filepath)?;
@@ -149,11 +154,15 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
     }
 }
 
+/// Create a IPK bundle from all files and directories in `source`
+/// 
+/// # Errors
+/// Will error if the IO fails or there are too many files
 pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), anyhow::Error> {
     let vfs = Native::new(source)?;
     let file_list = vfs.list_files(&PathBuf::from(""))?;
     let files: Vec<_> = file_list.iter().map(String::as_str).collect();
-    let file = File::create(destination).unwrap();
+    let file = File::create(destination)?;
     ipk::write(
         file,
         GamePlatform::try_from(0x1ddb_2268)?,
@@ -161,8 +170,6 @@ pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), anyhow::Error
         0x4fd39,
         ipk::Options {
             compression: ipk::CompressionEffort::Best,
-            #[cfg(feature = "oxipng")]
-            optimize_png: ipk::CompressionEffort::Best,
         },
         &vfs,
         &files,

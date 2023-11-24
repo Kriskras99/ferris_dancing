@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fs::File, io::Read, path::Path};
+use std::borrow::Cow;
 
 use anyhow::Error;
 use byteorder::WriteBytesExt;
@@ -6,21 +6,6 @@ pub use dotstar_toolkit_utils::bytes::*;
 use dotstar_toolkit_utils::testing::test;
 
 use super::{PathId, SplitPath};
-
-/// Read the file at path into a `Vec`
-///
-/// # Errors
-/// - Cannot open the file
-/// - Cannot get metadata for the file
-/// - Filesize is bigger than `usize`
-/// - Cannot read the entire file
-pub fn read_to_vec<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
-    let mut file = File::open(path.as_ref())?;
-    let file_size = usize::try_from(file.metadata()?.len())?;
-    let mut buf = Vec::with_capacity(file_size);
-    file.read_to_end(&mut buf)?;
-    Ok(buf)
-}
 
 /// Read a `SplitPath` from `source` at position `position` and check the CRC
 ///
