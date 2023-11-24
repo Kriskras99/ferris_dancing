@@ -1,13 +1,11 @@
 #![allow(clippy::module_name_repetitions)]
 
-use std::{io::ErrorKind, ops::Deref, path::Path};
+use std::{io::ErrorKind, path::Path};
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{
-    VirtualFile, VirtualFileInner, VirtualFileMetadata, VirtualFileSystem,
+    VirtualFile, VirtualFileMetadata, VirtualFileSystem,
 };
-use memmap2::Mmap;
-use stable_deref_trait::StableDeref;
 use yoke::Yoke;
 
 use crate::utils::path_id;
@@ -46,26 +44,6 @@ impl<'f> VfsIpkFilesystem<'f> {
         Ok(Self { ipk })
     }
 }
-
-pub enum VfsIpkFile<'a> {
-    Uncompressed(&'a [u8]),
-    Compressed(Mmap),
-}
-
-impl Deref for VfsIpkFile<'_> {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            VfsIpkFile::Uncompressed(data) => data,
-            VfsIpkFile::Compressed(data) => data,
-        }
-    }
-}
-
-impl<'f> VirtualFileInner for VfsIpkFile<'f> {}
-
-unsafe impl StableDeref for VfsIpkFile<'_> {}
 
 #[derive(Clone)]
 pub struct VfsIpkMetadata {
@@ -111,8 +89,7 @@ impl<'fs> VirtualFileSystem for VfsIpkFilesystem<'fs> {
                 let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
                 let mut decompress = flate2::Decompress::new(true);
                 decompress.decompress_vec(data.data, &mut vec, flate2::FlushDecompress::Finish)?;
-                let trait_object: Box<dyn VirtualFileInner> = Box::new(vec);
-                Ok(VirtualFile::from(trait_object))
+                Ok(VirtualFile::from(vec))
             }
         }
     }
@@ -140,11 +117,7 @@ impl<'fs> VirtualFileSystem for VfsIpkFilesystem<'fs> {
                 .map(ToString::to_string)
                 .filter_map(|s| {
                     let ss = s.strip_prefix('/').unwrap_or(s.as_str());
-                    if ss.starts_with(path) {
-                        Some(ss.to_string())
-                    } else {
-                        None
-                    }
+                    ss.starts_with(path).then(|| ss.to_string())
                 })
                 .collect())
         } else {

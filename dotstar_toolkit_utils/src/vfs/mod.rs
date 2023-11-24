@@ -2,6 +2,7 @@
 //! Contains traits for a virtual filesystem and implementations of some basic filesystems.
 use std::{io::Result, ops::Deref, path::Path};
 
+use memmap2::Mmap;
 use stable_deref_trait::StableDeref;
 
 pub mod layeredfs;
@@ -48,28 +49,31 @@ pub trait VirtualFileMetadata {
     fn created(&self) -> Result<u64>;
 }
 
-/// Trait alias for a types that dereference to byte slices, stay in the same position, and are sync
-pub trait VirtualFileInner: Deref<Target = [u8]> + StableDeref + Sync {}
-
-impl VirtualFileInner for Vec<u8> {}
-
 /// The content of a file from a filesystem
 pub enum VirtualFile<'f> {
-    /// The content is directly borrowed from the filesystem
-    Borrowed(&'f [u8]),
+    /// The content is directly borrowed from the virtual filesystem
+    Slice(&'f [u8]),
     /// The content is owned by this type
-    Owned(Box<dyn VirtualFileInner>),
+    Vec(Vec<u8>),
+    /// The content is is a mmap
+    Mmap(Mmap),
 }
 
 impl<'f> From<&'f [u8]> for VirtualFile<'f> {
     fn from(value: &'f [u8]) -> Self {
-        Self::Borrowed(value)
+        Self::Slice(value)
     }
 }
 
-impl From<Box<dyn VirtualFileInner>> for VirtualFile<'_> {
-    fn from(value: Box<dyn VirtualFileInner>) -> Self {
-        Self::Owned(value)
+impl From<Vec<u8>> for VirtualFile<'_> {
+    fn from(value: Vec<u8>) -> Self {
+        Self::Vec(value)
+    }
+}
+
+impl From<Mmap> for VirtualFile<'_> {
+    fn from(value: Mmap) -> Self {
+        Self::Mmap(value)
     }
 }
 
@@ -78,8 +82,9 @@ impl Deref for VirtualFile<'_> {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            VirtualFile::Borrowed(inner) => inner,
-            VirtualFile::Owned(inner) => inner.as_ref(),
+            VirtualFile::Slice(value) => value,
+            VirtualFile::Vec(value) => value,
+            VirtualFile::Mmap(value) => value,
         }
     }
 }
