@@ -13,7 +13,9 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .add_ksy_file("alias8.ksy")
+        .unwrap()
         .add_ksy_file("split_path.ksy")
+        .unwrap()
         .generate()
         // Unwrap the Result and panic on failure.
         .expect("Unable to generate bindings");

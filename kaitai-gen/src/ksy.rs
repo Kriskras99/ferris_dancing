@@ -1,7 +1,7 @@
-use std::{str::FromStr, collections::HashMap};
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-use anyhow::{anyhow, Error, bail};
-use serde_yaml::{Value, Mapping};
+use anyhow::{anyhow, bail, Error};
+use serde_yaml::{Mapping, Value};
 
 #[derive(Debug, Default)]
 pub struct Ksy {
@@ -29,7 +29,7 @@ impl Ksy {
         }
     }
 
-    fn add_types(&mut self, types: HashMap<Identifier, Ksy>) -> Result<(), Error> {
+    fn add_types(&mut self, types: HashMap<Identifier, Self>) -> Result<(), Error> {
         if self.types.is_none() {
             self.types = Some(types);
             Ok(())
@@ -49,19 +49,34 @@ impl Ksy {
         let mut ksy = Self::default();
         for (key, value) in mapping {
             match (key.as_str(), value) {
-                (Some("meta"), Value::Mapping(mapping)) => ksy.add_meta(Meta::from_mapping(mapping)?)?,
+                (Some("meta"), Value::Mapping(mapping)) => {
+                    ksy.add_meta(Meta::from_mapping(mapping)?)?;
+                }
                 (Some("meta"), _) => panic!("meta is not a mapping!"),
-                (Some("seq"), Value::Sequence(sequence)) => ksy.add_seq(sequence.into_iter().map(Attribute::from_value).collect::<Result<_, _>>()?)?,
+                (Some("seq"), Value::Sequence(sequence)) => ksy.add_seq(
+                    sequence
+                        .into_iter()
+                        .map(Attribute::from_value)
+                        .collect::<Result<_, _>>()?,
+                )?,
                 (Some("seq"), _) => panic!("seq is not a sequence!"),
-                (Some("types"), Value::Mapping(mapping)) => ksy.add_types(mapping.into_iter().map(|v| {
-                    if let (Value::String(string), Value::Mapping(mapping)) = v {
-                        Identifier::try_from(string).and_then(|i| Self::from_mapping(mapping).map(|k| (i, k)))
-                    } else {
-                        Err(anyhow!("types has invalid types: {v:?}"))
-                    }
-                }).collect::<Result<_, _>>()?)?,
+                (Some("types"), Value::Mapping(mapping)) => ksy.add_types(
+                    mapping
+                        .into_iter()
+                        .map(|v| {
+                            if let (Value::String(string), Value::Mapping(mapping)) = v {
+                                Identifier::try_from(string)
+                                    .and_then(|i| Self::from_mapping(mapping).map(|k| (i, k)))
+                            } else {
+                                Err(anyhow!("types has invalid types: {v:?}"))
+                            }
+                        })
+                        .collect::<Result<_, _>>()?,
+                )?,
                 (Some("types"), _) => panic!("types is not a mapping!"),
-                (Some(key), value) => panic!("Unrecognized ksy item, expected meta, seq, or types: {key:?} {value:?}"),
+                (Some(key), value) => {
+                    panic!("Unrecognized ksy item, expected meta, seq, or types: {key:?} {value:?}")
+                }
                 (None, _) => panic!("ksy key is not a string!"),
             }
         }
@@ -73,7 +88,6 @@ pub type Attributes = Vec<Attribute>;
 pub type Doc = String;
 pub type TypeRef = String;
 pub type StringOrInteger = String;
-pub type Import = String;
 
 #[derive(Debug, Default)]
 pub struct Meta {
@@ -143,7 +157,7 @@ impl Meta {
 
 impl Meta {
     pub fn from_mapping(mapping: Mapping) -> Result<Self, Error> {
-        let mut meta = Meta::default();
+        let mut meta = Self::default();
         for (key, value) in mapping {
             match (key.as_str(), value) {
                 (Some("id"), Value::String(string)) => meta.add_id(Identifier::try_from(string)?)?,
@@ -192,7 +206,9 @@ pub struct Attribute {
 
 impl Attribute {
     pub fn from_value(value: Value) -> Result<Self, Error> {
-        let Value::Mapping(mapping) = value else { bail!("Attribute is not a mapping!") };
+        let Value::Mapping(mapping) = value else {
+            bail!("Attribute is not a mapping!")
+        };
         let mut attribute = Self::default();
         for (key, value) in mapping {
             match (key.as_str(), value) {
@@ -224,7 +240,7 @@ impl FromStr for Endiannes {
         match s {
             "be" => Ok(Self::Big),
             "le" => Ok(Self::Little),
-            _ => Err(anyhow!("switch-on not supported! Expecting 'be' or 'le'"))
+            _ => Err(anyhow!("switch-on not supported! Expecting 'be' or 'le'")),
         }
     }
 }
@@ -242,7 +258,7 @@ impl FromStr for Repeat {
         match s {
             "eos" => Ok(Self::EndOfStream),
             "expr" => Ok(Self::Expression),
-            _ => Err(anyhow!("until not supported! Expecting 'eos' or 'expr'"))
+            _ => Err(anyhow!("until not supported! Expecting 'eos' or 'expr'")),
         }
     }
 }
@@ -254,29 +270,35 @@ impl Contents {
     pub fn from_value(value: Value) -> Result<Self, Error> {
         match value {
             Value::Number(number) => {
-                let n = number.as_u64().and_then(|n| u8::try_from(n).ok()).ok_or_else(|| anyhow!("Number is too big!"))?;
+                let n = number
+                    .as_u64()
+                    .and_then(|n| u8::try_from(n).ok())
+                    .ok_or_else(|| anyhow!("Number is too big!"))?;
                 Ok(Self(vec![n]))
-            },
-            Value::String(string) => {
-                Ok(Self(string.as_bytes().to_vec()))
-            },
+            }
+            Value::String(string) => Ok(Self(string.as_bytes().to_vec())),
             Value::Sequence(sequence) => {
                 let mut vec = Vec::new();
                 for value in sequence {
                     match value {
                         Value::Number(number) => {
-                            let n = number.as_u64().and_then(|n| u8::try_from(n).ok()).ok_or_else(|| anyhow!("Number is too big!"))?;
+                            let n = number
+                                .as_u64()
+                                .and_then(|n| u8::try_from(n).ok())
+                                .ok_or_else(|| anyhow!("Number is too big!"))?;
                             vec.push(n);
-                        },
+                        }
                         Value::String(string) => {
                             vec.extend_from_slice(string.as_bytes());
-                        },
-                        _ => panic!("Expected a number or string in seqeunce for contents")
+                        }
+                        _ => panic!("Expected a number or string in seqeunce for contents"),
                     }
                 }
                 Ok(Self(vec))
-            },
-            _ => Err(anyhow!("Expected a number, string, or sequence of numbers and/or strings for contents"))
+            }
+            _ => Err(anyhow!(
+                "Expected a number, string, or sequence of numbers and/or strings for contents"
+            )),
         }
     }
 }
@@ -289,8 +311,14 @@ macro_rules! regex {
     }};
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Identifier(String);
+
+impl Display for Identifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
 
 impl TryFrom<String> for Identifier {
     type Error = Error;
@@ -300,11 +328,54 @@ impl TryFrom<String> for Identifier {
         if regex.is_match(&value) {
             Ok(Self(value))
         } else {
-            Err(anyhow!("Identifier does not match the regex '^[a-z][a-z0-9_]*$'"))
+            Err(anyhow!(
+                "Identifier does not match the regex '^[a-z][a-z0-9_]*$'"
+            ))
         }
     }
 }
 
+impl AsRef<str> for Identifier {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Import {
+    RelativePath(String),
+    Identifier(Identifier),
+}
+
+impl Display for Import {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::RelativePath(path) => f.write_str(path),
+            Self::Identifier(id) => f.write_str(&id.0),
+        }
+    }
+}
+
+impl TryFrom<String> for Import {
+    type Error = Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let regex = regex!(r"^(.*/)?[a-z][a-z0-9_]*$");
+        if regex.is_match(&value) {
+            Ok(Self::RelativePath(value))
+        } else {
+            Err(anyhow!(
+                "Identifier does not match the regex '^[a-z][a-z0-9_]*$'"
+            ))
+        }
+    }
+}
+
+impl From<Identifier> for Import {
+    fn from(value: Identifier) -> Self {
+        Self::Identifier(value)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -314,13 +385,15 @@ mod tests {
 
     #[test]
     fn split_path() {
-        let file = File::open("/home/kriskras99/Source/ferris_dancing/ubiart-ksy/split_path.ksy").unwrap();
+        let file =
+            File::open("/home/kriskras99/Source/ferris_dancing/ubiart-ksy/split_path.ksy").unwrap();
         let _ksy = Ksy::from_reader(file).unwrap();
     }
 
     #[test]
     fn alias8() {
-        let file = File::open("/home/kriskras99/Source/ferris_dancing/ubiart-ksy/alias8.ksy").unwrap();
+        let file =
+            File::open("/home/kriskras99/Source/ferris_dancing/ubiart-ksy/alias8.ksy").unwrap();
         let _ksy = Ksy::from_reader(file).unwrap();
     }
 }
