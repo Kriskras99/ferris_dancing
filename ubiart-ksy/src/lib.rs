@@ -1,4 +1,3 @@
-
 // include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 pub fn add(left: usize, right: usize) -> usize {
     left + right
