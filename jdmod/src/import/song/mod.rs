@@ -57,10 +57,10 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
 
     let map_name = &songdesc.map_name;
     let lower_map_name = map_name.to_lowercase();
-    let song_path = is.dirs.songs().join(&lower_map_name);
+    let song_path = is.dirs.songs().join(map_name.as_ref());
     let dirs = SongDirectoryTree::new(&song_path);
     if dirs.exists() {
-        println!("Skipping {lower_map_name}, directory already exists!");
+        println!("Skipping {map_name}, directory already exists!");
         return Ok(());
     } else if songdesc.jdm_attributes.is_some()
         || songdesc.tags.contains(&Cow::Borrowed("dancemachine"))
