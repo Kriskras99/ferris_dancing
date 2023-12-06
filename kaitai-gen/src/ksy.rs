@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use anyhow::{anyhow, bail, Error};
+use heck::ToPascalCase;
 use serde_yaml::{Mapping, Value};
 
 #[derive(Debug, Default)]
@@ -227,9 +228,10 @@ impl Attribute {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum Endiannes {
     Big,
+    #[default]
     Little,
 }
 
@@ -313,6 +315,12 @@ macro_rules! regex {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Identifier(String);
+
+impl Identifier {
+    pub fn to_pascal_case(&self) -> String {
+        self.0.to_pascal_case()
+    }
+}
 
 impl Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
