@@ -30,6 +30,9 @@ pub struct Build {
     source: PathBuf,
     /// Directory to put the bundles
     destination: PathBuf,
+    /// Create a patch file instead of a bundle file
+    #[arg(long, default_value_t = true)]
+    patch: bool,
 }
 
 /// Files that need to be added to bundle
@@ -42,11 +45,11 @@ pub enum FilesToAdd<'a> {
 
 /// Wrapper around [`export`]
 pub fn main(cli: &Build) -> Result<(), anyhow::Error> {
-    export(&cli.source, &cli.destination)
+    export(&cli.source, &cli.destination, cli.patch)
 }
 
 /// Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
-pub fn export(dir_root: &Path, dir_export: &Path) -> Result<(), Error> {
+pub fn export(dir_root: &Path, dir_export: &Path, patch: bool) -> Result<(), Error> {
     // Check the directory structure
     let dir_tree = DirectoryTree::new(dir_root);
     if !dir_tree.exists() {
@@ -66,17 +69,15 @@ pub fn export(dir_root: &Path, dir_export: &Path) -> Result<(), Error> {
     let bundle_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref(), false)?;
     let patch_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref(), false)?;
     let patched_base_vfs = OverlayFs::new(&patch_nx_vfs, &bundle_nx_vfs);
-    let borrowed_patched_base_vfs = &patched_base_vfs;
 
     /*
-    1 thread bundles build files into ipks. It will only bundle song files until the channel is dropped
-    1 thread starts building localisation then receives song jobs
-    1 thread starts building gameconfig then receives song jobs
-    available_cpus-3 threads receive song jobs
-
-    after all song jobs are completed, song database will be built on main thread
-    after bundle thread receives song database it will built the bundle_nx.ipk
-
+     * 1 thread bundles build files into ipks. It will only bundle song files until the channel is dropped
+     * 1 thread starts building localisation then receives song jobs
+     * 1 thread starts building gameconfig then receives song jobs
+     * available_cpus-3 threads receive song jobs
+     *
+     * After all song jobs are completed, song database will be built on main thread
+     * After bundle thread receives song database it will built the bundle_nx.ipk
      */
 
     // Setup the (read-only) build state
@@ -91,13 +92,11 @@ pub fn export(dir_root: &Path, dir_export: &Path) -> Result<(), Error> {
         game,
         engine_version: config.engine_version,
     };
-    let borrowed_build_state = &build_state;
 
     let native_vfs = Native::new(&std::env::current_dir()?)?;
-    let borrowed_native_vfs = &native_vfs;
 
     // Get a list of all songs in the directory
-    let mut paths: Vec<_> = std::fs::read_dir(borrowed_build_state.dirs.songs())?
+    let mut paths: Vec<_> = std::fs::read_dir(build_state.dirs.songs())?
         .filter_map(Result::ok)
         .map(|d| std::fs::DirEntry::path(&d))
         .filter(|p| p.is_dir())
@@ -123,118 +122,118 @@ pub fn export(dir_root: &Path, dir_export: &Path) -> Result<(), Error> {
     drop(tx_job);
 
     std::thread::scope(|s| {
+        let build_state = &build_state;
+        let native_vfs = &native_vfs;
         std::thread::Builder::new()
             .name("Bundle".to_string())
             .spawn_scoped(s, || {
                 bundle::bundle(
-                    borrowed_patched_base_vfs,
-                    borrowed_native_vfs,
+                    &bundle_nx_vfs,
+                    &patch_nx_vfs,
+                    native_vfs,
                     &rx_files,
                     config,
                     dir_export,
+                    patch,
                 )
                 .unwrap();
             })
             .unwrap();
 
-        let tx_name_cloned = tx_name.clone();
-        let tx_files_cloned = tx_files.clone();
-        let rx_job_cloned = rx_job.clone();
-        std::thread::Builder::new()
-            .name("Localisation + Songs".to_string())
-            .spawn_scoped(s, move || {
-                // Build translations
-                let mut build_files = BuildFiles {
-                    generated_files: VecFs::with_capacity(30),
-                    static_files: SymlinkFs::new(borrowed_native_vfs),
-                };
-                build::localisation::build(borrowed_build_state, &mut build_files).unwrap();
+        {
+            // New scope so the channel variables can be shadowed
+            let tx_name = tx_name.clone();
+            let tx_files = tx_files.clone();
+            let rx_job = rx_job.clone();
+            std::thread::Builder::new()
+                .name("Localisation + Songs".to_string())
+                .spawn_scoped(s, move || {
+                    // Build translations
+                    let mut build_files = BuildFiles {
+                        generated_files: VecFs::with_capacity(30),
+                        static_files: SymlinkFs::new(native_vfs),
+                    };
+                    build::localisation::build(build_state, &mut build_files).unwrap();
 
-                loop {
-                    if let Ok(job) = rx_job_cloned.recv() {
-                        let mut build_files = BuildFiles {
-                            generated_files: VecFs::with_capacity(100),
-                            static_files: SymlinkFs::with_capacity(borrowed_native_vfs, 50),
-                        };
-                        let songname =
-                            build::song::build(borrowed_build_state, &mut build_files, job)
-                                .unwrap();
-                        tx_name_cloned.send(songname).unwrap();
-                        tx_files_cloned.send(FilesToAdd::Song(build_files)).unwrap();
-                    } else {
-                        // Otherwise the rx_name.iter() will never stop
-                        drop(tx_name_cloned);
-                        println!("No more song available to build! Breaking!");
-                        break;
+                    loop {
+                        if let Ok(job) = rx_job.recv() {
+                            let mut bf = BuildFiles {
+                                generated_files: VecFs::with_capacity(100),
+                                static_files: SymlinkFs::with_capacity(native_vfs, 50),
+                            };
+                            let songname = build::song::build(build_state, &mut bf, job).unwrap();
+                            tx_name.send(songname).unwrap();
+                            tx_files.send(FilesToAdd::Song(bf)).unwrap();
+                        } else {
+                            // Otherwise the rx_name.iter() will never stop
+                            drop(tx_name);
+                            println!("No more song available to build! Breaking!");
+                            break;
+                        }
                     }
-                }
 
-                // Collect and sort all the song names
-                // Sorting is not necessary, but makes the files easier to read when debugging
-                let mut song_names: Vec<_> = rx_name.iter().collect();
-                song_names.sort_unstable();
+                    // Collect and sort all the song names
+                    // Sorting is not necessary, but makes the files easier to read when debugging
+                    let mut song_names: Vec<_> = rx_name.iter().collect();
+                    song_names.sort_unstable();
 
-                // Build the various song databases and scenes
-                build::song_database(borrowed_build_state, &mut build_files, &song_names).unwrap();
-                tx_files_cloned
-                    .send(FilesToAdd::Bundle(build_files))
-                    .unwrap();
-            })
-            .unwrap();
+                    // Build the various song databases and scenes
+                    build::song_database(build_state, &mut build_files, &song_names).unwrap();
+                    tx_files.send(FilesToAdd::Bundle(build_files)).unwrap();
+                })
+                .unwrap();
+        }
 
-        let tx_name_cloned = tx_name.clone();
-        let tx_files_cloned = tx_files.clone();
-        let rx_job_cloned = rx_job.clone();
-        std::thread::Builder::new()
-            .name("Gameconfig + Songs".to_string())
-            .spawn_scoped(s, move || {
-                // Build config files
-                let mut build_files = BuildFiles {
-                    generated_files: VecFs::with_capacity(1000),
-                    static_files: SymlinkFs::new(borrowed_native_vfs),
-                };
-                build::gameconfig::build(borrowed_build_state, &mut build_files).unwrap();
-                tx_files_cloned
-                    .send(FilesToAdd::Bundle(build_files))
-                    .unwrap();
+        {
+            // New scope so the channel variables can be shadowed
+            let tx_name = tx_name.clone();
+            let tx_files = tx_files.clone();
+            let rx_job = rx_job.clone();
+            std::thread::Builder::new()
+                .name("Gameconfig + Songs".to_string())
+                .spawn_scoped(s, move || {
+                    // Build config files
+                    let mut build_files = BuildFiles {
+                        generated_files: VecFs::with_capacity(1000),
+                        static_files: SymlinkFs::new(native_vfs),
+                    };
+                    build::gameconfig::build(build_state, &mut build_files).unwrap();
+                    tx_files.send(FilesToAdd::Bundle(build_files)).unwrap();
 
-                loop {
-                    if let Ok(job) = rx_job_cloned.recv() {
-                        let mut build_files = BuildFiles {
-                            generated_files: VecFs::with_capacity(100),
-                            static_files: SymlinkFs::with_capacity(borrowed_native_vfs, 50),
-                        };
-                        let songname =
-                            build::song::build(borrowed_build_state, &mut build_files, job)
-                                .unwrap();
-                        tx_name_cloned.send(songname).unwrap();
-                        tx_files_cloned.send(FilesToAdd::Song(build_files)).unwrap();
-                    } else {
-                        println!("No more song available to build! Exiting thread!");
-                        return;
+                    loop {
+                        if let Ok(job) = rx_job.recv() {
+                            let mut bf = BuildFiles {
+                                generated_files: VecFs::with_capacity(100),
+                                static_files: SymlinkFs::with_capacity(native_vfs, 50),
+                            };
+                            let songname = build::song::build(build_state, &mut bf, job).unwrap();
+                            tx_name.send(songname).unwrap();
+                            tx_files.send(FilesToAdd::Song(bf)).unwrap();
+                        } else {
+                            println!("No more song available to build! Exiting thread!");
+                            return;
+                        }
                     }
-                }
-            })
-            .unwrap();
+                })
+                .unwrap();
+        }
 
         // Only start as many threads as there are cpus (excluding the main thread, which will be waiting and doing nothing the entire time)
         for i in 0..ncpus.saturating_sub(3) {
-            let tx_name_cloned = tx_name.clone();
-            let rx_job_cloned = rx_job.clone();
-            let tx_files_cloned = tx_files.clone();
+            let tx_name = tx_name.clone();
+            let rx_job = rx_job.clone();
+            let tx_files = tx_files.clone();
             std::thread::Builder::new()
                 .name(format!("Songs ({i})"))
                 .spawn_scoped(s, move || loop {
-                    if let Ok(job) = rx_job_cloned.recv() {
-                        let mut build_files = BuildFiles {
+                    if let Ok(job) = rx_job.recv() {
+                        let mut bf = BuildFiles {
                             generated_files: VecFs::with_capacity(100),
-                            static_files: SymlinkFs::with_capacity(borrowed_native_vfs, 50),
+                            static_files: SymlinkFs::with_capacity(native_vfs, 50),
                         };
-                        let songname =
-                            build::song::build(borrowed_build_state, &mut build_files, job)
-                                .unwrap();
-                        tx_name_cloned.send(songname).unwrap();
-                        tx_files_cloned.send(FilesToAdd::Song(build_files)).unwrap();
+                        let songname = build::song::build(build_state, &mut bf, job).unwrap();
+                        tx_name.send(songname).unwrap();
+                        tx_files.send(FilesToAdd::Song(bf)).unwrap();
                     } else {
                         println!("No more song available to build! Exiting thread!");
                         return;
@@ -243,6 +242,7 @@ pub fn export(dir_root: &Path, dir_export: &Path) -> Result<(), Error> {
                 .unwrap();
         }
 
+        // If these aren't dropped before the scope ends, the threads will infinitely wait for more jobs
         drop(tx_files);
         drop(tx_name);
         drop(rx_job);
