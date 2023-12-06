@@ -29,7 +29,6 @@ use import::Import;
 use new::New;
 
 mod build;
-mod check;
 mod export;
 mod extract;
 mod import;
