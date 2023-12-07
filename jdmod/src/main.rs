@@ -22,6 +22,7 @@
 //! Currently supported are Just Dance 2017-2022 for the Switch.
 //! It can import and export songs, playlists, quests/objectives, avatars, aliases, portraitborders, gacha machine, and search labels.
 
+use check::Check;
 use clap::{Parser, Subcommand, ValueEnum};
 use export::Build;
 use extract::Extract;
@@ -29,6 +30,7 @@ use import::Import;
 use new::New;
 
 mod build;
+mod check;
 mod export;
 mod extract;
 mod import;
@@ -60,6 +62,8 @@ enum Commands {
     Extract(Extract),
     /// Export the mod
     Export(Build),
+    /// Check the completeness of the mod
+    Check(Check),
 }
 
 /// Strategies for resolving file conflicts
@@ -77,10 +81,11 @@ fn main() -> Result<(), anyhow::Error> {
     let cli = Cli::parse();
 
     match cli.commands {
-        Commands::New(data) => new::cli_new(&data)?,
-        Commands::Import(data) => import::cli_import(&data)?,
+        Commands::New(data) => new::main(&data)?,
+        Commands::Import(data) => import::main(&data)?,
         Commands::Extract(data) => extract::main(data)?,
         Commands::Export(data) => export::main(&data)?,
+        Commands::Check(data) => check::main(&data)?,
     }
     Ok(())
 }

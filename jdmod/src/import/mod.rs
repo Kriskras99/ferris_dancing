@@ -37,7 +37,7 @@ pub struct Import {
 }
 
 /// Wrapper around [`import`]
-pub fn cli_import(cli: &Import) -> Result<(), Error> {
+pub fn main(cli: &Import) -> Result<(), Error> {
     import(&cli.game_path, &cli.mod_path, cli.lax, cli.songs)
 }
 
@@ -125,11 +125,53 @@ pub fn import_vfs(
             is.platform,
         )?;
         let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
-        let parsed_json = cooked::json::parse_v22(&gameconfig_file, true)?;
-        let gameconfig = parsed_json.game_manager_config()?;
+
+        let songdb_scene = match game {
+            Game::JustDance2017 => {
+                let parsed_json =
+                    cooked::json::parse_v17(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+            Game::JustDance2018 => {
+                let parsed_json =
+                    cooked::json::parse_v18(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+            Game::JustDance2019 => {
+                let parsed_json =
+                    cooked::json::parse_v19(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+            Game::JustDance2020 => {
+                let parsed_json =
+                    cooked::json::parse_v20(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+            Game::JustDanceChina => {
+                let parsed_json =
+                    cooked::json::parse_v20c(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+            Game::JustDance2021 => {
+                let parsed_json =
+                    cooked::json::parse_v21(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+            Game::JustDance2022 => {
+                let parsed_json =
+                    cooked::json::parse_v22(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+            _ => {
+                println!("Unknown game, trying JustDance2022");
+                let parsed_json =
+                    cooked::json::parse_v22(&gameconfig_file, true)?.game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
+        };
 
         // Import only songs
-        gameconfig::songdb::import(&is, &gameconfig.songdb_scene)?;
+        gameconfig::songdb::import(&is, &songdb_scene)?;
     } else {
         // Import gameconfig (& songs)
         gameconfig::import(&is)?;

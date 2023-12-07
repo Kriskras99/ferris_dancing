@@ -29,7 +29,7 @@ pub struct New {
 }
 
 /// Wrapper around [`new`]
-pub fn cli_new(cli: &New) -> Result<(), Error> {
+pub fn main(cli: &New) -> Result<(), Error> {
     new(&cli.sfat_path, &cli.mod_path)
 }
 
