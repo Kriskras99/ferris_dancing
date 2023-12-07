@@ -37,6 +37,6 @@ fn main() {
         .unwrap();
 
     for template in &actors.templates {
-        println!("{template:?}");
+        println!("{template:#?}");
     }
 }

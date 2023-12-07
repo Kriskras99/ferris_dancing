@@ -82,7 +82,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
         unk2: 0x3f80_0000,
         unk2_5: 0x3f80_0000,
         templates: vec![cooked::act::Template {
-            the_type: cooked::act::TemplateType::SongDesc,
+            the_type: cooked::act::TemplateType::SongDescComponent,
             data: cooked::act::TemplateData::None,
         }],
     };
