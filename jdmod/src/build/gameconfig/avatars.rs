@@ -176,7 +176,7 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
                 )),
             },
             cooked::act::Template {
-                the_type: cooked::act::TemplateType::Unknown1,
+                the_type: cooked::act::TemplateType::AvatarDescComponent,
                 data: cooked::act::TemplateData::None,
             },
         ],

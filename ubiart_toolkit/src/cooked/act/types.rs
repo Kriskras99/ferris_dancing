@@ -18,40 +18,72 @@ pub struct Actor<'a> {
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TemplateType {
-    Autodance = 0x67b8_bb77,
+    /// JD_AutoDanceComponent
+    AutodanceComponent = 0x67b8_bb77,
+    /// JD_BeatPulseComponent
     BeatPulseComponent = 0x7184_37a8,
+    /// BoxInterpolatorComponent
     BoxInterpolatorComponent = 0xf513_60da,
+    /// CameraGraphicComponent
     CameraGraphicComponent = 0xc760_4fa1,
-    ClearColor = 0xaebb_218b,
-    ConvertedTmlTape = 0xcd07_bb76,
+    /// ClearColorComponent
+    ClearColorComponent = 0xaebb_218b,
+    /// ConvertedTmlTape_Component
+    ConvertedTmlTapeComponent = 0xcd07_bb76,
+    /// JD_CreditsComponent
     CreditsComponent = 0x342e_a4fc,
+    /// JD_FixedCameraComponent
     FixedCameraComponent = 0x3d5d_eba2,
-    FXController = 0x8d4f_ffb6,
+    /// FXControllerComponent
+    FXControllerComponent = 0x8d4f_ffb6,
+    /// MasterTape
     MasterTape = 0x677b_269b,
+    /// MaterialGraphicComponent
     MaterialGraphicComponent = 0x72b6_1fc5,
+    /// JD_Carousel
     MusicTrackComponent = 0x27e4_80c0,
+    /// JD_PictoComponent
     PictoComponent = 0xc316_bf34,
+    /// PleoComponent
     PleoComponent = 0x1263_dad9,
+    /// PleoTextureGraphicComponent
     PleoTextureGraphicComponent = 0x0579_e81b,
+    /// PropertyPatcher
     PropertyPatcher = 0xf719_b524,
+    /// JD_RegistrationComponent
     RegistrationComponent = 0xe0a2_4b6d,
-    SingleInstanceMesh3D = 0x53e3_2af7,
-    SongDatabase = 0x4055_79fb,
-    SongDesc = 0xe07f_cc3f,
+    /// SingleInstanceMesh3DComponent
+    SingleInstanceMesh3DComponent = 0x53e3_2af7,
+    /// JD_SongDatabaseComponent
+    SongDatabaseComponent = 0x4055_79fb,
+    /// JD_SongDescComponent
+    SongDescComponent = 0xe07f_cc3f,
+    /// SoundComponent
     SoundComponent = 0x7dd8_643c,
-    TapeCase = 0x231f_27de,
+    /// TapeCase_Component
+    TapeCaseComponent = 0x231f_27de,
+    /// TextureGraphicComponent
     TextureGraphicComponent = 0x7b48_a9ae,
+    /// UICarousel
     UICarousel = 0x8782_fe60,
+    /// UITextBox
     UITextBox = 0xd10c_beed,
+    /// JD_UIWidgetGroupHUD_AutodanceRecorder
     UIWdigetGroupHUDAutodanceRecorder = 0x9f87_350c,
+    /// JD_UIWidgetGroupHUD_Lyrics
     UIWidgetGroupHUDLyrics = 0xf22c_9426,
-    ViewportUI = 0x6990_834c,
-    Unknown1 = 0x1759_e29d,
-    Unknown2 = 0x84ea_ae82,
-    Unknown3 = 0x966b_519d,
-    Unknown4 = 0x3236_cf4c,
-    Unknown5 = 0x2b34_9e69,
-    Unknown6 = 0xaa55_b6bd,
+    /// ViewportUIComponent
+    ViewportUIComponent = 0x6990_834c,
+    /// JD_AvatarDescComponent
+    AvatarDescComponent = 0x1759_e29d,
+    /// JD_SkinDescComponent
+    SkinDescComponent = 0x84ea_ae82,
+    /// FxBankComponent
+    FxBankComponent = 0x966b_519d,
+    /// BezierTreeComponent
+    BezierTreeComponent = 0x3236_cf4c,
+    /// AFXPostProcessComponent
+    AFXPostProcessComponent = 0x2b34_9e69,
 }
 
 impl TryFrom<u32> for TemplateType {
@@ -61,34 +93,33 @@ impl TryFrom<u32> for TemplateType {
         match value {
             0x0579_e81b => Ok(Self::PleoTextureGraphicComponent),
             0x1263_dad9 => Ok(Self::PleoComponent),
-            0x1759_e29d => Ok(Self::Unknown1),
-            0x231f_27de => Ok(Self::TapeCase),
+            0x1759_e29d => Ok(Self::AvatarDescComponent),
+            0x231f_27de => Ok(Self::TapeCaseComponent),
             0x27e4_80c0 => Ok(Self::MusicTrackComponent),
-            0x2b34_9e69 => Ok(Self::Unknown5),
-            0x3236_cf4c => Ok(Self::Unknown4),
+            0x2b34_9e69 => Ok(Self::AFXPostProcessComponent),
+            0x3236_cf4c => Ok(Self::BezierTreeComponent),
             0x342e_a4fc => Ok(Self::CreditsComponent),
             0x3d5d_eba2 => Ok(Self::FixedCameraComponent),
-            0x4055_79fb => Ok(Self::SongDatabase),
-            0x53e3_2af7 => Ok(Self::SingleInstanceMesh3D),
+            0x4055_79fb => Ok(Self::SongDatabaseComponent),
+            0x53e3_2af7 => Ok(Self::SingleInstanceMesh3DComponent),
             0x677b_269b => Ok(Self::MasterTape),
-            0x67b8_bb77 => Ok(Self::Autodance),
-            0x6990_834c => Ok(Self::ViewportUI),
+            0x67b8_bb77 => Ok(Self::AutodanceComponent),
+            0x6990_834c => Ok(Self::ViewportUIComponent),
             0x7184_37a8 => Ok(Self::BeatPulseComponent),
             0x72b6_1fc5 => Ok(Self::MaterialGraphicComponent),
             0x7b48_a9ae => Ok(Self::TextureGraphicComponent),
             0x7dd8_643c => Ok(Self::SoundComponent),
-            0x84ea_ae82 => Ok(Self::Unknown2),
+            0x84ea_ae82 => Ok(Self::SkinDescComponent),
             0x8782_fe60 => Ok(Self::UICarousel),
-            0x8d4f_ffb6 => Ok(Self::FXController),
-            0x966b_519d => Ok(Self::Unknown3),
+            0x8d4f_ffb6 => Ok(Self::FXControllerComponent),
+            0x966b_519d => Ok(Self::FxBankComponent),
             0x9f87_350c => Ok(Self::UIWdigetGroupHUDAutodanceRecorder),
-            0xaa55_b6bd => Ok(Self::Unknown6),
-            0xaebb_218b => Ok(Self::ClearColor),
+            0xaebb_218b => Ok(Self::ClearColorComponent),
             0xc316_bf34 => Ok(Self::PictoComponent),
             0xc760_4fa1 => Ok(Self::CameraGraphicComponent),
-            0xcd07_bb76 => Ok(Self::ConvertedTmlTape),
+            0xcd07_bb76 => Ok(Self::ConvertedTmlTapeComponent),
             0xd10c_beed => Ok(Self::UITextBox),
-            0xe07f_cc3f => Ok(Self::SongDesc),
+            0xe07f_cc3f => Ok(Self::SongDescComponent),
             0xe0a2_4b6d => Ok(Self::RegistrationComponent),
             0xf22c_9426 => Ok(Self::UIWidgetGroupHUDLyrics),
             0xf513_60da => Ok(Self::BoxInterpolatorComponent),

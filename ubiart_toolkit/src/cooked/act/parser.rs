@@ -107,22 +107,24 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
         let template_type = TemplateType::try_from(template_type_encoded)?;
 
         let template_data = match template_type {
-            TemplateType::Autodance
+            TemplateType::AutodanceComponent
             | TemplateType::MasterTape
-            | TemplateType::SongDatabase
-            | TemplateType::SongDesc
-            | TemplateType::TapeCase
-            | TemplateType::Unknown1
-            | TemplateType::Unknown2 => TemplateData::None,
+            | TemplateType::SongDatabaseComponent
+            | TemplateType::SongDescComponent
+            | TemplateType::TapeCaseComponent
+            | TemplateType::AvatarDescComponent
+            | TemplateType::SkinDescComponent => TemplateData::None,
             TemplateType::BoxInterpolatorComponent => {
                 parse_box_interpolator_component(src, game, &mut pos)?
             }
-            TemplateType::ConvertedTmlTape => parse_converted_tml_tape(src, game, &mut pos)?,
+            TemplateType::ConvertedTmlTapeComponent => {
+                parse_converted_tml_tape(src, game, &mut pos)?
+            }
             TemplateType::CreditsComponent => parse_credits_component(src, game, &mut pos)?,
             TemplateType::FixedCameraComponent => {
                 parse_fixed_camera_component(src, game, &mut pos)?
             }
-            TemplateType::FXController => parse_fx_controller(src, game, &mut pos)?,
+            TemplateType::FXControllerComponent => parse_fx_controller(src, game, &mut pos)?,
             TemplateType::MaterialGraphicComponent => {
                 parse_material_graphic_component(src, game, &mut pos, false)?
             }
@@ -135,12 +137,23 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
                 parse_registration_component(src, game, &mut pos)?
             }
             TemplateType::UITextBox => parse_ui_text_box(src, game, &mut pos)?,
-            TemplateType::Unknown3 => parse_unknown_3(src, game, &mut pos)?,
-            TemplateType::Unknown4 => parse_unknown_4(src, game, &mut pos)?,
-            TemplateType::Unknown5 => parse_unknown_5(src, game, &mut pos)?,
+            TemplateType::FxBankComponent => parse_fx_bank_component(src, game, &mut pos)?,
+            TemplateType::BezierTreeComponent => parse_bezier_tree_component(src, game, &mut pos)?,
+            TemplateType::AFXPostProcessComponent => {
+                parse_afx_post_process_component(src, game, &mut pos)?
+            }
             // TemplateType::TapeCase => parse_tape_case(src, game, &mut pos)?,
             // TemplateType::MusicTrackComponent => parse_music_track_component(src, game, path, &mut pos)?,
-            //  => todo!(),
+            TemplateType::BeatPulseComponent => todo!(),
+            TemplateType::CameraGraphicComponent => todo!(),
+            TemplateType::ClearColorComponent => todo!(),
+            TemplateType::PictoComponent => todo!(),
+            TemplateType::SingleInstanceMesh3DComponent => todo!(),
+            TemplateType::SoundComponent => todo!(),
+            TemplateType::UICarousel => todo!(),
+            TemplateType::UIWdigetGroupHUDAutodanceRecorder => todo!(),
+            TemplateType::UIWidgetGroupHUDLyrics => todo!(),
+            TemplateType::ViewportUIComponent => todo!(),
             _ => {
                 return Err(anyhow!("Unsupported actor type {template_type:?}!"));
             }
@@ -200,7 +213,7 @@ fn parse_box_interpolator_component<'a>(
     Ok(TemplateData::None)
 }
 
-fn parse_unknown_5<'a>(
+fn parse_afx_post_process_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
@@ -283,7 +296,7 @@ fn parse_fx_controller<'a>(
     Ok(TemplateData::None)
 }
 
-fn parse_unknown_3<'a>(
+fn parse_fx_bank_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
@@ -303,7 +316,7 @@ fn parse_unknown_3<'a>(
     Ok(TemplateData::None)
 }
 
-fn parse_unknown_4<'a>(
+fn parse_bezier_tree_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
@@ -365,6 +378,7 @@ fn parse_material_graphic_component<'a>(
     test_any(&unk13, &[0xFFFF_FFFF, 0x1])
         .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
 
+    // <ENUM NAME="anchor" SEL="[0-9]" /> ?
     let unk14 = read_u64_at::<BigEndian>(src, pos)?;
     test_any(&unk14, &[0x1, 0x2, 0x3, 0x6, 0x9])
         .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
@@ -383,16 +397,27 @@ fn parse_material_graphic_component<'a>(
     .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
 
     let mut files = [
+        // diffuse
         SplitPath::default(),
+        // back_light
         SplitPath::default(),
+        // normal
         SplitPath::default(),
+        // separateAlpha
         SplitPath::default(),
+        // diffuse_2
         SplitPath::default(),
+        // back_light_2
         SplitPath::default(),
+        // anim_impostor
         SplitPath::default(),
+        // diffuse_3
         SplitPath::default(),
+        // diffuse_4
         SplitPath::default(),
+        // ATL_Path
         SplitPath::default(),
+        // shaderPath
         SplitPath::default(),
     ];
 
@@ -439,8 +464,6 @@ fn parse_material_graphic_component<'a>(
     test(&unk22, &0xFFFF_FFFF_FFFF_FFFF)
         .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
 
-    // From here correct
-
     for _ in 0..3 {
         let unk23 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk23, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
@@ -452,6 +475,7 @@ fn parse_material_graphic_component<'a>(
     let unk25 = read_u64_at::<BigEndian>(src, pos)?;
     test(&unk25, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
 
+    // <ENUM NAME="oldAnchor" SEL="[0-9]" /> ?
     let unk26 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk26, &[0x1, 0x2, 0x3, 0x6, 0x9])
         .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
