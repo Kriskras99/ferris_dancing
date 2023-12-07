@@ -11,6 +11,7 @@ use hash32::{Hasher, Murmur3Hasher};
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 
+use ubiart_toolkit::json_types::BezierCurveFloatValue;
 use ubiart_toolkit::utils::Platform;
 use ubiart_toolkit::{json_types, utils::LocaleId};
 
@@ -720,27 +721,37 @@ pub struct Timeline<'a> {
 /// A event that happens during a song
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum Clip<'a> {
+    /// Unknown
+    Alpha(AlphaClip),
+    /// Unknown
+    Color(ColorClip),
+    /// Unknown
+    GameplayEvent(GameplayEventClip<'a>),
     /// Gold move effect
     GoldEffect(GoldEffectClip),
+    /// Hide user interface
+    HideUserInterface(HideUserInterfaceClip),
+    /// Show lyric
+    Karaoke(KaraokeClip<'a>),
+    /// Unknown
+    MaterialGraphicEnableLayer(MaterialGraphicEnableLayerClip),
     /// Grade dance move
     Motion(MotionClip<'a>),
     /// Show picto
     Pictogram(PictogramClip<'a>),
-    /// Show lyric
-    Karaoke(KaraokeClip<'a>),
-    /// Hide user interface
-    HideUserInterface(HideUserInterfaceClip),
+    /// Unknown
+    Proportion(ProportionClip),
+    /// Unknown
+    Rotation(RotationClip),
     /// Play audio sample
     SoundSet(SoundSetClip<'a>),
+    /// Unknown
+    Translation(TranslationClip),
     /// Vibrate the controller
     Vibration(VibrationClip<'a>),
-    /// Unknown
-    GameplayEvent(GameplayEventClip<'a>),
 }
 
 impl Ord for Clip<'_> {
-    // If you know a better way, please make it so!
-    #[allow(clippy::cognitive_complexity)]
     fn cmp(&self, other: &Self) -> Ordering {
         // Sort by start time
         let ord_start_time = self.start_time().cmp(&other.start_time());
@@ -752,66 +763,49 @@ impl Ord for Clip<'_> {
         if ord_duration != Ordering::Equal {
             return ord_duration;
         }
-        if std::mem::discriminant(self) == std::mem::discriminant(other) {
-            if let (Self::GoldEffect(cself), Self::GoldEffect(cother)) = (self, other) {
-                cself.cmp(cother)
-            } else if let (Self::Motion(cself), Self::Motion(cother)) = (self, other) {
-                cself.cmp(cother)
-            } else if let (Self::Pictogram(cself), Self::Pictogram(cother)) = (self, other) {
-                cself.cmp(cother)
-            } else if let (Self::Karaoke(cself), Self::Karaoke(cother)) = (self, other) {
-                cself.cmp(cother)
-            } else if let (Self::HideUserInterface(cself), Self::HideUserInterface(cother)) =
-                (self, other)
-            {
-                cself.cmp(cother)
-            } else if let (Self::SoundSet(cself), Self::SoundSet(cother)) = (self, other) {
-                cself.cmp(cother)
-            } else if let (Self::Vibration(cself), Self::Vibration(cother)) = (self, other) {
-                cself.cmp(cother)
-            } else if let (Self::GameplayEvent(cself), Self::GameplayEvent(cother)) = (self, other)
-            {
-                cself.cmp(cother)
-            } else {
-                unreachable!()
+        match (self, other) {
+            (Clip::Alpha(left), Clip::Alpha(right)) => left.cmp(right),
+            (Clip::Color(left), Clip::Color(right)) => left.cmp(right),
+            (Clip::GameplayEvent(left), Clip::GameplayEvent(right)) => left.cmp(right),
+            (Clip::GoldEffect(left), Clip::GoldEffect(right)) => left.cmp(right),
+            (Clip::HideUserInterface(left), Clip::HideUserInterface(right)) => left.cmp(right),
+            (Clip::Karaoke(left), Clip::Karaoke(right)) => left.cmp(right),
+            (Clip::MaterialGraphicEnableLayer(left), Clip::MaterialGraphicEnableLayer(right)) => {
+                left.cmp(right)
             }
-        } else {
-            // oh no
-            if let Self::GoldEffect(_) = self {
-                Ordering::Less
-            } else if let Self::GoldEffect(_) = other {
-                Ordering::Greater
-            } else if let Self::Motion(_) = self {
-                Ordering::Less
-            } else if let Self::Motion(_) = other {
-                Ordering::Greater
-            } else if let Self::Pictogram(_) = self {
-                Ordering::Less
-            } else if let Self::Pictogram(_) = other {
-                Ordering::Greater
-            } else if let Self::Karaoke(_) = self {
-                Ordering::Less
-            } else if let Self::Karaoke(_) = other {
-                Ordering::Greater
-            } else if let Self::HideUserInterface(_) = self {
-                Ordering::Less
-            } else if let Self::HideUserInterface(_) = other {
-                Ordering::Greater
-            } else if let Self::SoundSet(_) = self {
-                Ordering::Less
-            } else if let Self::SoundSet(_) = other {
-                Ordering::Greater
-            } else if let Self::Vibration(_) = self {
-                Ordering::Less
-            } else if let Self::Vibration(_) = other {
-                Ordering::Greater
-            } else if let Self::GameplayEvent(_) = self {
-                Ordering::Less
-            } else if let Self::GameplayEvent(_) = other {
-                Ordering::Greater
-            } else {
-                unreachable!()
-            }
+            (Clip::Motion(left), Clip::Motion(right)) => left.cmp(right),
+            (Clip::Pictogram(left), Clip::Pictogram(right)) => left.cmp(right),
+            (Clip::Proportion(left), Clip::Proportion(right)) => left.cmp(right),
+            (Clip::Rotation(left), Clip::Rotation(right)) => left.cmp(right),
+            (Clip::SoundSet(left), Clip::SoundSet(right)) => left.cmp(right),
+            (Clip::Translation(left), Clip::Translation(right)) => left.cmp(right),
+            (Clip::Vibration(left), Clip::Vibration(right)) => left.cmp(right),
+            (Clip::GoldEffect(_), _) => Ordering::Less,
+            (_, Clip::GoldEffect(_)) => Ordering::Greater,
+            (Clip::Motion(_), _) => Ordering::Less,
+            (_, Clip::Motion(_)) => Ordering::Greater,
+            (Clip::Pictogram(_), _) => Ordering::Less,
+            (_, Clip::Pictogram(_)) => Ordering::Greater,
+            (Clip::Karaoke(_), _) => Ordering::Less,
+            (_, Clip::Karaoke(_)) => Ordering::Greater,
+            (Clip::HideUserInterface(_), _) => Ordering::Less,
+            (_, Clip::HideUserInterface(_)) => Ordering::Greater,
+            (Clip::SoundSet(_), _) => Ordering::Less,
+            (_, Clip::SoundSet(_)) => Ordering::Greater,
+            (Clip::Vibration(_), _) => Ordering::Less,
+            (_, Clip::Vibration(_)) => Ordering::Greater,
+            (Clip::GameplayEvent(_), _) => Ordering::Less,
+            (_, Clip::GameplayEvent(_)) => Ordering::Greater,
+            (Clip::Color(_), _) => Ordering::Less,
+            (_, Clip::Color(_)) => Ordering::Greater,
+            (Clip::Alpha(_), _) => Ordering::Less,
+            (_, Clip::Alpha(_)) => Ordering::Greater,
+            (Clip::MaterialGraphicEnableLayer(_), _) => Ordering::Less,
+            (_, Clip::MaterialGraphicEnableLayer(_)) => Ordering::Greater,
+            (Clip::Proportion(_), _) => Ordering::Less,
+            (_, Clip::Proportion(_)) => Ordering::Greater,
+            (Clip::Rotation(_), _) => Ordering::Less,
+            (_, Clip::Rotation(_)) => Ordering::Greater,
         }
     }
 }
@@ -826,44 +820,64 @@ impl<'a> Clip<'a> {
     /// Convert this clip to the UbiArt representation
     pub fn to_tape(self, song: &Song) -> Result<json_types::Clip<'a>, Error> {
         match self {
-            Self::GoldEffect(data) => Ok(json_types::Clip::GoldEffect(data.into())),
-            Self::Motion(data) => Ok(json_types::Clip::Motion(data.to_tape(song))),
-            Self::Pictogram(data) => Ok(json_types::Clip::Pictogram(data.to_tape(song))),
-            Self::Karaoke(data) => Ok(json_types::Clip::Karaoke(data.into())),
-            Self::HideUserInterface(data) => Ok(json_types::Clip::HideUserInterface(data.into())),
             Self::SoundSet(_) => Err(anyhow!(
                 "Converting SoundSetClip through the Clip enum is not supported!"
             )),
-            Self::Vibration(data) => Ok(json_types::Clip::Vibration(data.into())),
+            Self::Alpha(data) => Ok(json_types::Clip::Alpha(data.into())),
+            Self::Color(data) => Ok(json_types::Clip::Color(data.into())),
             Self::GameplayEvent(data) => Ok(json_types::Clip::GameplayEvent(data.into())),
+            Self::GoldEffect(data) => Ok(json_types::Clip::GoldEffect(data.into())),
+            Self::HideUserInterface(data) => Ok(json_types::Clip::HideUserInterface(data.into())),
+            Self::Karaoke(data) => Ok(json_types::Clip::Karaoke(data.into())),
+            Self::MaterialGraphicEnableLayer(data) => {
+                Ok(json_types::Clip::MaterialGraphicEnableLayer(data.into()))
+            }
+            Self::Motion(data) => Ok(json_types::Clip::Motion(data.to_tape(song))),
+            Self::Pictogram(data) => Ok(json_types::Clip::Pictogram(data.to_tape(song))),
+            Self::Proportion(data) => Ok(json_types::Clip::Proportion(data.into())),
+            Self::Rotation(data) => Ok(json_types::Clip::Rotation(data.into())),
+            Self::Translation(data) => Ok(json_types::Clip::Translation(data.into())),
+            Self::Vibration(data) => Ok(json_types::Clip::Vibration(data.into())),
         }
     }
 
     /// The start time of a clip
     pub const fn start_time(&self) -> i32 {
         match self {
+            Clip::Alpha(data) => data.start_time,
+            Clip::Color(data) => data.start_time,
+            Clip::GameplayEvent(data) => data.start_time,
             Clip::GoldEffect(data) => data.start_time,
+            Clip::HideUserInterface(data) => data.start_time,
+            Clip::Karaoke(data) => data.start_time,
+            Clip::MaterialGraphicEnableLayer(data) => data.start_time,
             Clip::Motion(data) => data.start_time,
             Clip::Pictogram(data) => data.start_time,
-            Clip::Karaoke(data) => data.start_time,
-            Clip::HideUserInterface(data) => data.start_time,
+            Clip::Proportion(data) => data.start_time,
+            Clip::Rotation(data) => data.start_time,
             Clip::SoundSet(data) => data.start_time,
+            Clip::Translation(data) => data.start_time,
             Clip::Vibration(data) => data.start_time,
-            Clip::GameplayEvent(data) => data.start_time,
         }
     }
 
     /// The duration of a clip
     pub const fn duration(&self) -> u32 {
         match self {
+            Clip::Alpha(data) => data.duration,
+            Clip::Color(data) => data.duration,
+            Clip::GameplayEvent(data) => data.duration,
             Clip::GoldEffect(data) => data.duration,
+            Clip::HideUserInterface(data) => data.duration,
+            Clip::Karaoke(data) => data.duration,
+            Clip::MaterialGraphicEnableLayer(data) => data.duration,
             Clip::Motion(data) => data.duration,
             Clip::Pictogram(data) => data.duration,
-            Clip::Karaoke(data) => data.duration,
-            Clip::HideUserInterface(data) => data.duration,
+            Clip::Proportion(data) => data.duration,
+            Clip::Rotation(data) => data.duration,
             Clip::SoundSet(data) => data.duration,
+            Clip::Translation(data) => data.duration,
             Clip::Vibration(data) => data.duration,
-            Clip::GameplayEvent(data) => data.duration,
         }
     }
 }
@@ -873,19 +887,142 @@ impl<'a> TryFrom<json_types::Clip<'a>> for Clip<'a> {
 
     fn try_from(value: json_types::Clip<'a>) -> Result<Self, Self::Error> {
         match value {
+            json_types::Clip::Alpha(data) => Ok(Self::Alpha(data.into())),
+            json_types::Clip::Color(data) => Ok(Self::Color(data.into())),
+            json_types::Clip::GameplayEvent(data) => Ok(Self::GameplayEvent(data.into())),
             json_types::Clip::GoldEffect(data) => Ok(Self::GoldEffect(data.into())),
             json_types::Clip::HideUserInterface(data) => Ok(Self::HideUserInterface(data.into())),
             json_types::Clip::Karaoke(data) => Ok(Self::Karaoke(data.into())),
+            json_types::Clip::MaterialGraphicEnableLayer(data) => {
+                Ok(Self::MaterialGraphicEnableLayer(data.into()))
+            }
             json_types::Clip::Motion(data) => Ok(Self::Motion(data.try_into()?)),
             json_types::Clip::Pictogram(data) => Ok(Self::Pictogram(data.try_into()?)),
+            json_types::Clip::Proportion(data) => Ok(Self::Proportion(data.into())),
+            json_types::Clip::Rotation(data) => Ok(Self::Rotation(data.into())),
             json_types::Clip::SoundSet(_) => Err(anyhow!(
                 "Converting SoundSet clip through the Clip enum is not supported!"
             )),
-            json_types::Clip::Vibration(data) => Ok(Self::Vibration(data.into())),
-            json_types::Clip::GameplayEvent(data) => Ok(Self::GameplayEvent(data.into())),
             json_types::Clip::TapeReference(_) => Err(anyhow!(
                 "Converting TapeReference clip through the Clip enum is not supported!"
             )),
+            json_types::Clip::Translation(data) => Ok(Self::Translation(data.into())),
+            json_types::Clip::Vibration(data) => Ok(Self::Vibration(data.into())),
+        }
+    }
+}
+
+/// Unknown
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct AlphaClip {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When this clip starts
+    pub start_time: i32,
+    /// Duration of the clip
+    pub duration: u32,
+    /// Unknown
+    pub actor_indices: Vec<u8>,
+    /// Unknown
+    pub curve: Option<CurveFloat>,
+}
+
+impl From<AlphaClip> for json_types::AlphaClip<'static> {
+    fn from(value: AlphaClip) -> Self {
+        let mut hasher = Murmur3Hasher::default();
+        value.hash(&mut hasher);
+        let id = hasher.finish32();
+
+        Self {
+            class: None,
+            id,
+            track_id: 4_094_799_440,
+            is_active: u8::from(value.is_active),
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve: value
+                .curve
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+        }
+    }
+}
+
+impl From<json_types::AlphaClip<'_>> for AlphaClip {
+    fn from(value: json_types::AlphaClip<'_>) -> Self {
+        Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve: CurveFloat::from_curve(&value.curve),
+        }
+    }
+}
+
+/// Set an actor to a color?
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ColorClip {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When to start the vibration
+    pub start_time: i32,
+    /// Duration of the vibration
+    pub duration: u32,
+    /// The actors to color
+    pub actor_indices: Vec<u8>,
+    /// Red color curve
+    pub curve_red: Option<CurveFloat>,
+    /// Red color curve
+    pub curve_green: Option<CurveFloat>,
+    /// Red color curve
+    pub curve_blue: Option<CurveFloat>,
+}
+
+impl From<ColorClip> for json_types::ColorClip<'static> {
+    fn from(value: ColorClip) -> Self {
+        let mut hasher = Murmur3Hasher::default();
+        value.hash(&mut hasher);
+        let id = hasher.finish32();
+        Self {
+            class: None,
+            id,
+            track_id: 1_369_275_280,
+            is_active: u8::from(value.is_active),
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve_red: value
+                .curve_red
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+            curve_green: value
+                .curve_green
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+            curve_blue: value
+                .curve_blue
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+        }
+    }
+}
+
+impl From<json_types::ColorClip<'_>> for ColorClip {
+    fn from(value: json_types::ColorClip<'_>) -> Self {
+        Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve_red: CurveFloat::from_curve(&value.curve_red),
+            curve_green: CurveFloat::from_curve(&value.curve_green),
+            curve_blue: CurveFloat::from_curve(&value.curve_blue),
         }
     }
 }
@@ -900,7 +1037,7 @@ pub struct GameplayEventClip<'a> {
     /// Duration of the clip
     pub duration: u32,
     /// Unknown
-    pub actor_indices: Vec<u32>,
+    pub actor_indices: Vec<u8>,
     /// Unknown
     pub event_type: u32,
     /// Unknown
@@ -937,146 +1074,6 @@ impl<'a> From<json_types::GameplayEventClip<'a>> for GameplayEventClip<'a> {
             event_type: value.event_type,
             custom_param: value.custom_param,
         }
-    }
-}
-
-/// Show a pictogram
-#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct PictogramClip<'a> {
-    /// Is the clip active
-    pub is_active: bool,
-    /// When to show the picto
-    pub start_time: i32,
-    /// Duration to show the picto for
-    pub duration: u32,
-    /// The picto texture
-    pub picto_filename: Cow<'a, str>,
-}
-
-impl PictogramClip<'_> {
-    /// Convert this clip to the UbiArt representation
-    pub fn to_tape(&self, song: &Song) -> json_types::PictogramClip<'static> {
-        let mut hasher = Murmur3Hasher::default();
-        self.hash(&mut hasher);
-        let id = hasher.finish32();
-
-        let lower_map_name = song.map_name.to_lowercase();
-        let filename = self.picto_filename.as_ref();
-
-        json_types::PictogramClip {
-            class: None,
-            id,
-            track_id: 4_094_799_440,
-            is_active: u8::from(self.is_active),
-            start_time: self.start_time,
-            duration: self.duration,
-            picto_path: Cow::Owned(format!(
-                "world/maps/{lower_map_name}/timeline/pictos/{filename}"
-            )),
-            coach_count: 4_294_967_295,
-            montage_path: None,
-            atl_index: None,
-        }
-    }
-}
-
-impl<'a> TryFrom<json_types::PictogramClip<'a>> for PictogramClip<'a> {
-    type Error = Error;
-
-    fn try_from(value: json_types::PictogramClip<'a>) -> Result<Self, Self::Error> {
-        let regex = regex!(r".*/(.*\.png)$");
-        let picto_filename = cow_regex_single_capture(regex, value.picto_path)?;
-
-        Ok(Self {
-            is_active: value.is_active == 1,
-            start_time: value.start_time,
-            duration: value.duration,
-            picto_filename,
-        })
-    }
-}
-
-/// Provide movement space check
-#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct MotionClip<'a> {
-    /// Is the clip active
-    pub is_active: bool,
-    /// When to the move start
-    pub start_time: i32,
-    /// Duration of the move
-    pub duration: u32,
-    /// The classifier (.msm file for NX)
-    pub classifier_filename: Cow<'a, str>,
-    /// Is this a gold move
-    pub gold_move: bool,
-    /// Which coach this move is tracking
-    pub coach_id: u8,
-    /// The color of something?
-    pub color: Color,
-}
-
-impl MotionClip<'_> {
-    /// Convert this clip to the UbiArt representation
-    pub fn to_tape(&self, song: &Song) -> json_types::MotionClip<'static> {
-        let mut hasher = Murmur3Hasher::default();
-        self.hash(&mut hasher);
-        let id = hasher.finish32();
-
-        let lower_map_name = song.map_name.to_lowercase();
-        let filename = self.classifier_filename.as_ref();
-
-        json_types::MotionClip {
-            class: None,
-            id,
-            track_id: 4_094_799_440,
-            is_active: u8::from(self.is_active),
-            start_time: self.start_time,
-            duration: self.duration,
-            classifier_path: Cow::Owned(format!(
-                "world/maps/{lower_map_name}/timeline/moves/{lower_map_name}_{filename}"
-            )),
-            gold_move: u8::from(self.gold_move),
-            coach_id: self.coach_id,
-            move_type: 0,
-            color: (&self.color).into(),
-            motion_platform_specifics: HashMap::new(),
-        }
-    }
-
-    /// The classifier path needs to be changed to include the /wiiu/ component
-    pub fn fix_classifier_path(classifier_path: &str, platform: Platform) -> Result<String, Error> {
-        // Classifier path does not include platform specifier
-        let index = classifier_path
-            .rfind('/')
-            .ok_or_else(|| anyhow!("Weird classifier path"))?;
-        let (left, right) = classifier_path.split_at(index);
-        let mut classifier_path = String::with_capacity(classifier_path.len() + 5);
-        classifier_path.push_str(left);
-        match platform {
-            Platform::Nx => classifier_path.push_str("/wiiu"),
-            _ => unimplemented!("Not implemented for {}", platform),
-        }
-        classifier_path.push_str(right);
-        Ok(classifier_path)
-    }
-}
-
-impl<'a> TryFrom<json_types::MotionClip<'a>> for MotionClip<'a> {
-    type Error = Error;
-
-    fn try_from(value: json_types::MotionClip<'a>) -> Result<Self, Self::Error> {
-        let regex = regex!(r".*/[a-z0-9]*_(.*\.msm|.*\.gesture)$");
-        let classifier_filename = cow_regex_single_capture(regex, value.classifier_path)?;
-
-        Ok(Self {
-            is_active: value.is_active == 1,
-            start_time: value.start_time,
-            duration: value.duration,
-            classifier_filename,
-            gold_move: value.gold_move == 1,
-            coach_id: value.coach_id,
-            color: (&value.color).into(),
-        })
     }
 }
 
@@ -1117,6 +1114,48 @@ impl From<json_types::GoldEffectClip<'_>> for GoldEffectClip {
             start_time: value.start_time,
             duration: value.duration,
             effect_type: value.effect_type,
+        }
+    }
+}
+
+/// Clip to hide the user interface
+#[derive(Hash, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct HideUserInterfaceClip {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When to hide the user interface
+    pub start_time: i32,
+    /// Duration to hide the user interface for
+    pub duration: u32,
+    /// Unknown
+    pub event_type: u32,
+}
+
+impl From<HideUserInterfaceClip> for json_types::HideUserInterfaceClip<'static> {
+    fn from(value: HideUserInterfaceClip) -> Self {
+        let mut hasher = Murmur3Hasher::default();
+        value.hash(&mut hasher);
+        let id = hasher.finish32();
+        Self {
+            class: None,
+            id,
+            track_id: 1_028_802_763,
+            start_time: value.start_time,
+            duration: value.duration,
+            event_type: value.event_type,
+            custom_param: Cow::Borrowed(""),
+            is_active: u8::from(value.is_active),
+        }
+    }
+}
+
+impl From<json_types::HideUserInterfaceClip<'_>> for HideUserInterfaceClip {
+    fn from(value: json_types::HideUserInterfaceClip) -> Self {
+        Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            event_type: value.event_type,
         }
     }
 }
@@ -1216,44 +1255,318 @@ impl<'a> From<json_types::KaraokeClip<'a>> for KaraokeClip<'a> {
     }
 }
 
-/// Clip to hide the user interface
-#[derive(Hash, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct HideUserInterfaceClip {
+/// Unknown
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct MaterialGraphicEnableLayerClip {
     /// Is the clip active
     pub is_active: bool,
-    /// When to hide the user interface
+    /// When this clip starts
     pub start_time: i32,
-    /// Duration to hide the user interface for
+    /// Duration of the clip
     pub duration: u32,
     /// Unknown
-    pub event_type: u32,
+    pub actor_indices: Vec<u8>,
+    /// Unknown
+    pub layer_idx: u8,
+    /// Unknown
+    pub uv_modifier_idx: u8,
+    /// Unknown
+    pub layer_enabled: bool,
 }
 
-impl From<HideUserInterfaceClip> for json_types::HideUserInterfaceClip<'static> {
-    fn from(value: HideUserInterfaceClip) -> Self {
+impl From<MaterialGraphicEnableLayerClip> for json_types::MaterialGraphicEnableLayerClip<'static> {
+    fn from(value: MaterialGraphicEnableLayerClip) -> Self {
+        let mut hasher = Murmur3Hasher::default();
+        value.hash(&mut hasher);
+        let id = hasher.finish32();
+
+        Self {
+            class: None,
+            id,
+            track_id: 4_094_799_440,
+            is_active: u8::from(value.is_active),
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            layer_idx: value.layer_idx,
+            uv_modifier_idx: value.uv_modifier_idx,
+            layer_enabled: u8::from(value.layer_enabled),
+        }
+    }
+}
+
+impl From<json_types::MaterialGraphicEnableLayerClip<'_>> for MaterialGraphicEnableLayerClip {
+    fn from(value: json_types::MaterialGraphicEnableLayerClip<'_>) -> Self {
+        Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            layer_idx: value.layer_idx,
+            uv_modifier_idx: value.uv_modifier_idx,
+            layer_enabled: value.layer_enabled == 1,
+        }
+    }
+}
+
+/// Provide movement space check
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct MotionClip<'a> {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When to the move start
+    pub start_time: i32,
+    /// Duration of the move
+    pub duration: u32,
+    /// The classifier (.msm file for NX)
+    pub classifier_filename: Cow<'a, str>,
+    /// Is this a gold move
+    pub gold_move: bool,
+    /// Which coach this move is tracking
+    pub coach_id: u8,
+    /// The color of something?
+    pub color: Color,
+}
+
+impl MotionClip<'_> {
+    /// Convert this clip to the UbiArt representation
+    pub fn to_tape(&self, song: &Song) -> json_types::MotionClip<'static> {
+        let mut hasher = Murmur3Hasher::default();
+        self.hash(&mut hasher);
+        let id = hasher.finish32();
+
+        let lower_map_name = song.map_name.to_lowercase();
+        let filename = self.classifier_filename.as_ref();
+
+        json_types::MotionClip {
+            class: None,
+            id,
+            track_id: 4_094_799_440,
+            is_active: u8::from(self.is_active),
+            start_time: self.start_time,
+            duration: self.duration,
+            classifier_path: Cow::Owned(format!(
+                "world/maps/{lower_map_name}/timeline/moves/{lower_map_name}_{filename}"
+            )),
+            gold_move: u8::from(self.gold_move),
+            coach_id: self.coach_id,
+            move_type: 0,
+            color: (&self.color).into(),
+            motion_platform_specifics: HashMap::new(),
+        }
+    }
+
+    /// The classifier path needs to be changed to include the /wiiu/ component
+    pub fn fix_classifier_path(classifier_path: &str, platform: Platform) -> Result<String, Error> {
+        // Classifier path does not include platform specifier
+        let index = classifier_path
+            .rfind('/')
+            .ok_or_else(|| anyhow!("Weird classifier path"))?;
+        let (left, right) = classifier_path.split_at(index);
+        let mut classifier_path = String::with_capacity(classifier_path.len() + 5);
+        classifier_path.push_str(left);
+        match platform {
+            Platform::Nx => classifier_path.push_str("/wiiu"),
+            _ => unimplemented!("Not implemented for {}", platform),
+        }
+        classifier_path.push_str(right);
+        Ok(classifier_path)
+    }
+}
+
+impl<'a> TryFrom<json_types::MotionClip<'a>> for MotionClip<'a> {
+    type Error = Error;
+
+    fn try_from(value: json_types::MotionClip<'a>) -> Result<Self, Self::Error> {
+        let regex = regex!(r".*/[a-z0-9]*_(.*\.msm|.*\.gesture)$");
+        let classifier_filename = cow_regex_single_capture(regex, value.classifier_path)?;
+
+        Ok(Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            classifier_filename,
+            gold_move: value.gold_move == 1,
+            coach_id: value.coach_id,
+            color: (&value.color).into(),
+        })
+    }
+}
+
+/// Show a pictogram
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PictogramClip<'a> {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When to show the picto
+    pub start_time: i32,
+    /// Duration to show the picto for
+    pub duration: u32,
+    /// The picto texture
+    pub picto_filename: Cow<'a, str>,
+}
+
+impl PictogramClip<'_> {
+    /// Convert this clip to the UbiArt representation
+    pub fn to_tape(&self, song: &Song) -> json_types::PictogramClip<'static> {
+        let mut hasher = Murmur3Hasher::default();
+        self.hash(&mut hasher);
+        let id = hasher.finish32();
+
+        let lower_map_name = song.map_name.to_lowercase();
+        let filename = self.picto_filename.as_ref();
+
+        json_types::PictogramClip {
+            class: None,
+            id,
+            track_id: 4_094_799_440,
+            is_active: u8::from(self.is_active),
+            start_time: self.start_time,
+            duration: self.duration,
+            picto_path: Cow::Owned(format!(
+                "world/maps/{lower_map_name}/timeline/pictos/{filename}"
+            )),
+            coach_count: 4_294_967_295,
+            montage_path: None,
+            atl_index: None,
+        }
+    }
+}
+
+impl<'a> TryFrom<json_types::PictogramClip<'a>> for PictogramClip<'a> {
+    type Error = Error;
+
+    fn try_from(value: json_types::PictogramClip<'a>) -> Result<Self, Self::Error> {
+        let regex = regex!(r".*/(.*\.png)$");
+        let picto_filename = cow_regex_single_capture(regex, value.picto_path)?;
+
+        Ok(Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            picto_filename,
+        })
+    }
+}
+
+/// Resize an actor?
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ProportionClip {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When to start the vibration
+    pub start_time: i32,
+    /// Duration of the vibration
+    pub duration: u32,
+    /// The actors to resize
+    pub actor_indices: Vec<u8>,
+    /// X curve
+    pub curve_x: Option<CurveFloat>,
+    /// Y curve
+    pub curve_y: Option<CurveFloat>,
+}
+
+impl From<ProportionClip> for json_types::ProportionClip<'static> {
+    fn from(value: ProportionClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
         let id = hasher.finish32();
         Self {
             class: None,
             id,
-            track_id: 1_028_802_763,
+            track_id: 1_369_275_280,
+            is_active: u8::from(value.is_active),
             start_time: value.start_time,
             duration: value.duration,
-            event_type: value.event_type,
-            custom_param: Cow::Borrowed(""),
-            is_active: u8::from(value.is_active),
+            actor_indices: value.actor_indices,
+            curve_x: value
+                .curve_x
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+            curve_y: value
+                .curve_y
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
         }
     }
 }
 
-impl From<json_types::HideUserInterfaceClip<'_>> for HideUserInterfaceClip {
-    fn from(value: json_types::HideUserInterfaceClip) -> Self {
+impl From<json_types::ProportionClip<'_>> for ProportionClip {
+    fn from(value: json_types::ProportionClip<'_>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
             duration: value.duration,
-            event_type: value.event_type,
+            actor_indices: value.actor_indices,
+            curve_x: CurveFloat::from_curve(&value.curve_x),
+            curve_y: CurveFloat::from_curve(&value.curve_y),
+        }
+    }
+}
+
+/// Rotate an actor?
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct RotationClip {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When to start the vibration
+    pub start_time: i32,
+    /// Duration of the vibration
+    pub duration: u32,
+    /// The actors to resize
+    pub actor_indices: Vec<u8>,
+    /// X curve
+    pub curve_x: Option<CurveFloat>,
+    /// Y curve
+    pub curve_y: Option<CurveFloat>,
+    /// Z curve
+    pub curve_z: Option<CurveFloat>,
+}
+
+impl From<RotationClip> for json_types::RotationClip<'static> {
+    fn from(value: RotationClip) -> Self {
+        let mut hasher = Murmur3Hasher::default();
+        value.hash(&mut hasher);
+        let id = hasher.finish32();
+        Self {
+            class: None,
+            id,
+            track_id: 1_369_275_280,
+            is_active: u8::from(value.is_active),
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve_x: value
+                .curve_x
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+            curve_y: value
+                .curve_y
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+            curve_z: value
+                .curve_z
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+        }
+    }
+}
+
+impl From<json_types::RotationClip<'_>> for RotationClip {
+    fn from(value: json_types::RotationClip<'_>) -> Self {
+        Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve_x: CurveFloat::from_curve(&value.curve_x),
+            curve_y: CurveFloat::from_curve(&value.curve_y),
+            curve_z: CurveFloat::from_curve(&value.curve_z),
         }
     }
 }
@@ -1292,6 +1605,71 @@ impl SoundSetClip<'_> {
             start_offset: 0,
             stops_on_end: 0,
             accounted_for_duration: 0,
+        }
+    }
+}
+
+/// Move an actor?
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TranslationClip {
+    /// Is the clip active
+    pub is_active: bool,
+    /// When to start the vibration
+    pub start_time: i32,
+    /// Duration of the vibration
+    pub duration: u32,
+    /// The actors to resize
+    pub actor_indices: Vec<u8>,
+    /// X curve
+    pub curve_x: Option<CurveFloat>,
+    /// Y curve
+    pub curve_y: Option<CurveFloat>,
+    /// Z curve
+    pub curve_z: Option<CurveFloat>,
+}
+
+impl From<TranslationClip> for json_types::TranslationClip<'static> {
+    fn from(value: TranslationClip) -> Self {
+        let mut hasher = Murmur3Hasher::default();
+        value.hash(&mut hasher);
+        let id = hasher.finish32();
+        Self {
+            class: None,
+            id,
+            track_id: 1_369_275_280,
+            is_active: u8::from(value.is_active),
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve_x: value
+                .curve_x
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+            curve_y: value
+                .curve_y
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+            curve_z: value
+                .curve_z
+                .as_ref()
+                .map(json_types::Curve::from)
+                .unwrap_or_default(),
+        }
+    }
+}
+
+impl From<json_types::TranslationClip<'_>> for TranslationClip {
+    fn from(value: json_types::TranslationClip<'_>) -> Self {
+        Self {
+            is_active: value.is_active == 1,
+            start_time: value.start_time,
+            duration: value.duration,
+            actor_indices: value.actor_indices,
+            curve_x: CurveFloat::from_curve(&value.curve_x),
+            curve_y: CurveFloat::from_curve(&value.curve_y),
+            curve_z: CurveFloat::from_curve(&value.curve_z),
         }
     }
 }
@@ -1340,5 +1718,270 @@ impl<'a> From<json_types::VibrationClip<'a>> for VibrationClip<'a> {
             duration: value.duration,
             vibration: value.vibration_file_path.clone(),
         }
+    }
+}
+
+/// Describes how a value can change (if not constant)
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum CurveFloat {
+    /// Constant value (no curve)
+    Constant(CurveFloatConstant),
+    /// Bezier curve with two points
+    Linear(CurveFloatLinear),
+    /// Bezier curve with multiple points
+    Multi(CurveFloatMulti),
+}
+
+impl CurveFloat {
+    /// Convert a [`json_types::Curve`] into a Option<CurveFloat>
+    pub fn from_curve(value: &json_types::Curve<'_>) -> Option<Self> {
+        let json_types::Curve::BezierCurveFloat(value) = value;
+        match &value.value {
+            BezierCurveFloatValue::Empty => None,
+            BezierCurveFloatValue::Constant(value) => Some(Self::Constant(value.into())),
+            BezierCurveFloatValue::Linear(value) => Some(Self::Linear(value.into())),
+            BezierCurveFloatValue::Multi(value) => Some(Self::Multi(value.into())),
+        }
+    }
+}
+
+impl From<&CurveFloat> for json_types::Curve<'static> {
+    fn from(value: &CurveFloat) -> Self {
+        let value = match value {
+            CurveFloat::Constant(value) => BezierCurveFloatValue::Constant(value.into()),
+            CurveFloat::Linear(value) => BezierCurveFloatValue::Linear(value.into()),
+            CurveFloat::Multi(value) => BezierCurveFloatValue::Multi(value.into()),
+        };
+
+        Self::BezierCurveFloat(json_types::BezierCurveFloat { class: None, value })
+    }
+}
+
+/// Constant value for the 'curve'
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CurveFloatConstant(pub f32);
+
+impl From<&json_types::BezierCurveFloatConstant<'_>> for CurveFloatConstant {
+    fn from(value: &json_types::BezierCurveFloatConstant) -> Self {
+        Self(value.value)
+    }
+}
+
+impl From<&CurveFloatConstant> for json_types::BezierCurveFloatConstant<'static> {
+    fn from(value: &CurveFloatConstant) -> Self {
+        Self {
+            class: None,
+            value: value.0,
+        }
+    }
+}
+
+impl Hash for CurveFloatConstant {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.to_bits().hash(state);
+    }
+}
+
+impl PartialEq for CurveFloatConstant {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.total_cmp(&other.0) == Ordering::Equal
+    }
+}
+
+impl Eq for CurveFloatConstant {}
+
+impl Ord for CurveFloatConstant {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.total_cmp(&other.0)
+    }
+}
+
+impl PartialOrd for CurveFloatConstant {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+/// Linear bezier curve (2 points)
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CurveFloatLinear {
+    /// Unknown
+    pub value_left: (f32, f32),
+    /// Unknown
+    pub normal_left_out: (f32, f32),
+    /// Unknown
+    pub value_right: (f32, f32),
+    /// Unknown
+    pub normal_right_in: (f32, f32),
+}
+
+impl From<&json_types::BezierCurveFloatLinear<'_>> for CurveFloatLinear {
+    fn from(value: &json_types::BezierCurveFloatLinear) -> Self {
+        Self {
+            value_left: value.value_left,
+            normal_left_out: value.normal_left_out,
+            value_right: value.value_right,
+            normal_right_in: value.normal_right_in,
+        }
+    }
+}
+
+impl From<&CurveFloatLinear> for json_types::BezierCurveFloatLinear<'static> {
+    fn from(value: &CurveFloatLinear) -> Self {
+        Self {
+            class: None,
+            value_left: value.value_left,
+            normal_left_out: value.normal_left_out,
+            value_right: value.value_right,
+            normal_right_in: value.normal_right_in,
+        }
+    }
+}
+
+impl Hash for CurveFloatLinear {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.value_left.0.to_bits().hash(state);
+        self.value_left.1.to_bits().hash(state);
+        self.normal_left_out.0.to_bits().hash(state);
+        self.normal_left_out.1.to_bits().hash(state);
+        self.value_right.0.to_bits().hash(state);
+        self.value_right.1.to_bits().hash(state);
+        self.normal_right_in.0.to_bits().hash(state);
+        self.normal_right_in.1.to_bits().hash(state);
+    }
+}
+
+impl PartialEq for CurveFloatLinear {
+    fn eq(&self, other: &Self) -> bool {
+        self.value_left.0.total_cmp(&other.value_left.0) == Ordering::Equal
+            && self.value_left.1.total_cmp(&other.value_left.0) == Ordering::Equal
+            && self.normal_left_out.0.total_cmp(&other.normal_left_out.0) == Ordering::Equal
+            && self.normal_left_out.1.total_cmp(&other.normal_left_out.0) == Ordering::Equal
+            && self.value_right.0.total_cmp(&other.value_right.0) == Ordering::Equal
+            && self.value_right.1.total_cmp(&other.value_right.0) == Ordering::Equal
+            && self.normal_right_in.0.total_cmp(&other.normal_right_in.0) == Ordering::Equal
+            && self.normal_right_in.1.total_cmp(&other.normal_right_in.0) == Ordering::Equal
+    }
+}
+
+impl Eq for CurveFloatLinear {}
+
+impl Ord for CurveFloatLinear {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.value_left
+            .0
+            .total_cmp(&other.value_left.0)
+            .then(self.value_left.1.total_cmp(&other.value_left.0))
+            .then(self.normal_left_out.0.total_cmp(&other.normal_left_out.0))
+            .then(self.normal_left_out.1.total_cmp(&other.normal_left_out.0))
+            .then(self.value_right.0.total_cmp(&other.value_right.0))
+            .then(self.value_right.1.total_cmp(&other.value_right.0))
+            .then(self.normal_right_in.0.total_cmp(&other.normal_right_in.0))
+            .then(self.normal_right_in.1.total_cmp(&other.normal_right_in.0))
+    }
+}
+
+impl PartialOrd for CurveFloatLinear {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+/// Mutli point bezier curve (more than 4)
+#[derive(Hash, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct CurveFloatMulti {
+    /// The points of the curve
+    pub keys: Vec<KeyFloat>,
+}
+
+impl From<&json_types::BezierCurveFloatMulti<'_>> for CurveFloatMulti {
+    fn from(value: &json_types::BezierCurveFloatMulti) -> Self {
+        Self {
+            keys: value.keys.iter().map(KeyFloat::from).collect(),
+        }
+    }
+}
+
+impl From<&CurveFloatMulti> for json_types::BezierCurveFloatMulti<'static> {
+    fn from(value: &CurveFloatMulti) -> Self {
+        Self {
+            class: None,
+            keys: value.keys.iter().map(json_types::KeyFloat::from).collect(),
+        }
+    }
+}
+
+/// Key float for multi point bezier curve
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct KeyFloat {
+    /// Unknown
+    pub value: (f32, f32),
+    /// Unknown
+    pub normal_out: (f32, f32),
+    /// Unknown
+    pub normal_in: (f32, f32),
+}
+
+impl From<&json_types::KeyFloat<'_>> for KeyFloat {
+    fn from(value: &json_types::KeyFloat) -> Self {
+        Self {
+            value: value.value,
+            normal_out: value.normal_out,
+            normal_in: value.normal_in,
+        }
+    }
+}
+
+impl From<&KeyFloat> for json_types::KeyFloat<'static> {
+    fn from(value: &KeyFloat) -> Self {
+        Self {
+            class: Some("KeyFloat"),
+            value: value.value,
+            normal_out: value.normal_out,
+            normal_in: value.normal_in,
+        }
+    }
+}
+
+impl Hash for KeyFloat {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.value.0.to_bits().hash(state);
+        self.value.1.to_bits().hash(state);
+        self.normal_out.0.to_bits().hash(state);
+        self.normal_out.1.to_bits().hash(state);
+        self.normal_in.0.to_bits().hash(state);
+        self.normal_in.1.to_bits().hash(state);
+    }
+}
+
+impl PartialEq for KeyFloat {
+    fn eq(&self, other: &Self) -> bool {
+        self.value.0.total_cmp(&other.value.0) == Ordering::Equal
+            && self.value.1.total_cmp(&other.value.0) == Ordering::Equal
+            && self.normal_out.0.total_cmp(&other.normal_out.0) == Ordering::Equal
+            && self.normal_out.1.total_cmp(&other.normal_out.0) == Ordering::Equal
+            && self.normal_in.0.total_cmp(&other.normal_in.0) == Ordering::Equal
+            && self.normal_in.1.total_cmp(&other.normal_in.0) == Ordering::Equal
+    }
+}
+
+impl Eq for KeyFloat {}
+
+impl Ord for KeyFloat {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.value
+            .0
+            .total_cmp(&other.value.0)
+            .then(self.value.1.total_cmp(&other.value.0))
+            .then(self.normal_out.0.total_cmp(&other.normal_out.0))
+            .then(self.normal_out.1.total_cmp(&other.normal_out.0))
+            .then(self.normal_in.0.total_cmp(&other.normal_in.0))
+            .then(self.normal_in.1.total_cmp(&other.normal_in.0))
+    }
+}
+
+impl PartialOrd for KeyFloat {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
