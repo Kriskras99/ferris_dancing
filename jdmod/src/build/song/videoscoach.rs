@@ -91,9 +91,9 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         unk1: 0,
         unk2: 0x3f80_0000,
         unk2_5: 0x3f80_0000,
-        templates: vec![cooked::act::Template {
-            the_type: cooked::act::TemplateType::PleoComponent,
-            data: cooked::act::TemplateData::PleoComponent(cooked::act::PleoComponent {
+        components: vec![cooked::act::Component {
+            the_type: cooked::act::ComponentType::PleoComponent,
+            data: cooked::act::ComponentData::PleoComponent(cooked::act::PleoComponent {
                 video: SplitPath {
                     path: Cow::Owned(format!("{map_path}/videoscoach/")),
                     filename: Cow::Owned(format!("{lower_map_name}.webm")),

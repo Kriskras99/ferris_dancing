@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Context, Error};
-use ubiart_toolkit::cooked::{self, act::TemplateType};
+use ubiart_toolkit::cooked::{self, act::ComponentType};
 
 use dotstar_toolkit_utils::testing::test;
 
@@ -42,9 +42,9 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
             .open(cook_path(&playlist.cover_path, is.platform)?.as_ref())?;
         let actor = cooked::act::parse(&act_file, is.game)?;
         let template = actor
-            .templates
+            .components
             .iter()
-            .find(|t| t.the_type == TemplateType::MaterialGraphicComponent)
+            .find(|t| t.the_type == ComponentType::MaterialGraphicComponent)
             .ok_or_else(|| anyhow!("No MaterialGraphicComponent in actor!"))?;
         let tga_path = template.data.material_graphics_component()?.files[0].to_string();
         test(&tga_path.is_empty(), &false)?;

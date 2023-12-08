@@ -127,9 +127,9 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
         unk1: 0,
         unk2: 0x3f80_0000,
         unk2_5: 0x3f80_0000,
-        templates: vec![cooked::act::Template {
-            the_type: cooked::act::TemplateType::MaterialGraphicComponent,
-            data: cooked::act::TemplateData::MaterialGraphicComponent(Box::new(
+        components: vec![cooked::act::Component {
+            the_type: cooked::act::ComponentType::MaterialGraphicComponent,
+            data: cooked::act::ComponentData::MaterialGraphicComponent(Box::new(
                 cooked::act::MaterialGraphicComponent {
                     files: [
                         SplitPath {

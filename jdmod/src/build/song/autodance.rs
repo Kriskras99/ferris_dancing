@@ -71,9 +71,9 @@ fn autodance_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         unk1: 0,
         unk2: 0x3f80_0000,
         unk2_5: 0x3f80_0000,
-        templates: vec![cooked::act::Template {
-            the_type: cooked::act::TemplateType::AutodanceComponent,
-            data: cooked::act::TemplateData::None,
+        components: vec![cooked::act::Component {
+            the_type: cooked::act::ComponentType::AutodanceComponent,
+            data: cooked::act::ComponentData::None,
         }],
     };
 

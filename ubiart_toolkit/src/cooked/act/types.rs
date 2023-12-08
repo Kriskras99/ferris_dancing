@@ -12,12 +12,12 @@ pub struct Actor<'a> {
     pub unk1: u32,
     pub unk2: u32,
     pub unk2_5: u32,
-    pub templates: Vec<Template<'a>>,
+    pub components: Vec<Component<'a>>,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TemplateType {
+pub enum ComponentType {
     /// JD_AutoDanceComponent
     AutodanceComponent = 0x67b8_bb77,
     /// JD_BeatPulseComponent
@@ -86,7 +86,7 @@ pub enum TemplateType {
     AFXPostProcessComponent = 0x2b34_9e69,
 }
 
-impl TryFrom<u32> for TemplateType {
+impl TryFrom<u32> for ComponentType {
     type Error = anyhow::Error;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
@@ -125,29 +125,29 @@ impl TryFrom<u32> for TemplateType {
             0xf513_60da => Ok(Self::BoxInterpolatorComponent),
             0xf719_b524 => Ok(Self::PropertyPatcher),
             _ => Err(anyhow!(
-                "Found unexpected template type value: 0x{value:x}!"
+                "Found unexpected component type value: 0x{value:x}!"
             )),
         }
     }
 }
 
-impl From<TemplateType> for u32 {
+impl From<ComponentType> for u32 {
     // Type is repr(u32) thus 'as' is always safe
     #[allow(clippy::as_conversions)]
-    fn from(value: TemplateType) -> Self {
+    fn from(value: ComponentType) -> Self {
         value as Self
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Template<'a> {
-    pub the_type: TemplateType,
-    pub data: TemplateData<'a>,
+pub struct Component<'a> {
+    pub the_type: ComponentType,
+    pub data: ComponentData<'a>,
 }
 
-/// Contains the template specific data
+/// Contains the component specific data
 #[derive(Debug, Clone)]
-pub enum TemplateData<'a> {
+pub enum ComponentData<'a> {
     /// Describes the main video player of a song
     PleoComponent(PleoComponent<'a>),
     /// Describes a 2d sprite
@@ -157,17 +157,17 @@ pub enum TemplateData<'a> {
     None,
 }
 
-impl TemplateData<'_> {
-    /// Convert this template data to a `MaterialGraphicComponent`.
+impl ComponentData<'_> {
+    /// Convert this component data to a `MaterialGraphicComponent`.
     ///
     /// # Errors
-    /// Will error if this template data is not a `MaterialGraphicComponent`.
+    /// Will error if this component data is not a `MaterialGraphicComponent`.
     pub fn material_graphics_component(&self) -> Result<&MaterialGraphicComponent<'_>, Error> {
-        if let TemplateData::MaterialGraphicComponent(mgc) = self {
+        if let ComponentData::MaterialGraphicComponent(mgc) = self {
             Ok(mgc)
         } else {
             Err(anyhow!(
-                "MaterialGraphicComponent not found in template data: {self:?}"
+                "MaterialGraphicComponent not found in component data: {self:?}"
             ))
         }
     }

@@ -43,7 +43,7 @@ pub fn main(extract: Extract) -> Result<(), Error> {
     if destination.exists() && destination.read_dir()?.next().is_some() {
         return Err(anyhow!("Target directory exists and is not empty!"));
     } else if !destination.exists() {
-        std::fs::create_dir(destination)?;
+        std::fs::create_dir(&destination)?;
     }
     let files: Vec<&str> = extract.files.iter().map(String::as_str).collect();
     let files = if files.is_empty() {
