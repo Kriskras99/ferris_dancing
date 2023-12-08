@@ -39,8 +39,12 @@ pub fn main(extract: Extract) -> Result<(), Error> {
     assert!(source.try_exists()?, "Source does not exist!");
     assert!(source.is_file(), "Source is not a file!");
     let destination = extract.destination.unwrap_or(fs::canonicalize(".")?);
-    assert!(destination.try_exists()?, "Destination does not exist!");
-    assert!(destination.is_dir(), "Destination is not a directory!");
+    // Create the export directory
+    if destination.exists() && destination.read_dir()?.next().is_some() {
+        return Err(anyhow!("Target directory exists and is not empty!"));
+    } else if !destination.exists() {
+        std::fs::create_dir(destination)?;
+    }
     let files: Vec<&str> = extract.files.iter().map(String::as_str).collect();
     let files = if files.is_empty() {
         None
