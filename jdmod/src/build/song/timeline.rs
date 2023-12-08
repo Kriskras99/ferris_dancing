@@ -302,9 +302,9 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
         unk1: 0,
         unk2: 0x3f80_0000,
         unk2_5: 0x3f80_0000,
-        templates: vec![cooked::act::Template {
-            the_type: cooked::act::TemplateType::TapeCaseComponent,
-            data: cooked::act::TemplateData::None,
+        components: vec![cooked::act::Component {
+            the_type: cooked::act::ComponentType::TapeCaseComponent,
+            data: cooked::act::ComponentData::None,
         }],
     };
 

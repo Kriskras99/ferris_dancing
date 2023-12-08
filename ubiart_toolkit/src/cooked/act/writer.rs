@@ -6,7 +6,7 @@ use std::{
 use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
-use super::{Actor, MaterialGraphicComponent, PleoComponent, TemplateData};
+use super::{Actor, MaterialGraphicComponent, PleoComponent, ComponentData};
 use crate::utils::bytes::WriteBytesExtUbiArt;
 
 /// Write the `Actor` to the writer
@@ -28,15 +28,15 @@ pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), Error
     writer.write_path::<BigEndian>(&actor.tpl)?;
     writer.write_u32::<BigEndian>(0)?;
     writer.write_u32::<BigEndian>(0)?;
-    writer.write_u32::<BigEndian>(u32::try_from(actor.templates.len())?)?;
-    for template in &actor.templates {
+    writer.write_u32::<BigEndian>(u32::try_from(actor.components.len())?)?;
+    for template in &actor.components {
         writer.write_u32::<BigEndian>(u32::from(template.the_type))?;
         match &template.data {
-            TemplateData::None => {}
-            TemplateData::MaterialGraphicComponent(mgc) => {
+            ComponentData::None => {}
+            ComponentData::MaterialGraphicComponent(mgc) => {
                 write_material_graphic_component(&mut writer, mgc, false)?;
             }
-            TemplateData::PleoComponent(pc) => {
+            ComponentData::PleoComponent(pc) => {
                 write_pleo_component(&mut writer, pc)?;
             }
             _ => todo!("{:?}", template.data),

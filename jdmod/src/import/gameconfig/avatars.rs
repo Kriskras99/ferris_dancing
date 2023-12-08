@@ -130,7 +130,7 @@ pub fn import_v18v22(
             let alt_actor = cooked::act::parse(&alt_actor_file, is.game)?;
 
             let image_actor = alt_actor
-                .templates
+                .components
                 .first()
                 .ok_or_else(|| anyhow!("No templates in {}", avatar_desc.actor_path))?;
             let mtg = image_actor.data.material_graphics_component()?;

@@ -12,8 +12,8 @@ use crate::utils::{
 use dotstar_toolkit_utils::testing::{test, test_any};
 
 use super::{
-    Actor, CreditsComponent, MaterialGraphicComponent, PleoComponent, Template, TemplateData,
-    TemplateType,
+    Actor, CreditsComponent, MaterialGraphicComponent, PleoComponent, Component, ComponentData,
+    ComponentType,
 };
 
 /// Parse a bytearray-like source as a actor file
@@ -99,68 +99,68 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
     test(&unk9, &0)?;
     let actor_amount = read_u32_at::<BigEndian>(src, &mut pos)?;
 
-    let mut templates = Vec::with_capacity(actor_amount.try_into()?);
+    let mut components = Vec::with_capacity(actor_amount.try_into()?);
     for _ in 0..actor_amount {
         // String id of the class name of the template without the '_Template' but including 'JD_' if it is in the class name
-        let template_type_encoded = read_u32_at::<BigEndian>(src, &mut pos)?;
+        let component_type_encoded = read_u32_at::<BigEndian>(src, &mut pos)?;
 
-        let template_type = TemplateType::try_from(template_type_encoded)?;
+        let component_type = ComponentType::try_from(component_type_encoded)?;
 
-        let template_data = match template_type {
-            TemplateType::AutodanceComponent
-            | TemplateType::MasterTape
-            | TemplateType::SongDatabaseComponent
-            | TemplateType::SongDescComponent
-            | TemplateType::TapeCaseComponent
-            | TemplateType::AvatarDescComponent
-            | TemplateType::SkinDescComponent => TemplateData::None,
-            TemplateType::BoxInterpolatorComponent => {
+        let component_data = match component_type {
+            ComponentType::AutodanceComponent
+            | ComponentType::MasterTape
+            | ComponentType::SongDatabaseComponent
+            | ComponentType::SongDescComponent
+            | ComponentType::TapeCaseComponent
+            | ComponentType::AvatarDescComponent
+            | ComponentType::SkinDescComponent => ComponentData::None,
+            ComponentType::BoxInterpolatorComponent => {
                 parse_box_interpolator_component(src, game, &mut pos)?
             }
-            TemplateType::ConvertedTmlTapeComponent => {
+            ComponentType::ConvertedTmlTapeComponent => {
                 parse_converted_tml_tape(src, game, &mut pos)?
             }
-            TemplateType::CreditsComponent => parse_credits_component(src, game, &mut pos)?,
-            TemplateType::FixedCameraComponent => {
+            ComponentType::CreditsComponent => parse_credits_component(src, game, &mut pos)?,
+            ComponentType::FixedCameraComponent => {
                 parse_fixed_camera_component(src, game, &mut pos)?
             }
-            TemplateType::FXControllerComponent => parse_fx_controller(src, game, &mut pos)?,
-            TemplateType::MaterialGraphicComponent => {
+            ComponentType::FXControllerComponent => parse_fx_controller(src, game, &mut pos)?,
+            ComponentType::MaterialGraphicComponent => {
                 parse_material_graphic_component(src, game, &mut pos, false)?
             }
-            TemplateType::PleoTextureGraphicComponent => {
+            ComponentType::PleoTextureGraphicComponent => {
                 parse_material_graphic_component(src, game, &mut pos, true)?
             }
-            TemplateType::PleoComponent => parse_pleo_component(src, game, &mut pos)?,
-            TemplateType::PropertyPatcher => parse_property_patcher(src, game, &mut pos)?,
-            TemplateType::RegistrationComponent => {
+            ComponentType::PleoComponent => parse_pleo_component(src, game, &mut pos)?,
+            ComponentType::PropertyPatcher => parse_property_patcher(src, game, &mut pos)?,
+            ComponentType::RegistrationComponent => {
                 parse_registration_component(src, game, &mut pos)?
             }
-            TemplateType::UITextBox => parse_ui_text_box(src, game, &mut pos)?,
-            TemplateType::FxBankComponent => parse_fx_bank_component(src, game, &mut pos)?,
-            TemplateType::BezierTreeComponent => parse_bezier_tree_component(src, game, &mut pos)?,
-            TemplateType::AFXPostProcessComponent => {
+            ComponentType::UITextBox => parse_ui_text_box(src, game, &mut pos)?,
+            ComponentType::FxBankComponent => parse_fx_bank_component(src, game, &mut pos)?,
+            ComponentType::BezierTreeComponent => parse_bezier_tree_component(src, game, &mut pos)?,
+            ComponentType::AFXPostProcessComponent => {
                 parse_afx_post_process_component(src, game, &mut pos)?
             }
             // TemplateType::TapeCase => parse_tape_case(src, game, &mut pos)?,
             // TemplateType::MusicTrackComponent => parse_music_track_component(src, game, path, &mut pos)?,
-            TemplateType::BeatPulseComponent => todo!(),
-            TemplateType::CameraGraphicComponent => todo!(),
-            TemplateType::ClearColorComponent => todo!(),
-            TemplateType::PictoComponent => todo!(),
-            TemplateType::SingleInstanceMesh3DComponent => todo!(),
-            TemplateType::SoundComponent => todo!(),
-            TemplateType::UICarousel => todo!(),
-            TemplateType::UIWdigetGroupHUDAutodanceRecorder => todo!(),
-            TemplateType::UIWidgetGroupHUDLyrics => todo!(),
-            TemplateType::ViewportUIComponent => todo!(),
+            ComponentType::BeatPulseComponent => todo!(),
+            ComponentType::CameraGraphicComponent => todo!(),
+            ComponentType::ClearColorComponent => todo!(),
+            ComponentType::PictoComponent => todo!(),
+            ComponentType::SingleInstanceMesh3DComponent => todo!(),
+            ComponentType::SoundComponent => todo!(),
+            ComponentType::UICarousel => todo!(),
+            ComponentType::UIWdigetGroupHUDAutodanceRecorder => todo!(),
+            ComponentType::UIWidgetGroupHUDLyrics => todo!(),
+            ComponentType::ViewportUIComponent => todo!(),
             _ => {
-                return Err(anyhow!("Unsupported actor type {template_type:?}!"));
+                return Err(anyhow!("Unsupported component type {component_type:?}!"));
             }
         };
-        templates.push(Template {
-            the_type: template_type,
-            data: template_data,
+        components.push(Component {
+            the_type: component_type,
+            data: component_data,
         });
     }
 
@@ -171,7 +171,7 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
         unk1,
         unk2,
         unk2_5,
-        templates,
+        components,
     })
 }
 
@@ -179,21 +179,21 @@ fn parse_registration_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     // if game == Game::JustDance2018 {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0xAA55_B6BD, 0xFFFF_FFFF])?;
     let unk12 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk12, &0x0)?;
     // }
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_box_interpolator_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     for _ in 0..2 {
         let unk11 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk11, &0xBF00_0000)?;
@@ -210,36 +210,36 @@ fn parse_box_interpolator_component<'a>(
         let unk14 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk14, &0x3F80_0000)?;
     }
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_afx_post_process_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk16 = read_u64_at::<BigEndian>(src, pos)?;
     test(&unk16, &8)?;
     let unk17 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk17, &1)?;
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_converted_tml_tape<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk11, &0)?;
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_credits_component<'a>(
     src: &'a [u8],
     game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0xD, 0x17]).context(*pos)?;
     let i = if game == Game::JustDance2017 { 6 } else { 10 };
@@ -267,14 +267,14 @@ fn parse_credits_component<'a>(
         lines.push(line);
     }
 
-    Ok(TemplateData::CreditsComponent(CreditsComponent { lines }))
+    Ok(ComponentData::CreditsComponent(CreditsComponent { lines }))
 }
 
 fn parse_fixed_camera_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0x0, 0x1])?;
     let unk12 = read_u64_at::<BigEndian>(src, pos)?;
@@ -283,24 +283,24 @@ fn parse_fixed_camera_component<'a>(
     test(&unk13, &0x4120_0000)?;
     let unk14 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk14, &[0x0, 0x1])?;
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_fx_controller<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk11 = read_u64_at::<BigEndian>(src, pos)?;
     test(&unk11, &0)?;
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_fx_bank_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     for _ in 0..4 {
         let unk11 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk11, &0x3F80_0000)?;
@@ -313,14 +313,14 @@ fn parse_fx_bank_component<'a>(
     test_any(&unk13, &[0x0, 0xFFFF_FFFF])?;
     let unk14 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk14, &0xFFFF_FFFF)?;
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_bezier_tree_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk18 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk18, &2)?;
     for _ in 0..4 {
@@ -351,7 +351,7 @@ fn parse_bezier_tree_component<'a>(
     }
     let unk26 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk26, &1)?;
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_material_graphic_component<'a>(
@@ -359,7 +359,7 @@ fn parse_material_graphic_component<'a>(
     game: Game,
     pos: &mut usize,
     is_pleo: bool,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     for _ in 0..3 {
         let unk11 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk11, &0x3F80_0000).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
@@ -485,7 +485,7 @@ fn parse_material_graphic_component<'a>(
         test(&unk27, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
     }
 
-    Ok(TemplateData::MaterialGraphicComponent(Box::new(
+    Ok(ComponentData::MaterialGraphicComponent(Box::new(
         MaterialGraphicComponent {
             files,
             unk11_5,
@@ -571,15 +571,15 @@ fn parse_pleo_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
-    let webm = read_path_at::<BigEndian>(src, pos)?;
-    let mpd = read_path_at::<BigEndian>(src, pos)?;
-    let name = Cow::Borrowed(read_string_at::<BigEndian>(src, pos)?);
-    let name = if name.is_empty() { None } else { Some(name) };
-    Ok(TemplateData::PleoComponent(PleoComponent {
-        video: webm,
-        dash_mpd: mpd,
-        channel_id: name,
+) -> Result<ComponentData<'a>, Error> {
+    let video = read_path_at::<BigEndian>(src, pos)?;
+    let dash_mpd = read_path_at::<BigEndian>(src, pos)?;
+    let channel_id = Cow::Borrowed(read_string_at::<BigEndian>(src, pos)?);
+    let channel_id = if channel_id.is_empty() { None } else { Some(channel_id) };
+    Ok(ComponentData::PleoComponent(PleoComponent {
+        video,
+        dash_mpd,
+        channel_id,
     }))
 }
 
@@ -587,7 +587,7 @@ fn parse_property_patcher<'a>(
     src: &'a [u8],
     game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk11, &1)?;
     let unk12 = read_u32_at::<BigEndian>(src, pos)?;
@@ -596,14 +596,14 @@ fn parse_property_patcher<'a>(
         let unk13 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk13, &0)?;
     }
-    Ok(TemplateData::None)
+    Ok(ComponentData::None)
 }
 
 fn parse_ui_text_box<'a>(
     src: &'a [u8],
     game: Game,
     pos: &mut usize,
-) -> Result<TemplateData<'a>, Error> {
+) -> Result<ComponentData<'a>, Error> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0x0, 0x2, 0x3])?;
     let unk12 = read_u32_at::<BigEndian>(src, pos)?;
@@ -698,7 +698,7 @@ fn parse_ui_text_box<'a>(
     test_any(&unk32, &[0xffff_ffff, 0x1]).context(*pos)?;
     let unk33 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk33, &[1, 4, 0xFFFF_FFFF]).context(*pos)?;
-    Ok(TemplateData::UITextBox(super::UITextBox {
+    Ok(ComponentData::UITextBox(super::UITextBox {
         string1,
         string2,
     }))

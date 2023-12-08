@@ -36,7 +36,7 @@ fn main() {
         .with_context(|| format!("{:?}", cli.source))
         .unwrap();
 
-    for template in &actors.templates {
+    for template in &actors.components {
         println!("{template:#?}");
     }
 }
