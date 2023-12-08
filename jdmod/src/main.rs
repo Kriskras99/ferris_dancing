@@ -22,6 +22,7 @@
 //! Currently supported are Just Dance 2017-2022 for the Switch.
 //! It can import and export songs, playlists, quests/objectives, avatars, aliases, portraitborders, gacha machine, and search labels.
 
+use bundle::Bundle;
 use check::Check;
 use clap::{Parser, Subcommand, ValueEnum};
 use export::Build;
@@ -30,6 +31,7 @@ use import::Import;
 use new::New;
 
 mod build;
+mod bundle;
 mod check;
 mod export;
 mod extract;
@@ -64,6 +66,8 @@ enum Commands {
     Export(Build),
     /// Check the completeness of the mod
     Check(Check),
+    /// Check the completeness of the mod
+    Bundle(Bundle),
 }
 
 /// Strategies for resolving file conflicts
@@ -86,6 +90,7 @@ fn main() -> Result<(), anyhow::Error> {
         Commands::Extract(data) => extract::main(data)?,
         Commands::Export(data) => export::main(&data)?,
         Commands::Check(data) => check::main(&data)?,
+        Commands::Bundle(data) => bundle::main(&data)?,
     }
     Ok(())
 }
