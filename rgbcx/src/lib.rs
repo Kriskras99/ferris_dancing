@@ -40,6 +40,17 @@ pub static RGBCX: OnceLock<Rgbcx> = OnceLock::new();
 pub fn get_rgbcx() -> &'static Rgbcx {
     RGBCX.get_or_init(Rgbcx::default)
 }
+/// Get an instance of the encoder with the specified approximation mode.
+/// 
+/// See [`Bc1ApproxMode`] for details
+/// 
+/// # Panics
+/// Will panic if there already is a `Rgbcx` object initialised which does not match the approximation mode.
+pub fn get_rgbcx_with_bc1_approx_mode(bc1_approx_mode: Bc1ApproxMode) -> &'static Rgbcx {
+    let rgbcx = RGBCX.get_or_init(|| Rgbcx::with_bc1_approx_mode(bc1_approx_mode));
+    assert!(rgbcx.approx_mode != bc1_approx_mode, "There is already a Rgbcx object initialised that does not match {bc1_approx_mode:?}");
+    rgbcx
+}
 
 /// Minimum total orderings that will be tried
 pub const MIN_TOTAL_ORDERINGS: u32 = rgbcx_sys::rgbcx_MIN_TOTAL_ORDERINGS;
@@ -53,14 +64,16 @@ pub const DEFAULT_TOTAL_ORDERINGS_TO_TRY: u32 = rgbcx_sys::rgbcx_DEFAULT_TOTAL_O
 /// Default total orderings that will be tried for 3-color blocks
 pub const DEFAULT_TOTAL_ORDERINGS_TO_TRY3: u32 = rgbcx_sys::rgbcx_DEFAULT_TOTAL_ORDERINGS_TO_TRY3;
 /// The minimum level supported by the level-based functions
+#[allow(clippy::cast_possible_truncation, clippy::as_conversions)]
 pub const MIN_LEVEL: u8 = rgbcx_sys::rgbcx_MIN_LEVEL as u8;
 /// The maximum level supported by the level-based functions
+#[allow(clippy::cast_possible_truncation, clippy::as_conversions)]
 pub const MAX_LEVEL: u8 = rgbcx_sys::rgbcx_MAX_LEVEL as u8;
 
 /// The encoder with it's global state
 pub struct Rgbcx {
     /// The approximation mode the encoder is set to
-    _approx_mode: Bc1ApproxMode,
+    approx_mode: Bc1ApproxMode,
 }
 
 impl Default for Rgbcx {
@@ -71,22 +84,29 @@ impl Default for Rgbcx {
 
 impl Rgbcx {
     /// Initialize the Rgbcx encoder with the default approximation mode
-    pub fn new() -> Self {
+    /// 
+    /// This function is not thread-safe!
+    #[must_use]
+    fn new() -> Self {
         unsafe { rgbcx_sys::rgbcx_init(rgbcx_sys::rgbcx_bc1_approx_mode_cBC1Ideal) };
         Self {
-            _approx_mode: Bc1ApproxMode::Ideal,
+            approx_mode: Bc1ApproxMode::Ideal,
         }
     }
 
     /// Initialize the Rgbcx encoder with a approximation mode
-    pub fn with_bc1_approx_mode(bc1_approx_mode: Bc1ApproxMode) -> Self {
+    /// 
+    /// This function is not thread-safe!
+    #[must_use]
+    fn with_bc1_approx_mode(bc1_approx_mode: Bc1ApproxMode) -> Self {
         unsafe { rgbcx_sys::rgbcx_init(bc1_approx_mode.into()) };
         Self {
-            _approx_mode: bc1_approx_mode,
+            approx_mode: bc1_approx_mode,
         }
     }
 
     /// Optimally encodes a solid color block to BC1 format.
+    #[must_use]
     pub fn encode_bc1_solid_block(&self, fr: u32, fg: u32, fb: u32, allow_3color: bool) -> [u8; 8] {
         let mut buf = [0; 8];
         self.encode_bc1_solid_block_mut(&mut buf, fr, fg, fb, allow_3color);
@@ -115,6 +135,7 @@ impl Rgbcx {
     /// This is the recommended function to use for BC1 encoding, becuase it configures the encoder for you in the best possible way (on average).
     /// Note that the 3 color modes won't be used at all until level 5 or higher.
     /// No transparency supported, however if you set `use_transparent_texels_for_black` to true the encoder will use transparent selectors on very dark/black texels to reduce MSE.
+    #[must_use]
     pub fn encode_bc1_block(
         &self,
         pixels: &[u8; 64],
@@ -140,6 +161,9 @@ impl Rgbcx {
     /// This is the recommended function to use for BC1 encoding, becuase it configures the encoder for you in the best possible way (on average).
     /// Note that the 3 color modes won't be used at all until level 5 or higher.
     /// No transparency supported, however if you set `use_transparent_texels_for_black` to true the encoder will use transparent selectors on very dark/black texels to reduce MSE.
+    /// 
+    /// # Panics
+    /// Will panic if `level` is larger than [`MAX_LEVEL`]
     pub fn encode_bc1_block_mut(
         &self,
         pixels: &[u8; 64],
@@ -168,6 +192,7 @@ impl Rgbcx {
     /// Always returns a 4 color block, unless cEncodeBC1Use3ColorBlocksForBlackPixels or cEncodeBC1Use3ColorBlock flags are specified.
     /// `total_orderings_to_try` controls the perf. vs. quality tradeoff on 4-color blocks when the [`Flags::EncodeBC1UseLikelyTotalOrderings`] flag is used. It must range between [[`MIN_TOTAL_ORDERINGS`], [`MAX_TOTAL_ORDERINGS`]].
     /// `total_orderings_to_try3` controls the perf. vs. quality tradeoff on 3-color bocks when the [`Flags::EncodeBC1UseLikelyTotalOrderings`] and the [`Flags::EncodeBC1Use3ColorBlocks`] flags are used. Valid range is [0,[`MAX_TOTAL_ORDERINGS3`]] (0=disabled).
+    #[must_use]
     pub fn encode_bc1_block_with_flags(
         &self,
         pixels: &[u8; 64],
@@ -216,6 +241,7 @@ impl Rgbcx {
     /// Encodes a 4x4 block of RGBA pixels to BC3 format.
     ///
     /// This is the recommended function, which accepts a level parameter.
+    #[must_use]
     pub fn encode_bc3_block(&self, pixels: &[u8; 64], level: u8) -> [u8; 16] {
         let mut buf = [0; 16];
         self.encode_bc3_block_mut(pixels, &mut buf, level);
@@ -225,6 +251,9 @@ impl Rgbcx {
     /// Encodes a 4x4 block of RGBA pixels to BC3 format.
     ///
     /// This is the recommended function, which accepts a level parameter.
+    /// 
+    /// # Panics
+    /// Will panic if `level` is larger than [`MAX_LEVEL`]
     pub fn encode_bc3_block_mut(&self, pixels: &[u8; 64], encoded: &mut [u8; 16], level: u8) {
         assert!(level <= MAX_LEVEL + 1, "Level is too big!");
         let level = u32::from(level);
@@ -238,6 +267,7 @@ impl Rgbcx {
     /// Encodes a 4x4 block of RGBA pixels to BC3 format.
     ///
     /// This is  a low-level version that allows fine control over BC1 encoding.
+    #[must_use]
     pub fn encode_bc3_block_with_flags(
         &self,
         pixels: &[u8; 64],

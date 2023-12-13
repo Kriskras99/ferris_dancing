@@ -100,9 +100,9 @@ pub fn bundle(
     let files_str: Vec<_> = files.iter().map(String::as_str).collect();
 
     if patch {
-        let path = destination.join("patch_nx.ipk");
+        let file_path = destination.join("patch_nx.ipk");
         ipk::create(
-            &path,
+            &file_path,
             config.game_platform,
             config.ipk_unk4,
             config.engine_version,
@@ -110,7 +110,7 @@ pub fn bundle(
             &vfs,
             &files_str,
         )?;
-        if path.metadata()?.len() >= MAX_BUNDLE_SIZE_FAT32 {
+        if file_path.metadata()?.len() >= MAX_BUNDLE_SIZE_FAT32 {
             println!("Warning! patch_nx.ipk file is bigger than 4 GB and therefore not compatible with the FAT32 filesystem.");
         }
     } else {
