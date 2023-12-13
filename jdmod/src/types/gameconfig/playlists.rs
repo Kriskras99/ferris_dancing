@@ -23,6 +23,9 @@ pub struct Playlist<'a> {
 
 impl<'a> Playlist<'a> {
     /// Convert from the UbiArt representation
+    ///
+    /// # Errors
+    /// Will error if the parsing of the filename fails or if the game is not supported
     pub fn from_offline_playlist(
         is: &ImportState<'_>,
         offline_playlist: &json_types::OfflinePlaylist<'a>,
@@ -87,6 +90,9 @@ impl<'a> Playlist<'a> {
     }
 
     /// Convert to the UbiArt representation
+    ///
+    /// # Errors
+    /// Will error if parsing the filename fails
     pub fn to_offline_playlist(self) -> Result<json_types::OfflinePlaylist<'a>, Error> {
         let file_stem = AsRef::<Path>::as_ref(self.cover.as_ref())
             .file_stem()

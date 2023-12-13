@@ -51,6 +51,9 @@ impl SongDirectoryTree {
     }
 
     /// Create the directory tree.
+    ///
+    /// # Errors
+    /// Will error if it fails to create any directory
     pub fn create_all(&self) -> std::io::Result<()> {
         std::fs::create_dir(&self.dir_song)
             .and_then(|()| std::fs::create_dir(&self.dir_song_moves))
@@ -431,6 +434,9 @@ impl From<&(f32, f32, f32, f32)> for Color {
 }
 
 /// Map a `value` in range `min` to `max` to a u8
+///
+/// # Panics
+/// Will panic if `max` >= `min`
 #[allow(
     clippy::cast_sign_loss,
     clippy::cast_possible_truncation,
@@ -447,10 +453,6 @@ fn map_range_to_u8(mut value: f32, min: f32, max: f32) -> u8 {
         value = value.clamp(min, max);
         // move value down to zero..range, then map it to 255
         let new_value = (((value - min) * 255.0) / range).round();
-        assert!(
-            (0.0..=255.0).contains(&new_value),
-            "Range conversion failed! {new_value}"
-        );
         new_value as u8
     }
 }
@@ -817,6 +819,11 @@ impl PartialOrd for Clip<'_> {
 
 impl<'a> Clip<'a> {
     /// Convert this clip to the UbiArt representation
+    ///
+    /// Will not work for [`Clip::SoundSet`].
+    ///
+    /// # Errors
+    /// Will return an error if song is a [`Clip::SoundSet`]
     pub fn to_tape(self, song: &Song) -> Result<json_types::Clip<'a>, Error> {
         match self {
             Self::SoundSet(_) => Err(anyhow!(
@@ -1356,6 +1363,9 @@ impl MotionClip<'_> {
     }
 
     /// The classifier path needs to be changed to include the /wiiu/ component
+    ///
+    /// # Errors
+    /// Will return an error if the platform is not supported or the path is broken
     pub fn fix_classifier_path(classifier_path: &str, platform: Platform) -> Result<String, Error> {
         // Classifier path does not include platform specifier
         let index = classifier_path

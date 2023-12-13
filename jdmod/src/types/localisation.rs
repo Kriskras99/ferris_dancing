@@ -50,6 +50,9 @@ impl Default for LocaleIdMap {
 
 impl LocaleIdMap {
     /// Map a new game id to a mod id
+    ///
+    /// # Panics
+    /// Will panic if the [`LocaleId`] already exists
     pub fn insert(&mut self, id_game: LocaleId, id_mod: LocaleId) {
         assert!(
             self.id_map.insert(id_game, id_mod).is_none(),
@@ -58,6 +61,9 @@ impl LocaleIdMap {
     }
 
     /// Get the right mod id for a game id
+    ///
+    /// # Errors
+    /// Will return an error if the [`LocaleId`] is not known
     pub fn get(&self, id_game: LocaleId) -> Result<LocaleId, Error> {
         self.id_map
             .get(&id_game)
@@ -80,6 +86,9 @@ pub struct Localisation<'a> {
 
 impl Localisation<'_> {
     /// Load all existing translations in the mod
+    ///
+    /// # Errors
+    /// Will error when parsing of a localisation files fails
     pub fn load(dir_tree: &DirectoryTree) -> Result<Self, Error> {
         let mut translations: HashMap<LocaleId, Translation<'_>> = HashMap::new();
         for (lang, file) in LANGUAGE_FILES {
@@ -125,7 +134,10 @@ impl Localisation<'_> {
     }
 
     /// Save all the translations
-    pub fn save(&self, dir_tree: &DirectoryTree) -> Result<(), Error> {
+    ///
+    /// # Errors
+    /// Will return an error if the IO fails
+    pub fn save(&self, dir_tree: &DirectoryTree) -> std::io::Result<()> {
         for (lang, file) in LANGUAGE_FILES {
             // Load all translations for this language in a new map
             let mut submap = HashMap::with_capacity(self.translations.capacity());
@@ -172,7 +184,10 @@ impl<'a> Localisation<'a> {
         {
             // There's a similar translation, that's just missing translations for specific languages
             // Merge and then return the existing id.
-            let id = self.reverse.remove(&found).unwrap();
+            let id = self
+                .reverse
+                .remove(&found)
+                .unwrap_or_else(|| unreachable!());
             let merged = found.merge(translation).unwrap_or_else(|_| unreachable!());
             self.reverse.insert(merged.clone(), id);
             self.translations.insert(id, merged);
@@ -245,6 +260,7 @@ impl Translation<'_> {
     }
 
     /// Get the translation for a `language`
+    #[allow(clippy::missing_panics_doc)]
     pub fn get(&self, language: Language) -> &'_ str {
         let index =
             usize::try_from(u32::from(language)).expect("Don't run this on a 16-bit machine!");
@@ -254,6 +270,9 @@ impl Translation<'_> {
 
 impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
     /// Merge two translations, rejecting if translations do not match
+    ///
+    /// # Errors
+    /// Will error if the translations don't overlap or don't match
     pub fn merge(self, other: Translation<'b>) -> Result<Translation<'c>, Error> {
         if self.is_empty() && other.is_empty() {
             // Both are empty
@@ -277,6 +296,9 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
     }
 
     /// Add a translation for `language`
+    ///
+    /// # Panics
+    /// Will panic if a added translation does not match the existing translation for the language
     pub fn add_translation<'d: 'a>(&mut self, language: Language, string: Cow<'d, str>) {
         // Ignore a translation if it's empty
         if !string.is_empty() {
@@ -306,7 +328,7 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
 /// Merges an empty and non-empty string.
 /// If both strings are empty or equal the original string will be returned
 ///
-/// # Error
+/// # Errors
 /// Will error if both strings are non-empty and are not the same
 #[inline]
 fn merge_string<'a: 'c, 'b: 'c, 'c>(

@@ -41,14 +41,17 @@ pub fn get_rgbcx() -> &'static Rgbcx {
     RGBCX.get_or_init(Rgbcx::default)
 }
 /// Get an instance of the encoder with the specified approximation mode.
-/// 
+///
 /// See [`Bc1ApproxMode`] for details
-/// 
+///
 /// # Panics
 /// Will panic if there already is a `Rgbcx` object initialised which does not match the approximation mode.
 pub fn get_rgbcx_with_bc1_approx_mode(bc1_approx_mode: Bc1ApproxMode) -> &'static Rgbcx {
     let rgbcx = RGBCX.get_or_init(|| Rgbcx::with_bc1_approx_mode(bc1_approx_mode));
-    assert!(rgbcx.approx_mode != bc1_approx_mode, "There is already a Rgbcx object initialised that does not match {bc1_approx_mode:?}");
+    assert!(
+        rgbcx.approx_mode != bc1_approx_mode,
+        "There is already a Rgbcx object initialised that does not match {bc1_approx_mode:?}"
+    );
     rgbcx
 }
 
@@ -84,7 +87,7 @@ impl Default for Rgbcx {
 
 impl Rgbcx {
     /// Initialize the Rgbcx encoder with the default approximation mode
-    /// 
+    ///
     /// This function is not thread-safe!
     #[must_use]
     fn new() -> Self {
@@ -95,7 +98,7 @@ impl Rgbcx {
     }
 
     /// Initialize the Rgbcx encoder with a approximation mode
-    /// 
+    ///
     /// This function is not thread-safe!
     #[must_use]
     fn with_bc1_approx_mode(bc1_approx_mode: Bc1ApproxMode) -> Self {
@@ -161,7 +164,7 @@ impl Rgbcx {
     /// This is the recommended function to use for BC1 encoding, becuase it configures the encoder for you in the best possible way (on average).
     /// Note that the 3 color modes won't be used at all until level 5 or higher.
     /// No transparency supported, however if you set `use_transparent_texels_for_black` to true the encoder will use transparent selectors on very dark/black texels to reduce MSE.
-    /// 
+    ///
     /// # Panics
     /// Will panic if `level` is larger than [`MAX_LEVEL`]
     pub fn encode_bc1_block_mut(
@@ -251,7 +254,7 @@ impl Rgbcx {
     /// Encodes a 4x4 block of RGBA pixels to BC3 format.
     ///
     /// This is the recommended function, which accepts a level parameter.
-    /// 
+    ///
     /// # Panics
     /// Will panic if `level` is larger than [`MAX_LEVEL`]
     pub fn encode_bc3_block_mut(&self, pixels: &[u8; 64], encoded: &mut [u8; 16], level: u8) {

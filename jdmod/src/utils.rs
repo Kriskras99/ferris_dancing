@@ -15,6 +15,9 @@ use ubiart_toolkit::{
 };
 
 /// Cook a path so it stars with 'cache/itf_cooked/...'
+///
+/// # Errors
+/// Will return an error if it's unknown how the path or the platform should be cooked
 pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
     let path = path.strip_prefix('/').unwrap_or(path);
 
@@ -67,6 +70,13 @@ macro_rules! regex {
 }
 
 /// Decode a XTX texture into an image buffer
+///
+/// # Errors
+/// Will return an error if the parsing fails
+/// Will return an error if the decoded image doesn't fit into memory
+///
+/// # Panics
+/// Will panic if there is more than one image in the texture
 pub fn decode_texture(src: &[u8]) -> Result<RgbaImage, Error> {
     let png = cooked::png::parse(src)?;
 
@@ -129,6 +139,9 @@ pub fn decode_texture(src: &[u8]) -> Result<RgbaImage, Error> {
 ///
 /// If the file has no alpha (alpha is all 1), then the BC1 codec is used.
 /// Otherwise the BC3 codec is used.
+///
+/// # Errors
+/// Will return an error if any IO or parsing fails
 pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
     // let mipmaps = false;
     let img = image::io::Reader::open(image_path)
@@ -174,7 +187,7 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
         let image = Image {
             header: TextureHeader {
                 // TODO! Check these values!
-                image_size: u64::try_from(data.len()).unwrap(),
+                image_size: u64::try_from(data.len())?,
                 alignment: 0x200,
                 width,
                 height,
@@ -182,7 +195,7 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
                 target: 1,
                 format: cooked::xtx::Format::DXT1,
                 mipmaps: 1,
-                slice_size: u32::try_from(data.len()).unwrap(),
+                slice_size: u32::try_from(data.len())?,
                 mipmap_offsets: [0; 0x10],
                 unk1: 0x4_0000_0000,
             },
@@ -234,7 +247,7 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
         let image = Image {
             header: TextureHeader {
                 // TODO! Check these values!
-                image_size: u64::try_from(data.len()).unwrap(),
+                image_size: u64::try_from(data.len())?,
                 alignment: 0x200,
                 width: u32::from(width),
                 height: u32::from(height),
@@ -242,7 +255,7 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
                 target: 1,
                 format: cooked::xtx::Format::DXT5,
                 mipmaps: 1,
-                slice_size: u32::try_from(data.len()).unwrap(),
+                slice_size: u32::try_from(data.len())?,
                 mipmap_offsets: [0; 0x10],
                 unk1: 0x4_0000_0000,
             },
@@ -255,6 +268,9 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
 }
 
 /// Efficient implementation of `(_, [needle]) = regex.captures(haystack).extract()` for `Cow<str>`
+///
+/// # Errors
+/// Returns an error if the needle is not in the haystack
 pub fn cow_regex_single_capture<'a>(
     regex: &Regex,
     haystack: Cow<'a, str>,

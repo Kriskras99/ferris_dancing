@@ -3,7 +3,7 @@
 //! However, these are not the same skins as in earlier games
 use std::borrow::Cow;
 
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, bail, Error};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types::PortraitBorderDesc;
 
@@ -88,18 +88,19 @@ pub struct PortraitBorder<'a> {
 
 impl<'a> PortraitBorder<'a> {
     /// Convert to the mod representation
+    ///
+    /// # Errors
+    /// Will error if `desc` has invalid values
     pub fn from_portrait_border_desc(
         desc: &PortraitBorderDesc<'a>,
         name: &str,
     ) -> Result<Self, Error> {
-        assert!(
-            !desc.background_phone_path.is_empty(),
-            "Background phone image does not exist!"
-        );
-        assert!(
-            !desc.background_texture_path.is_empty(),
-            "Background texture does not exist!"
-        );
+        if desc.background_phone_path.is_empty() {
+            bail!("Background phone image dooes not exist!");
+        }
+        if desc.background_texture_path.is_empty() {
+            bail!("Background texture does not exist!");
+        };
         Ok(Self {
             background_texture_path: Cow::Owned(format!("{name}/background_texture.png")),
             foreground_texture_path: if desc.foreground_texture_path.is_empty() {
