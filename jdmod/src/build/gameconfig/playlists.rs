@@ -117,7 +117,7 @@ fn build_carousel(
         act: Cow::Borrowed("ui_carousel"),
         isc: Cow::Borrowed("grp_row"),
         title: Cow::Borrowed("Themed"),
-        title_id: 0x39ab, // 'Themed Playlists'
+        title_id: 0x39AB, // 'Themed Playlists'
         requests,
         filters: Vec::new(),
     };
@@ -142,8 +142,8 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
             filename: Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
         },
         unk1: 0,
-        unk2: 0x3f80_0000,
-        unk2_5: 0x3f80_0000,
+        unk2: 0x3F80_0000,
+        unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component {
             the_type: cooked::act::ComponentType::MaterialGraphicComponent,
             data: cooked::act::ComponentData::MaterialGraphicComponent(Box::new(

@@ -5,9 +5,8 @@ use std::{borrow::Cow, collections::HashMap};
 use anyhow::Error;
 use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
 
-use crate::{build::BuildFiles, types::song::Tag};
-
 use super::SongExportState;
+use crate::{build::BuildFiles, types::song::Tag};
 
 /// Builds the songdesc files
 pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
@@ -79,8 +78,8 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
             filename: Cow::Borrowed("songdesc.tpl"),
         },
         unk1: 0,
-        unk2: 0x3f80_0000,
-        unk2_5: 0x3f80_0000,
+        unk2: 0x3F80_0000,
+        unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component {
             the_type: cooked::act::ComponentType::SongDescComponent,
             data: cooked::act::ComponentData::None,

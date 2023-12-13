@@ -6,9 +6,8 @@ use std::{
     path::Path,
 };
 
-use byteorder::{BigEndian, WriteBytesExt};
-
 use anyhow::Error;
+use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{SecureFat, MAGIC, UNK1};
 

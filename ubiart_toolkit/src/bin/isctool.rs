@@ -1,7 +1,6 @@
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
-
 use ubiart_toolkit::{cooked, utils::bytes::read_to_vec};
 
 #[derive(Parser)]

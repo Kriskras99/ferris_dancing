@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Error};
 use clap::Args;
-
 use dotstar_toolkit_utils::vfs::symlinkfs::SymlinkFs;
 use dotstar_toolkit_utils::vfs::vecfs::VecFs;
 use dotstar_toolkit_utils::vfs::{layeredfs::OverlayFs, native::Native};

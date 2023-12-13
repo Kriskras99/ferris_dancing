@@ -4,13 +4,12 @@ use std::{fs, path::Path};
 use anyhow::{anyhow, Error};
 use byteorder::BigEndian;
 use cipher::{generic_array::GenericArray, BlockDecryptMut, KeyIvInit};
-use memmap2::Mmap;
-use yoke::Yoke;
-
 use dotstar_toolkit_utils::{
     bytes::{read_slice_at, read_u16_at, read_u32_at, read_u64_at, read_u8_at},
     testing::test,
 };
+use memmap2::Mmap;
+use yoke::Yoke;
 
 use super::types::{
     AccessRights, Aes128CbcDec, Content, ContentMetadata, ContentType, InstallableArchive, Region,
@@ -127,7 +126,7 @@ fn parse_installable<'a>(
 
 /// Wii Common Key, used to decrypt the title key
 const COMMON_KEY: [u8; 0x10] = [
-    0xeb, 0xe4, 0x2a, 0x22, 0x5e, 0x85, 0x93, 0xe4, 0x48, 0xd9, 0xc5, 0x45, 0x73, 0x81, 0xaa, 0xf7,
+    0xEB, 0xE4, 0x2A, 0x22, 0x5E, 0x85, 0x93, 0xE4, 0x48, 0xD9, 0xC5, 0x45, 0x73, 0x81, 0xAA, 0xF7,
 ];
 
 /// Parse the ticket metadata
@@ -322,8 +321,8 @@ mod tests {
         assert_eq!(round_to_boundary(0x1), 0x40);
         assert_eq!(round_to_boundary(0x40), 0x40);
         assert_eq!(round_to_boundary(0x41), 0x80);
-        assert_eq!(round_to_boundary(0xa00), 0xa00);
-        assert_eq!(round_to_boundary(0x2a4), 0x2c0);
+        assert_eq!(round_to_boundary(0xA00), 0xA00);
+        assert_eq!(round_to_boundary(0x2A4), 0x2C0);
         assert_eq!(round_to_boundary(576), 576);
     }
 }

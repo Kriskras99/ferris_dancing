@@ -4,13 +4,12 @@ use std::{fs, path::Path};
 
 use anyhow::Error;
 use byteorder::BigEndian;
-use memmap2::Mmap;
-use yoke::Yoke;
-
 use dotstar_toolkit_utils::{
     bytes::{read_null_terminated_string_at, read_slice_at, read_u24_at, read_u32_at, read_u8_at},
     testing::test,
 };
+use memmap2::Mmap;
+use yoke::Yoke;
 
 use super::types::{Node, NodeType, U8Archive, U8ArchiveOwned, UnparsedNode};
 

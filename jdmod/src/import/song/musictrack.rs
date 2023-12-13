@@ -5,9 +5,8 @@ use std::{fs::File, io::Write};
 use anyhow::Error;
 use ubiart_toolkit::cooked;
 
-use crate::{types::song::MusicTrack, utils::cook_path};
-
 use super::SongImportState;
+use crate::{types::song::MusicTrack, utils::cook_path};
 
 /// Imports the main sequence and audio file
 pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String, Error> {

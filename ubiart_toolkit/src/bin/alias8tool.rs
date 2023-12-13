@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-
 use ubiart_toolkit::{alias8, utils::bytes::read_to_vec};
 
 #[derive(Parser)]

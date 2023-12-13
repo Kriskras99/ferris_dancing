@@ -3,9 +3,8 @@
 use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Context, Error};
-use ubiart_toolkit::cooked::{self, act::ComponentType};
-
 use dotstar_toolkit_utils::testing::test;
+use ubiart_toolkit::cooked::{self, act::ComponentType};
 
 use crate::{
     types::{gameconfig::playlists::Playlist, ImportState},

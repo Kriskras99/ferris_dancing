@@ -6,7 +6,6 @@ use std::{
 
 use anyhow::{anyhow, Error};
 use clap::Parser;
-
 use image::{imageops, ImageBuffer, ImageOutputFormat, Rgba};
 use serde::Serialize;
 use ubiart_toolkit::{

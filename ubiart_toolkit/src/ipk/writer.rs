@@ -10,9 +10,8 @@ use dotstar_toolkit_utils::testing::test;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use flate2::{write::ZlibEncoder, Compression};
 
-use crate::utils::{self, bytes::WriteBytesExtUbiArt, Game, GamePlatform, SplitPath};
-
 use super::{Platform, MAGIC};
+use crate::utils::{self, bytes::WriteBytesExtUbiArt, Game, GamePlatform, SplitPath};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
@@ -118,7 +117,7 @@ pub fn write<W: Write + Seek>(
 
     // Add the static metadata size for every file plus the length of the path
     for path in files {
-        base_offset += 0x2c + path.len(); // metadata size + path length
+        base_offset += 0x2C + path.len(); // metadata size + path length
     }
 
     // Start writing the header

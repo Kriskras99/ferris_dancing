@@ -10,7 +10,6 @@ use anyhow::{anyhow, Error};
 use hash32::{Hasher, Murmur3Hasher};
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
-
 use ubiart_toolkit::json_types::BezierCurveFloatValue;
 use ubiart_toolkit::utils::Platform;
 use ubiart_toolkit::{json_types, utils::LocaleId};

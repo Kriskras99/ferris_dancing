@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 
 use anyhow::anyhow;
-use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
-
 use dotstar_toolkit_utils::testing::test;
+use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
@@ -2790,9 +2789,9 @@ macro_rules! deserialize_variant {
 pub use wrapped_actors::*;
 mod wrapped_actors {
     #![allow(clippy::wildcard_imports, clippy::module_name_repetitions)]
-    use super::*;
-
     use anyhow::anyhow;
+
+    use super::*;
 
     #[derive(Debug, Clone, Serialize)]
     #[serde(tag = "@NAME", deny_unknown_fields)]

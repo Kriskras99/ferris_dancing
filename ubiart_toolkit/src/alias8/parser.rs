@@ -1,13 +1,11 @@
 //! Contains the parser implementation
 
-use byteorder::BigEndian;
-
 use anyhow::Error;
+use byteorder::BigEndian;
 use dotstar_toolkit_utils::testing::{test, test_any};
 
-use crate::utils::bytes::{read_path_at, read_string_at, read_u16_at, read_u32_at};
-
 use super::types::{Alias, Alias8};
+use crate::utils::bytes::{read_path_at, read_string_at, read_u16_at, read_u32_at};
 
 /// Parse an .alias8 file
 ///

@@ -8,15 +8,14 @@ use dotstar_toolkit_utils::testing::TestResult;
 use dotstar_toolkit_utils::testing::{test, test_any};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
+use super::{
+    types::Platform, Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR,
+    UNK1, UNK2, UNK3, UNK6,
+};
 use crate::utils::{
     self,
     bytes::{read_string_at, read_u32_at, read_u64_at},
     string_id_2, Game, GamePlatform, PathId, SplitPath,
-};
-
-use super::{
-    types::Platform, Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR,
-    UNK1, UNK2, UNK3, UNK6,
 };
 
 /// Parse a bytearray-like source as a IPK bundle
@@ -60,7 +59,7 @@ pub fn parse(src: &[u8], lax: bool) -> Result<Bundle, anyhow::Error> {
         (Err(_), true) => GamePlatform {
             game: Game::JustDance2022,
             platform: utils::Platform::Nx,
-            id: 0x1ddb_2268,
+            id: 0x1DDB_2268,
         },
         (err @ Err(_), false) => err?,
     };

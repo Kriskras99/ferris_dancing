@@ -2,11 +2,10 @@
 
 use anyhow::Error;
 use byteorder::BigEndian;
-
-use crate::utils::bytes::{read_null_terminated_string_at, read_slice_at, read_u32_at};
 use dotstar_toolkit_utils::testing::{test, test_le};
 
 use super::MovementSpaceMove;
+use crate::utils::bytes::{read_null_terminated_string_at, read_slice_at, read_u32_at};
 
 /// Parse a MovementSpaceMove file
 ///
@@ -40,7 +39,7 @@ pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, Error> {
     let unk7 = read_u32_at::<BigEndian>(src, &mut position)?;
 
     let unk8 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk8, &0x211c_0000)?;
+    test(&unk8, &0x211C_0000)?;
     let unk9 = read_u32_at::<BigEndian>(src, &mut position)?;
     test(&unk9, &0x0)?;
     let unk10 = read_u32_at::<BigEndian>(src, &mut position)?;

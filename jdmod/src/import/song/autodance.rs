@@ -5,9 +5,8 @@ use std::{borrow::Cow, fs::File, io::Write};
 use anyhow::Error;
 use ubiart_toolkit::cooked;
 
-use crate::{types::song::Autodance, utils::cook_path};
-
 use super::SongImportState;
+use crate::{types::song::Autodance, utils::cook_path};
 
 /// Imports the autodance settings and preview audio file
 pub fn import(sis: &SongImportState<'_>, autodance_path: &str) -> Result<(), Error> {

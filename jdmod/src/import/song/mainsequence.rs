@@ -5,12 +5,11 @@ use std::{borrow::Cow, collections::BinaryHeap, fs::File, io::Write};
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, json_types};
 
+use super::SongImportState;
 use crate::{
     types::song::{Clip, SoundSetClip, Timeline},
     utils::cook_path,
 };
-
-use super::SongImportState;
 
 /// Imports the mainsequence and files referenced in it
 pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), Error> {

@@ -3,9 +3,8 @@ use std::{borrow::Cow, collections::HashMap};
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 
-use crate::utils::LocaleId;
-
 use super::{AutoDanceFxDesc, DifficultyColors, Empty, ObjectiveDesc1819, PlaybackEvent};
+use crate::utils::LocaleId;
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]

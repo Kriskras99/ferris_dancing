@@ -8,9 +8,8 @@ use ubiart_toolkit::{
     utils::LocaleId,
 };
 
-use crate::types::localisation::Localisation;
-
 use super::{BuildFiles, BuildState};
+use crate::types::localisation::Localisation;
 
 /// The .loc8 files in the game
 const LOC8_FILES: &[(Language, &str)] = &[

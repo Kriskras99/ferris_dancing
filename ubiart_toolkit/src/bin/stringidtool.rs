@@ -1,5 +1,4 @@
 use clap::Parser;
-
 use ubiart_toolkit::utils::string_id;
 
 #[derive(Parser)]

@@ -5,12 +5,11 @@ use std::{collections::BinaryHeap, fs::File, io::Write};
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, json_types};
 
+use super::{montage, SongImportState};
 use crate::{
     types::song::{Clip, MotionClip, PictogramClip, Timeline},
     utils::{cook_path, decode_texture},
 };
-
-use super::{montage, SongImportState};
 
 /// Imports the dance timeline, pictos, and classifiers
 pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<(), Error> {

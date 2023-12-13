@@ -6,9 +6,8 @@ use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 use yoke::Yoke;
 
-use crate::utils::path_id;
-
 use super::IpkFile;
+use crate::utils::path_id;
 
 pub struct VfsIpkFilesystem<'f> {
     ipk: Yoke<super::Bundle<'static>, VirtualFile<'f>>,

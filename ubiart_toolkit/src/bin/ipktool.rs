@@ -7,7 +7,6 @@ use std::{
 
 use anyhow::Error;
 use clap::Parser;
-
 use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
 use memmap2::Mmap;
 use ubiart_toolkit::{
@@ -165,9 +164,9 @@ pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), anyhow::Error
     let file = File::create(destination)?;
     ipk::write(
         file,
-        GamePlatform::try_from(0x1ddb_2268)?,
-        0x937d0,
-        0x4fd39,
+        GamePlatform::try_from(0x1DDB_2268)?,
+        0x937D0,
+        0x4FD39,
         ipk::Options {
             compression: ipk::CompressionEffort::Best,
         },

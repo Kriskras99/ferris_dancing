@@ -49,7 +49,7 @@ pub trait WriteBytesExtUbiArt: std::io::Write {
         if path.is_empty() {
             self.write_u32::<T>(0)?; // filename length
             self.write_u32::<T>(0)?; // directory length
-            self.write_u32::<T>(0xffff_ffff)?; // crc
+            self.write_u32::<T>(0xFFFF_FFFF)?; // crc
         } else {
             self.write_string::<T>(&path.filename)?;
             self.write_string::<T>(&path.path)?;

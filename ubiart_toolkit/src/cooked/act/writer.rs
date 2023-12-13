@@ -6,7 +6,7 @@ use std::{
 use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
-use super::{Actor, MaterialGraphicComponent, PleoComponent, ComponentData};
+use super::{Actor, ComponentData, MaterialGraphicComponent, PleoComponent};
 use crate::utils::bytes::WriteBytesExtUbiArt;
 
 /// Write the `Actor` to the writer
@@ -23,7 +23,7 @@ pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), Error
     writer.write_u64::<BigEndian>(0x1_0000_0000)?;
     writer.write_u32::<BigEndian>(0)?;
     writer.write_u64::<BigEndian>(0)?;
-    writer.write_u64::<BigEndian>(0xffff_ffff)?;
+    writer.write_u64::<BigEndian>(0xFFFF_FFFF)?;
     writer.write_u32::<BigEndian>(0)?;
     writer.write_path::<BigEndian>(&actor.tpl)?;
     writer.write_u32::<BigEndian>(0)?;
@@ -67,12 +67,12 @@ fn write_material_graphic_component<W: Write + Seek>(
     is_pleo: bool,
 ) -> Result<(), Error> {
     for _ in 0..3 {
-        writer.write_u32::<BigEndian>(0x3f80_0000)?;
+        writer.write_u32::<BigEndian>(0x3F80_0000)?;
     }
     writer.write_u32::<BigEndian>(mgc.unk11_5)?;
     for _ in 0..2 {
         if is_pleo {
-            writer.write_u64::<BigEndian>(0xffff_ffff)?;
+            writer.write_u64::<BigEndian>(0xFFFF_FFFF)?;
         } else {
             writer.write_u64::<BigEndian>(0x0)?;
         }
@@ -93,12 +93,12 @@ fn write_material_graphic_component<W: Write + Seek>(
         writer.write_u64::<BigEndian>(0)?;
     }
     writer.write_u32::<BigEndian>(0)?;
-    writer.write_u32::<BigEndian>(0x3f80_0000)?;
+    writer.write_u32::<BigEndian>(0x3F80_0000)?;
     writer.write_u64::<BigEndian>(0xFFFF_FFFF_FFFF_FFFF)?;
     for _ in 0..3 {
         writer.write_u32::<BigEndian>(0)?;
     }
-    writer.write_u32::<BigEndian>(0x3f80_0000)?;
+    writer.write_u32::<BigEndian>(0x3F80_0000)?;
     writer.write_u64::<BigEndian>(0)?;
     writer.write_u32::<BigEndian>(mgc.unk26)?;
     if is_pleo {

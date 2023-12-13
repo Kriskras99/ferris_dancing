@@ -4,12 +4,11 @@ use anyhow::Error;
 use byteorder::BigEndian;
 use dotstar_toolkit_utils::testing::{test, test_any};
 
+use super::Png;
 use crate::{
     cooked::xtx,
     utils::bytes::{read_u16_at, read_u32_at, read_u64_at},
 };
-
-use super::Png;
 
 /// Parse a .png.ckd file
 ///
@@ -22,7 +21,7 @@ pub fn parse(src: &[u8]) -> Result<Png, Error> {
     test(&magic, &0x9_5445_5800)?;
 
     let header_size = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&header_size, &0x2c)?;
+    test(&header_size, &0x2C)?;
 
     let unk2 = read_u32_at::<BigEndian>(src, &mut position)?;
 
@@ -53,7 +52,7 @@ pub fn parse(src: &[u8]) -> Result<Png, Error> {
     let _unk11 = read_u16_at::<BigEndian>(src, &mut position)?;
 
     // Start of XTX header (0x2C)
-    let xtx = xtx::parse(&src[0x2c..])?;
+    let xtx = xtx::parse(&src[0x2C..])?;
 
     if xtx.images.len() > 1 {
         println!("Multiple XTX images!");

@@ -3,9 +3,8 @@ use std::io::{Cursor, Write};
 use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
-use crate::cooked::xtx;
-
 use super::Png;
+use crate::cooked::xtx;
 
 /// Create the cooked PNG file in a newly allocated `Vec`
 ///

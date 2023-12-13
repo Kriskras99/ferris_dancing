@@ -13,9 +13,8 @@ use ubiart_toolkit::{
     utils::PathId,
 };
 
-use crate::{build::BuildFiles, types::Config};
-
 use super::FilesToAdd;
+use crate::{build::BuildFiles, types::Config};
 
 /// Maximum file size for FAT32
 const MAX_BUNDLE_SIZE_FAT32: u64 = 4_294_967_295;

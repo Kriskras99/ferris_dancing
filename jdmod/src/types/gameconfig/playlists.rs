@@ -4,7 +4,6 @@ use std::{borrow::Cow, path::Path};
 
 use anyhow::{anyhow, Error};
 use serde::{Deserialize, Serialize};
-
 use ubiart_toolkit::json_types;
 
 use crate::types::{localisation::LocaleId, ImportState};
