@@ -29,6 +29,8 @@ pub fn main(data: &Check) -> Result<(), Error> {
 
 /// Checks which songs are in the mod and which ones are missing
 ///
+/// Maybe host a file on Github as the parsing is finicky, and some songs have multiple codenames
+///
 /// TODO: Also check song correctness (missing files)
 pub fn check(_dir_tree: DirectoryTree) -> Result<(), Error> {
     let mediawiki = MediaWiki::new("justdance.fandom.com");
