@@ -10,7 +10,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::{test, TestResult};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types;
 
@@ -1095,7 +1095,10 @@ impl<'a> ObjectiveType<'a> {
                 }
             },
             json_types::ObjectiveDesc1819::MinStarsReachedSongCount(data) => {
-                assert!(data.objective_type == 18, "Objective type is not 18");
+                if data.objective_type != 18 {
+                    println!("Warning!: ObjectiveDesc1819::MinStarsReachedSongCount does not have objective type 18");
+                    println!("{data:?}");
+                }
                 components.push(Component {
                     c_type: ComponentType::MapLaunchLocationRequirement(
                         MapLaunchLocationRequirement {
@@ -1129,7 +1132,10 @@ impl<'a> ObjectiveType<'a> {
                 )
             }
             json_types::ObjectiveDesc1819::PlaySpecificMap(data) => {
-                assert!(data.objective_type == 10, "Objective type is not 10!");
+                if data.objective_type != 10 {
+                    println!("Warning!: ObjectiveDesc1819::PlaySpecificMap does not have objective type 10");
+                    println!("{data:?}");
+                }
                 let acceptable_map_names = if data.map_name.is_empty() {
                     Vec::new()
                 } else {
@@ -1167,7 +1173,10 @@ impl<'a> ObjectiveType<'a> {
                 )
             }
             json_types::ObjectiveDesc1819::GatherStarsWDF(data) => {
-                assert!(data.objective_type == 0, "Objective type is not 0!");
+                if data.objective_type != 0 {
+                    println!("Warning!: ObjectiveDesc1819::GatherStarsWDF does not have objective type 0");
+                    println!("{data:?}");
+                }
                 components.push(Component {
                     c_type: ComponentType::MapLaunchLocationRequirement(
                         MapLaunchLocationRequirement {
@@ -1197,7 +1206,10 @@ impl<'a> ObjectiveType<'a> {
                 )
             }
             json_types::ObjectiveDesc1819::SweatSongCount(data) => {
-                assert!(data.objective_type == 11, "Objective type is not 11");
+                if data.objective_type != 11 {
+                    println!("Warning!: ObjectiveDesc1819::SweatSongCount does not have objective type 11");
+                    println!("{data:?}");
+                }
                 components.push(Component {
                     c_type: ComponentType::MapLaunchLocationRequirement(
                         MapLaunchLocationRequirement {
@@ -1227,7 +1239,12 @@ impl<'a> ObjectiveType<'a> {
                 )
             }
             json_types::ObjectiveDesc1819::WDFSongCount(data) => {
-                assert!(data.objective_type == 11, "Objective type is not 11");
+                if data.objective_type != 11 {
+                    println!(
+                        "Warning!: ObjectiveDesc1819::WDFSongCount does not have objective type 11"
+                    );
+                    println!("{data:?}");
+                }
                 components.push(Component {
                     c_type: ComponentType::MapLaunchLocationRequirement(
                         MapLaunchLocationRequirement {
@@ -1258,7 +1275,10 @@ impl<'a> ObjectiveType<'a> {
             }
             json_types::ObjectiveDesc1819::RecommendSongCount(data) => {
                 // Recommend songs don't exist anymore as objective type, so changed to quickplay songs
-                assert!(data.objective_type == 19, "Objective type is not 19");
+                if data.objective_type != 19 {
+                    println!("Warning!: ObjectiveDesc1819::RecommendSongCount does not have objective type 19");
+                    println!("{data:?}");
+                }
                 let components = vec![Component {
                     c_type: ComponentType::MapLaunchLocationRequirement(
                         MapLaunchLocationRequirement {
@@ -1278,7 +1298,10 @@ impl<'a> ObjectiveType<'a> {
             }
             json_types::ObjectiveDesc1819::ClassicTournamentRank(data) => {
                 // Classic Tournament doesn't exist anymore so map to regular rank
-                assert!(data.objective_type == 54, "Objective type is not 54");
+                if data.objective_type != 54 {
+                    println!("Warning!: ObjectiveDesc1819::ClassicTournamentRank does not have objective type 54");
+                    println!("{data:?}");
+                }
                 (
                     Self::ReachRankX(ReachRankX {
                         rank_to_reach: data.minimum_value,
@@ -1503,6 +1526,9 @@ pub struct Component<'a> {
 
 impl<'a> Component<'a> {
     /// Convert from UbiArt representation
+    ///
+    /// # Errors
+    /// Will error if the component has invalid values
     pub fn from_component(
         component: &json_types::ObjectiveDescriptorComponent<'a>,
         locale_id_map: &LocaleIdMap,
@@ -1570,13 +1596,18 @@ impl<'a> Component<'a> {
                         acceptable_categories,
                     })
                 } else if data.only_map_last_move {
-                    assert!(
-                        (data.exact_moves_count == 1 && data.min_moves_count == u32::MAX)
-                            || (data.exact_moves_count == u32::MAX && data.min_moves_count == 1),
-                        "Exact/Min moves count have unexpected value! {} {}",
-                        data.exact_moves_count,
-                        data.min_moves_count
-                    );
+                    TestResult::or(
+                        test(&data.exact_moves_count, &1)
+                            .and(test(&data.min_moves_count, &u32::MAX)),
+                        test(&data.exact_moves_count, &u32::MAX)
+                            .and(test(&data.min_moves_count, &1)),
+                    )
+                    .with_context(|| {
+                        format!(
+                            "Exact/Min moves count have unexpected value! {} {}",
+                            data.exact_moves_count, data.min_moves_count
+                        )
+                    })?;
                     test(&data.max_moves_count, &u32::MAX)?;
                     test(&data.all_map_moves_count, &false)?;
                     test(&data.moves_in_a_row, &false)?;

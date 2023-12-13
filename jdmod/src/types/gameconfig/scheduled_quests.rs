@@ -63,6 +63,9 @@ pub struct QuestDescription<'a> {
 static mut QUEST_ID: AtomicU32 = AtomicU32::new(1);
 
 /// Generate a new id for a quest
+///
+/// # Panics
+/// Will panic if if incrementing the id would overflow
 fn generate_quest_id() -> u32 {
     // SAFETY: The atomic u16 will make sure every call gets a different value
     let id = unsafe { QUEST_ID.fetch_add(1, Ordering::SeqCst) };
@@ -102,6 +105,9 @@ impl<'a> From<QuestDescription<'a>> for json_types::ScheduledQuestDesc<'a> {
 
 impl<'a> QuestDescription<'a> {
     /// Convert an old quest description into the modern format
+    ///
+    /// # Errors
+    /// Will error if the conversion of the objective fails
     pub fn from_scheduled_quest_desc_1819(
         description: json_types::ScheduledQuestDesc1819<'a>,
         objectives: &mut Objectives<'a>,

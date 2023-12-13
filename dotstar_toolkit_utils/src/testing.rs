@@ -19,6 +19,34 @@ pub enum TestResult {
 }
 
 impl TestResult {
+    /// Combine two tests, only fail if both tests fail
+    pub fn or(self, right: Self) -> Self {
+        match (self, right) {
+            (TestResult::Err(left), Self::Err(right)) => Self::Err(TestError::And {
+                left: Box::new(left),
+                right: Box::new(right),
+            }),
+            _ => Self::Ok,
+        }
+    }
+
+    /// Combine two tests, fail if any of the two fail
+    pub fn and(self, right: Self) -> Self {
+        match (self, right) {
+            (TestResult::Err(left), Self::Err(right)) => Self::Err(TestError::And {
+                left: Box::new(left),
+                right: Box::new(right),
+            }),
+            (TestResult::Err(left), _) => Self::Err(TestError::Or {
+                failed: Box::new(left),
+            }),
+            (_, TestResult::Err(right)) => Self::Err(TestError::Or {
+                failed: Box::new(right),
+            }),
+            _ => Self::Ok,
+        }
+    }
+
     /// Ignore any test failures
     pub fn lax(self, lax: bool) -> Self {
         if lax {
@@ -67,6 +95,12 @@ impl TestResult {
     pub const fn is_err(&self) -> bool {
         matches!(self, Self::Err(_))
     }
+
+    /// Is this TestResult not an error
+    #[must_use]
+    pub const fn is_ok(&self) -> bool {
+        matches!(self, Self::Ok)
+    }
 }
 
 impl From<TestResult> for Result<(), TestError> {
@@ -105,7 +139,7 @@ impl Try for TestResult {
 #[derive(Error, Debug)]
 pub enum TestError {
     /// TestError with context
-    #[error("{source:?}\nContext: {context}")]
+    #[error("{source:?}\n    Context: {context}")]
     Context {
         /// The original error
         source: Box<Self>,
@@ -143,6 +177,20 @@ pub enum TestError {
         left: String,
         /// Right value
         right: String,
+    },
+    /// Both tests failed
+    #[error("Both tests failed:\n    {left:?}\n    {right:?}")]
+    And {
+        /// The original left result
+        left: Box<Self>,
+        /// The original right result
+        right: Box<Self>,
+    },
+    /// One of the tests failed
+    #[error("One of two tests failed:\n    {failed:?}")]
+    Or {
+        /// The original failed result
+        failed: Box<Self>,
     },
 }
 

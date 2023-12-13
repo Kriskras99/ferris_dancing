@@ -16,6 +16,9 @@ pub mod search_labels;
 static mut GACHA_ID: AtomicU16 = AtomicU16::new(0);
 
 /// Generate a new id for content that could go into a gacha machine
+///
+/// # Panics
+/// Will panic if incrementing the id would overflow
 pub fn generate_gacha_id() -> u16 {
     // SAFETY: The atomic u16 will make sure every call gets a different value
     let id = unsafe { GACHA_ID.fetch_add(1, Ordering::SeqCst) };

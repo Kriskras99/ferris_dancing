@@ -95,6 +95,9 @@ impl DirectoryTree {
     }
 
     /// Create the directory tree.
+    ///
+    /// # Errors
+    /// Will return an error if it fails to create any of the directories
     pub fn create_all(&self) -> std::io::Result<()> {
         std::fs::create_dir_all(&self.dir_root)
             .and_then(|()| std::fs::create_dir(&self.dir_root_mod))
