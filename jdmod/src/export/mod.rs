@@ -1,13 +1,11 @@
 //! # Export
 //! Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use std::path::PathBuf;
-
+use anyhow::{bail, Error};
 use clap::Args;
 
-use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::symlinkfs::SymlinkFs;
 use dotstar_toolkit_utils::vfs::vecfs::VecFs;
 use dotstar_toolkit_utils::vfs::{layeredfs::OverlayFs, native::Native};
@@ -49,19 +47,21 @@ pub fn main(cli: &Build) -> Result<(), anyhow::Error> {
 }
 
 /// Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
-pub fn export(dir_root: &Path, dir_export: &Path, patch: bool) -> Result<(), Error> {
+pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Error> {
     // Check the directory structure
-    let dir_tree = DirectoryTree::new(dir_root);
+    let dir_tree = DirectoryTree::new(source);
     if !dir_tree.exists() {
-        return Err(anyhow!(
-            "Mod directory does not exist or is missing vital subdirectories!"
-        ));
+        bail!("Mod directory does not exist or is missing vital subdirectories!");
     }
     // Create the export directory
-    if dir_export.exists() && dir_export.read_dir()?.next().is_some() {
-        return Err(anyhow!("Target directory exists and is not empty!"));
-    } else if !dir_export.exists() {
-        std::fs::create_dir(dir_export)?;
+    if destination.exists() {
+        if !destination.is_dir() {
+            bail!("Destination directory is not a directory! {destination:?}");
+        } else if destination.read_dir()?.next().is_some() {
+            bail!("Destination directory is not empty! {destination:?}");
+        }
+    } else {
+        std::fs::create_dir(destination)?;
     }
 
     // Load bundle_nx.ipk and patch_nx.ipk to use as a base
@@ -133,7 +133,7 @@ pub fn export(dir_root: &Path, dir_export: &Path, patch: bool) -> Result<(), Err
                     native_vfs,
                     &rx_files,
                     config,
-                    dir_export,
+                    destination,
                     patch,
                 )
                 .unwrap();
