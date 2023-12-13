@@ -5,9 +5,8 @@ use std::{borrow::Cow, fs::File, path::PathBuf};
 use anyhow::Error;
 use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
 
-use crate::{build::BuildFiles, types::song::Autodance};
-
 use super::SongExportState;
+use crate::{build::BuildFiles, types::song::Autodance};
 
 /// Build the autodance and preview audio file
 pub fn build(
@@ -69,8 +68,8 @@ fn autodance_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
             filename: Cow::Owned(format!("{lower_map_name}_autodance.tpl")),
         },
         unk1: 0,
-        unk2: 0x3f80_0000,
-        unk2_5: 0x3f80_0000,
+        unk2: 0x3F80_0000,
+        unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component {
             the_type: cooked::act::ComponentType::AutodanceComponent,
             data: cooked::act::ComponentData::None,

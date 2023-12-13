@@ -2,10 +2,9 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde_with::{serde_as, DisplayFromStr};
 
-use crate::utils::LocaleId;
-
 #[allow(clippy::wildcard_imports)]
 use super::*;
+use crate::utils::LocaleId;
 
 #[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug)]

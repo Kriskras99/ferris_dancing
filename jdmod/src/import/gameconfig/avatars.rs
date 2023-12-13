@@ -6,9 +6,8 @@
 use std::{borrow::Cow, collections::HashMap, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use ubiart_toolkit::{cooked, json_types::AvatarsObjectives};
-
 use dotstar_toolkit_utils::testing::test;
+use ubiart_toolkit::{cooked, json_types::AvatarsObjectives};
 
 use crate::{
     types::{

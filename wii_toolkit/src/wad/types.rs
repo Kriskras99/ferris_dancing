@@ -15,7 +15,7 @@ pub enum WadType {
     /// Used on the update partition of Wii discs
     Installable = 0x4973,
     /// Used for data stored on the SD card
-    Backup = 0x426b,
+    Backup = 0x426B,
 }
 
 impl TryFrom<u16> for WadType {
@@ -25,7 +25,7 @@ impl TryFrom<u16> for WadType {
         match value {
             0x4962 => Ok(Self::Bootable),
             0x4973 => Ok(Self::Installable),
-            0x426b => Ok(Self::Backup),
+            0x426B => Ok(Self::Backup),
             _ => Err(anyhow!("Unknown value for WAD type: {value:x}")),
         }
     }
@@ -313,4 +313,4 @@ pub const MAGIC_IB: [u8; 6] = [0x0, 0x0, 0x0, 0x20, 0x49, 0x62];
 /// MAGIC for installable WAD
 pub const MAGIC_IS: [u8; 6] = [0x0, 0x0, 0x0, 0x20, 0x49, 0x73];
 /// MAGIC for backup WAD
-pub const MAGIC_BK: [u8; 6] = [0x0, 0x0, 0x0, 0x70, 0x42, 0x6b];
+pub const MAGIC_BK: [u8; 6] = [0x0, 0x0, 0x0, 0x70, 0x42, 0x6B];

@@ -19,71 +19,71 @@ pub struct Actor<'a> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ComponentType {
     /// JD_AutoDanceComponent
-    AutodanceComponent = 0x67b8_bb77,
+    AutodanceComponent = 0x67B8_BB77,
     /// JD_BeatPulseComponent
-    BeatPulseComponent = 0x7184_37a8,
+    BeatPulseComponent = 0x7184_37A8,
     /// BoxInterpolatorComponent
-    BoxInterpolatorComponent = 0xf513_60da,
+    BoxInterpolatorComponent = 0xF513_60DA,
     /// CameraGraphicComponent
-    CameraGraphicComponent = 0xc760_4fa1,
+    CameraGraphicComponent = 0xC760_4FA1,
     /// ClearColorComponent
-    ClearColorComponent = 0xaebb_218b,
+    ClearColorComponent = 0xAEBB_218B,
     /// ConvertedTmlTape_Component
-    ConvertedTmlTapeComponent = 0xcd07_bb76,
+    ConvertedTmlTapeComponent = 0xCD07_BB76,
     /// JD_CreditsComponent
-    CreditsComponent = 0x342e_a4fc,
+    CreditsComponent = 0x342E_A4FC,
     /// JD_FixedCameraComponent
-    FixedCameraComponent = 0x3d5d_eba2,
+    FixedCameraComponent = 0x3D5D_EBA2,
     /// FXControllerComponent
-    FXControllerComponent = 0x8d4f_ffb6,
+    FXControllerComponent = 0x8D4F_FFB6,
     /// MasterTape
-    MasterTape = 0x677b_269b,
+    MasterTape = 0x677B_269B,
     /// MaterialGraphicComponent
-    MaterialGraphicComponent = 0x72b6_1fc5,
+    MaterialGraphicComponent = 0x72B6_1FC5,
     /// JD_Carousel
-    MusicTrackComponent = 0x27e4_80c0,
+    MusicTrackComponent = 0x27E4_80C0,
     /// JD_PictoComponent
-    PictoComponent = 0xc316_bf34,
+    PictoComponent = 0xC316_BF34,
     /// PleoComponent
-    PleoComponent = 0x1263_dad9,
+    PleoComponent = 0x1263_DAD9,
     /// PleoTextureGraphicComponent
-    PleoTextureGraphicComponent = 0x0579_e81b,
+    PleoTextureGraphicComponent = 0x0579_E81B,
     /// PropertyPatcher
-    PropertyPatcher = 0xf719_b524,
+    PropertyPatcher = 0xF719_B524,
     /// JD_RegistrationComponent
-    RegistrationComponent = 0xe0a2_4b6d,
+    RegistrationComponent = 0xE0A2_4B6D,
     /// SingleInstanceMesh3DComponent
-    SingleInstanceMesh3DComponent = 0x53e3_2af7,
+    SingleInstanceMesh3DComponent = 0x53E3_2AF7,
     /// JD_SongDatabaseComponent
-    SongDatabaseComponent = 0x4055_79fb,
+    SongDatabaseComponent = 0x4055_79FB,
     /// JD_SongDescComponent
-    SongDescComponent = 0xe07f_cc3f,
+    SongDescComponent = 0xE07F_CC3F,
     /// SoundComponent
-    SoundComponent = 0x7dd8_643c,
+    SoundComponent = 0x7DD8_643C,
     /// TapeCase_Component
-    TapeCaseComponent = 0x231f_27de,
+    TapeCaseComponent = 0x231F_27DE,
     /// TextureGraphicComponent
-    TextureGraphicComponent = 0x7b48_a9ae,
+    TextureGraphicComponent = 0x7B48_A9AE,
     /// UICarousel
-    UICarousel = 0x8782_fe60,
+    UICarousel = 0x8782_FE60,
     /// UITextBox
-    UITextBox = 0xd10c_beed,
+    UITextBox = 0xD10C_BEED,
     /// JD_UIWidgetGroupHUD_AutodanceRecorder
-    UIWdigetGroupHUDAutodanceRecorder = 0x9f87_350c,
+    UIWdigetGroupHUDAutodanceRecorder = 0x9F87_350C,
     /// JD_UIWidgetGroupHUD_Lyrics
-    UIWidgetGroupHUDLyrics = 0xf22c_9426,
+    UIWidgetGroupHUDLyrics = 0xF22C_9426,
     /// ViewportUIComponent
-    ViewportUIComponent = 0x6990_834c,
+    ViewportUIComponent = 0x6990_834C,
     /// JD_AvatarDescComponent
-    AvatarDescComponent = 0x1759_e29d,
+    AvatarDescComponent = 0x1759_E29D,
     /// JD_SkinDescComponent
-    SkinDescComponent = 0x84ea_ae82,
+    SkinDescComponent = 0x84EA_AE82,
     /// FxBankComponent
-    FxBankComponent = 0x966b_519d,
+    FxBankComponent = 0x966B_519D,
     /// BezierTreeComponent
-    BezierTreeComponent = 0x3236_cf4c,
+    BezierTreeComponent = 0x3236_CF4C,
     /// AFXPostProcessComponent
-    AFXPostProcessComponent = 0x2b34_9e69,
+    AFXPostProcessComponent = 0x2B34_9E69,
 }
 
 impl TryFrom<u32> for ComponentType {
@@ -91,39 +91,39 @@ impl TryFrom<u32> for ComponentType {
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
-            0x0579_e81b => Ok(Self::PleoTextureGraphicComponent),
-            0x1263_dad9 => Ok(Self::PleoComponent),
-            0x1759_e29d => Ok(Self::AvatarDescComponent),
-            0x231f_27de => Ok(Self::TapeCaseComponent),
-            0x27e4_80c0 => Ok(Self::MusicTrackComponent),
-            0x2b34_9e69 => Ok(Self::AFXPostProcessComponent),
-            0x3236_cf4c => Ok(Self::BezierTreeComponent),
-            0x342e_a4fc => Ok(Self::CreditsComponent),
-            0x3d5d_eba2 => Ok(Self::FixedCameraComponent),
-            0x4055_79fb => Ok(Self::SongDatabaseComponent),
-            0x53e3_2af7 => Ok(Self::SingleInstanceMesh3DComponent),
-            0x677b_269b => Ok(Self::MasterTape),
-            0x67b8_bb77 => Ok(Self::AutodanceComponent),
-            0x6990_834c => Ok(Self::ViewportUIComponent),
-            0x7184_37a8 => Ok(Self::BeatPulseComponent),
-            0x72b6_1fc5 => Ok(Self::MaterialGraphicComponent),
-            0x7b48_a9ae => Ok(Self::TextureGraphicComponent),
-            0x7dd8_643c => Ok(Self::SoundComponent),
-            0x84ea_ae82 => Ok(Self::SkinDescComponent),
-            0x8782_fe60 => Ok(Self::UICarousel),
-            0x8d4f_ffb6 => Ok(Self::FXControllerComponent),
-            0x966b_519d => Ok(Self::FxBankComponent),
-            0x9f87_350c => Ok(Self::UIWdigetGroupHUDAutodanceRecorder),
-            0xaebb_218b => Ok(Self::ClearColorComponent),
-            0xc316_bf34 => Ok(Self::PictoComponent),
-            0xc760_4fa1 => Ok(Self::CameraGraphicComponent),
-            0xcd07_bb76 => Ok(Self::ConvertedTmlTapeComponent),
-            0xd10c_beed => Ok(Self::UITextBox),
-            0xe07f_cc3f => Ok(Self::SongDescComponent),
-            0xe0a2_4b6d => Ok(Self::RegistrationComponent),
-            0xf22c_9426 => Ok(Self::UIWidgetGroupHUDLyrics),
-            0xf513_60da => Ok(Self::BoxInterpolatorComponent),
-            0xf719_b524 => Ok(Self::PropertyPatcher),
+            0x0579_E81B => Ok(Self::PleoTextureGraphicComponent),
+            0x1263_DAD9 => Ok(Self::PleoComponent),
+            0x1759_E29D => Ok(Self::AvatarDescComponent),
+            0x231F_27DE => Ok(Self::TapeCaseComponent),
+            0x27E4_80C0 => Ok(Self::MusicTrackComponent),
+            0x2B34_9E69 => Ok(Self::AFXPostProcessComponent),
+            0x3236_CF4C => Ok(Self::BezierTreeComponent),
+            0x342E_A4FC => Ok(Self::CreditsComponent),
+            0x3D5D_EBA2 => Ok(Self::FixedCameraComponent),
+            0x4055_79FB => Ok(Self::SongDatabaseComponent),
+            0x53E3_2AF7 => Ok(Self::SingleInstanceMesh3DComponent),
+            0x677B_269B => Ok(Self::MasterTape),
+            0x67B8_BB77 => Ok(Self::AutodanceComponent),
+            0x6990_834C => Ok(Self::ViewportUIComponent),
+            0x7184_37A8 => Ok(Self::BeatPulseComponent),
+            0x72B6_1FC5 => Ok(Self::MaterialGraphicComponent),
+            0x7B48_A9AE => Ok(Self::TextureGraphicComponent),
+            0x7DD8_643C => Ok(Self::SoundComponent),
+            0x84EA_AE82 => Ok(Self::SkinDescComponent),
+            0x8782_FE60 => Ok(Self::UICarousel),
+            0x8D4F_FFB6 => Ok(Self::FXControllerComponent),
+            0x966B_519D => Ok(Self::FxBankComponent),
+            0x9F87_350C => Ok(Self::UIWdigetGroupHUDAutodanceRecorder),
+            0xAEBB_218B => Ok(Self::ClearColorComponent),
+            0xC316_BF34 => Ok(Self::PictoComponent),
+            0xC760_4FA1 => Ok(Self::CameraGraphicComponent),
+            0xCD07_BB76 => Ok(Self::ConvertedTmlTapeComponent),
+            0xD10C_BEED => Ok(Self::UITextBox),
+            0xE07F_CC3F => Ok(Self::SongDescComponent),
+            0xE0A2_4B6D => Ok(Self::RegistrationComponent),
+            0xF22C_9426 => Ok(Self::UIWidgetGroupHUDLyrics),
+            0xF513_60DA => Ok(Self::BoxInterpolatorComponent),
+            0xF719_B524 => Ok(Self::PropertyPatcher),
             _ => Err(anyhow!(
                 "Found unexpected component type value: 0x{value:x}!"
             )),
@@ -205,7 +205,7 @@ impl Default for MaterialGraphicComponent<'static> {
     fn default() -> Self {
         Self {
             files: Default::default(),
-            unk11_5: 0x3f80_0000,
+            unk11_5: 0x3F80_0000,
             unk13: u32::MAX,
             unk14: 1,
             unk15: Default::default(),

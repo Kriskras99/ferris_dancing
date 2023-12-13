@@ -5,9 +5,8 @@ use std::{borrow::Cow, fs::File, path::PathBuf};
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, json_types};
 
-use crate::{build::BuildFiles, types::song::MusicTrack, utils::cook_path};
-
 use super::SongExportState;
+use crate::{build::BuildFiles, types::song::MusicTrack, utils::cook_path};
 
 /// Build the audio and musictrack
 pub fn build(

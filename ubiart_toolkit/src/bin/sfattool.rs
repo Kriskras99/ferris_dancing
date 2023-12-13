@@ -2,7 +2,6 @@ use std::{fs::File, path::PathBuf};
 
 use anyhow::{anyhow, Error};
 use clap::Parser;
-
 use memmap2::Mmap;
 use ubiart_toolkit::secure_fat;
 

@@ -5,13 +5,12 @@ use std::{borrow::Cow, fs::File, path::PathBuf};
 use anyhow::Error;
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
+use super::SongExportState;
 use crate::{
     build::BuildFiles,
     types::song::{MenuArt, MenuArtTexture},
     utils::encode_texture,
 };
-
-use super::SongExportState;
 
 /// Builds the menuart textures and phone images
 pub fn build(
@@ -125,8 +124,8 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
             filename: Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
         },
         unk1: 0,
-        unk2: 0x3f80_0000,
-        unk2_5: 0x3f80_0000,
+        unk2: 0x3F80_0000,
+        unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component {
             the_type: cooked::act::ComponentType::MaterialGraphicComponent,
             data: cooked::act::ComponentData::MaterialGraphicComponent(Box::new(

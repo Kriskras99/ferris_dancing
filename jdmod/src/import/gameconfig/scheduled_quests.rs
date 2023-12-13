@@ -8,6 +8,7 @@ use ubiart_toolkit::{
     json_types::{ScheduledQuestDesc1819, ScheduledQuestSetup},
 };
 
+use super::objectives::{load_objectives, save_objectives};
 use crate::{
     types::{
         gameconfig::scheduled_quests::{QuestDescription, ScheduledQuests},
@@ -15,8 +16,6 @@ use crate::{
     },
     utils::cook_path,
 };
-
-use super::objectives::{load_objectives, save_objectives};
 
 /// Import scheduled quests for Just Dance 2020-2022
 pub fn import_v20v22(

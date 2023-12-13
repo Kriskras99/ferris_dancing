@@ -26,7 +26,7 @@ pub fn import(
 
     // "Calculate" the width of the individual pictos
     let picto_width = match montage.width {
-        0xb90 => 0x2e4,
+        0xB90 => 0x2E4,
         0x800 | 0x1000 => 0x200,
         _ => panic!("Unknown width! {:x}", montage.width),
     };

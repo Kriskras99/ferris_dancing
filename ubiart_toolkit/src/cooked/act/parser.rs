@@ -4,16 +4,15 @@ use std::borrow::Cow;
 
 use anyhow::{anyhow, Context, Error};
 use byteorder::BigEndian;
-
-use crate::utils::{
-    bytes::{read_path_at, read_string_at, read_u32_at, read_u64_at},
-    Game, SplitPath,
-};
 use dotstar_toolkit_utils::testing::{test, test_any};
 
 use super::{
-    Actor, CreditsComponent, MaterialGraphicComponent, PleoComponent, Component, ComponentData,
-    ComponentType,
+    Actor, Component, ComponentData, ComponentType, CreditsComponent, MaterialGraphicComponent,
+    PleoComponent,
+};
+use crate::utils::{
+    bytes::{read_path_at, read_string_at, read_u32_at, read_u64_at},
+    Game, SplitPath,
 };
 
 /// Parse a bytearray-like source as a actor file
@@ -575,7 +574,11 @@ fn parse_pleo_component<'a>(
     let video = read_path_at::<BigEndian>(src, pos)?;
     let dash_mpd = read_path_at::<BigEndian>(src, pos)?;
     let channel_id = Cow::Borrowed(read_string_at::<BigEndian>(src, pos)?);
-    let channel_id = if channel_id.is_empty() { None } else { Some(channel_id) };
+    let channel_id = if channel_id.is_empty() {
+        None
+    } else {
+        Some(channel_id)
+    };
     Ok(ComponentData::PleoComponent(PleoComponent {
         video,
         dash_mpd,
@@ -610,8 +613,8 @@ fn parse_ui_text_box<'a>(
     test_any(
         &unk12,
         &[
-            0xbf80_0000,
-            0x41a0_0000,
+            0xBF80_0000,
+            0x41A0_0000,
             0x4200_0000,
             0x428C_0000,
             0x42C8_0000,
@@ -619,21 +622,21 @@ fn parse_ui_text_box<'a>(
         ],
     )?;
     let unk13 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk13, &0xffff_ffff)?;
+    test(&unk13, &0xFFFF_FFFF)?;
     let unk14 = read_u64_at::<BigEndian>(src, pos)?;
     test(&unk14, &0)?;
     for _ in 0..3 {
         let unk15 = read_u32_at::<BigEndian>(src, pos)?;
-        test_any(&unk15, &[0x0, 0x3f80_0000])?;
+        test_any(&unk15, &[0x0, 0x3F80_0000])?;
     }
     for _ in 0..2 {
         let unk17 = read_u32_at::<BigEndian>(src, pos)?;
-        test_any(&unk17, &[0x4496_0000, 0xbf80_0000])?;
+        test_any(&unk17, &[0x4496_0000, 0xBF80_0000])?;
     }
     let unk18 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk18, &[0xbf80_0000, 0x443b_8000, 0x458C_A000]).context(*pos)?;
+    test_any(&unk18, &[0xBF80_0000, 0x443B_8000, 0x458C_A000]).context(*pos)?;
     let unk19 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk19, &0xbf80_0000).context(*pos)?;
+    test(&unk19, &0xBF80_0000).context(*pos)?;
     let string1 = Cow::Borrowed(read_string_at::<BigEndian>(src, pos).context(*pos)?);
     let string1 = if string1.is_empty() {
         None
@@ -645,7 +648,7 @@ fn parse_ui_text_box<'a>(
     let unk21 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk21, &1).context(*pos)?;
     let unk22 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk22, &[0xffff_ffff, 0x317a, 0x3b]).context(*pos)?;
+    test_any(&unk22, &[0xFFFF_FFFF, 0x317A, 0x3B]).context(*pos)?;
     let unk23_1 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk23_1, &[0x0, 0x4140_0000, 0xC170_0000, 0xC120_0000]).context(*pos)?;
     let unk23_2 = read_u32_at::<BigEndian>(src, pos)?;
@@ -673,7 +676,7 @@ fn parse_ui_text_box<'a>(
     let unk26 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk26, &[0, 0xFFFF_FFFF]).context(*pos)?;
     let unk27 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk27, &[0, 0xbf80_0000]).context(*pos)?;
+    test_any(&unk27, &[0, 0xBF80_0000]).context(*pos)?;
     let i = if game == Game::JustDance2018 || game == Game::JustDance2017 {
         6
     } else {
@@ -684,7 +687,7 @@ fn parse_ui_text_box<'a>(
         test(&unk28, &0).context(*pos)?;
     }
     let unk29 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk29, &0xbf80_0000).context(*pos)?;
+    test(&unk29, &0xBF80_0000).context(*pos)?;
     if game == Game::JustDance2019 || game == Game::JustDance2018 || game == Game::JustDance2017 {
         let unk30 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk30, &0).context(*pos)?;
@@ -693,9 +696,9 @@ fn parse_ui_text_box<'a>(
         test(&unk30, &0).context(*pos)?;
     }
     let unk31 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk31, &[0xffff_ffff, 0x1]).context(*pos)?;
+    test_any(&unk31, &[0xFFFF_FFFF, 0x1]).context(*pos)?;
     let unk32 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk32, &[0xffff_ffff, 0x1]).context(*pos)?;
+    test_any(&unk32, &[0xFFFF_FFFF, 0x1]).context(*pos)?;
     let unk33 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk33, &[1, 4, 0xFFFF_FFFF]).context(*pos)?;
     Ok(ComponentData::UITextBox(super::UITextBox {

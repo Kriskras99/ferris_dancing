@@ -5,9 +5,8 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{alias8, cooked, json_types};
 
-use crate::utils::cook_path;
-
 use super::{BuildFiles, BuildState};
+use crate::utils::cook_path;
 
 mod aliases;
 mod avatars;

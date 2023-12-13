@@ -17,7 +17,7 @@ pub enum Platform {
     Ps4 = 0x3,
     Wii = 0x5,
     WiiU = 0x8,
-    Nx = 0xb,
+    Nx = 0xB,
 }
 
 impl TryFrom<u32> for Platform {
@@ -29,7 +29,7 @@ impl TryFrom<u32> for Platform {
             0x3 => Ok(Self::Ps4),
             0x5 => Ok(Self::Wii),
             0x8 => Ok(Self::WiiU),
-            0xb => Ok(Self::Nx),
+            0xB => Ok(Self::Nx),
             _ => Err(anyhow!("Unknown platform id {value}!")),
         }
     }

@@ -7,7 +7,9 @@ use std::{
 
 use anyhow::{Context, Error};
 use byteorder::BigEndian;
+use dotstar_toolkit_utils::testing::test_any;
 
+use super::types::Loc8;
 use crate::{
     loc8::types::Language,
     utils::{
@@ -15,9 +17,6 @@ use crate::{
         LocaleId,
     },
 };
-use dotstar_toolkit_utils::testing::test_any;
-
-use super::types::Loc8;
 
 /// Parse a .loc8 file
 ///

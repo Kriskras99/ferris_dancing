@@ -6,13 +6,12 @@ use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
 
+use super::SongExportState;
 use crate::{
     build::BuildFiles,
     types::song::{Clip, Timeline},
     utils::cook_path,
 };
-
-use super::SongExportState;
 
 /// Build the mainsequence
 pub fn build(
@@ -65,8 +64,8 @@ fn mainsequence_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
             filename: Cow::Owned(format!("{lower_map_name}_mainsequence.tpl")),
         },
         unk1: 0,
-        unk2: 0x3f80_0000,
-        unk2_5: 0x3f80_0000,
+        unk2: 0x3F80_0000,
+        unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component {
             the_type: cooked::act::ComponentType::MasterTape,
             data: cooked::act::ComponentData::None,

@@ -141,8 +141,8 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
             filename: Cow::Borrowed("desc.tpl"),
         },
         unk1: 0,
-        unk2: 0x3f80_0000,
-        unk2_5: 0x3f80_0000,
+        unk2: 0x3F80_0000,
+        unk2_5: 0x3F80_0000,
         components: vec![
             cooked::act::Component {
                 the_type: cooked::act::ComponentType::MaterialGraphicComponent,

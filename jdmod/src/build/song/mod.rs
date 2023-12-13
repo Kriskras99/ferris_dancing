@@ -6,9 +6,8 @@ use anyhow::{Context, Error};
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{cooked, utils::Platform};
 
-use crate::types::song::{Song, SongDirectoryTree};
-
 use super::{BuildFiles, BuildState};
+use crate::types::song::{Song, SongDirectoryTree};
 
 mod audio;
 mod autodance;

@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 use clap::Parser;
-
 use ubiart_toolkit::{
     cooked::act,
     utils::{bytes::read_to_vec, Game},

@@ -12,12 +12,11 @@ use ubiart_toolkit::{
     utils::LocaleId,
 };
 
-use crate::types::localisation::LocaleIdMap;
-
 use super::{
     generate_gacha_id,
     objectives::{Objective, Objectives},
 };
+use crate::types::localisation::LocaleIdMap;
 
 /// Describes an alias
 #[derive(Debug, Clone, Serialize, Deserialize)]

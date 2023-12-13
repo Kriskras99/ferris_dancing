@@ -3,9 +3,8 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::LocaleId;
-
 use super::{AutodanceVideoStructure, PhoneImages};
+use crate::utils::LocaleId;
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]

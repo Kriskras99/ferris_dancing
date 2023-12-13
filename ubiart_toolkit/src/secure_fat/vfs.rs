@@ -6,12 +6,11 @@ use anyhow::{Context, Error};
 use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
+use super::{BundleId, SecureFat};
 use crate::{
     ipk::vfs::VfsIpkFilesystem,
     utils::{path_id, GamePlatform},
 };
-
-use super::{BundleId, SecureFat};
 
 pub struct VfsSfatFilesystem<'f> {
     sfat: SecureFat,

@@ -4,9 +4,8 @@ use std::io::{Seek, Write};
 use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
-use crate::utils::bytes::WriteBytesExtUbiArt;
-
 use super::Alias8;
+use crate::utils::bytes::WriteBytesExtUbiArt;
 
 /// Write an alias8 file.
 ///

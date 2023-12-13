@@ -5,12 +5,11 @@ use byteorder::BigEndian;
 use dotstar_toolkit_utils::testing::{test, test_le, test_not};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
+use super::{BundleId, SecureFat, MAGIC, UNK1};
 use crate::utils::{
     bytes::{read_string_at, read_u32_at, read_u8_at},
     GamePlatform, PathId,
 };
-
-use super::{BundleId, SecureFat, MAGIC, UNK1};
 
 /// Parse a bytearray-like source as a secure_fat.gf
 ///
@@ -56,7 +55,7 @@ pub fn parse(src: &[u8]) -> Result<SecureFat, Error> {
 
     // Read how many bundles there are and prepare a map
     let bundle_count = usize::try_from(read_u32_at::<BigEndian>(src, &mut pos)?)?;
-    test_le(&bundle_count, &0xff)?;
+    test_le(&bundle_count, &0xFF)?;
     let mut bundle_id_to_bundle_name =
         IntMap::with_capacity_and_hasher(bundle_count, BuildNoHashHasher::default());
 

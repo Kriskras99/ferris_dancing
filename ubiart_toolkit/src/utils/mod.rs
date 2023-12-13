@@ -1,11 +1,12 @@
 pub mod bytes;
 
+use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
+
 use anyhow::{anyhow, Error};
 use byteorder::LittleEndian;
 use dotstar_toolkit_utils::bytes::read_u32_at;
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
 
 use crate::ipk;
 
@@ -160,52 +161,52 @@ impl TryFrom<u32> for GamePlatform {
     type Error = anyhow::Error;
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
-            0x1c24_b91a => Ok(Self {
+            0x1C24_B91A => Ok(Self {
                 game: Game::JustDance2014,
                 platform: Platform::Wii,
                 id: value,
             }),
-            0xc563_9f58 => Ok(Self {
+            0xC563_9F58 => Ok(Self {
                 game: Game::JustDance2015,
                 platform: Platform::WiiU,
                 id: value,
             }),
-            0x415e_6d8c | 0x32f3_512a => Ok(Self {
+            0x415E_6D8C | 0x32F3_512A => Ok(Self {
                 game: Game::JustDance2017,
                 platform: Platform::Nx,
                 id: value,
             }),
-            0x032e_71c5 => Ok(Self {
+            0x032E_71C5 => Ok(Self {
                 game: Game::JustDance2018,
                 platform: Platform::Nx,
                 id: value,
             }),
-            0x1f5e_e42f | 0xc781_a65b | 0x57a7_053c => Ok(Self {
+            0x1F5E_E42F | 0xC781_A65B | 0x57A7_053C => Ok(Self {
                 game: Game::JustDance2019,
                 platform: Platform::Nx,
                 id: value,
             }),
-            0x72b4_2ff4 | 0xb292_fd08 | 0x217a_94ce => Ok(Self {
+            0x72B4_2FF4 | 0xB292_FD08 | 0x217A_94CE => Ok(Self {
                 game: Game::JustDance2020,
                 platform: Platform::Nx,
                 id: value,
             }),
-            0xa155_8f87 => Ok(Self {
+            0xA155_8F87 => Ok(Self {
                 game: Game::JustDanceChina,
                 platform: Platform::Nx,
                 id: value,
             }),
-            0x4c8e_c5c5 => Ok(Self {
+            0x4C8E_C5C5 => Ok(Self {
                 game: Game::JustDance2020,
                 platform: Platform::Wii,
                 id: value,
             }),
-            0xeb5d_504c | 0xa4f0_18ee => Ok(Self {
+            0xEB5D_504C | 0xA4F0_18EE => Ok(Self {
                 game: Game::JustDance2021,
                 platform: Platform::Nx,
                 id: value,
             }),
-            0x1ddb_2268 => Ok(Self {
+            0x1DDB_2268 => Ok(Self {
                 game: Game::JustDance2022,
                 platform: Platform::Nx,
                 id: value,
@@ -306,7 +307,7 @@ pub fn string_id(string: &str) -> u32 {
     let mut upper = Vec::with_capacity(bytes.len());
     // Convert lowercase chars to uppercase
     for byte in bytes {
-        if *byte >= 0x61 && *byte <= 0x7a {
+        if *byte >= 0x61 && *byte <= 0x7A {
             upper.push(*byte - 0x20);
         } else {
             upper.push(*byte);
@@ -324,7 +325,7 @@ pub fn os_string_id(string: &OsStr) -> u32 {
     let mut upper = Vec::with_capacity(bytes.len());
     // Convert lowercase chars to uppercase
     for byte in bytes {
-        if *byte >= 0x61 && *byte <= 0x7a {
+        if *byte >= 0x61 && *byte <= 0x7A {
             upper.push(*byte - 0x20);
         } else {
             upper.push(*byte);
@@ -343,14 +344,14 @@ pub fn string_id_2(one: &str, two: &str) -> u32 {
     let mut upper = Vec::with_capacity(bytes_one.len() + bytes_two.len());
     // Convert lowercase chars to uppercase
     for byte in bytes_one {
-        if *byte >= 0x61 && *byte <= 0x7a {
+        if *byte >= 0x61 && *byte <= 0x7A {
             upper.push(*byte - 0x20);
         } else {
             upper.push(*byte);
         }
     }
     for byte in bytes_two {
-        if *byte >= 0x61 && *byte <= 0x7a {
+        if *byte >= 0x61 && *byte <= 0x7A {
             upper.push(*byte - 0x20);
         } else {
             upper.push(*byte);
@@ -449,15 +450,15 @@ const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
 
 /// Shifting implementation for ubicrc
 const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
-    a = (a.wrapping_sub(b).wrapping_sub(c)) ^ (c >> 0xd);
+    a = (a.wrapping_sub(b).wrapping_sub(c)) ^ (c >> 0xD);
     b = (b.wrapping_sub(a).wrapping_sub(c)) ^ (a << 0x8);
-    c = (c.wrapping_sub(a).wrapping_sub(b)) ^ (b >> 0xd);
-    a = (a.wrapping_sub(c).wrapping_sub(b)) ^ (c >> 0xc);
+    c = (c.wrapping_sub(a).wrapping_sub(b)) ^ (b >> 0xD);
+    a = (a.wrapping_sub(c).wrapping_sub(b)) ^ (c >> 0xC);
     let d = (b.wrapping_sub(a).wrapping_sub(c)) ^ (a << 0x10);
     c = (c.wrapping_sub(a).wrapping_sub(d)) ^ (d >> 0x5);
     a = (a.wrapping_sub(c).wrapping_sub(d)) ^ (c >> 0x3);
-    b = (d.wrapping_sub(a).wrapping_sub(c)) ^ (a << 0xa);
-    c = (c.wrapping_sub(a).wrapping_sub(b)) ^ (b >> 0xf);
+    b = (d.wrapping_sub(a).wrapping_sub(c)) ^ (a << 0xA);
+    c = (c.wrapping_sub(a).wrapping_sub(b)) ^ (b >> 0xF);
     (a, b, c)
 }
 
@@ -469,7 +470,7 @@ mod tests {
     fn test_string_id() {
         assert_eq!(
             string_id("world/maps/adoreyou/videoscoach/adoreyou.vp9.720.webm"),
-            0x45cc_a9ca
+            0x45CC_A9CA
         );
     }
 }

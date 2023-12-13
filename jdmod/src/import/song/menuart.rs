@@ -5,12 +5,11 @@ use std::{borrow::Cow, fs::File, io::Write};
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, json_types::PhoneImages};
 
+use super::SongImportState;
 use crate::{
     types::song::{MenuArt, MenuArtTexture, PhoneImage},
     utils::{cook_path, decode_texture},
 };
-
-use super::SongImportState;
 
 /// Imports all the textures and phone images used in the menus for this song
 pub fn import(

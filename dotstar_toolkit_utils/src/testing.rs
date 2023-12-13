@@ -5,6 +5,7 @@ use std::{
     fmt::Debug,
     ops::{ControlFlow, FromResidual, Try},
 };
+
 use thiserror::Error;
 
 /// The result of a test

@@ -10,9 +10,8 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types;
 
-use crate::types::localisation::LocaleIdMap;
-
 use super::objectives::{Objective, Objectives};
+use crate::types::localisation::LocaleIdMap;
 
 /// Configuration for the daily quests
 #[derive(Debug, Clone, Serialize, Deserialize)]

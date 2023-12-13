@@ -5,9 +5,8 @@ use std::fs::File;
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::cooked;
 
-use crate::{types::song::Timeline, utils::cook_path};
-
 use super::SongImportState;
+use crate::{types::song::Timeline, utils::cook_path};
 
 /// Imports the karaoke timeline
 pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<(), Error> {

@@ -3,7 +3,6 @@
 use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Error};
-
 use bitvec::BitArr;
 use ubiart_toolkit::loc8::Language;
 pub use ubiart_toolkit::utils::LocaleId;

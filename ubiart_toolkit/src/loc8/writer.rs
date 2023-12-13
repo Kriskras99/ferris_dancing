@@ -6,12 +6,11 @@ use std::{
 use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
+use super::types::Language;
 use crate::{
     loc8::types::Loc8,
     utils::{bytes::WriteBytesExtUbiArt, LocaleId},
 };
-
-use super::types::Language;
 
 /// Creates a .loc8 file and writes it to the writer
 ///

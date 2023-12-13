@@ -6,9 +6,8 @@ use anyhow::Error;
 use dotstar_toolkit_utils::testing::test;
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
-use crate::build::BuildFiles;
-
 use super::SongExportState;
+use crate::build::BuildFiles;
 
 /// Build the video scenes, actors, and video
 pub fn build(
@@ -23,7 +22,7 @@ pub fn build(
 
     // .mpd.ckd is always the same
     let mpd_vec = vec![
-        0x00, 0x00, 0x00, 0x01, 0x00, 0x42, 0x4b, 0xae, 0x14, 0x3f, 0x80, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x42, 0x4B, 0xAE, 0x14, 0x3F, 0x80, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00,
     ];
 
@@ -89,8 +88,8 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
             filename: Cow::Borrowed("video_player_main.tpl"),
         },
         unk1: 0,
-        unk2: 0x3f80_0000,
-        unk2_5: 0x3f80_0000,
+        unk2: 0x3F80_0000,
+        unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component {
             the_type: cooked::act::ComponentType::PleoComponent,
             data: cooked::act::ComponentData::PleoComponent(cooked::act::PleoComponent {
