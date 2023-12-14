@@ -3,17 +3,16 @@ use std::{
     io::{Cursor, Seek, Write},
 };
 
-use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{Actor, ComponentData, MaterialGraphicComponent, PleoComponent};
-use crate::utils::bytes::WriteBytesExtUbiArt;
+use crate::utils::{bytes::WriteBytesExtUbiArt, errors::WriterError};
 
 /// Write the `Actor` to the writer
 ///
 /// # Errors
 /// Will error if the writer fails or the paths are too long or there are too many templates
-pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), Error> {
+pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), WriterError> {
     writer.write_u32::<BigEndian>(1)?;
     writer.write_u32::<BigEndian>(actor.unk1)?;
     writer.write_u32::<BigEndian>(actor.unk2)?;
@@ -49,7 +48,7 @@ pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), Error
 ///
 /// # Errors
 /// Will error the paths are too long or there are too many templates
-pub fn create_vec(actor: &Actor) -> Result<Vec<u8>, Error> {
+pub fn create_vec(actor: &Actor) -> Result<Vec<u8>, WriterError> {
     let mut vec = Vec::with_capacity(700);
     let cursor = Cursor::new(&mut vec);
     create(cursor, actor)?;
@@ -65,7 +64,7 @@ fn write_material_graphic_component<W: Write + Seek>(
     writer: &mut W,
     mgc: &MaterialGraphicComponent,
     is_pleo: bool,
-) -> Result<(), Error> {
+) -> Result<(), WriterError> {
     for _ in 0..3 {
         writer.write_u32::<BigEndian>(0x3F80_0000)?;
     }
@@ -114,7 +113,7 @@ fn write_material_graphic_component<W: Write + Seek>(
 fn write_pleo_component<W: Write + Seek>(
     writer: &mut W,
     pleo_component: &PleoComponent,
-) -> Result<(), Error> {
+) -> Result<(), WriterError> {
     writer.write_path::<BigEndian>(&pleo_component.video)?;
     writer.write_u32::<BigEndian>(0)?;
     writer.write_path::<BigEndian>(&pleo_component.dash_mpd)?;

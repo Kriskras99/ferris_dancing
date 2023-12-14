@@ -4,17 +4,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Error};
 use clap::Parser;
+use dotstar_toolkit_utils::bytes::read_to_vec;
 use image::{imageops, ImageBuffer, ImageOutputFormat, Rgba};
 use serde::Serialize;
-use ubiart_toolkit::{
-    cooked::{
-        self,
-        png::Png,
-        xtx::{Format, Image, Xtx},
-    },
-    utils::bytes::read_to_vec,
+use ubiart_toolkit::cooked::{
+    self,
+    png::Png,
+    xtx::{Format, Image, Xtx},
 };
 
 #[derive(Parser)]
@@ -30,11 +27,11 @@ struct Cli {
     output: Option<PathBuf>,
 }
 
-fn main() -> Result<(), Error> {
+fn main() {
     let cli = Cli::parse();
 
-    let data = read_to_vec(&cli.source)?;
-    let png = cooked::png::parse(&data)?;
+    let data = read_to_vec(&cli.source).unwrap();
+    let png = cooked::png::parse(&data).unwrap();
     drop(data);
     if cli.info {
         println!("Width:            0x{:x}", png.width);
@@ -79,19 +76,12 @@ fn main() -> Result<(), Error> {
             .and_then(OsStr::to_str)
             .unwrap();
 
-        let big_image = png
-            .xtx
-            .images
-            .first()
-            .ok_or_else(|| anyhow!("No image found!"))?;
+        let big_image = png.xtx.images.first().unwrap();
         if big_image.data.len() > 1 {
             println!("Warning! Not extracting mipmaps, only original image!");
         }
         let hdr = &big_image.header;
-        let data_compressed = big_image
-            .data
-            .first()
-            .ok_or_else(|| anyhow!("No data for image!"))?;
+        let data_compressed = big_image.data.first().unwrap();
         let mut data_decompressed =
             vec![0xFF; usize::try_from(hdr.width * hdr.height * 4).unwrap()];
         match hdr.format {
@@ -133,11 +123,9 @@ fn main() -> Result<(), Error> {
 
     if let Some(json_path) = cli.json {
         let metadata = Metadata::from(&png);
-        let file = File::create(json_path)?;
-        serde_json::to_writer_pretty(file, &metadata)?;
+        let file = File::create(json_path).unwrap();
+        serde_json::to_writer_pretty(file, &metadata).unwrap();
     }
-
-    Ok(())
 }
 
 #[derive(Serialize)]

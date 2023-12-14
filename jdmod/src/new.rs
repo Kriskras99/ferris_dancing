@@ -10,7 +10,7 @@ use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::vfs::native::Native;
 use ubiart_toolkit::{
-    secure_fat::vfs::VfsSfatFilesystem,
+    secure_fat::vfs::SfatFilesystem,
     utils::{Game, Platform},
 };
 
@@ -54,7 +54,7 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
             .parent()
             .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
     )?;
-    let sfat_vfs = VfsSfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"), false)?;
+    let sfat_vfs = SfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"), false)?;
 
     // Check that the sfat is from the right game
     let game_platform = sfat_vfs.game_platform();

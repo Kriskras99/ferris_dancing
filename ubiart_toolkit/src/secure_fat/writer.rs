@@ -6,10 +6,10 @@ use std::{
     path::Path,
 };
 
-use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{SecureFat, MAGIC, UNK1};
+use crate::utils::errors::WriterError;
 
 /// Create a secure_fat.gf file at the path
 ///
@@ -18,7 +18,7 @@ use super::{SecureFat, MAGIC, UNK1};
 /// - The file cannot be opened
 /// - Something goes wrong with writing to the writer
 /// - There are too many bundles (more than 256)
-pub fn create<P: AsRef<Path>>(path: P, sfat: &SecureFat) -> Result<(), Error> {
+pub fn create<P: AsRef<Path>>(path: P, sfat: &SecureFat) -> Result<(), WriterError> {
     let file = File::create(path)?;
     let writer = BufWriter::new(file);
     write(writer, sfat)
@@ -30,7 +30,7 @@ pub fn create<P: AsRef<Path>>(path: P, sfat: &SecureFat) -> Result<(), Error> {
 /// This function errors in various ways:
 /// - Something goes wrong with writing to the writer
 /// - There are too many bundles (more than 256)
-pub fn write<W: Write>(mut writer: W, sfat: &SecureFat) -> Result<(), Error> {
+pub fn write<W: Write>(mut writer: W, sfat: &SecureFat) -> Result<(), WriterError> {
     // Write the header
     writer.write_u32::<BigEndian>(MAGIC)?;
     writer.write_u32::<BigEndian>(u32::from(sfat.game_platform()))?;

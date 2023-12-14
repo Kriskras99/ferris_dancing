@@ -1,18 +1,20 @@
 //! Contains the parser implementation
 
-use anyhow::Error;
 use byteorder::BigEndian;
-use dotstar_toolkit_utils::testing::{test, test_any};
+use dotstar_toolkit_utils::{
+    bytes::{read_string_at, read_u16_at, read_u32_at},
+    testing::{test, test_any},
+};
 
 use super::types::{Alias, Alias8};
-use crate::utils::bytes::{read_path_at, read_string_at, read_u16_at, read_u32_at};
+use crate::utils::{bytes::read_path_at, errors::ParserError};
 
 /// Parse an .alias8 file
 ///
 /// # Errors
 ///
 /// Returns [`Err`] if the source is corrupt or not an alias8 file
-pub fn parse(src: &[u8]) -> Result<Alias8<'_>, Error> {
+pub fn parse(src: &[u8]) -> Result<Alias8<'_>, ParserError> {
     let mut position = 0;
 
     // Read the unknown value at the beginning of the file and check it's correct

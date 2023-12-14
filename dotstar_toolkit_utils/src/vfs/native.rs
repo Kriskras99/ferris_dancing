@@ -29,6 +29,9 @@ impl Native {
     }
 
     /// Create a canonical version of `path` with all relative things removed
+    ///
+    /// # Errors
+    /// Will error if the path is outside the root or if the path does not exist
     fn canonicalize(&self, path: &Path) -> Result<PathBuf> {
         let path = if path.starts_with(&self.root) {
             fs::canonicalize(path)?
@@ -46,6 +49,9 @@ impl Native {
     }
 
     /// Recursive way to get a full file list for a directory
+    ///
+    /// # Errors
+    /// Will error if it cannot read the error or files escape outside the root
     fn recursive_file_list(&self, path: &Path, list: &mut Vec<String>) -> Result<()> {
         for entry in path.read_dir()?.flatten() {
             let path = entry.path();

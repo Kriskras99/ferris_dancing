@@ -1,8 +1,7 @@
 use std::borrow::Cow;
 
-use anyhow::anyhow;
 use dotstar_toolkit_utils::testing::test;
-use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
@@ -91,21 +90,21 @@ impl<'a> Scene<'a> {
     pub fn get_subscene_by_userfriendly(
         &self,
         userfriendly: &str,
-    ) -> Result<&SubSceneActor, anyhow::Error> {
+    ) -> Result<&SubSceneActor, ParserError> {
         self.actors
             .iter()
             .map(WrappedActors::sub_scene_actor)
             .filter_map(Result::ok)
             .find(|a| a.userfriendly == userfriendly)
             .ok_or_else(|| {
-                anyhow!(
-                    "SubSceneActor matching '{userfriendly}' not found! SubSceneActors: {:?}",
+                ParserError::custom(format!(
+                    "SubSceneActor matching '{userfriendly}' not found: SubSceneActors: {:?}",
                     self.actors
                         .iter()
                         .map(WrappedActors::sub_scene_actor)
                         .filter_map(Result::ok)
                         .map(|a| a.userfriendly.as_ref())
-                )
+                ))
             })
     }
 
@@ -117,7 +116,7 @@ impl<'a> Scene<'a> {
         &self,
         userfriendly: &str,
         lax: bool,
-    ) -> Result<&SubSceneActor, anyhow::Error> {
+    ) -> Result<&SubSceneActor, ParserError> {
         let userfriendly = if lax {
             Cow::Owned(userfriendly.to_lowercase())
         } else {
@@ -137,14 +136,14 @@ impl<'a> Scene<'a> {
                 }
             })
             .ok_or_else(|| {
-                anyhow!(
-                    "SubSceneActor ending in '{userfriendly}' not found! SubSceneActors: {:?}",
+                ParserError::custom(format!(
+                    "SubSceneActor ending in '{userfriendly}' not found: SubSceneActors: {:?}",
                     self.actors
                         .iter()
                         .map(WrappedActors::sub_scene_actor)
                         .filter_map(Result::ok)
                         .map(|a| a.userfriendly.as_ref())
-                )
+                ))
             })
     }
 
@@ -156,7 +155,7 @@ impl<'a> Scene<'a> {
         &self,
         userfriendly: &str,
         lax: bool,
-    ) -> Result<&Actor, anyhow::Error> {
+    ) -> Result<&Actor, ParserError> {
         let userfriendly = if lax {
             Cow::Owned(userfriendly.to_lowercase())
         } else {
@@ -176,14 +175,14 @@ impl<'a> Scene<'a> {
                 }
             })
             .ok_or_else(|| {
-                anyhow!(
-                    "Actor ending in '{userfriendly}' not found! Actors: {:?}",
+                ParserError::custom(format!(
+                    "Actor ending in '{userfriendly}' not found: Actors: {:?}",
                     self.actors
                         .iter()
                         .map(WrappedActors::actor)
                         .filter_map(Result::ok)
                         .map(|a| a.userfriendly.as_ref())
-                )
+                ))
             })
     }
 
@@ -191,21 +190,21 @@ impl<'a> Scene<'a> {
     ///
     /// # Errors
     /// Will error if there is no actor matching `userfriendly`
-    pub fn get_actor_by_userfriendly(&self, userfriendly: &str) -> Result<&Actor, anyhow::Error> {
+    pub fn get_actor_by_userfriendly(&self, userfriendly: &str) -> Result<&Actor, ParserError> {
         self.actors
             .iter()
             .map(WrappedActors::actor)
             .filter_map(Result::ok)
             .find(|a| a.userfriendly == userfriendly)
             .ok_or_else(|| {
-                anyhow!(
-                    "Actor matching '{userfriendly}' not found! Actors: {:?}",
+                ParserError::custom(format!(
+                    "Actor matching '{userfriendly}' not found: Actors: {:?}",
                     self.actors
                         .iter()
                         .map(WrappedActors::actor)
                         .filter_map(Result::ok)
                         .map(|a| a.userfriendly.as_ref())
-                )
+                ))
             })
     }
 }
@@ -2594,6 +2593,10 @@ pub struct TargetFilterObject<'a> {
     pub value: Cow<'a, str>,
 }
 
+/// Serialize a boolean as a "1" or a "0"
+///
+/// # Errors
+/// Will error if the underlying `ser` fails
 #[allow(clippy::trivially_copy_pass_by_ref)]
 fn ser_bool<S>(data: &bool, ser: S) -> Result<S::Ok, S::Error>
 where
@@ -2606,12 +2609,17 @@ where
     }
 }
 
+/// Serialize a Option<boolean> as a "1" or a "0"
+///
+/// # Errors
+/// Will error if the underlying `ser` fails or the Option is None
 #[allow(clippy::trivially_copy_pass_by_ref)]
 fn ser_option_bool<S>(data: &Option<bool>, ser: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let act_data = data.unwrap();
+    use serde::ser::Error;
+    let act_data = data.ok_or_else(|| S::Error::custom("Option<bool> is empty!"))?;
     if act_data {
         ser.serialize_str("1")
     } else {
@@ -2619,6 +2627,10 @@ where
     }
 }
 
+/// Serialize the separator as a string
+///
+/// # Errors
+/// Will error if the underlying `ser` fails
 fn ser_separator<S>(data: &[Color; 4], ser: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -2627,10 +2639,15 @@ where
         data[0].0, data[0].1, data[0].2, data[0].3, data[1].0, data[1].1, data[1].2, data[1].3, data[2].0, data[2].1, data[2].2, data[2].3, data[3].0, data[3].1, data[3].2, data[3].3))
 }
 
+/// Deserialize the separator from a string
+///
+/// # Errors
+/// Will error if the underlying `deser` fails or if the separator is wrong
 fn deser_separator<'de, D>(deser: D) -> Result<[Color; 4], D::Error>
 where
     D: Deserializer<'de>,
 {
+    use serde::de::Error;
     let s: &str = Deserialize::deserialize(deser)?;
     let mut result: [Color; 4] = [(0.0, 0.0, 0.0, 0.0); 4];
     let mut max_i = 0;
@@ -2789,8 +2806,6 @@ macro_rules! deserialize_variant {
 pub use wrapped_actors::*;
 mod wrapped_actors {
     #![allow(clippy::wildcard_imports, clippy::module_name_repetitions)]
-    use anyhow::anyhow;
-
     use super::*;
 
     #[derive(Debug, Clone, Serialize)]
@@ -2807,11 +2822,13 @@ mod wrapped_actors {
         ///
         /// # Errors
         /// Will error if this Actors is not a `Actor`.
-        pub fn actor(&'a self) -> Result<&'a Actor<'a>, anyhow::Error> {
+        pub fn actor(&'a self) -> Result<&'a Actor<'a>, ParserError> {
             if let WrappedActors::Actor(actor) = self {
                 Ok(&actor.actor)
             } else {
-                Err(anyhow!("Actor not found in WrappedActors: {self:?}"))
+                Err(ParserError::custom(format!(
+                    "Actor not found in WrappedActors: {self:?}"
+                )))
             }
         }
 
@@ -2819,11 +2836,13 @@ mod wrapped_actors {
         ///
         /// # Errors
         /// Will error if this Actors is not a `SubSceneActor`.
-        pub fn sub_scene_actor(&'a self) -> Result<&'a SubSceneActor<'a>, anyhow::Error> {
+        pub fn sub_scene_actor(&'a self) -> Result<&'a SubSceneActor<'a>, ParserError> {
             if let WrappedActors::SubSceneActor(ss_actor) = self {
                 Ok(&ss_actor.sub_scene_actor)
             } else {
-                Err(anyhow!("Actor not found in WrappedActors: {self:?}"))
+                Err(ParserError::custom(format!(
+                    "Actor not found in WrappedActors: {self:?}"
+                )))
             }
         }
     }
@@ -3500,11 +3519,13 @@ mod wrapped_component {
         ///
         /// # Errors
         /// Will error if this component is not a `PleoComponent`.
-        pub fn pleo_component(&'a self) -> Result<&'a PleoComponent, anyhow::Error> {
+        pub fn pleo_component(&'a self) -> Result<&'a PleoComponent, ParserError> {
             if let Self::Pleo(pleo_component) = self {
                 Ok(&pleo_component.pleo_component)
             } else {
-                Err(anyhow!("No PleoComponent in Component: {self:?}"))
+                Err(ParserError::custom(format!(
+                    "No PleoComponent in Component: {self:?}"
+                )))
             }
         }
 
@@ -3514,13 +3535,13 @@ mod wrapped_component {
         /// Will error if this component is not a `MaterialGraphicComponent`.
         pub fn material_graphic_component(
             &'a self,
-        ) -> Result<&'a MaterialGraphicComponent, anyhow::Error> {
+        ) -> Result<&'a MaterialGraphicComponent, ParserError> {
             if let Self::MaterialGraphic(material_graphic_component) = self {
                 Ok(&material_graphic_component.material_graphic_component)
             } else {
-                Err(anyhow!(
+                Err(ParserError::custom(format!(
                     "No MaterialGraphicComponent in Component: {self:?}"
-                ))
+                )))
             }
         }
     }
@@ -4434,6 +4455,8 @@ mod wrapped_component {
 }
 
 pub use wrapped_carousel_behaviour::*;
+
+use crate::utils::errors::ParserError;
 mod wrapped_carousel_behaviour {
     #![allow(clippy::wildcard_imports, clippy::module_name_repetitions)]
     use super::*;

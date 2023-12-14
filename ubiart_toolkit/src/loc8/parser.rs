@@ -5,24 +5,23 @@ use std::{
     collections::{hash_map::Entry, HashMap},
 };
 
-use anyhow::{Context, Error};
 use byteorder::BigEndian;
-use dotstar_toolkit_utils::testing::test_any;
+use dotstar_toolkit_utils::{
+    bytes::{read_string_at, read_u32_at},
+    testing::test_any,
+};
 
 use super::types::Loc8;
 use crate::{
     loc8::types::Language,
-    utils::{
-        bytes::{read_string_at, read_u32_at},
-        LocaleId,
-    },
+    utils::{errors::ParserError, LocaleId},
 };
 
 /// Parse a .loc8 file
 ///
 /// # Errors
 /// -  the file is not a loc8 file or the parser encounters an unexpected value.
-pub fn parse(src: &[u8]) -> Result<Loc8<'_>, Error> {
+pub fn parse(src: &[u8]) -> Result<Loc8<'_>, ParserError> {
     let mut position = 0;
 
     let unk1 = read_u32_at::<BigEndian>(src, &mut position)?;
@@ -40,7 +39,8 @@ pub fn parse(src: &[u8]) -> Result<Loc8<'_>, Error> {
         for _ in 0..string_count {
             let id = LocaleId::from(read_u32_at::<BigEndian>(src, &mut position)?);
             let string = read_string_at::<BigEndian>(src, &mut position)
-                .with_context(|| format!("ID: {id:?}, POS: {position}"))?;
+                .map_err(ParserError::from)
+                .map_err(|error| error.context(format!("ID: {id:?}, POS: {position}")))?;
 
             if i == 0 {
                 strings.insert(id, Cow::Borrowed(string));
@@ -55,7 +55,14 @@ pub fn parse(src: &[u8]) -> Result<Loc8<'_>, Error> {
         let _unk2 = read_u32_at::<BigEndian>(src, &mut position)?;
     }
 
-    if test_any(&src[position..position + 100].try_into()?, Loc8::FOOTERS).is_err() {
+    if test_any(
+        &src[position..position + 100]
+            .try_into()
+            .unwrap_or_else(|_| unreachable!()),
+        Loc8::FOOTERS,
+    )
+    .is_err()
+    {
         println!(
             "Warning! Unexpected footer in loc8 file: {:?}",
             &src[position..position + 100]

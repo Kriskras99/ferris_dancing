@@ -35,17 +35,17 @@ pub fn build(
     bf.generated_files.add_file(
         format!("{autodance_cache_dir}/{lower_map_name}_autodance.act.ckd"),
         autodance_actor_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{autodance_cache_dir}/{lower_map_name}_autodance.tpl.ckd"),
         autodance_template_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{autodance_cache_dir}/{lower_map_name}_autodance.isc.ckd"),
         autodance_scene_vec,
-    );
+    )?;
 
     // preview audio file
     let from = ses.dirs.audio().join("autodance.ogg");
@@ -76,7 +76,7 @@ fn autodance_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         }],
     };
 
-    cooked::act::create_vec(&actor)
+    Ok(cooked::act::create_vec(&actor)?)
 }
 
 /// Build the autodance scene
@@ -116,17 +116,17 @@ fn autodance_template(ses: &SongExportState<'_>, autodance: &Autodance) -> Resul
         startpaused: 0,
         forceisenvironment: 0,
         components: vec![json_types::v22::Template22::AutodanceComponent(
-            json_types::AutodanceComponent {
+            json_types::just_dance::AutodanceComponent {
                 class: None,
                 song: ses.song.map_name.clone(),
-                autodance_data: json_types::AutodanceData {
-                    class: Some(json_types::AutodanceData::CLASS),
-                    recording_structure: json_types::AutodanceRecordingStructure {
-                        class: Some(json_types::AutodanceRecordingStructure::CLASS),
+                autodance_data: json_types::just_dance::AutodanceData {
+                    class: Some(json_types::just_dance::AutodanceData::CLASS),
+                    recording_structure: json_types::just_dance::AutodanceRecordingStructure {
+                        class: Some(json_types::just_dance::AutodanceRecordingStructure::CLASS),
                         records: autodance.record.iter().map(Into::into).collect(),
                     },
-                    video_structure: json_types::AutodanceVideoStructure {
-                        class: Some(json_types::AutodanceVideoStructure::CLASS),
+                    video_structure: json_types::isg::AutodanceVideoStructure {
+                        class: Some(json_types::isg::AutodanceVideoStructure::CLASS),
                         song_start_position: autodance.song_start_position,
                         duration: autodance.duration,
                         thumbnail_time: 0,
@@ -141,8 +141,9 @@ fn autodance_template(ses: &SongExportState<'_>, autodance: &Autodance) -> Resul
                             .iter()
                             .map(Into::into)
                             .collect(),
-                        background_effect: Box::<json_types::AutoDanceFxDesc>::default(),
-                        player_effect: Box::<json_types::AutoDanceFxDesc>::default(),
+                        background_effect: Box::<json_types::just_dance::AutoDanceFxDesc>::default(
+                        ),
+                        player_effect: Box::<json_types::just_dance::AutoDanceFxDesc>::default(),
                         background_effect_events: Vec::new(),
                         player_effect_events: Vec::new(),
                         prop_events: Vec::new(),
@@ -157,5 +158,5 @@ fn autodance_template(ses: &SongExportState<'_>, autodance: &Autodance) -> Resul
         )],
     });
 
-    cooked::json::create_vec(&template)
+    Ok(cooked::json::create_vec(&template)?)
 }

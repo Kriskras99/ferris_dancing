@@ -1,6 +1,7 @@
 use std::path::Path;
 
-use ubiart_toolkit::{cooked::sgs, utils::bytes::read_to_vec};
+use dotstar_toolkit_utils::bytes::read_to_vec;
+use ubiart_toolkit::cooked::sgs;
 
 fn sgs_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;

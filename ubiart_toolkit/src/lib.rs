@@ -1,7 +1,6 @@
 #![allow(clippy::too_many_lines)]
 // Doesn't work very well unk{n}
 #![allow(clippy::similar_names)]
-// #![allow(clippy::large_enum_variant)] // Broken
 #![allow(clippy::struct_excessive_bools)]
 #![allow(clippy::implicit_hasher)]
 // Broken by serde_with

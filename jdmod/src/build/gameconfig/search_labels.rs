@@ -21,11 +21,11 @@ pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Resul
         .map(|(name, tags)| {
             (
                 name,
-                json_types::SongSearchTags {
-                    class: Some(json_types::SongSearchTags::CLASS),
+                json_types::isg::SongSearchTags {
+                    class: Some(json_types::isg::SongSearchTags::CLASS),
                     tags: tags
                         .into_iter()
-                        .map(json_types::SongSearchTag::from)
+                        .map(json_types::isg::SongSearchTag::from)
                         .collect(),
                 },
             )

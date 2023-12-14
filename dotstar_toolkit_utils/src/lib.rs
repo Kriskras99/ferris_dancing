@@ -8,6 +8,7 @@
 // Not reliable enough
 #![allow(clippy::doc_markdown)]
 #![feature(try_trait_v2)]
+#![feature(error_generic_member_access)]
 
 //! # .* Toolkit Utils
 //! This library contains various utilities for writing parsers.

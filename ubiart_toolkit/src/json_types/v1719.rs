@@ -1,9 +1,9 @@
 use std::{borrow::Cow, collections::HashMap};
 
+use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 
-#[allow(clippy::wildcard_imports)]
-use super::*;
+use super::{isg::Rarity, DifficultyColors};
 use crate::utils::LocaleId;
 
 #[serde_as]
@@ -13,7 +13,6 @@ pub struct LocalAliases1719<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub locked_color: Cow<'a, str>,
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub difficulty_colors: DifficultyColors<'a>,
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub aliases: HashMap<u16, UnlockableAliasDescriptor1719<'a>>,
@@ -28,7 +27,7 @@ pub struct UnlockableAliasDescriptor1719<'a> {
     pub string_loc_id: LocaleId,
     pub string_online_localized: Cow<'a, str>,
     pub string_placeholder: Cow<'a, str>,
-    pub difficulty_color: u8,
+    pub difficulty_color: Rarity,
     pub restricted_to_unlimited_songs: bool,
     pub unlock_objective: ObjectiveDesc1819<'a>,
 }

@@ -59,22 +59,22 @@ pub fn build(
     bf.generated_files.add_file(
         format!("{audio_cache_dir}/{lower_map_name}_musictrack.tpl.ckd"),
         musictrack_template_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{audio_cache_dir}/{lower_map_name}_sequence.tpl.ckd"),
         sequence_template_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{audio_cache_dir}/{lower_map_name}.stape.ckd"),
         sequence_tape_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{audio_cache_dir}/{lower_map_name}_audio.isc.ckd"),
         audio_scene_vec,
-    );
+    )?;
 
     Ok(cooked::isc::WrappedScene {
         scene: audio_scene.scene,
@@ -135,12 +135,12 @@ fn musictrack_template(ses: &SongExportState<'_>, extension: &str) -> Result<Vec
         startpaused: 0,
         forceisenvironment: 0,
         components: vec![json_types::v22::Template22::MusicTrackComponent(
-            json_types::MusicTrackComponent {
+            json_types::tpl::MusicTrackComponent {
                 class: None,
-                track_data: json_types::MusicTrackData {
-                    class: Some(json_types::MusicTrackData::CLASS),
-                    structure: json_types::MusicTrackStructure {
-                        class: Some(json_types::MusicTrackStructure::CLASS),
+                track_data: json_types::tpl::MusicTrackData {
+                    class: Some(json_types::tpl::MusicTrackData::CLASS),
+                    structure: json_types::tpl::MusicTrackStructure {
+                        class: Some(json_types::tpl::MusicTrackStructure::CLASS),
                         markers: musictrack.markers.clone(),
                         signatures: musictrack.signatures.into_iter().map(Into::into).collect(),
                         sections: musictrack.sections.into_iter().map(Into::into).collect(),
@@ -168,24 +168,26 @@ fn musictrack_template(ses: &SongExportState<'_>, extension: &str) -> Result<Vec
         )],
     });
 
-    cooked::json::create_vec_with_capacity_hint(&template, 8000)
+    Ok(cooked::json::create_vec_with_capacity_hint(
+        &template, 8000,
+    )?)
 }
 
 /// Build the sequence template
 fn sequence_template() -> Result<Vec<u8>, Error> {
     let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
         components: vec![json_types::v22::Template22::MasterTape(
-            json_types::MasterTape::default(),
+            json_types::tpl::MasterTape::default(),
         )],
         ..Default::default()
     });
 
-    cooked::json::create_vec_with_capacity_hint(&template, 500)
+    Ok(cooked::json::create_vec_with_capacity_hint(&template, 500)?)
 }
 
 /// Build the sequence tape
 fn sequence_tape(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
-    let template = json_types::v22::Template22::Tape(json_types::Tape {
+    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
         class: None,
         clips: Vec::new(),
         tape_clock: 0,
@@ -196,5 +198,5 @@ fn sequence_tape(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         actor_paths: Vec::new(),
     });
 
-    cooked::json::create_vec(&template)
+    Ok(cooked::json::create_vec(&template)?)
 }

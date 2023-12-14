@@ -56,7 +56,7 @@ pub fn build(
     bf.generated_files.add_file(
         format!("{timeline_cache_dir}/{lower_map_name}_tml.isc.ckd"),
         tml_scene_vec,
-    );
+    )?;
 
     // Build the dance timeline and related files
     build_dance(ses, bf)?;
@@ -85,8 +85,8 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
 
     for orig_clip in timeline.timeline {
         let some = match orig_clip {
-            Clip::GoldEffect(orig_clip) => Some(json_types::Clip::GoldEffect(
-                json_types::GoldEffectClip::from(orig_clip),
+            Clip::GoldEffect(orig_clip) => Some(json_types::tape::Clip::GoldEffect(
+                json_types::tape::GoldEffectClip::from(orig_clip),
             )),
             Clip::Motion(orig_clip) => {
                 let new_clip = orig_clip.to_tape(&ses.song);
@@ -108,7 +108,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                     );
                 }
 
-                Some(json_types::Clip::Motion(new_clip))
+                Some(json_types::tape::Clip::Motion(new_clip))
             }
             Clip::Pictogram(orig_clip) => {
                 let new_clip = orig_clip.to_tape(&ses.song);
@@ -121,7 +121,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                         let encoded = encode_texture(&from)?;
                         let encoded_vec = cooked::png::create_vec(&encoded)?;
 
-                        bf.generated_files.add_file(to, encoded_vec);
+                        bf.generated_files.add_file(to, encoded_vec)?;
                     } else {
                         println!(
                             "Warning! Missing {} for {lower_map_name}!",
@@ -130,7 +130,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                     }
                 }
 
-                Some(json_types::Clip::Pictogram(new_clip))
+                Some(json_types::tape::Clip::Pictogram(new_clip))
             }
             x => {
                 println!("Warning! Found non-dance clip in dance_timeline, ignoring! {x:?}");
@@ -142,7 +142,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
         }
     }
 
-    let template = json_types::v22::Template22::Tape(json_types::Tape {
+    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
         class: None,
         clips,
         tape_clock: 0,
@@ -158,17 +158,17 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
     bf.generated_files.add_file(
         format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.act.ckd"),
         dance_act_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.tpl.ckd"),
         dance_tpl_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.dtape.ckd"),
         dance_dtape_vec,
-    );
+    )?;
 
     Ok(())
 }
@@ -187,7 +187,7 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
     let tml_actor_vec = tml_actor(ses, k)?;
     let tml_template_vec = tml_template(ses, k)?;
 
-    let template = json_types::v22::Template22::Tape(json_types::Tape {
+    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
         class: None,
         clips: timeline
             .timeline
@@ -215,15 +215,15 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
     bf.generated_files.add_file(
         format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.act.ckd"),
         tml_actor_vec,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.tpl.ckd"),
         tml_template_vec,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.ktape.ckd"),
         ktape_vec,
-    );
+    )?;
     Ok(())
 }
 
@@ -307,7 +307,7 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
         }],
     };
 
-    cooked::act::create_vec(&actor)
+    Ok(cooked::act::create_vec(&actor)?)
 }
 
 /// Build a tml template
@@ -319,10 +319,10 @@ fn tml_template(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Erro
         let map_path = ses.map_path;
         let lower_map_name = ses.lower_map_name;
         let k_or_d = k_or_d.to_tape_end();
-        vec![json_types::TapeGroup {
-            class: Some(json_types::TapeGroup::CLASS),
-            entries: vec![json_types::TapeEntry {
-                class: Some(json_types::TapeEntry::CLASS),
+        vec![json_types::tpl::TapeGroup {
+            class: Some(json_types::tpl::TapeGroup::CLASS),
+            entries: vec![json_types::tpl::TapeEntry {
+                class: Some(json_types::tpl::TapeEntry::CLASS),
                 label: Cow::Borrowed("tml_motion"),
                 path: Cow::Owned(format!("{map_path}/timeline/{lower_map_name}_tml_{k_or_d}")),
             }],
@@ -337,12 +337,12 @@ fn tml_template(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Erro
         startpaused: 0,
         forceisenvironment: 0,
         components: vec![json_types::v22::Template22::TapeCase(
-            json_types::MasterTape {
+            json_types::tpl::MasterTape {
                 class: None,
                 tapes_rack,
             },
         )],
     });
 
-    cooked::json::create_vec(&template)
+    Ok(cooked::json::create_vec(&template)?)
 }

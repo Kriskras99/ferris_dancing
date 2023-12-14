@@ -8,7 +8,7 @@ use dotstar_toolkit_utils::vfs::{
     layeredfs::OverlayFs, native::Native, symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem,
 };
 use ubiart_toolkit::{
-    ipk::{self, vfs::VfsIpkFilesystem},
+    ipk::{self, vfs::IpkFilesystem},
     secure_fat::{self, SecureFat},
     utils::PathId,
 };
@@ -21,8 +21,8 @@ const MAX_BUNDLE_SIZE_FAT32: u64 = 4_294_967_295;
 
 /// Receives files in `rx` and bundles them into .ipk files at `destination`
 pub fn bundle(
-    bundle_vfs: &VfsIpkFilesystem<'_>,
-    patch_vfs: &VfsIpkFilesystem<'_>,
+    bundle_vfs: &IpkFilesystem<'_>,
+    patch_vfs: &IpkFilesystem<'_>,
     native_vfs: &Native,
     rx: &Receiver<FilesToAdd>,
     config: Config,
@@ -78,10 +78,10 @@ pub fn bundle(
                         || path.ends_with("songdesc.tpl.ckd")
                     {
                         // Add the file to the main bundle
-                        bundle_files.generated_files.add_file(path, content);
+                        bundle_files.generated_files.add_file(path, content)?;
                     } else {
                         // Add the file to the song bundle
-                        song_files.generated_files.add_file(path, content);
+                        song_files.generated_files.add_file(path, content)?;
                     }
                 }
                 for (new_path, orig_path) in new_song_files.static_files {

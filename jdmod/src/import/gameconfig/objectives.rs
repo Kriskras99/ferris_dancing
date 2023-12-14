@@ -55,7 +55,7 @@ pub fn load_objectives(is: &ImportState<'_>) -> Result<Objectives<'static>, Erro
 }
 
 /// Save the objectives to the mod folder
-pub fn save_objectives(is: &ImportState<'_>, objectives: &Objectives) -> Result<(), Error> {
+pub fn save_objectives(is: &ImportState<'_>, objectives: &Objectives) -> std::io::Result<()> {
     let file = File::create(is.dirs.config().join("objectives.json"))?;
     serde_json::to_writer_pretty(file, &objectives.name_map)?;
 

@@ -11,7 +11,9 @@ use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use flate2::{write::ZlibEncoder, Compression};
 
 use super::{Platform, MAGIC};
-use crate::utils::{self, bytes::WriteBytesExtUbiArt, Game, GamePlatform, SplitPath};
+use crate::utils::{
+    self, bytes::WriteBytesExtUbiArt, errors::WriterError, Game, GamePlatform, SplitPath,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
@@ -76,7 +78,7 @@ pub fn create<P: AsRef<Path>>(
     options: Options,
     vfs: &dyn VirtualFileSystem,
     files: &[&str],
-) -> Result<(), anyhow::Error> {
+) -> Result<(), WriterError> {
     let file = File::create(path)?;
     let writer = BufWriter::new(file);
     write(
@@ -102,7 +104,7 @@ pub fn write<W: Write + Seek>(
     options: Options,
     vfs: &dyn VirtualFileSystem,
     files: &[&str],
-) -> Result<(), anyhow::Error> {
+) -> Result<(), WriterError> {
     // Calculate the size of the header, starting with the static size
     let mut base_offset = STATIC_HEADER_SIZE;
 
@@ -123,9 +125,7 @@ pub fn write<W: Write + Seek>(
     // Start writing the header
     writer.write_u32::<BigEndian>(MAGIC)?;
     writer.write_u32::<BigEndian>(0x5)?; // version
-    writer.write_u32::<BigEndian>(u32::from(TryInto::<Platform>::try_into(
-        game_platform.platform,
-    )?))?;
+    writer.write_u32::<BigEndian>(u32::from(Into::<Platform>::into(game_platform.platform)))?;
     writer.write_u32::<BigEndian>(u32::try_from(base_offset)?)?;
     writer.write_u32::<BigEndian>(u32::try_from(files.len())?)?;
     writer.write_u32::<BigEndian>(0x0)?; // unk1

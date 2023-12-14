@@ -2,25 +2,44 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
+use yoke::Yokeable;
 
-#[allow(clippy::wildcard_imports)]
-use super::*;
-
-pub struct Template22Owned<C: StableDeref> {
-    yoke: Yoke<Template22<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Template22<'static>, C>> for Template22Owned<C> {
-    fn from(yoke: Yoke<Template22<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> Template22Owned<C> {
-    pub fn template(&'a self) -> &'a Template22<'a> {
-        self.yoke.get()
-    }
-}
+#[cfg(feature = "full_json_types")]
+use super::{
+    isg::{
+        AchievementsDatabase, CameraShakeConfig, CarouselManager, FTUESteps, FontEffectList,
+        PadRumbleManager, QuickplayRules, SoundConfig, TRCLocalisation, UITextManager,
+        VibrationManager, WDFLinearRewards, ZInputConfig, ZInputManager,
+    },
+    just_dance::{AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDatabase},
+    msh::GFXMaterialShader,
+    tpl::{
+        AFXPostProcessComponent, BezierTreeComponent, BoxInterpolatorComponent, FxBankComponent,
+        FxControllerComponent, PleoComponent, PleoTextureGraphicComponent,
+        SingleInstanceMesh3DComponent, TextureGraphicComponent, UINineSliceMaskComponent,
+        UITextBox,
+    },
+    Empty, FeedbackFXManager,
+};
+use super::{
+    isg::{
+        AutoDanceEffectData, CarouselElementDesc, CarouselRules, ClubRewardConfig,
+        CollectibleAlbum, CountryEntry, CustomizableItemConfig, GachaConfig, GachaContentDatabase,
+        GridActorsToPreload, HomeDataConfig, HomeDataTipEntry, ItemColorLookUp, LayoutTabbedGrids,
+        LocalAliases, MenuAssetsCacheParams, MenuMultiTrackItem, MenuMusicConfig, MenuMusicParams,
+        ObjectivesDatabase, OnFlyNotificationTypeParams, PlaylistDatabase, PopupConfigList,
+        PortraitBordersDatabase, RankDescriptor, RecapConfig, RemoteSoundParams,
+        ScheduledQuestDatabase, ScheduledQuestSetup, ScoringCameraParams, ScoringMovespaceParams,
+        ScoringParams, ShortcutDesc1719, SongsSearchTags, TutorialContent, TutorialDesc,
+        UnlimitedUpsellSongList, UnlimitedUpsellSubtitles, UplayReward, WDFBossEntry,
+        WhatsNewConfigs,
+    },
+    just_dance::{AutodanceComponent, SongDescription},
+    tape::Tape,
+    tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
+    AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
+};
+use crate::utils::errors::ParserError;
 
 #[derive(Debug, Serialize, Deserialize, Yokeable)]
 #[serde(tag = "__class")]
@@ -314,11 +333,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `GameManagerConfig22`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig22<'a>, Error> {
+    pub fn game_manager_config(self) -> Result<GameManagerConfig22<'a>, ParserError> {
         if let Template22::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
-            Err(anyhow!("GameManagerConfig not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "GameManagerConfig not found in template: {self:?}"
+            )))
         }
     }
 
@@ -326,13 +347,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `ObjectivesDatabase`.
-    pub fn objectives_database(self) -> Result<ObjectivesDatabase<'a>, Error> {
+    pub fn objectives_database(self) -> Result<ObjectivesDatabase<'a>, ParserError> {
         if let Template22::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "ObjectivesDatabase not found in template: {self:?}"
-            ))
+            )))
         }
     }
 
@@ -340,13 +361,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `ScheduledQuestDatabase`.
-    pub fn scheduled_quests_database(self) -> Result<ScheduledQuestDatabase<'a>, Error> {
+    pub fn scheduled_quests_database(self) -> Result<ScheduledQuestDatabase<'a>, ParserError> {
         if let Template22::ScheduledQuestDatabase(sqst_db) = self {
             Ok(sqst_db)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "ScheduledQuestDatabase not found in template: {self:?}"
-            ))
+            )))
         }
     }
 
@@ -354,11 +375,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `PlaylistDatabase`.
-    pub fn playlists_database(self) -> Result<PlaylistDatabase<'a>, Error> {
+    pub fn playlists_database(self) -> Result<PlaylistDatabase<'a>, ParserError> {
         if let Template22::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {
-            Err(anyhow!("PlaylistDatabase not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "PlaylistDatabase not found in template: {self:?}"
+            )))
         }
     }
 
@@ -366,11 +389,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `LocalAliases`.
-    pub fn local_aliases(self) -> Result<LocalAliases<'a>, Error> {
+    pub fn local_aliases(self) -> Result<LocalAliases<'a>, ParserError> {
         if let Template22::LocalAliases(local_aliases) = self {
             Ok(local_aliases)
         } else {
-            Err(anyhow!("LocalAliases not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "LocalAliases not found in template: {self:?}"
+            )))
         }
     }
 
@@ -378,13 +403,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `PortraitBordersDatabase`.
-    pub fn portrait_borders_database(self) -> Result<PortraitBordersDatabase<'a>, Error> {
+    pub fn portrait_borders_database(self) -> Result<PortraitBordersDatabase<'a>, ParserError> {
         if let Template22::PortraitBordersDatabase(portrait_borders_database) = self {
             Ok(portrait_borders_database)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "PortraitBordersDatabase not found in template: {self:?}"
-            ))
+            )))
         }
     }
 
@@ -392,11 +417,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `Actor22`.
-    pub fn actor(self) -> Result<Actor22<'a>, Error> {
+    pub fn actor(self) -> Result<Actor22<'a>, ParserError> {
         if let Template22::Actor(actor) = self {
             Ok(actor)
         } else {
-            Err(anyhow!("Actor not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "Actor not found in template: {self:?}"
+            )))
         }
     }
 
@@ -404,11 +431,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `AvatarDescription22`.
-    pub fn avatar_description(&'a self) -> Result<&'a AvatarDescription22<'a>, Error> {
+    pub fn avatar_description(&'a self) -> Result<&'a AvatarDescription22<'a>, ParserError> {
         if let Template22::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {
-            Err(anyhow!("AvatarDescription not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "AvatarDescription not found in template: {self:?}"
+            )))
         }
     }
 
@@ -416,11 +445,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `SongDescription`.
-    pub fn song_description(self) -> Result<SongDescription<'a>, Error> {
+    pub fn song_description(self) -> Result<SongDescription<'a>, ParserError> {
         if let Template22::SongDescription(song_description) = self {
             Ok(song_description)
         } else {
-            Err(anyhow!("SongDescription not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "SongDescription not found in template: {self:?}"
+            )))
         }
     }
 
@@ -428,13 +459,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `AutodanceComponent`.
-    pub fn autodance_component(self) -> Result<AutodanceComponent<'a>, Error> {
+    pub fn autodance_component(self) -> Result<AutodanceComponent<'a>, ParserError> {
         if let Template22::AutodanceComponent(autodance_component) = self {
             Ok(autodance_component)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "AutodanceComponent not found in template: {self:?}"
-            ))
+            )))
         }
     }
 
@@ -442,11 +473,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `MasterTape`.
-    pub fn master_tape(self) -> Result<MasterTape<'a>, Error> {
+    pub fn master_tape(self) -> Result<MasterTape<'a>, ParserError> {
         if let Template22::MasterTape(master_tape) = self {
             Ok(master_tape)
         } else {
-            Err(anyhow!("MasterTape not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "MasterTape not found in template: {self:?}"
+            )))
         }
     }
 
@@ -454,11 +487,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `MusicTrackComponent`.
-    pub fn tape_case_component(self) -> Result<MasterTape<'a>, Error> {
+    pub fn tape_case_component(self) -> Result<MasterTape<'a>, ParserError> {
         if let Template22::TapeCase(tape_case_component) = self {
             Ok(tape_case_component)
         } else {
-            Err(anyhow!("TapeCase not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "TapeCase not found in template: {self:?}"
+            )))
         }
     }
 
@@ -466,11 +501,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `CarouselRules`.
-    pub fn carousel_rules(self) -> Result<CarouselRules<'a>, Error> {
+    pub fn carousel_rules(self) -> Result<CarouselRules<'a>, ParserError> {
         if let Template22::CarouselRules(carousel_rules) = self {
             Ok(carousel_rules)
         } else {
-            Err(anyhow!("CarouselRules not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "CarouselRules not found in template: {self:?}"
+            )))
         }
     }
 
@@ -478,11 +515,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `Tape`.
-    pub fn tape(self) -> Result<Tape<'a>, Error> {
+    pub fn tape(self) -> Result<Tape<'a>, ParserError> {
         if let Template22::Tape(tape) = self {
             Ok(tape)
         } else {
-            Err(anyhow!("Tape not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "Tape not found in template: {self:?}"
+            )))
         }
     }
 
@@ -490,11 +529,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `SoundComponent`.
-    pub fn sound_component(&'a self) -> Result<&'a SoundComponent<'a>, Error> {
+    pub fn sound_component(&'a self) -> Result<&'a SoundComponent<'a>, ParserError> {
         if let Template22::SoundComponent(sound_component) = self {
             Ok(sound_component)
         } else {
-            Err(anyhow!("SoundComponent not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "SoundComponent not found in template: {self:?}"
+            )))
         }
     }
 
@@ -502,13 +543,13 @@ impl<'a> Template22<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `MusicTrackComponent`.
-    pub fn musictrack_component(self) -> Result<MusicTrackComponent<'a>, Error> {
+    pub fn musictrack_component(self) -> Result<MusicTrackComponent<'a>, ParserError> {
         if let Template22::MusicTrackComponent(musictrack_component) = self {
             Ok(musictrack_component)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "MusicTrackComponent not found in template: {self:?}"
-            ))
+            )))
         }
     }
 }

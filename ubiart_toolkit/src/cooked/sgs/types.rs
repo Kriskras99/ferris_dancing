@@ -1,9 +1,10 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use anyhow::{anyhow, Error};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+use crate::utils::errors::ParserError;
+
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields, untagged)]
 pub enum Sgs<'a> {
     #[serde(borrow)]
@@ -17,11 +18,13 @@ impl<'a> Sgs<'a> {
     ///
     /// # Errors
     /// Will error if this is not a `SceneSettings` type
-    pub fn as_scene_settings(self) -> Result<SceneSettings<'a>, Error> {
+    pub fn as_scene_settings(self) -> Result<SceneSettings<'a>, ParserError> {
         if let Sgs::SceneSettings(scene_settings) = self {
             Ok(scene_settings)
         } else {
-            Err(anyhow!("Sgs is not a SceneSettings!"))
+            Err(ParserError::custom(format!(
+                "Sgs is not a SceneSettings: {self:?}"
+            )))
         }
     }
 
@@ -29,23 +32,25 @@ impl<'a> Sgs<'a> {
     ///
     /// # Errors
     /// Will error if this is not a `SceneConfigManager` type
-    pub fn as_scene_config_manager(self) -> Result<SceneConfigManager<'a>, Error> {
+    pub fn as_scene_config_manager(self) -> Result<SceneConfigManager<'a>, ParserError> {
         if let Sgs::SceneConfigManager(scene_config_manager) = self {
             Ok(scene_config_manager)
         } else {
-            Err(anyhow!("Sgs is not a SceneConfigManager!"))
+            Err(ParserError::custom(format!(
+                "Sgs is not a SceneConfigManager: {self:?}"
+            )))
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SceneSettings<'a> {
     #[serde(borrow)]
     pub settings: Settings<'a>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SceneConfigManager<'a> {
     pub version: u8,
@@ -53,7 +58,7 @@ pub struct SceneConfigManager<'a> {
     pub sgs_map: SgsKey<'a>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct SgsKey<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
@@ -61,7 +66,7 @@ pub struct SgsKey<'a> {
     pub keys: HashMap<Cow<'a, str>, Settings<'a>>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "__class")]
 pub enum Settings<'a> {
     #[serde(borrow, rename = "JD_MapSceneConfig")]
@@ -72,7 +77,7 @@ pub enum Settings<'a> {
     TransitionSceneConfig(TransitionSceneConfig<'a>),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MapSceneConfig<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
@@ -107,7 +112,7 @@ impl<'a> Default for MapSceneConfig<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TransitionSceneConfig<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
@@ -119,7 +124,7 @@ pub struct TransitionSceneConfig<'a> {
     pub param_bindings: Vec<ParamBinding<'a>>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParamBinding<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
@@ -129,7 +134,7 @@ pub struct ParamBinding<'a> {
     pub patcher_marker: Cow<'a, str>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct SongDatabaseSceneConfig<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
@@ -161,7 +166,7 @@ impl Default for SongDatabaseSceneConfig<'static> {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "snake_case", deny_unknown_fields)]
 pub struct CoverflowSong<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]

@@ -1,20 +1,19 @@
 //! Contains the parser implementation
 
-use anyhow::Error;
 use byteorder::BigEndian;
-use dotstar_toolkit_utils::testing::{test, test_any};
+use dotstar_toolkit_utils::{
+    bytes::{read_u16_at, read_u32_at, read_u64_at},
+    testing::{test, test_any},
+};
 
 use super::Png;
-use crate::{
-    cooked::xtx,
-    utils::bytes::{read_u16_at, read_u32_at, read_u64_at},
-};
+use crate::{cooked::xtx, utils::errors::ParserError};
 
 /// Parse a .png.ckd file
 ///
 /// # Errors
 /// -  the file is not a .png.ckd file or the parser encounters an unexpected value.
-pub fn parse(src: &[u8]) -> Result<Png, Error> {
+pub fn parse(src: &[u8]) -> Result<Png, ParserError> {
     let mut position = 0;
 
     let magic = read_u64_at::<BigEndian>(src, &mut position)?;

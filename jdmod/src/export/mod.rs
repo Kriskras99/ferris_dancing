@@ -8,7 +8,7 @@ use clap::Args;
 use dotstar_toolkit_utils::vfs::symlinkfs::SymlinkFs;
 use dotstar_toolkit_utils::vfs::vecfs::VecFs;
 use dotstar_toolkit_utils::vfs::{layeredfs::OverlayFs, native::Native};
-use ubiart_toolkit::ipk::vfs::VfsIpkFilesystem;
+use ubiart_toolkit::ipk::vfs::IpkFilesystem;
 use ubiart_toolkit::utils::Game;
 use ubiart_toolkit::utils::Platform;
 
@@ -65,8 +65,8 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
 
     // Load bundle_nx.ipk and patch_nx.ipk to use as a base
     let base_native_vfs = Native::new(dir_tree.base())?;
-    let bundle_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref(), false)?;
-    let patch_nx_vfs = VfsIpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref(), false)?;
+    let bundle_nx_vfs = IpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref(), false)?;
+    let patch_nx_vfs = IpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref(), false)?;
     let patched_base_vfs = OverlayFs::new(&patch_nx_vfs, &bundle_nx_vfs);
 
     /*

@@ -1,24 +1,24 @@
-#![allow(clippy::module_name_repetitions)]
-
+//! A [`VirtualFileSystem`] implementation for [`SecureFat`]
+//!
+//! It will load the secure_fat.gf file and any IPK bundles listed therein plus the patch file.
 use std::{io::ErrorKind, path::Path};
 
-use anyhow::{Context, Error};
 use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use super::{BundleId, SecureFat};
 use crate::{
-    ipk::vfs::VfsIpkFilesystem,
+    ipk::vfs::IpkFilesystem,
     utils::{path_id, GamePlatform},
 };
 
-pub struct VfsSfatFilesystem<'f> {
+pub struct SfatFilesystem<'f> {
     sfat: SecureFat,
-    bundles: IntMap<BundleId, VfsIpkFilesystem<'f>>,
-    patch: Option<VfsIpkFilesystem<'f>>,
+    bundles: IntMap<BundleId, IpkFilesystem<'f>>,
+    patch: Option<IpkFilesystem<'f>>,
 }
 
-impl VfsSfatFilesystem<'_> {
+impl SfatFilesystem<'_> {
     /// Get the `GamePlatform` value for this secure_fat.gf file
     #[must_use]
     pub const fn game_platform(&self) -> GamePlatform {
@@ -32,7 +32,7 @@ impl VfsSfatFilesystem<'_> {
         } else {
             self.bundles
                 .values()
-                .map(VfsIpkFilesystem::engine_version)
+                .map(IpkFilesystem::engine_version)
                 .max()
                 .unwrap_or_else(|| unreachable!())
         }
@@ -45,14 +45,14 @@ impl VfsSfatFilesystem<'_> {
         } else {
             self.bundles
                 .values()
-                .map(VfsIpkFilesystem::unk4)
+                .map(IpkFilesystem::unk4)
                 .max()
                 .unwrap_or_else(|| unreachable!())
         }
     }
 }
 
-impl<'f> VfsSfatFilesystem<'f> {
+impl<'f> SfatFilesystem<'f> {
     /// Create a new virtual filesystem from a secure_fat.gf at `path`
     ///
     /// # Errors
@@ -60,11 +60,13 @@ impl<'f> VfsSfatFilesystem<'f> {
     ///
     /// # Panics
     /// Will panic if the secure_fat.gf file does not reference any IPKs
-    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path, lax: bool) -> Result<Self, Error> {
-        let sfat_file = fs
-            .open(path)
-            .with_context(|| format!("Failed to open {path:?}"))?;
-        let sfat = super::parse(&sfat_file)?;
+    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path, lax: bool) -> std::io::Result<Self> {
+        let sfat_file = fs.open(path).map_err(|error| {
+            std::io::Error::other(format!("Failed to open {path:?}: {error:?}"))
+        })?;
+        let sfat = super::parse(&sfat_file).map_err(|error| {
+            std::io::Error::other(format!("Failed to parse secure_fat.gf: {error:?}"))
+        })?;
         assert!(
             sfat.bundle_count() >= 1,
             "secure_fat.gf does not have any IPKs"
@@ -77,13 +79,14 @@ impl<'f> VfsSfatFilesystem<'f> {
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             let filename = super::bundle_name_to_filename(name, sfat.game_platform().platform);
             let path = parent.with_file_name(&filename);
-            let ipk = VfsIpkFilesystem::new(fs, &path, lax)
-                .with_context(|| format!("Failed to open or parse {path:?}"))?;
+            let ipk = IpkFilesystem::new(fs, &path, lax).map_err(|error| {
+                std::io::Error::other(format!("Failed to parse {path:?}: {error:?}"))
+            })?;
             bundles.insert(*bundle_id, ipk);
         }
         let filename = super::bundle_name_to_filename("patch", sfat.game_platform().platform);
         let path = parent.with_file_name(filename);
-        let patch = VfsIpkFilesystem::new(fs, &path, lax).ok();
+        let patch = IpkFilesystem::new(fs, &path, lax).ok();
         if patch.is_none() {
             println!("Warning! No patch file found!");
         }
@@ -96,7 +99,7 @@ impl<'f> VfsSfatFilesystem<'f> {
     }
 }
 
-impl<'fs> VirtualFileSystem for VfsSfatFilesystem<'fs> {
+impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     fn open<'f>(&'f self, path: &Path) -> std::io::Result<VirtualFile<'f>> {
         let path_id = path_id(path);
         if let Some(file) = self.patch.as_ref().and_then(|p| p.open(path).ok()) {

@@ -52,8 +52,8 @@ pub fn build(
                 bf.generated_files.add_file(
                     format!("{actors_cache_dir}/{lower_map_name}_{lower_name}.act.ckd"),
                     mgc_actor_vec,
-                );
-                bf.generated_files.add_file(to, encoded_vec);
+                )?;
+                bf.generated_files.add_file(to, encoded_vec)?;
             }
             MenuArt::Phone(phone) => {
                 let from = ses.dirs.menuart().join(phone.filename.as_ref());
@@ -77,7 +77,7 @@ pub fn build(
     bf.generated_files.add_file(
         format!("{menuart_cache_dir}/{lower_map_name}_menuart.isc.ckd"),
         menuart_scene_vec,
-    );
+    )?;
 
     Ok(cooked::isc::WrappedScene {
         scene: menuart_scene.scene,
@@ -162,7 +162,7 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
         }],
     };
 
-    cooked::act::create_vec(&actor)
+    Ok(cooked::act::create_vec(&actor)?)
 }
 
 /// Build the MaterialGraphicComponent scene

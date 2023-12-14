@@ -1,6 +1,7 @@
 //! # Testing
 //! Contains functions like `assert!` but they return an `Error` instead of panicking.
 use std::{
+    backtrace::Backtrace,
     convert::Infallible,
     fmt::Debug,
     ops::{ControlFlow, FromResidual, Try},
@@ -22,9 +23,9 @@ impl TestResult {
     /// Combine two tests, only fail if both tests fail
     pub fn or(self, right: Self) -> Self {
         match (self, right) {
-            (TestResult::Err(left), Self::Err(right)) => Self::Err(TestError::And {
-                left: Box::new(left),
-                right: Box::new(right),
+            (Self::Err(left), Self::Err(right)) => Self::Err(TestError::And {
+                source: Box::new(left),
+                other: Box::new(right),
             }),
             _ => Self::Ok,
         }
@@ -33,15 +34,15 @@ impl TestResult {
     /// Combine two tests, fail if any of the two fail
     pub fn and(self, right: Self) -> Self {
         match (self, right) {
-            (TestResult::Err(left), Self::Err(right)) => Self::Err(TestError::And {
-                left: Box::new(left),
-                right: Box::new(right),
+            (Self::Err(left), Self::Err(right)) => Self::Err(TestError::And {
+                source: Box::new(left),
+                other: Box::new(right),
             }),
-            (TestResult::Err(left), _) => Self::Err(TestError::Or {
-                failed: Box::new(left),
+            (Self::Err(left), _) => Self::Err(TestError::Or {
+                source: Box::new(left),
             }),
-            (_, TestResult::Err(right)) => Self::Err(TestError::Or {
-                failed: Box::new(right),
+            (_, Self::Err(right)) => Self::Err(TestError::Or {
+                source: Box::new(right),
             }),
             _ => Self::Ok,
         }
@@ -142,6 +143,7 @@ pub enum TestError {
     #[error("{source:?}\n    Context: {context}")]
     Context {
         /// The original error
+        #[backtrace]
         source: Box<Self>,
         /// Added context
         context: String,
@@ -153,6 +155,8 @@ pub enum TestError {
         left: String,
         /// Right value
         right: String,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     /// The two values do match
     #[error("Test failed: {left} matches {right}")]
@@ -161,6 +165,8 @@ pub enum TestError {
         left: String,
         /// Right value
         right: String,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     /// The value is not any of the right values
     #[error("Test failed: {left} does not match any value in {right}")]
@@ -169,6 +175,8 @@ pub enum TestError {
         left: String,
         /// Right value
         right: String,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     /// The value is greater than it's supposed to be
     #[error("Test failed: {left} is greater than {right}")]
@@ -177,20 +185,24 @@ pub enum TestError {
         left: String,
         /// Right value
         right: String,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     /// Both tests failed
-    #[error("Both tests failed:\n    {left:?}\n    {right:?}")]
+    #[error("Both tests failed:\n    {source:?}\n    {other:?}")]
     And {
         /// The original left result
-        left: Box<Self>,
+        #[backtrace]
+        source: Box<Self>,
         /// The original right result
-        right: Box<Self>,
+        other: Box<Self>,
     },
     /// One of the tests failed
-    #[error("One of two tests failed:\n    {failed:?}")]
+    #[error("One of two tests failed:\n    {source:?}")]
     Or {
         /// The original failed result
-        failed: Box<Self>,
+        #[backtrace]
+        source: Box<Self>,
     },
 }
 
@@ -200,6 +212,7 @@ impl TestError {
         Self::NotEqual {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
+            backtrace: Backtrace::capture(),
         }
     }
 
@@ -208,6 +221,7 @@ impl TestError {
         Self::Equal {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
+            backtrace: Backtrace::capture(),
         }
     }
 
@@ -216,6 +230,7 @@ impl TestError {
         Self::NotAny {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
+            backtrace: Backtrace::capture(),
         }
     }
 
@@ -224,6 +239,7 @@ impl TestError {
         Self::GreaterThan {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
+            backtrace: Backtrace::capture(),
         }
     }
 }

@@ -175,7 +175,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
             let scene = cooked::isc::parse(&scene_file)?.scene;
             menuart::import(&sis, &scene, &songdesc.phone_images)?;
         }
-        (Err(error), false) => return Err(error),
+        (Err(error), false) => return Err(error.into()),
     }
 
     let song_path = sis.dirs.song().join("song.json");

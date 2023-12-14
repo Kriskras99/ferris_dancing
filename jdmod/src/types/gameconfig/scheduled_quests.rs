@@ -6,7 +6,6 @@ use std::{
     sync::atomic::{AtomicU32, Ordering},
 };
 
-use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types;
 
@@ -73,8 +72,8 @@ fn generate_quest_id() -> u32 {
     id
 }
 
-impl<'a> From<json_types::ScheduledQuestDesc<'a>> for QuestDescription<'a> {
-    fn from(value: json_types::ScheduledQuestDesc<'a>) -> Self {
+impl<'a> From<json_types::isg::ScheduledQuestDesc<'a>> for QuestDescription<'a> {
+    fn from(value: json_types::isg::ScheduledQuestDesc<'a>) -> Self {
         Self {
             quest_type: value.type_it,
             mojo_reward: value.mojo_reward,
@@ -87,10 +86,10 @@ impl<'a> From<json_types::ScheduledQuestDesc<'a>> for QuestDescription<'a> {
     }
 }
 
-impl<'a> From<QuestDescription<'a>> for json_types::ScheduledQuestDesc<'a> {
+impl<'a> From<QuestDescription<'a>> for json_types::isg::ScheduledQuestDesc<'a> {
     fn from(value: QuestDescription<'a>) -> Self {
-        json_types::ScheduledQuestDesc {
-            class: Some(json_types::ScheduledQuestDesc::CLASS),
+        json_types::isg::ScheduledQuestDesc {
+            class: Some(json_types::isg::ScheduledQuestDesc::CLASS),
             id: generate_quest_id(),
             type_it: value.quest_type,
             unlimited_only: value.unlimited_only,
@@ -105,21 +104,18 @@ impl<'a> From<QuestDescription<'a>> for json_types::ScheduledQuestDesc<'a> {
 
 impl<'a> QuestDescription<'a> {
     /// Convert an old quest description into the modern format
-    ///
-    /// # Errors
-    /// Will error if the conversion of the objective fails
     pub fn from_scheduled_quest_desc_1819(
-        description: json_types::ScheduledQuestDesc1819<'a>,
+        description: json_types::v1719::ScheduledQuestDesc1819<'a>,
         objectives: &mut Objectives<'a>,
         locale_id_map: &LocaleIdMap,
-    ) -> Result<Self, Error> {
+    ) -> Self {
         let objective = Cow::Owned(objectives.add_objective(Objective::from_old_descriptor(
             &description.objective,
             description.unlimited_only,
             locale_id_map,
-        ))?);
+        )));
 
-        Ok(Self {
+        Self {
             quest_type: description.type_it,
             mojo_reward: description.mojo_reward,
             probability_weight: description.objective.probability_weight(),
@@ -127,6 +123,6 @@ impl<'a> QuestDescription<'a> {
             objective,
             tags: description.tags,
             preconditions: description.preconditions_objectives_id,
-        })
+        }
     }
 }

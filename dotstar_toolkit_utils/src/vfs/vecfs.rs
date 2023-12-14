@@ -34,15 +34,15 @@ impl VecFs {
 
     /// Add a file to the filesystem
     ///
-    /// # Panics
-    /// Will panic if there is already a file for `path`
-    pub fn add_file(&mut self, path: String, mut content: Vec<u8>) {
-        assert!(
-            !self.files.contains_key(&path),
-            "Path '{path}' already exists!"
-        );
+    /// # Errors
+    /// Will return an error if the file already exists
+    pub fn add_file(&mut self, path: String, mut content: Vec<u8>) -> std::io::Result<()> {
+        if self.files.contains_key(&path) {
+            return Err(std::io::ErrorKind::AlreadyExists.into());
+        }
         content.shrink_to_fit();
         self.files.insert(path, content);
+        Ok(())
     }
 
     /// Merge this filesystem with another filesystem.
@@ -55,11 +55,11 @@ impl VecFs {
 
     /// Get the size of the entire filesystem
     ///
-    /// # Panics
-    /// Will panic if the total size does not fit in a `u64`
-    pub fn size(&self) -> u64 {
+    /// # Errors
+    /// - The total size is larger than [`u64::MAX`]
+    pub fn size(&self) -> Result<u64> {
         u64::try_from(self.files.values().map(Vec::len).sum::<usize>())
-            .expect("Filesystem is bigger than the size of the universe!")
+            .map_err(|_| std::io::Error::other("Overflow occured"))
     }
 }
 

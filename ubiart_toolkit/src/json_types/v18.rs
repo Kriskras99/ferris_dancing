@@ -2,25 +2,48 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
+use yoke::Yokeable;
 
-#[allow(clippy::wildcard_imports)]
-use super::*;
-
-pub struct Template18Owned<C: StableDeref> {
-    yoke: Yoke<Template18<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<Template18<'static>, C>> for Template18Owned<C> {
-    fn from(yoke: Yoke<Template18<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> Template18Owned<C> {
-    pub fn template(&'a self) -> &'a Template18<'a> {
-        self.yoke.get()
-    }
-}
+#[cfg(feature = "full_json_types")]
+use super::{
+    isg::{
+        AchievementsDatabase, AnthologyConfig, CameraShakeConfig, CarouselManager, CarouselRules,
+        FTUESteps, FontEffectList, GachaContentDatabase, PadRumbleManager, QuickplayRules,
+        SoundConfig, TRCLocalisation, UITextManager, VibrationManager, WDFLinearRewards,
+        ZInputConfig, ZInputManager,
+    },
+    just_dance::{
+        AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
+    },
+    msh::GFXMaterialShader1718,
+    tpl::{
+        AFXPostProcessComponent, BezierTreeComponent, BoxInterpolatorComponent, FxBankComponent,
+        FxControllerComponent, PleoComponent, PleoTextureGraphicComponent,
+        SingleInstanceMesh3DComponent, TextureGraphicComponent, UINineSliceMaskComponent,
+        UITextBox,
+    },
+    Empty, FeedbackFXManager,
+};
+use super::{
+    isg::{
+        AdventureBossDesc18, AdventureModeSetup18, AdventureObjective18, AutoDanceEffectData,
+        ChallengerScoreEvolutionTemplate1719, ChatMessagesParams1718, ClubRewardConfig,
+        CollectibleAlbum, CountryEntry, CustomizableItemConfig, DanceMachineGlobalConfig1719,
+        FTUEConfig, GachaConfig, HueConfig, ItemColorLookUp, MenuAssetsCacheParams,
+        MenuMultiTrackItem, MenuMusicConfig, MenuMusicParams, ObjectivesDatabase, PlaylistDatabase,
+        PopupConfigList, PortraitBordersDatabase, QuestChallengerEntry1718, QuestConfig1718,
+        RankDescriptor, RemoteSoundParams, RumbleConfig, ScheduledQuestDatabase,
+        ScheduledQuestSetup, ScoringCameraParams, ScoringMovespaceParams, ScoringParams,
+        SearchConfig1719, ShortcutSetup1719, StickerEntry, SweatRandomizeConfig1719,
+        SystemDescriptor18, TutorialContent, TutorialDesc, UnlimitedUpsellSongList, UplayReward,
+        VideoLoopSetup, WDFBossEntry,
+    },
+    just_dance::{AutodanceComponent, AvatarDescription, SongDatabase},
+    tape::Tape,
+    tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
+    v1719::{LocalAliases1719, ScheduledQuestDesc1819},
+};
+use crate::utils::errors::ParserError;
 
 #[derive(Debug, Serialize, Deserialize, Yokeable)]
 #[serde(tag = "__class")]
@@ -319,11 +342,13 @@ impl<'a> Template18<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `GameManagerConfig18`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig18<'a>, Error> {
+    pub fn game_manager_config(self) -> Result<GameManagerConfig18<'a>, ParserError> {
         if let Template18::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
-            Err(anyhow!("GameManagerConfig not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "GameManagerConfig not found in template: {self:?}"
+            )))
         }
     }
 
@@ -331,13 +356,13 @@ impl<'a> Template18<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `ObjectivesDatabase`.
-    pub fn objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, Error> {
+    pub fn objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
         if let Template18::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "ObjectivesDatabase not found in template: {self:?}"
-            ))
+            )))
         }
     }
 
@@ -345,13 +370,15 @@ impl<'a> Template18<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `ScheduledQuestDatabase`.
-    pub fn scheduled_quests_database(&'a self) -> Result<&'a ScheduledQuestDatabase<'a>, Error> {
+    pub fn scheduled_quests_database(
+        &'a self,
+    ) -> Result<&'a ScheduledQuestDatabase<'a>, ParserError> {
         if let Template18::ScheduledQuestDatabase(sqst_db) = self {
             Ok(sqst_db)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "ScheduledQuestDatabase not found in template: {self:?}"
-            ))
+            )))
         }
     }
 
@@ -359,11 +386,13 @@ impl<'a> Template18<'a> {
     ///
     /// # Errors
     /// Will error if this template is not a `PlaylistDatabase`.
-    pub fn playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, Error> {
+    pub fn playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
         if let Template18::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {
-            Err(anyhow!("PlaylistDatabase not found in template: {self:?}"))
+            Err(ParserError::custom(format!(
+                "PlaylistDatabase not found in template: {self:?}"
+            )))
         }
     }
 }

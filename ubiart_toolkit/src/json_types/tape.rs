@@ -766,6 +766,7 @@ pub struct KeyFloat<'a> {
     pub normal_out: (f32, f32),
 }
 
+/// Deserialize a [`BezierCurveFloatValue`] which is weirdly formattend in the JSON files
 fn deser_bezier_curve_float_value<'de, D>(deser: D) -> Result<BezierCurveFloatValue<'de>, D::Error>
 where
     D: serde::Deserializer<'de>,

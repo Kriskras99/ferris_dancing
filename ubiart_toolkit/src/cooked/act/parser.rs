@@ -2,18 +2,17 @@
 
 use std::borrow::Cow;
 
-use anyhow::{anyhow, Context, Error};
 use byteorder::BigEndian;
-use dotstar_toolkit_utils::testing::{test, test_any};
+use dotstar_toolkit_utils::{
+    bytes::{read_string_at, read_u32_at, read_u64_at},
+    testing::{test, test_any},
+};
 
 use super::{
     Actor, Component, ComponentData, ComponentType, CreditsComponent, MaterialGraphicComponent,
     PleoComponent,
 };
-use crate::utils::{
-    bytes::{read_path_at, read_string_at, read_u32_at, read_u64_at},
-    Game, SplitPath,
-};
+use crate::utils::{bytes::read_path_at, errors::ParserError, Game, SplitPath};
 
 /// Parse a bytearray-like source as a actor file
 ///
@@ -25,7 +24,7 @@ use crate::utils::{
 /// - Invalid UTF-8 (i.e. in paths)
 /// - Source has an unexpected size (i.e. not enough bytes, or too many bytes)
 /// - If there are too many templates
-pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
+pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
     // Keep track of where we are
     let mut pos = 0;
     let unk0 = read_u32_at::<BigEndian>(src, &mut pos)?;
@@ -154,7 +153,9 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
             ComponentType::UIWidgetGroupHUDLyrics => todo!(),
             ComponentType::ViewportUIComponent => todo!(),
             _ => {
-                return Err(anyhow!("Unsupported component type {component_type:?}!"));
+                return Err(ParserError::custom(format!(
+                    "Unsupported component type: {component_type:?}!"
+                )));
             }
         };
         components.push(Component {
@@ -174,25 +175,31 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, anyhow::Error> {
     })
 }
 
+/// Parse the registration component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_registration_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
-    // if game == Game::JustDance2018 {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0xAA55_B6BD, 0xFFFF_FFFF])?;
     let unk12 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk12, &0x0)?;
-    // }
     Ok(ComponentData::None)
 }
 
+/// Parse the box interpolator component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_box_interpolator_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     for _ in 0..2 {
         let unk11 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk11, &0xBF00_0000)?;
@@ -212,11 +219,15 @@ fn parse_box_interpolator_component<'a>(
     Ok(ComponentData::None)
 }
 
+/// Parse the AFX post process component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_afx_post_process_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk16 = read_u64_at::<BigEndian>(src, pos)?;
     test(&unk16, &8)?;
     let unk17 = read_u32_at::<BigEndian>(src, pos)?;
@@ -224,21 +235,29 @@ fn parse_afx_post_process_component<'a>(
     Ok(ComponentData::None)
 }
 
+/// Parse the converted tml tape component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_converted_tml_tape<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk11, &0)?;
     Ok(ComponentData::None)
 }
 
+/// Parse the credits component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_credits_component<'a>(
     src: &'a [u8],
     game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0xD, 0x17]).context(*pos)?;
     let i = if game == Game::JustDance2017 { 6 } else { 10 };
@@ -269,11 +288,15 @@ fn parse_credits_component<'a>(
     Ok(ComponentData::CreditsComponent(CreditsComponent { lines }))
 }
 
+/// Parse the fixed camera component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_fixed_camera_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0x0, 0x1])?;
     let unk12 = read_u64_at::<BigEndian>(src, pos)?;
@@ -285,21 +308,29 @@ fn parse_fixed_camera_component<'a>(
     Ok(ComponentData::None)
 }
 
+/// Parse the fx controller component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_fx_controller<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk11 = read_u64_at::<BigEndian>(src, pos)?;
     test(&unk11, &0)?;
     Ok(ComponentData::None)
 }
 
+/// Parse the fx bank component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_fx_bank_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     for _ in 0..4 {
         let unk11 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk11, &0x3F80_0000)?;
@@ -315,11 +346,15 @@ fn parse_fx_bank_component<'a>(
     Ok(ComponentData::None)
 }
 
+/// Parse the bezier tree component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_bezier_tree_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk18 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk18, &2)?;
     for _ in 0..4 {
@@ -353,12 +388,16 @@ fn parse_bezier_tree_component<'a>(
     Ok(ComponentData::None)
 }
 
+/// Parse the material graphic component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_material_graphic_component<'a>(
     src: &'a [u8],
     game: Game,
     pos: &mut usize,
     is_pleo: bool,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     for _ in 0..3 {
         let unk11 = read_u32_at::<BigEndian>(src, pos)?;
         test(&unk11, &0x3F80_0000).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
@@ -422,7 +461,7 @@ fn parse_material_graphic_component<'a>(
 
     for item in files.iter_mut().take(9) {
         let path = read_path_at::<BigEndian>(src, pos)
-            .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+            .map_err(|error| error.context(format!("Pos: {pos}, is_pleo: {is_pleo}")))?;
         *item = path;
     }
 
@@ -431,7 +470,7 @@ fn parse_material_graphic_component<'a>(
 
     for item in files.iter_mut().skip(9) {
         let path = read_path_at::<BigEndian>(src, pos)
-            .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+            .map_err(|error| error.context(format!("Pos: {pos}, is_pleo: {is_pleo}")))?;
         *item = path;
     }
 
@@ -496,6 +535,10 @@ fn parse_material_graphic_component<'a>(
     )))
 }
 
+// /// Parse the music track component of an actor
+// ///
+// /// # Errors
+// /// Will error on unexpected values
 // fn parse_music_track_component<'a>(src: 'a '[u8], _game: Game, path: &Path, pos: &mut usize) -> Result<TemplateData<'a>, Error> {
 //     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
 //     test(
@@ -566,11 +609,15 @@ fn parse_material_graphic_component<'a>(
 //     todo!()
 // }
 
+/// Parse the pleo component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_pleo_component<'a>(
     src: &'a [u8],
     _game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let video = read_path_at::<BigEndian>(src, pos)?;
     let dash_mpd = read_path_at::<BigEndian>(src, pos)?;
     let channel_id = Cow::Borrowed(read_string_at::<BigEndian>(src, pos)?);
@@ -586,11 +633,15 @@ fn parse_pleo_component<'a>(
     }))
 }
 
+/// Parse the property patcher component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_property_patcher<'a>(
     src: &'a [u8],
     game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk11, &1)?;
     let unk12 = read_u32_at::<BigEndian>(src, pos)?;
@@ -602,11 +653,15 @@ fn parse_property_patcher<'a>(
     Ok(ComponentData::None)
 }
 
+/// Parse the ui textbox component of an actor
+///
+/// # Errors
+/// Will error on unexpected values
 fn parse_ui_text_box<'a>(
     src: &'a [u8],
     game: Game,
     pos: &mut usize,
-) -> Result<ComponentData<'a>, Error> {
+) -> Result<ComponentData<'a>, ParserError> {
     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
     test_any(&unk11, &[0x0, 0x2, 0x3])?;
     let unk12 = read_u32_at::<BigEndian>(src, pos)?;
@@ -637,7 +692,11 @@ fn parse_ui_text_box<'a>(
     test_any(&unk18, &[0xBF80_0000, 0x443B_8000, 0x458C_A000]).context(*pos)?;
     let unk19 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk19, &0xBF80_0000).context(*pos)?;
-    let string1 = Cow::Borrowed(read_string_at::<BigEndian>(src, pos).context(*pos)?);
+    let string1 = Cow::Borrowed(
+        read_string_at::<BigEndian>(src, pos)
+            .map_err(ParserError::from)
+            .map_err(|error| error.context(*pos))?,
+    );
     let string1 = if string1.is_empty() {
         None
     } else {
@@ -657,7 +716,8 @@ fn parse_ui_text_box<'a>(
     test(&unk23_3, &0).context(*pos)?;
     let unk23_4 = read_u32_at::<BigEndian>(src, pos)?;
     test(&unk23_4, &0).context(*pos)?;
-    let string2 = Cow::Borrowed(read_string_at::<BigEndian>(src, pos).context(*pos)?);
+    let string2 =
+        Cow::Borrowed(read_string_at::<BigEndian>(src, pos).map_err(|e| e.context(*pos))?);
     let string2 = if string2.is_empty() {
         None
     } else {

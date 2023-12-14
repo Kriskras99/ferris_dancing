@@ -2,9 +2,7 @@
 
 use std::borrow::Cow;
 
-use anyhow::{anyhow, Error};
-
-use crate::utils::SplitPath;
+use crate::utils::{errors::ParserError, SplitPath};
 
 #[derive(Debug, Clone)]
 pub struct Actor<'a> {
@@ -87,7 +85,7 @@ pub enum ComponentType {
 }
 
 impl TryFrom<u32> for ComponentType {
-    type Error = anyhow::Error;
+    type Error = ParserError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
@@ -124,9 +122,9 @@ impl TryFrom<u32> for ComponentType {
             0xF22C_9426 => Ok(Self::UIWidgetGroupHUDLyrics),
             0xF513_60DA => Ok(Self::BoxInterpolatorComponent),
             0xF719_B524 => Ok(Self::PropertyPatcher),
-            _ => Err(anyhow!(
+            _ => Err(ParserError::custom(format!(
                 "Found unexpected component type value: 0x{value:x}!"
-            )),
+            ))),
         }
     }
 }
@@ -162,13 +160,15 @@ impl ComponentData<'_> {
     ///
     /// # Errors
     /// Will error if this component data is not a `MaterialGraphicComponent`.
-    pub fn material_graphics_component(&self) -> Result<&MaterialGraphicComponent<'_>, Error> {
+    pub fn material_graphics_component(
+        &self,
+    ) -> Result<&MaterialGraphicComponent<'_>, ParserError> {
         if let ComponentData::MaterialGraphicComponent(mgc) = self {
             Ok(mgc)
         } else {
-            Err(anyhow!(
+            Err(ParserError::custom(format!(
                 "MaterialGraphicComponent not found in component data: {self:?}"
-            ))
+            )))
         }
     }
 }

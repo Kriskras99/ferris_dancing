@@ -1,11 +1,16 @@
 use std::borrow::Cow;
 
-use anyhow::Error;
+pub use byteorder::ByteOrder;
 use byteorder::WriteBytesExt;
-pub use dotstar_toolkit_utils::bytes::*;
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::{
+    bytes::{read_string_at, read_u32_at},
+    testing::test,
+};
 
-use super::{PathId, SplitPath};
+use super::{
+    errors::{ParserError, WriterError},
+    PathId, SplitPath,
+};
 
 /// Read a `SplitPath` from `source` at position `position` and check the CRC
 ///
@@ -16,7 +21,7 @@ use super::{PathId, SplitPath};
 pub fn read_path_at<'b, T: ByteOrder>(
     source: &'b [u8],
     position: &mut usize,
-) -> Result<SplitPath<'b>, Error> {
+) -> Result<SplitPath<'b>, ParserError> {
     let filename = read_string_at::<T>(source, position)?;
     let path = read_string_at::<T>(source, position)?;
     let path_id = PathId::from(read_u32_at::<T>(source, position)?);
@@ -45,7 +50,7 @@ pub trait WriteBytesExtUbiArt: std::io::Write {
     ///
     /// # Errors
     /// Will error if the individual components are longer than `u32::MAX` or if the writer fails
-    fn write_path<T: ByteOrder>(&mut self, path: &SplitPath<'_>) -> Result<(), Error> {
+    fn write_path<T: ByteOrder>(&mut self, path: &SplitPath<'_>) -> Result<(), WriterError> {
         if path.is_empty() {
             self.write_u32::<T>(0)?; // filename length
             self.write_u32::<T>(0)?; // directory length
@@ -62,7 +67,7 @@ pub trait WriteBytesExtUbiArt: std::io::Write {
     ///
     /// # Errors
     /// Will error if the string is longer than `u32::MAX` or if the writer fails
-    fn write_string<T: ByteOrder>(&mut self, string: &str) -> Result<(), Error> {
+    fn write_string<T: ByteOrder>(&mut self, string: &str) -> Result<(), WriterError> {
         self.write_u32::<T>(u32::try_from(string.len())?)?;
         self.write_all(string.as_bytes())?;
         Ok(())

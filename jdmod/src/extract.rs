@@ -97,7 +97,7 @@ pub fn extract_secure_fat(
     );
     // Open the sfat as a vfs using the native filesystem as base
     let native_vfs = Native::new(source_directory)?;
-    let fat_vfs = secure_fat::vfs::VfsSfatFilesystem::new(&native_vfs, &source_filename, lax)?;
+    let fat_vfs = secure_fat::vfs::SfatFilesystem::new(&native_vfs, &source_filename, lax)?;
     extract_vfs(&fat_vfs, destination, files, conflicts)
 }
 
@@ -130,7 +130,7 @@ pub fn extract_ipk(
 
     // Open the sfat as a vfs using the native filesystem as base
     let native_vfs = Native::new(source_directory)?;
-    let ipk_vfs = ipk::vfs::VfsIpkFilesystem::new(&native_vfs, &source_filename, lax)?;
+    let ipk_vfs = ipk::vfs::IpkFilesystem::new(&native_vfs, &source_filename, lax)?;
     extract_vfs(&ipk_vfs, destination, files, conflicts)?;
     Ok(())
 }

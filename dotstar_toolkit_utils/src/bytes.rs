@@ -1,6 +1,6 @@
 //! # Bytes
 //! Contains functions to read integers and strings from byte slices.
-use std::{fs::File, path::Path, str::Utf8Error};
+use std::{fmt::Debug, fs::File, path::Path, str::Utf8Error};
 
 pub use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use thiserror::Error;
@@ -23,6 +23,14 @@ pub fn read_to_vec<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<u8>> {
 /// Errors returend when the test* functions fail
 #[derive(Error, Debug)]
 pub enum ReadError {
+    /// ReadError with context
+    #[error("{source:?}\n    Context: {context}")]
+    Context {
+        /// The original error
+        source: Box<Self>,
+        /// Added context
+        context: String,
+    },
     /// Trying to read outside source
     #[error("source is not large enough, attempted to read {n} bytes at {position} but source is only {size} bytes")]
     SourceTooSmall {
@@ -49,6 +57,20 @@ pub enum ReadError {
         /// Position in the source
         position: usize,
     },
+    #[error("attempted to increment position {position} by {n}, but that would overflow")]
+    /// Increasing the position would overflow the number
+    PositionOverflow {
+        /// Position in the source
+        position: usize,
+        /// How much the increment would be
+        n: usize,
+    },
+    #[error("attempted to read more bytes than can be pointed to")]
+    /// Attempted to read more bytes than can be pointed to
+    TooManyBytes {
+        /// Position in the source
+        position: usize,
+    },
 }
 
 impl ReadError {
@@ -72,6 +94,38 @@ impl ReadError {
     fn no_null_byte(position: usize) -> Self {
         Self::NoNullByte { position }
     }
+
+    /// Create the [`ReadError::PositionOverflow`] error
+    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
+    #[allow(clippy::missing_const_for_fn)]
+    fn position_overflow(position: usize, n: usize) -> Self {
+        Self::PositionOverflow { position, n }
+    }
+
+    /// Create the [`ReadError::TooManyBytes`] error
+    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
+    #[allow(clippy::missing_const_for_fn)]
+    fn too_many_bytes(position: usize) -> Self {
+        Self::TooManyBytes { position }
+    }
+
+    /// Add context for this error
+    #[must_use]
+    pub fn context<C: Debug>(self, context: C) -> Self {
+        Self::Context {
+            source: Box::new(self),
+            context: format!("{context:?}"),
+        }
+    }
+
+    /// Add context for this error
+    #[must_use]
+    pub fn with_context<C: Debug, F: FnOnce() -> C>(self, f: F) -> Self {
+        Self::Context {
+            source: Box::new(self),
+            context: format!("{:?}", f()),
+        }
+    }
 }
 
 /// Read a `u8` from `source` at position `position`
@@ -80,11 +134,10 @@ impl ReadError {
 ///
 /// # Errors
 /// This function will return an error when the u8 would be (partially) outside the source.
-///
-/// # Panics
-/// Will panic if the addition would overflow
 pub fn read_u8_at(source: &[u8], position: &mut usize) -> Result<u8, ReadError> {
-    let new_position = position.checked_add(1).expect("Overflow occurred!");
+    let new_position = position
+        .checked_add(1)
+        .ok_or_else(|| ReadError::position_overflow(*position, 1))?;
     if source.len() < (new_position) {
         Err(ReadError::source_too_small(1, *position, source.len()))
     } else {
@@ -100,11 +153,10 @@ pub fn read_u8_at(source: &[u8], position: &mut usize) -> Result<u8, ReadError> 
 ///
 /// # Errors
 /// This function will return an error when the u16 would be (partially) outside the source.
-///
-/// # Panics
-/// Will panic if the addition would overflow
 pub fn read_u16_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u16, ReadError> {
-    let new_position = position.checked_add(2).expect("Overflow occurred!");
+    let new_position = position
+        .checked_add(2)
+        .ok_or_else(|| ReadError::position_overflow(*position, 2))?;
     if source.len() < (new_position) {
         Err(ReadError::source_too_small(2, *position, source.len()))
     } else {
@@ -120,11 +172,10 @@ pub fn read_u16_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 ///
 /// # Errors
 /// This function will return an error when the u24 would be (partially) outside the source.
-///
-/// # Panics
-/// Will panic if the addition would overflow
 pub fn read_u24_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u32, ReadError> {
-    let new_position = position.checked_add(3).expect("Overflow occurred!");
+    let new_position = position
+        .checked_add(3)
+        .ok_or_else(|| ReadError::position_overflow(*position, 3))?;
     if source.len() < (new_position) {
         Err(ReadError::source_too_small(3, *position, source.len()))
     } else {
@@ -140,11 +191,10 @@ pub fn read_u24_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 ///
 /// # Errors
 /// This function will return an error when the u32 would be (partially) outside the source.
-///
-/// # Panics
-/// Will panic if the addition would overflow
 pub fn read_u32_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u32, ReadError> {
-    let new_position = position.checked_add(4).expect("Overflow occurred!");
+    let new_position = position
+        .checked_add(4)
+        .ok_or_else(|| ReadError::position_overflow(*position, 4))?;
     if source.len() < (new_position) {
         Err(ReadError::source_too_small(4, *position, source.len()))
     } else {
@@ -160,11 +210,10 @@ pub fn read_u32_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 ///
 /// # Errors
 /// This function will return an error when the u64 would be (partially) outside the source.
-///
-/// # Panics
-/// Will panic if the addition would overflow
 pub fn read_u64_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<u64, ReadError> {
-    let new_position = position.checked_add(8).expect("Overflow occurred!");
+    let new_position = position
+        .checked_add(8)
+        .ok_or_else(|| ReadError::position_overflow(*position, 8))?;
     if source.len() < (new_position) {
         Err(ReadError::source_too_small(8, *position, source.len()))
     } else {
@@ -181,16 +230,15 @@ pub fn read_u64_at<T: ByteOrder>(source: &[u8], position: &mut usize) -> Result<
 ///
 /// # Errors
 /// This function will return an error when the string would be (partially) outside the source.
-///
-/// # Panics
-/// Will panic if the addition would overflow
 pub fn read_string_at<'b, T: ByteOrder>(
     source: &'b [u8],
     position: &mut usize,
 ) -> Result<&'b str, ReadError> {
     let len = usize::try_from(read_u32_at::<T>(source, position)?)
-        .expect("Attempted to read more bytes than can fit in a usize");
-    let new_position = position.checked_add(len).expect("Overflow occurred!");
+        .map_err(|_| ReadError::too_many_bytes(*position))?;
+    let new_position = position
+        .checked_add(len)
+        .ok_or_else(|| ReadError::position_overflow(*position, len))?;
     if source.len() < (new_position) {
         // Reset the read position
         *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
@@ -250,14 +298,13 @@ pub fn read_null_terminated_string_at<'b>(
 ///
 /// # Errors
 /// This function will return an error when the data would be (partially) outside the source.
-///
-/// # Panics
-/// Will panic if the addition would overflow
 pub fn read_slice_at<'b, const N: usize>(
     source: &'b [u8],
     position: &mut usize,
 ) -> Result<&'b [u8; N], ReadError> {
-    let new_position = position.checked_add(N).expect("Overflow occurred");
+    let new_position = position
+        .checked_add(N)
+        .ok_or_else(|| ReadError::position_overflow(*position, N))?;
     if source.len() < (new_position) {
         Err(ReadError::source_too_small(N, *position, source.len()))
     } else {

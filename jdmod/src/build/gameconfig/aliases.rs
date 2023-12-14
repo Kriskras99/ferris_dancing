@@ -6,8 +6,8 @@ use anyhow::Error;
 use ubiart_toolkit::{
     cooked,
     json_types::{
+        isg::LocalAliases,
         v22::{GameManagerConfig22, Template22},
-        LocalAliases,
     },
 };
 
@@ -45,7 +45,7 @@ pub fn build(
         difficulty_colors: aliases
             .rarity_color
             .iter()
-            .map(|(r, c)| (u8::from(*r), c.clone()))
+            .map(|(r, c)| (ubiart_toolkit::json_types::isg::Rarity::from(*r), c.clone()))
             .collect(),
         aliases: aliases_vec,
     });
@@ -54,7 +54,7 @@ pub fn build(
     bf.generated_files.add_file(
         cook_path(&gameconfig.alias_db_path, bs.platform)?,
         local_aliases_vec,
-    );
+    )?;
 
     Ok(())
 }

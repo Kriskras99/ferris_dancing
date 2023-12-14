@@ -5,7 +5,7 @@ use std::borrow::Cow;
 
 use anyhow::{anyhow, bail, Error};
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::json_types::PortraitBorderDesc;
+use ubiart_toolkit::json_types::isg::PortraitBorderDesc;
 
 use super::generate_gacha_id;
 

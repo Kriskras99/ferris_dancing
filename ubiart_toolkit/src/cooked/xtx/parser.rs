@@ -1,14 +1,16 @@
 //! Contains the parser implementation
 
-use anyhow::{anyhow, Error};
 use byteorder::LittleEndian;
-use dotstar_toolkit_utils::testing::{test, test_any, test_le};
+use dotstar_toolkit_utils::{
+    bytes::{read_u32_at, read_u64_at},
+    testing::{test, test_any, test_le},
+};
 
 use super::{
     count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Block, BlockData, Format, Image,
     TextureHeader, Xtx,
 };
-use crate::utils::bytes::{read_u32_at, read_u64_at};
+use crate::utils::errors::ParserError;
 
 const TEX_HEAD_BLK_TYPE: u32 = 0x2;
 const DATA_BLK_TYPE: u32 = 0x3;
@@ -20,7 +22,7 @@ const UNKNOWN_BLK_TYPE_THREE: u32 = 0x5;
 /// - The file is not a Tegra Texture file
 /// - The parser encounters an unexpected value
 /// - The `src` is not large enough
-pub fn parse(src: &[u8]) -> Result<Xtx, Error> {
+pub fn parse(src: &[u8]) -> Result<Xtx, ParserError> {
     let mut position = 0;
 
     let magic = read_u32_at::<LittleEndian>(src, &mut position)?;
@@ -53,9 +55,9 @@ pub fn parse(src: &[u8]) -> Result<Xtx, Error> {
                 let data = match second_block {
                     Some(block) => match &block.data {
                         BlockData::Data(data) => Ok(data),
-                        _ => Err(anyhow!("Found header without data!")),
+                        _ => Err(ParserError::custom("Found header without data")),
                     },
-                    None => Err(anyhow!("Found header without data!")),
+                    None => Err(ParserError::custom("Found header without data")),
                 }?;
 
                 images.push(parse_data_block_to_image(hdr, data)?);
@@ -64,7 +66,7 @@ pub fn parse(src: &[u8]) -> Result<Xtx, Error> {
 
                 Ok(())
             }
-            BlockData::Data(_) => Err(anyhow!("Found data without a header!")),
+            BlockData::Data(_) => Err(ParserError::custom("Found data without a header")),
             BlockData::Three(_) => {
                 index += 1;
                 Ok(())
@@ -79,7 +81,8 @@ pub fn parse(src: &[u8]) -> Result<Xtx, Error> {
     })
 }
 
-fn parse_block<'a>(src: &'a [u8], position: &mut usize) -> Result<Block<'a>, Error> {
+/// Parse some data at `position` as a [`Block`]
+fn parse_block<'a>(src: &'a [u8], position: &mut usize) -> Result<Block<'a>, ParserError> {
     let start = *position;
     let magic = read_u32_at::<LittleEndian>(src, position)?;
     test(&magic, &0x4E76_4248)?;
@@ -121,7 +124,9 @@ fn parse_block<'a>(src: &'a [u8], position: &mut usize) -> Result<Block<'a>, Err
             )?;
             Ok(BlockData::Three(data))
         }
-        _ => Err(anyhow!("Unknown block type found!")),
+        _ => Err(ParserError::custom(format!(
+            "Unknown block type found: {typed:x}"
+        ))),
     }?;
 
     let new_pos = *position;
@@ -134,7 +139,11 @@ fn parse_block<'a>(src: &'a [u8], position: &mut usize) -> Result<Block<'a>, Err
     })
 }
 
-fn parse_tex_header_block<'a>(src: &'a [u8], position: &mut usize) -> Result<BlockData<'a>, Error> {
+/// Parse some data at `position` as a [`BlockData::TextureHeader`]
+fn parse_tex_header_block<'a>(
+    src: &'a [u8],
+    position: &mut usize,
+) -> Result<BlockData<'a>, ParserError> {
     let image_size = read_u64_at::<LittleEndian>(src, position)?;
     let alignment = read_u32_at::<LittleEndian>(src, position)?;
     let width = read_u32_at::<LittleEndian>(src, position)?;
@@ -181,7 +190,8 @@ fn parse_tex_header_block<'a>(src: &'a [u8], position: &mut usize) -> Result<Blo
     }))
 }
 
-fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, Error> {
+/// Retrieve the data the [`TextureHeader`] points at and create a [`Image`]
+fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, ParserError> {
     test(&hdr.depth, &1)?;
     let bpp = hdr.format.get_bpp();
     let is_bcn = hdr.format.is_bcn();
@@ -216,7 +226,11 @@ fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, 
     })
 }
 
-fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, Error> {
+/// Deswizzle the image in `data`
+///
+/// # Errors
+/// Will error if the BPP is not supported or values don't fit in [`usize::MAX`]
+fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, ParserError> {
     let (origin_width, origin_height) = if format.is_bcn() {
         ((width + 3) / 4, (height + 3) / 4)
     } else {
@@ -238,10 +252,10 @@ fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec
         4 => Ok(16),
         8 => Ok(8),
         16 => Ok(4),
-        _ => Err(anyhow!(
-            "BPP is not 1, 2, 4, 8, or 16! {}",
+        _ => Err(ParserError::custom(format!(
+            "BPP is not 1, 2, 4, 8, or 16: {}",
             format.get_bpp()
-        )),
+        ))),
     }?;
 
     let rounded_width = round_size(origin_width, pad);
@@ -254,10 +268,10 @@ fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec
         4 => Ok(2),
         8 => Ok(1),
         16 => Ok(0),
-        _ => Err(anyhow!(
-            "BPP is not 1, 2, 4, 8, or 16! {}",
+        _ => Err(ParserError::custom(format!(
+            "BPP is not 1, 2, 4, 8, or 16: {}",
             format.get_bpp()
-        )),
+        ))),
     }?;
 
     let mut pos_ = 0;

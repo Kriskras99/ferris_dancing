@@ -31,7 +31,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
 
     let song_desc_tpl = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
         components: vec![json_types::v22::Template22::SongDescription(
-            json_types::SongDescription {
+            json_types::just_dance::SongDescription {
                 class: None,
                 map_name: ses.song.map_name.clone(),
                 jd_version: 2022,
@@ -92,11 +92,11 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     bf.generated_files.add_file(
         format!("{cache_map_path}/songdesc.tpl.ckd"),
         song_desc_tpl_vec,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{cache_map_path}/songdesc.act.ckd"),
         song_desc_act_vec,
-    );
+    )?;
 
     Ok(())
 }

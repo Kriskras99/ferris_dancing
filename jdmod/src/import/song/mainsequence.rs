@@ -48,8 +48,10 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
 
             for clip in tape.clips {
                 let new_clip = match clip {
-                    json_types::Clip::HideUserInterface(hui) => Clip::HideUserInterface(hui.into()),
-                    json_types::Clip::SoundSet(soundset) => {
+                    json_types::tape::Clip::HideUserInterface(hui) => {
+                        Clip::HideUserInterface(hui.into())
+                    }
+                    json_types::tape::Clip::SoundSet(soundset) => {
                         match (parse_soundset(sis, &soundset), sis.lax) {
                             (Ok(clip), _) => clip,
                             (Err(error), true) => {
@@ -59,12 +61,14 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                             (Err(error), false) => return Err(error),
                         }
                     }
-                    json_types::Clip::Vibration(vib) => Clip::Vibration(vib.into()),
-                    json_types::Clip::GoldEffect(goldeffect) => Clip::GoldEffect(goldeffect.into()),
-                    json_types::Clip::GameplayEvent(gameplay) => {
+                    json_types::tape::Clip::Vibration(vib) => Clip::Vibration(vib.into()),
+                    json_types::tape::Clip::GoldEffect(goldeffect) => {
+                        Clip::GoldEffect(goldeffect.into())
+                    }
+                    json_types::tape::Clip::GameplayEvent(gameplay) => {
                         Clip::GameplayEvent(gameplay.into())
                     }
-                    json_types::Clip::TapeReference(reference) => {
+                    json_types::tape::Clip::TapeReference(reference) => {
                         let ref_file = sis
                             .vfs
                             .open(cook_path(&reference.path, sis.platform)?.as_ref())?;
@@ -72,7 +76,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
 
                         for clip in ref_tape.clips {
                             match clip {
-                                json_types::Clip::SoundSet(soundset) => {
+                                json_types::tape::Clip::SoundSet(soundset) => {
                                     match (parse_soundset(sis, &soundset), sis.lax) {
                                         (Ok(clip), _) => timeline.timeline.push(clip),
                                         (Err(error), true) => {
@@ -82,7 +86,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                                         (Err(error), false) => return Err(error),
                                     }
                                 }
-                                json_types::Clip::Vibration(vib) => {
+                                json_types::tape::Clip::Vibration(vib) => {
                                     timeline
                                         .timeline
                                         .push(Clip::Vibration(vib.to_owned().into()));
@@ -128,7 +132,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
 /// Parse a `SoundSetClip`
 pub fn parse_soundset(
     sis: &SongImportState<'_>,
-    soundset: &json_types::SoundSetClip,
+    soundset: &json_types::tape::SoundSetClip,
 ) -> Result<Clip<'static>, Error> {
     let sound_set_path = cook_path(&soundset.sound_set_path, sis.platform)?;
     let template_file = sis.vfs.open(sound_set_path.as_ref())?;
