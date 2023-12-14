@@ -35,17 +35,17 @@ pub fn build(
     bf.generated_files.add_file(
         format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.act.ckd"),
         mainsequence_actor_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.tpl.ckd"),
         mainsequence_template_vec,
-    );
+    )?;
 
     bf.generated_files.add_file(
         format!("{cinematics_cache_dir}/{lower_map_name}_cine.isc.ckd"),
         cine_scene_vec,
-    );
+    )?;
 
     // the timeline
     mainsequence_timeline(ses, bf)?;
@@ -72,7 +72,7 @@ fn mainsequence_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         }],
     };
 
-    cooked::act::create_vec(&actor)
+    Ok(cooked::act::create_vec(&actor)?)
 }
 
 /// Build the cine scene
@@ -124,12 +124,12 @@ fn mainsequence_template(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         startpaused: 0,
         forceisenvironment: 0,
         components: vec![json_types::v22::Template22::MasterTape(
-            json_types::MasterTape {
+            json_types::tpl::MasterTape {
                 class: None,
-                tapes_rack: vec![json_types::TapeGroup {
-                    class: Some(json_types::TapeGroup::CLASS),
-                    entries: vec![json_types::TapeEntry {
-                        class: Some(json_types::TapeEntry::CLASS),
+                tapes_rack: vec![json_types::tpl::TapeGroup {
+                    class: Some(json_types::tpl::TapeGroup::CLASS),
+                    entries: vec![json_types::tpl::TapeEntry {
+                        class: Some(json_types::tpl::TapeEntry::CLASS),
                         label: Cow::Borrowed("master"),
                         path: Cow::Owned(format!(
                         "world/maps/{lower_map_name}/cinematics/{lower_map_name}_mainsequence.tape"
@@ -140,7 +140,7 @@ fn mainsequence_template(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         )],
     });
 
-    cooked::json::create_vec(&template)
+    Ok(cooked::json::create_vec(&template)?)
 }
 
 /// Build the mainsequence timeline
@@ -172,14 +172,14 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
                 if !bf.static_files.exists(&to) {
                     bf.static_files.add_file(from, to)?;
                     // Create the sound template
-                    let sound_descriptor = json_types::SoundDescriptor {
+                    let sound_descriptor = json_types::tpl::SoundDescriptor {
                         name: Cow::Borrowed(name),
                         files: vec![filename],
                         ..Default::default()
                     };
                     let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
                         components: vec![json_types::v22::Template22::SoundComponent(
-                            json_types::SoundComponent {
+                            json_types::tpl::SoundComponent {
                                 class: None,
                                 sound_list: vec![sound_descriptor],
                             },
@@ -191,13 +191,13 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
                     let cooked_template_path = cook_path(&template_path, ses.platform)?;
                     let cooked_template_vec = cooked::json::create_vec(&template)?;
                     bf.generated_files
-                        .add_file(cooked_template_path, cooked_template_vec);
+                        .add_file(cooked_template_path, cooked_template_vec)?;
                 }
 
                 // Create the new clip with the proper template path
                 let new_clip = orig_clip.to_tape(template_path);
 
-                Some(json_types::Clip::SoundSet(new_clip))
+                Some(json_types::tape::Clip::SoundSet(new_clip))
             }
             x => {
                 println!("Warning! Found non-dance clip in dance_timeline, ignoring! {x:?}");
@@ -209,7 +209,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
         }
     }
 
-    let template = json_types::v22::Template22::Tape(json_types::Tape {
+    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
         class: None,
         clips,
         tape_clock: 0,
@@ -224,7 +224,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
     bf.generated_files.add_file(
         format!("{cache_map_path}/cinematics/{lower_map_name}_mainsequence.tape.ckd"),
         mainsequence_tape_vec,
-    );
+    )?;
 
     Ok(())
 }

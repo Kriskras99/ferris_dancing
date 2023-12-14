@@ -50,7 +50,7 @@ pub fn import_v20v22(
                     alias,
                     aliasesobjectives,
                     &is.locale_id_map,
-                )?,
+                ),
             );
         }
     }
@@ -91,7 +91,7 @@ pub fn import_v19(is: &ImportState<'_>, alias_db_path: &str) -> Result<(), Error
                     alias,
                     &is.locale_id_map,
                     &mut objectives,
-                )?,
+                ),
             );
         }
     }
@@ -115,7 +115,7 @@ fn load_aliases<'a>(
     } else {
         let mut rarity_color = HashMap::new();
         for (diff, color) in difficulty_colors {
-            rarity_color.insert((*diff).try_into()?, color.clone());
+            rarity_color.insert((*diff).into(), color.clone());
         }
 
         Ok(Aliases {
@@ -127,7 +127,10 @@ fn load_aliases<'a>(
 }
 
 /// Save all aliases to the mod folder
-fn save_aliases(is: &ImportState<'_>, aliases: &Aliases) -> Result<(), Error> {
+///
+/// # Errors
+/// Will error if the IO fails
+fn save_aliases(is: &ImportState<'_>, aliases: &Aliases) -> std::io::Result<()> {
     let aliases_config_path = is.dirs.config().join("aliases.json");
 
     let file = File::create(aliases_config_path)?;

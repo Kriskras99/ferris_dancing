@@ -59,7 +59,8 @@ pub fn build(bs: &BuildState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
 
     let gameconfig_vec =
         cooked::json::create_vec(&json_types::v22::Template22::GameManagerConfig(gameconfig))?;
-    bf.generated_files.add_file(gameconfig_path, gameconfig_vec);
+    bf.generated_files
+        .add_file(gameconfig_path, gameconfig_vec)?;
 
     Ok(())
 }

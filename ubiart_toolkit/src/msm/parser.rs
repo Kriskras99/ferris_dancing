@@ -1,17 +1,19 @@
 //! Contains the parser implementation
 
-use anyhow::Error;
 use byteorder::BigEndian;
-use dotstar_toolkit_utils::testing::{test, test_le};
+use dotstar_toolkit_utils::{
+    bytes::{read_null_terminated_string_at, read_slice_at, read_u32_at},
+    testing::{test, test_le},
+};
 
 use super::MovementSpaceMove;
-use crate::utils::bytes::{read_null_terminated_string_at, read_slice_at, read_u32_at};
+use crate::utils::errors::ParserError;
 
 /// Parse a MovementSpaceMove file
 ///
 /// # Errors
 /// -  the file is not a MovementSpaceMove file or the parser encounters an unexpected value.
-pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, Error> {
+pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, ParserError> {
     let mut position = 0;
 
     // Check the magic

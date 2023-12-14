@@ -2,10 +2,9 @@
 
 use std::{borrow::Cow, collections::HashMap};
 
-use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
-use crate::utils::LocaleId;
+use crate::utils::{errors::ParserError, LocaleId};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 #[repr(u32)]
@@ -31,7 +30,7 @@ pub enum Language {
 }
 
 impl TryFrom<u32> for Language {
-    type Error = anyhow::Error;
+    type Error = ParserError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
@@ -53,7 +52,7 @@ impl TryFrom<u32> for Language {
             0x10 => Ok(Self::Finnish),
             0x16 => Ok(Self::GavChinese),
             0x17 => Ok(Self::DevReference),
-            _ => Err(anyhow!("Unknown language! {value:x}")),
+            _ => Err(ParserError::custom(format!("Unknown language: {value:x}"))),
         }
     }
 }

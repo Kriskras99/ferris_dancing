@@ -29,7 +29,8 @@ pub fn build(
         scheduled_quests.push(quest.into());
     }
 
-    let discovery_quest = json_types::ScheduledQuestDesc::from(quest_config.first_discovery_quest);
+    let discovery_quest =
+        json_types::isg::ScheduledQuestDesc::from(quest_config.first_discovery_quest);
     let first_discovery_quest_id = discovery_quest.id;
     scheduled_quests.push(discovery_quest);
 
@@ -47,17 +48,18 @@ pub fn build(
     setup.exclude_from_algorithm_quest_tags = quest_config.exclude_from_algorithm_quest_tags;
     setup.first_discovery_quest_id = first_discovery_quest_id;
 
-    let quest_database =
-        json_types::v22::Template22::ScheduledQuestDatabase(json_types::ScheduledQuestDatabase {
+    let quest_database = json_types::v22::Template22::ScheduledQuestDatabase(
+        json_types::isg::ScheduledQuestDatabase {
             class: None,
             scheduled_quests,
-        });
+        },
+    );
 
     let quest_database_vec = cooked::json::create_vec(&quest_database)?;
     bf.generated_files.add_file(
         cook_path("enginedata/gameconfig/scheduledquests.isg", bs.platform)?,
         quest_database_vec,
-    );
+    )?;
 
     Ok(())
 }

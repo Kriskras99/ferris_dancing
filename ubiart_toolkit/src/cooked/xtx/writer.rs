@@ -1,15 +1,15 @@
 use std::io::Write;
 
-use anyhow::{anyhow, Error};
 use byteorder::{LittleEndian, WriteBytesExt};
 
 use super::{count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Format, Xtx};
+use crate::utils::errors::WriterError;
 
 /// Writes the XTX texture to the file
 ///
 /// # Errors
 /// Will error when the writer fails or when the color BPP is too high
-pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), Error> {
+pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriterError> {
     src.write_u32::<LittleEndian>(0x4E76_4644)?;
     src.write_u32::<LittleEndian>(0x10)?;
     src.write_u32::<LittleEndian>(xtx.major_version)?;
@@ -82,7 +82,11 @@ pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), Error> {
     Ok(())
 }
 
-fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, Error> {
+/// Swizzle the image in `data`
+///
+/// # Errors
+/// Will error if the BPP is not supported or values don't fit in [`usize::MAX`]
+fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, WriterError> {
     let (origin_width, origin_height) = if format.is_bcn() {
         ((width + 3) / 4, (height + 3) / 4)
     } else {
@@ -104,10 +108,10 @@ fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u
         4 => Ok(16),
         8 => Ok(8),
         16 => Ok(4),
-        _ => Err(anyhow!(
+        _ => Err(WriterError::custom(format!(
             "BPP is not 1, 2, 4, 8, or 16! {}",
             format.get_bpp()
-        )),
+        ))),
     }?;
 
     let rounded_width = round_size(origin_width, pad);
@@ -120,10 +124,10 @@ fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u
         4 => Ok(2),
         8 => Ok(1),
         16 => Ok(0),
-        _ => Err(anyhow!(
+        _ => Err(WriterError::custom(format!(
             "BPP is not 1, 2, 4, 8, or 16! {}",
             format.get_bpp()
-        )),
+        ))),
     }?;
 
     let mut pos_ = 0;

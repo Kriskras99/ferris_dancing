@@ -10,7 +10,7 @@ use crate::types::{gameconfig::gachacontent::GachaConfig, ImportState};
 /// Import the gacha config if it does not exist in the mod yet
 pub fn import_v18v22(
     is: &ImportState<'_>,
-    gachaconfig: &json_types::GachaConfig,
+    gachaconfig: &json_types::isg::GachaConfig,
 ) -> Result<(), Error> {
     let gacha_config_path = is.dirs.config().join("gacha.json");
 

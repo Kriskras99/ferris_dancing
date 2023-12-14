@@ -1,7 +1,8 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use anyhow::{anyhow, Error};
 use serde::Serialize;
+
+use crate::utils::errors::ParserError;
 
 #[derive(Debug, Clone, Copy)]
 pub struct TextureHeader {
@@ -57,7 +58,7 @@ pub enum Format {
 }
 
 impl TryFrom<u32> for Format {
-    type Error = Error;
+    type Error = ParserError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
@@ -76,7 +77,7 @@ impl TryFrom<u32> for Format {
             0x4A => Ok(Self::BC4S),
             0x4B => Ok(Self::BC5U),
             0x4C => Ok(Self::BC5S),
-            _ => Err(anyhow!("Unknown format! {value:x}")),
+            _ => Err(ParserError::custom(format!("Unknown format: {value:x}"))),
         }
     }
 }

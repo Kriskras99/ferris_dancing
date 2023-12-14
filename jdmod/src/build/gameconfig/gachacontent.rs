@@ -33,7 +33,7 @@ pub fn build(
         gacha_config.numbers_of_maps_before_push_gacha_screen;
 
     let gacha_content_database =
-        json_types::v22::Template22::GachaContentDatabase(json_types::GachaContentDatabase {
+        json_types::v22::Template22::GachaContentDatabase(json_types::isg::GachaContentDatabase {
             class: None,
             collectibles: gacha_items.into_iter().map(Into::into).collect(),
         });
@@ -43,7 +43,7 @@ pub fn build(
     bf.generated_files.add_file(
         cook_path(&gameconfig.config_files_path.gachacontent, bs.platform)?,
         gacha_content_database_vec,
-    );
+    )?;
 
     Ok(())
 }

@@ -1,6 +1,7 @@
 use std::path::Path;
 
-use ubiart_toolkit::{cooked::json, utils::bytes::read_to_vec};
+use dotstar_toolkit_utils::bytes::read_to_vec;
+use ubiart_toolkit::cooked::json;
 
 fn frt_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;

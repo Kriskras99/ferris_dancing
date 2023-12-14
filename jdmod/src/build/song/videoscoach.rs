@@ -48,23 +48,23 @@ pub fn build(
     bf.generated_files.add_file(
         format!("{videoscoach_cache_dir}/{lower_map_name}.mpd.ckd"),
         mpd_vec,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{videoscoach_cache_dir}/video_player_main.act.ckd"),
         video_player_main_act_vec,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{videoscoach_cache_dir}/video_player_map_preview.act.ckd"),
         video_player_map_preview_act_vec,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{videoscoach_cache_dir}/{lower_map_name}_video.isc.ckd"),
         video_scene_vec,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{videoscoach_cache_dir}/{lower_map_name}_video_map_preview.isc.ckd"),
         video_map_preview_scene_vec,
-    );
+    )?;
 
     bf.static_files.add_file(
         video_path,
@@ -106,7 +106,7 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         }],
     };
 
-    cooked::act::create_vec(&actor)
+    Ok(cooked::act::create_vec(&actor)?)
 }
 
 /// Build the video scene

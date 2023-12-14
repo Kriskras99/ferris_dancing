@@ -54,19 +54,14 @@ impl<'a> Objectives<'a> {
     ///
     /// # Errors
     /// Will error if an objective already exists for the generated name but does not match `objective`
-    pub fn add_objective(&mut self, objective: Objective<'a>) -> Result<String, Error> {
+    pub fn add_objective(&mut self, objective: Objective<'a>) -> String {
         if let Some(name) = self.objective_map.get(&objective) {
-            Ok(name.clone())
+            name.clone()
         } else {
             let name = objective.generate_name();
-            if self.name_map.contains_key(&name) {
-                return Err(anyhow!(
-                    "Generated name already in Objectives but Objective is not in object_map!"
-                ));
-            }
             self.name_map.insert(name.clone(), objective.clone());
             self.objective_map.insert(objective, name.clone());
-            Ok(name)
+            name
         }
     }
 
@@ -123,8 +118,11 @@ impl Objective<'_> {
 
 impl<'a> Objective<'a> {
     /// Convert from the UbiArt representation
+    ///
+    /// # Errors
+    /// Will error if converting the [`ObjectiveType`] fails
     pub fn from_descriptor(
-        descriptor: &json_types::ObjectiveDescriptor<'a>,
+        descriptor: &json_types::isg::ObjectiveDescriptor<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Result<Self, Error> {
         Ok(Self {
@@ -140,7 +138,7 @@ impl<'a> Objective<'a> {
 
     /// Convert from the old UbiArt represntation
     pub fn from_old_descriptor(
-        descriptor: &json_types::ObjectiveDesc1819<'a>,
+        descriptor: &json_types::v1719::ObjectiveDesc1819<'a>,
         unlimited_only: bool,
         locale_id_map: &LocaleIdMap,
     ) -> Self {
@@ -157,24 +155,26 @@ impl<'a> Objective<'a> {
     }
 }
 
-impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
+impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
     fn from(value: Objective<'a>) -> Self {
         match value.objective_type {
-            ObjectiveType::AccumulateXCal(data) => json_types::ObjectiveDescriptor::AccumulateXCal(
-                json_types::ObjectiveDescriptorAccumulateXCal {
-                    description: value.description,
-                    description_raw: value.description_raw,
-                    components: data.components.into_iter().map(Component::into).collect(),
-                    is_static: value.is_static,
-                    exclude_from_upload: value.exclude_from_upload,
-                    calories_amount: data.calories_amount,
-                    in_one_session: data.in_one_session,
-                    ..Default::default()
-                },
-            ),
+            ObjectiveType::AccumulateXCal(data) => {
+                json_types::isg::ObjectiveDescriptor::AccumulateXCal(
+                    json_types::isg::ObjectiveDescriptorAccumulateXCal {
+                        description: value.description,
+                        description_raw: value.description_raw,
+                        components: data.components.into_iter().map(Component::into).collect(),
+                        is_static: value.is_static,
+                        exclude_from_upload: value.exclude_from_upload,
+                        calories_amount: data.calories_amount,
+                        in_one_session: data.in_one_session,
+                        ..Default::default()
+                    },
+                )
+            }
             ObjectiveType::AccumulateXMoves(data) => {
-                json_types::ObjectiveDescriptor::AccumulateXMoves(
-                    json_types::ObjectiveDescriptorAccumulateXMoves {
+                json_types::isg::ObjectiveDescriptor::AccumulateXMoves(
+                    json_types::isg::ObjectiveDescriptorAccumulateXMoves {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -191,8 +191,8 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::AddXSongsToAPlaylist(data) => {
-                json_types::ObjectiveDescriptor::AddXSongsToAPlaylist(
-                    json_types::ObjectiveDescriptorAddXSongsToAPlaylist {
+                json_types::isg::ObjectiveDescriptor::AddXSongsToAPlaylist(
+                    json_types::isg::ObjectiveDescriptorAddXSongsToAPlaylist {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -204,8 +204,8 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::ChangeCustoItemXTimes(data) => {
-                json_types::ObjectiveDescriptor::ChangeCustoItemXTimes(
-                    json_types::ObjectiveDescriptorChangeCustoItemXTimes {
+                json_types::isg::ObjectiveDescriptor::ChangeCustoItemXTimes(
+                    json_types::isg::ObjectiveDescriptorChangeCustoItemXTimes {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -217,8 +217,8 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::CompleteXQuests(data) => {
-                json_types::ObjectiveDescriptor::CompleteXQuests(
-                    json_types::ObjectiveDescriptorCompleteXQuests {
+                json_types::isg::ObjectiveDescriptor::CompleteXQuests(
+                    json_types::isg::ObjectiveDescriptorCompleteXQuests {
                         description: value.description,
                         description_raw: value.description_raw,
                         is_static: value.is_static,
@@ -228,19 +228,21 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            ObjectiveType::DanceXSeconds(data) => json_types::ObjectiveDescriptor::DanceXSeconds(
-                json_types::ObjectiveDescriptorDanceXSeconds {
-                    description: value.description,
-                    description_raw: value.description_raw,
-                    is_static: value.is_static,
-                    exclude_from_upload: value.exclude_from_upload,
-                    dance_time: data.dance_time,
-                    ..Default::default()
-                },
-            ),
+            ObjectiveType::DanceXSeconds(data) => {
+                json_types::isg::ObjectiveDescriptor::DanceXSeconds(
+                    json_types::isg::ObjectiveDescriptorDanceXSeconds {
+                        description: value.description,
+                        description_raw: value.description_raw,
+                        is_static: value.is_static,
+                        exclude_from_upload: value.exclude_from_upload,
+                        dance_time: data.dance_time,
+                        ..Default::default()
+                    },
+                )
+            }
             ObjectiveType::FinishXPlaylist(data) => {
-                json_types::ObjectiveDescriptor::FinishXPlaylist(
-                    json_types::ObjectiveDescriptorFinishXPlaylist {
+                json_types::isg::ObjectiveDescriptor::FinishXPlaylist(
+                    json_types::isg::ObjectiveDescriptorFinishXPlaylist {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -251,20 +253,22 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            ObjectiveType::GatherXStars(data) => json_types::ObjectiveDescriptor::GatherXStars(
-                json_types::ObjectiveDescriptorGatherXStars {
-                    description: value.description,
-                    description_raw: value.description_raw,
-                    components: data.components.into_iter().map(Component::into).collect(),
-                    is_static: value.is_static,
-                    exclude_from_upload: value.exclude_from_upload,
-                    stars_count: data.stars_count,
-                    ..Default::default()
-                },
-            ),
+            ObjectiveType::GatherXStars(data) => {
+                json_types::isg::ObjectiveDescriptor::GatherXStars(
+                    json_types::isg::ObjectiveDescriptorGatherXStars {
+                        description: value.description,
+                        description_raw: value.description_raw,
+                        components: data.components.into_iter().map(Component::into).collect(),
+                        is_static: value.is_static,
+                        exclude_from_upload: value.exclude_from_upload,
+                        stars_count: data.stars_count,
+                        ..Default::default()
+                    },
+                )
+            }
             ObjectiveType::PlayDailyQuestsForXDays(data) => {
-                json_types::ObjectiveDescriptor::PlayDailyQuestsForXDays(
-                    json_types::ObjectiveDescriptorPlayDailyQuestsForXDays {
+                json_types::isg::ObjectiveDescriptor::PlayDailyQuestsForXDays(
+                    json_types::isg::ObjectiveDescriptorPlayDailyQuestsForXDays {
                         description: value.description,
                         description_raw: value.description_raw,
                         is_static: value.is_static,
@@ -275,8 +279,8 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::PlayGachaXTimes(data) => {
-                json_types::ObjectiveDescriptor::PlayGachaXTimes(
-                    json_types::ObjectiveDescriptorPlayGachaXTimes {
+                json_types::isg::ObjectiveDescriptor::PlayGachaXTimes(
+                    json_types::isg::ObjectiveDescriptorPlayGachaXTimes {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -288,8 +292,8 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            ObjectiveType::PlayXMaps(data) => json_types::ObjectiveDescriptor::PlayXMaps(
-                json_types::ObjectiveDescriptorPlayXMaps {
+            ObjectiveType::PlayXMaps(data) => json_types::isg::ObjectiveDescriptor::PlayXMaps(
+                json_types::isg::ObjectiveDescriptorPlayXMaps {
                     description: value.description,
                     description_raw: value.description_raw,
                     components: data.components.into_iter().map(Component::into).collect(),
@@ -299,8 +303,8 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                     ..Default::default()
                 },
             ),
-            ObjectiveType::ReachRankX(data) => json_types::ObjectiveDescriptor::ReachRankX(
-                json_types::ObjectiveDescriptorReachRankX {
+            ObjectiveType::ReachRankX(data) => json_types::isg::ObjectiveDescriptor::ReachRankX(
+                json_types::isg::ObjectiveDescriptorReachRankX {
                     description: value.description,
                     description_raw: value.description_raw,
                     is_static: value.is_static,
@@ -310,8 +314,8 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                 },
             ),
             ObjectiveType::UnlockXPortraitBorders(data) => {
-                json_types::ObjectiveDescriptor::UnlockXPortraitBorders(
-                    json_types::ObjectiveDescriptorUnlockXPortraitBorders {
+                json_types::isg::ObjectiveDescriptor::UnlockXPortraitBorders(
+                    json_types::isg::ObjectiveDescriptorUnlockXPortraitBorders {
                         description: value.description,
                         description_raw: value.description_raw,
                         is_static: value.is_static,
@@ -321,9 +325,9 @@ impl<'a> From<Objective<'a>> for json_types::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            _ => json_types::ObjectiveDescriptor::SwitchSweatMode(
+            _ => json_types::isg::ObjectiveDescriptor::SwitchSweatMode(
                 // Convert all objectives that are impossible to do with the mod to sweat mode
-                json_types::ObjectiveDescriptorBase {
+                json_types::isg::ObjectiveDescriptorBase {
                     description: value.description,
                     description_raw: value.description_raw,
                     is_static: value.is_static,
@@ -400,12 +404,15 @@ pub enum ObjectiveType<'a> {
 
 impl<'a> ObjectiveType<'a> {
     /// Convert from the UbiArt representation
+    ///
+    /// # Errors
+    /// Will error of converting the descriptor fails
     pub fn from_descriptor(
-        descriptor: &json_types::ObjectiveDescriptor<'a>,
+        descriptor: &json_types::isg::ObjectiveDescriptor<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Result<Self, Error> {
         match descriptor {
-            json_types::ObjectiveDescriptor::AccumulateXCal(data) => {
+            json_types::isg::ObjectiveDescriptor::AccumulateXCal(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -416,7 +423,7 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::AccumulateXMoves(data) => {
+            json_types::isg::ObjectiveDescriptor::AccumulateXMoves(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -431,8 +438,8 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::ActivateCoopMode(_) => Ok(Self::ActivateCoopMode),
-            json_types::ObjectiveDescriptor::AddXSongsToAPlaylist(data) => {
+            json_types::isg::ObjectiveDescriptor::ActivateCoopMode(_) => Ok(Self::ActivateCoopMode),
+            json_types::isg::ObjectiveDescriptor::AddXSongsToAPlaylist(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -442,8 +449,8 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::BeatWDFBoss(_) => Ok(Self::BeatWDFBoss),
-            json_types::ObjectiveDescriptor::ChangeCustoItemXTimes(data) => {
+            json_types::isg::ObjectiveDescriptor::BeatWDFBoss(_) => Ok(Self::BeatWDFBoss),
+            json_types::isg::ObjectiveDescriptor::ChangeCustoItemXTimes(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -453,17 +460,17 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::CompleteXQuests(data) => {
+            json_types::isg::ObjectiveDescriptor::CompleteXQuests(data) => {
                 Ok(Self::CompleteXQuests(CompleteXQuests {
                     quests_count: data.quests_count,
                 }))
             }
-            json_types::ObjectiveDescriptor::DanceXSeconds(data) => {
+            json_types::isg::ObjectiveDescriptor::DanceXSeconds(data) => {
                 Ok(Self::DanceXSeconds(DanceXSeconds {
                     dance_time: data.dance_time,
                 }))
             }
-            json_types::ObjectiveDescriptor::FinishXPlaylist(data) => {
+            json_types::isg::ObjectiveDescriptor::FinishXPlaylist(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -473,7 +480,7 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::GatherXStars(data) => {
+            json_types::isg::ObjectiveDescriptor::GatherXStars(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -483,19 +490,21 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::LinkedToUplay(_) => Ok(Self::LinkedToUplay),
-            json_types::ObjectiveDescriptor::OpenAnthologyMode(_) => Ok(Self::OpenAnthologyMode),
-            json_types::ObjectiveDescriptor::OpenPostcardsGallery(_) => {
+            json_types::isg::ObjectiveDescriptor::LinkedToUplay(_) => Ok(Self::LinkedToUplay),
+            json_types::isg::ObjectiveDescriptor::OpenAnthologyMode(_) => {
+                Ok(Self::OpenAnthologyMode)
+            }
+            json_types::isg::ObjectiveDescriptor::OpenPostcardsGallery(_) => {
                 Ok(Self::OpenPostcardsGallery)
             }
-            json_types::ObjectiveDescriptor::OpenStickerAlbum(_) => Ok(Self::OpenStickerAlbum),
-            json_types::ObjectiveDescriptor::OpenVideoGallery(_) => Ok(Self::OpenVideoGallery),
-            json_types::ObjectiveDescriptor::PlayDailyQuestsForXDays(data) => {
+            json_types::isg::ObjectiveDescriptor::OpenStickerAlbum(_) => Ok(Self::OpenStickerAlbum),
+            json_types::isg::ObjectiveDescriptor::OpenVideoGallery(_) => Ok(Self::OpenVideoGallery),
+            json_types::isg::ObjectiveDescriptor::PlayDailyQuestsForXDays(data) => {
                 Ok(Self::PlayDailyQuestsForXDays(PlayDailyQuestsForXDays {
                     consecutive_days: data.consecutive_days,
                 }))
             }
-            json_types::ObjectiveDescriptor::PlayGachaXTimes(data) => {
+            json_types::isg::ObjectiveDescriptor::PlayGachaXTimes(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -506,13 +515,13 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::PlayPreviousJD(_) => Ok(Self::PlayPreviousJD),
-            json_types::ObjectiveDescriptor::PlayWDFTournament(data) => {
+            json_types::isg::ObjectiveDescriptor::PlayPreviousJD(_) => Ok(Self::PlayPreviousJD),
+            json_types::isg::ObjectiveDescriptor::PlayWDFTournament(data) => {
                 Ok(Self::PlayWDFTournament(PlayWDFTournament {
                     tournament_count: data.tournament_count.unwrap_or(1),
                 }))
             }
-            json_types::ObjectiveDescriptor::PlayXMaps(data) => {
+            json_types::isg::ObjectiveDescriptor::PlayXMaps(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -522,7 +531,7 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::PlayXWDFTournamentRounds(data) => {
+            json_types::isg::ObjectiveDescriptor::PlayXWDFTournamentRounds(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -532,23 +541,25 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::ReachRankX(data) => Ok(Self::ReachRankX(ReachRankX {
-                rank_to_reach: data.rank_to_reach,
-            })),
-            json_types::ObjectiveDescriptor::RenewJDUSub(_) => Ok(Self::RenewJDUSub),
-            json_types::ObjectiveDescriptor::SwitchSweatMode(_) => Ok(Self::SwitchSweatMode),
-            json_types::ObjectiveDescriptor::UnlockUplayRewardAliasPack1(_) => {
+            json_types::isg::ObjectiveDescriptor::ReachRankX(data) => {
+                Ok(Self::ReachRankX(ReachRankX {
+                    rank_to_reach: data.rank_to_reach,
+                }))
+            }
+            json_types::isg::ObjectiveDescriptor::RenewJDUSub(_) => Ok(Self::RenewJDUSub),
+            json_types::isg::ObjectiveDescriptor::SwitchSweatMode(_) => Ok(Self::SwitchSweatMode),
+            json_types::isg::ObjectiveDescriptor::UnlockUplayRewardAliasPack1(_) => {
                 Ok(Self::UnlockUplayRewardAliasPack1)
             }
-            json_types::ObjectiveDescriptor::UnlockUplayRewardAliasPack2(_) => {
+            json_types::isg::ObjectiveDescriptor::UnlockUplayRewardAliasPack2(_) => {
                 Ok(Self::UnlockUplayRewardAliasPack2)
             }
-            json_types::ObjectiveDescriptor::UnlockXPortraitBorders(data) => {
+            json_types::isg::ObjectiveDescriptor::UnlockXPortraitBorders(data) => {
                 Ok(Self::UnlockXPortraitBorders(UnlockXPortraitBorders {
                     portrait_border_count: data.portrait_border_count,
                 }))
             }
-            json_types::ObjectiveDescriptor::UnlockXStickers(data) => {
+            json_types::isg::ObjectiveDescriptor::UnlockXStickers(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -559,13 +570,13 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::ObjectiveDescriptor::WinWDFTeamBattle(_) => Ok(Self::WinWDFTeamBattle),
+            json_types::isg::ObjectiveDescriptor::WinWDFTeamBattle(_) => Ok(Self::WinWDFTeamBattle),
         }
     }
 
     /// Convert from the old UbiArt representation
     pub fn from_old_descriptor(
-        descriptor: &json_types::ObjectiveDesc1819<'a>,
+        descriptor: &json_types::v1719::ObjectiveDesc1819<'a>,
         unlimited_only: bool,
     ) -> (Self, bool) {
         let mut components = if unlimited_only {
@@ -579,7 +590,7 @@ impl<'a> ObjectiveType<'a> {
         match descriptor {
             // The comments matter!
             #[allow(clippy::match_same_arms)]
-            json_types::ObjectiveDesc1819::Base(data) => match data.objective_type {
+            json_types::v1719::ObjectiveDesc1819::Base(data) => match data.objective_type {
                 0 => {
                     components.push(Component {
                         c_type: ComponentType::MapLaunchLocationRequirement(
@@ -1094,7 +1105,7 @@ impl<'a> ObjectiveType<'a> {
                     (Self::SwitchSweatMode, true)
                 }
             },
-            json_types::ObjectiveDesc1819::MinStarsReachedSongCount(data) => {
+            json_types::v1719::ObjectiveDesc1819::MinStarsReachedSongCount(data) => {
                 if data.objective_type != 18 {
                     println!("Warning!: ObjectiveDesc1819::MinStarsReachedSongCount does not have objective type 18");
                     println!("{data:?}");
@@ -1131,7 +1142,7 @@ impl<'a> ObjectiveType<'a> {
                     true,
                 )
             }
-            json_types::ObjectiveDesc1819::PlaySpecificMap(data) => {
+            json_types::v1719::ObjectiveDesc1819::PlaySpecificMap(data) => {
                 if data.objective_type != 10 {
                     println!("Warning!: ObjectiveDesc1819::PlaySpecificMap does not have objective type 10");
                     println!("{data:?}");
@@ -1172,7 +1183,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::ObjectiveDesc1819::GatherStarsWDF(data) => {
+            json_types::v1719::ObjectiveDesc1819::GatherStarsWDF(data) => {
                 if data.objective_type != 0 {
                     println!("Warning!: ObjectiveDesc1819::GatherStarsWDF does not have objective type 0");
                     println!("{data:?}");
@@ -1205,7 +1216,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::ObjectiveDesc1819::SweatSongCount(data) => {
+            json_types::v1719::ObjectiveDesc1819::SweatSongCount(data) => {
                 if data.objective_type != 11 {
                     println!("Warning!: ObjectiveDesc1819::SweatSongCount does not have objective type 11");
                     println!("{data:?}");
@@ -1238,7 +1249,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::ObjectiveDesc1819::WDFSongCount(data) => {
+            json_types::v1719::ObjectiveDesc1819::WDFSongCount(data) => {
                 if data.objective_type != 11 {
                     println!(
                         "Warning!: ObjectiveDesc1819::WDFSongCount does not have objective type 11"
@@ -1273,7 +1284,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::ObjectiveDesc1819::RecommendSongCount(data) => {
+            json_types::v1719::ObjectiveDesc1819::RecommendSongCount(data) => {
                 // Recommend songs don't exist anymore as objective type, so changed to quickplay songs
                 if data.objective_type != 19 {
                     println!("Warning!: ObjectiveDesc1819::RecommendSongCount does not have objective type 19");
@@ -1296,7 +1307,7 @@ impl<'a> ObjectiveType<'a> {
                     true,
                 )
             }
-            json_types::ObjectiveDesc1819::ClassicTournamentRank(data) => {
+            json_types::v1719::ObjectiveDesc1819::ClassicTournamentRank(data) => {
                 // Classic Tournament doesn't exist anymore so map to regular rank
                 if data.objective_type != 54 {
                     println!("Warning!: ObjectiveDesc1819::ClassicTournamentRank does not have objective type 54");
@@ -1530,11 +1541,11 @@ impl<'a> Component<'a> {
     /// # Errors
     /// Will error if the component has invalid values
     pub fn from_component(
-        component: &json_types::ObjectiveDescriptorComponent<'a>,
+        component: &json_types::isg::ObjectiveDescriptorComponent<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Result<Self, Error> {
         let c_type = match component {
-            json_types::ObjectiveDescriptorComponent::CustoItemTypeRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::CustoItemTypeRequirement(data) => {
                 let mut acceptable_custo_item_types =
                     Vec::with_capacity(data.acceptable_custo_item_types.len());
                 for item in &data.acceptable_custo_item_types {
@@ -1544,7 +1555,7 @@ impl<'a> Component<'a> {
                     acceptable_custo_item_types,
                 })
             }
-            json_types::ObjectiveDescriptorComponent::GachaItemTypeRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::GachaItemTypeRequirement(data) => {
                 let mut acceptable_gacha_item_types =
                     Vec::with_capacity(data.acceptable_gacha_item_types.len());
                 for item in &data.acceptable_gacha_item_types {
@@ -1554,7 +1565,7 @@ impl<'a> Component<'a> {
                     acceptable_gacha_item_types,
                 })
             }
-            json_types::ObjectiveDescriptorComponent::MapCoachCountRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::MapCoachCountRequirement(data) => {
                 let mut acceptable_coach_counts =
                     Vec::with_capacity(data.acceptable_coach_counts.len());
                 for item in &data.acceptable_coach_counts {
@@ -1564,7 +1575,7 @@ impl<'a> Component<'a> {
                     acceptable_coach_counts,
                 })
             }
-            json_types::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(data) => {
                 let mut acceptable_launch_contexts =
                     Vec::with_capacity(data.acceptable_launch_contexts.len());
                 for item in &data.acceptable_launch_contexts {
@@ -1580,7 +1591,7 @@ impl<'a> Component<'a> {
                     acceptable_launch_subcontexts,
                 })
             }
-            json_types::ObjectiveDescriptorComponent::MapMovesRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(data) => {
                 let mut acceptable_categories =
                     Vec::with_capacity(data.acceptable_categories.len());
                 for cat in &data.acceptable_categories {
@@ -1627,12 +1638,12 @@ impl<'a> Component<'a> {
                     return Err(anyhow!("MapMovesRequirement options are all false!"));
                 }
             }
-            json_types::ObjectiveDescriptorComponent::MapNameRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::MapNameRequirement(data) => {
                 ComponentType::MapNameRequirement(MapNameRequirement {
                     acceptable_map_names: data.acceptable_map_names.clone(),
                 })
             }
-            json_types::ObjectiveDescriptorComponent::MapPlaymodeRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::MapPlaymodeRequirement(data) => {
                 ComponentType::MapPlaymodeRequirement(MapPlaymodeRequirement {
                     classic: data.classic,
                     coop: data.coop,
@@ -1643,13 +1654,13 @@ impl<'a> Component<'a> {
                     anthology: data.anthology.unwrap_or_default(),
                 })
             }
-            json_types::ObjectiveDescriptorComponent::MapScoreRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::MapScoreRequirement(data) => {
                 ComponentType::MapScoreRequirement(MapScoreRequirement {
                     score: data.score,
                     better_than_dancer_of_the_week: data.better_than_dancer_of_the_week,
                 })
             }
-            json_types::ObjectiveDescriptorComponent::MapTagsRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::MapTagsRequirement(data) => {
                 let mut acceptable_map_tags = Vec::with_capacity(data.acceptable_map_tags.len());
                 for item in &data.acceptable_map_tags {
                     acceptable_map_tags.push(Tag::try_from(item.as_ref())?);
@@ -1664,16 +1675,18 @@ impl<'a> Component<'a> {
                     unacceptable_map_tags,
                 })
             }
-            json_types::ObjectiveDescriptorComponent::OnlyOnline(_) => ComponentType::OnlyOnline,
-            json_types::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(_) => {
+            json_types::isg::ObjectiveDescriptorComponent::OnlyOnline(_) => {
+                ComponentType::OnlyOnline
+            }
+            json_types::isg::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(_) => {
                 ComponentType::OnlyOnUnlimitedSongs
             }
-            json_types::ObjectiveDescriptorComponent::PlaylistIdRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::PlaylistIdRequirement(data) => {
                 ComponentType::PlaylistIdRequirement(PlaylistIdRequirement {
                     acceptable_playlist_ids: data.acceptable_playlist_ids.clone(),
                 })
             }
-            json_types::ObjectiveDescriptorComponent::ScoringModeRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::ScoringModeRequirement(data) => {
                 let mut acceptable_scoring_modes =
                     Vec::with_capacity(data.acceptable_scoring_modes.len());
                 for item in &data.acceptable_scoring_modes {
@@ -1683,7 +1696,7 @@ impl<'a> Component<'a> {
                     acceptable_scoring_modes,
                 })
             }
-            json_types::ObjectiveDescriptorComponent::SearchLabelsRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::SearchLabelsRequirement(data) => {
                 ComponentType::SearchLabelsRequirement(SearchLabelsRequirement {
                     acceptable_labels: data
                         .acceptable_label_loc_ids
@@ -1697,7 +1710,7 @@ impl<'a> Component<'a> {
                         .collect(),
                 })
             }
-            json_types::ObjectiveDescriptorComponent::StickerIdRequirement(data) => {
+            json_types::isg::ObjectiveDescriptorComponent::StickerIdRequirement(data) => {
                 ComponentType::StickerIdRequirement(StickerIdRequirement {
                     acceptable_sticker_ids: data.acceptable_sticker_ids.clone(),
                 })
@@ -1710,12 +1723,12 @@ impl<'a> Component<'a> {
     }
 }
 
-impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
+impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'a> {
     fn from(value: Component<'a>) -> Self {
         match value.c_type {
             ComponentType::CustoItemTypeRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::CustoItemTypeRequirement(
-                    json_types::ObjectiveDescriptorComponentCustoItemTypeRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::CustoItemTypeRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentCustoItemTypeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_custo_item_types: data
@@ -1728,8 +1741,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::GachaItemTypeRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::GachaItemTypeRequirement(
-                    json_types::ObjectiveDescriptorComponentGachaItemTypeRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::GachaItemTypeRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentGachaItemTypeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_gacha_item_types: data
@@ -1742,8 +1755,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapCoachCountRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::MapCoachCountRequirement(
-                    json_types::ObjectiveDescriptorComponentMapCoachCountRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapCoachCountRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapCoachCountRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_coach_counts: data
@@ -1756,8 +1769,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapLaunchLocationRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(
-                    json_types::ObjectiveDescriptorComponentMapLaunchLocationRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapLaunchLocationRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_launch_contexts: data
@@ -1776,8 +1789,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapNameRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::MapNameRequirement(
-                    json_types::ObjectiveDescriptorComponentMapNameRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapNameRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapNameRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_map_names: data.acceptable_map_names,
@@ -1785,8 +1798,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapPlaymodeRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::MapPlaymodeRequirement(
-                    json_types::ObjectiveDescriptorComponentMapPlaymodeRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapPlaymodeRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapPlaymodeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         classic: data.classic,
@@ -1800,8 +1813,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapScoreRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::MapScoreRequirement(
-                    json_types::ObjectiveDescriptorComponentMapScoreRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapScoreRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapScoreRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         score: data.score,
@@ -1810,8 +1823,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapTagsRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::MapTagsRequirement(
-                    json_types::ObjectiveDescriptorComponentMapTagsRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapTagsRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapTagsRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_map_tags: data
@@ -1829,23 +1842,23 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                     },
                 )
             }
-            ComponentType::OnlyOnline => json_types::ObjectiveDescriptorComponent::OnlyOnline(
-                json_types::ObjectiveDescriptorComponentBase {
+            ComponentType::OnlyOnline => json_types::isg::ObjectiveDescriptorComponent::OnlyOnline(
+                json_types::isg::ObjectiveDescriptorComponentBase {
                     class: None,
                     only_diff_values: value.only_diff_values,
                 },
             ),
             ComponentType::OnlyOnUnlimitedSongs => {
-                json_types::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(
-                    json_types::ObjectiveDescriptorComponentBase {
+                json_types::isg::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(
+                    json_types::isg::ObjectiveDescriptorComponentBase {
                         class: None,
                         only_diff_values: value.only_diff_values,
                     },
                 )
             }
             ComponentType::PlaylistIdRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::PlaylistIdRequirement(
-                    json_types::ObjectiveDescriptorComponentPlaylistIdRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::PlaylistIdRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentPlaylistIdRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_playlist_ids: data.acceptable_playlist_ids,
@@ -1853,8 +1866,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::ScoringModeRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::ScoringModeRequirement(
-                    json_types::ObjectiveDescriptorComponentScoringModeRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::ScoringModeRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentScoringModeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_scoring_modes: data
@@ -1867,8 +1880,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::SearchLabelsRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::SearchLabelsRequirement(
-                    json_types::ObjectiveDescriptorComponentSearchLabelsRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::SearchLabelsRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentSearchLabelsRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_label_loc_ids: data.acceptable_labels,
@@ -1877,8 +1890,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::StickerIdRequirement(data) => {
-                json_types::ObjectiveDescriptorComponent::StickerIdRequirement(
-                    json_types::ObjectiveDescriptorComponentStickerIdRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::StickerIdRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentStickerIdRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_sticker_ids: data.acceptable_sticker_ids,
@@ -1886,8 +1899,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapRequireAllMoves(data) => {
-                json_types::ObjectiveDescriptorComponent::MapMovesRequirement(
-                    json_types::ObjectiveDescriptorComponentMapMovesRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapMovesRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         exact_moves_count: u32::MAX,
@@ -1906,8 +1919,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapRequireLastMove(data) => {
-                json_types::ObjectiveDescriptorComponent::MapMovesRequirement(
-                    json_types::ObjectiveDescriptorComponentMapMovesRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapMovesRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         exact_moves_count: 1,
@@ -1926,8 +1939,8 @@ impl<'a> From<Component<'a>> for json_types::ObjectiveDescriptorComponent<'a> {
                 )
             }
             ComponentType::MapRequireXMovesInARow(data) => {
-                json_types::ObjectiveDescriptorComponent::MapMovesRequirement(
-                    json_types::ObjectiveDescriptorComponentMapMovesRequirement {
+                json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
+                    json_types::isg::ObjectiveDescriptorComponentMapMovesRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         exact_moves_count: u32::MAX,

@@ -1,9 +1,14 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::{serde_as, DisplayFromStr};
 
-use super::{AutoDanceFxDesc, DifficultyColors, Empty, ObjectiveDesc1819, PlaybackEvent};
+use super::{
+    just_dance::{AutoDanceFxDesc, PlaybackEvent},
+    v1719::ObjectiveDesc1819,
+    DifficultyColors, Empty,
+};
 use crate::utils::LocaleId;
 
 #[cfg(feature = "full_json_types")]
@@ -34,7 +39,6 @@ pub struct LocalAliases<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub locked_color: Cow<'a, str>,
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub difficulty_colors: DifficultyColors<'a>,
     pub aliases: Vec<UnlockableAliasDescriptor<'a>>,
 }
@@ -58,12 +62,30 @@ pub struct UnlockableAliasDescriptor<'a> {
     pub description_localized: Cow<'a, str>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unlock_objective: Option<UnlockObjectiveOnlineInfo<'a>>,
-    pub difficulty_color: u8,
+    pub difficulty_color: Rarity,
     pub visibility: u8,
 }
 
 impl UnlockableAliasDescriptor<'_> {
     pub const CLASS: &'static str = "JD_UnlockableAliasDescriptor";
+}
+
+/// How rare is the alias
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, Serialize_repr, Deserialize_repr, Hash, PartialEq, Eq)]
+pub enum Rarity {
+    /// Common
+    Common = 0,
+    /// Uncommon
+    Uncommon = 1,
+    /// Rare
+    Rare = 2,
+    /// Epic
+    Epic = 3,
+    /// Legendary
+    Legendary = 4,
+    /// Exotic
+    Exotic = 5,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

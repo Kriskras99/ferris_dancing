@@ -1,13 +1,14 @@
 pub mod bytes;
+pub mod errors;
 
 use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
 
-use anyhow::{anyhow, Error};
 use byteorder::LittleEndian;
 use dotstar_toolkit_utils::bytes::read_u32_at;
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
 
+use self::errors::ParserError;
 use crate::ipk;
 
 /// Represents the id of a localised string
@@ -89,12 +90,12 @@ impl From<&SplitPath<'_>> for PathId {
 }
 
 impl<'a> TryFrom<&'a str> for SplitPath<'a> {
-    type Error = Error;
+    type Error = ParserError;
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let pos = value
             .rfind('/')
-            .ok_or_else(|| anyhow!("Path does not contain separator ('/')"))?;
+            .ok_or_else(|| ParserError::custom("Path does not contain separator ('/')"))?;
         let (path, filename) = value.split_at(pos + 1);
         assert!(
             !filename.contains('/'),
@@ -158,7 +159,7 @@ impl From<GamePlatform> for u32 {
 }
 
 impl TryFrom<u32> for GamePlatform {
-    type Error = anyhow::Error;
+    type Error = ParserError;
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             0x1C24_B91A => Ok(Self {
@@ -211,7 +212,9 @@ impl TryFrom<u32> for GamePlatform {
                 platform: Platform::Nx,
                 id: value,
             }),
-            _ => Err(anyhow!("Unknown game platform: {value:x}")),
+            _ => Err(ParserError::custom(format!(
+                "Unknown game platform: {value:x}"
+            ))),
         }
     }
 }
@@ -270,17 +273,15 @@ pub enum Platform {
     Nx,
 }
 
-impl TryFrom<Platform> for ipk::Platform {
-    type Error = anyhow::Error;
-
-    fn try_from(value: Platform) -> Result<Self, Self::Error> {
+impl From<Platform> for ipk::Platform {
+    fn from(value: Platform) -> Self {
         match value {
-            Platform::X360 => Ok(Self::X360),
-            Platform::Ps4 => Ok(Self::Ps4),
-            Platform::Wii => Ok(Self::Wii),
-            Platform::WiiU => Ok(Self::WiiU),
-            Platform::Nx => Ok(Self::Nx),
-            Platform::Ps3 => Err(anyhow!("No IPK platform number for {value}")),
+            Platform::X360 => Self::X360,
+            Platform::Ps4 => Self::Ps4,
+            Platform::Wii => Self::Wii,
+            Platform::WiiU => Self::WiiU,
+            Platform::Nx => Self::Nx,
+            Platform::Ps3 => todo!("No IPK platform number known for {value}"),
         }
     }
 }

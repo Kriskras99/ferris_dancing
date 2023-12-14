@@ -3,13 +3,12 @@ use std::{
     io::{Cursor, Write},
 };
 
-use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::types::Language;
 use crate::{
     loc8::types::Loc8,
-    utils::{bytes::WriteBytesExtUbiArt, LocaleId},
+    utils::{bytes::WriteBytesExtUbiArt, errors::WriterError, LocaleId},
 };
 
 /// Creates a .loc8 file and writes it to the writer
@@ -20,7 +19,7 @@ pub fn create<W: Write, S: AsRef<str>>(
     mut writer: W,
     language: Language,
     strings: &HashMap<LocaleId, S>,
-) -> Result<(), Error> {
+) -> Result<(), WriterError> {
     writer.write_u32::<BigEndian>(1)?;
     writer.write_u32::<BigEndian>(u32::from(language))?;
     writer.write_u32::<BigEndian>(u32::try_from(strings.len())?)?;
@@ -46,7 +45,7 @@ pub fn create<W: Write, S: AsRef<str>>(
 pub fn create_vec<S: AsRef<str>>(
     language: Language,
     strings: &HashMap<LocaleId, S>,
-) -> Result<Vec<u8>, Error> {
+) -> Result<Vec<u8>, WriterError> {
     let mut vec = Vec::with_capacity(2_000_000);
     let cursor = Cursor::new(&mut vec);
     create(cursor, language, strings)?;

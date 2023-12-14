@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use super::{AutodanceVideoStructure, PhoneImages};
+use super::{isg::AutodanceVideoStructure, PhoneImages};
 use crate::utils::LocaleId;
 
 #[cfg(feature = "full_json_types")]

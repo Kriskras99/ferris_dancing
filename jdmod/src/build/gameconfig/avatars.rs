@@ -77,7 +77,7 @@ pub fn build(
         let tpl = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
             components: vec![
                 json_types::v22::Template22::MaterialGraphicComponent(
-                    json_types::MaterialGraphicComponent {
+                    json_types::tpl::MaterialGraphicComponent {
                         shadow_size: (1.8, 0.3),
                         shadow_dist: 4,
                         ..Default::default()
@@ -112,12 +112,12 @@ pub fn build(
         bf.generated_files.add_file(
             cook_path(&format!("world/avatars/{id:04}/desc.tpl"), bs.platform)?,
             desc_tpl_vec,
-        );
+        )?;
 
-        bf.generated_files.add_file(to, cooked_image_vec);
+        bf.generated_files.add_file(to, cooked_image_vec)?;
 
         bf.generated_files
-            .add_file(cook_path(&actor_path, bs.platform)?, actor_vec);
+            .add_file(cook_path(&actor_path, bs.platform)?, actor_vec)?;
 
         let scene = desc_scene(id);
         scene_actors.push(scene);
@@ -128,7 +128,7 @@ pub fn build(
     bf.generated_files.add_file(
         cook_path(&gameconfig.avatardb_scene, bs.platform)?,
         avatardb_scene_vec,
-    );
+    )?;
 
     Ok(())
 }
@@ -182,7 +182,7 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
         ],
     };
 
-    cooked::act::create_vec(&actor)
+    Ok(cooked::act::create_vec(&actor)?)
 }
 
 /// Build the description scene

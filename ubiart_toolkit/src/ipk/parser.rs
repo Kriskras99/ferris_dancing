@@ -2,8 +2,8 @@
 
 use std::borrow::Cow;
 
-use anyhow::anyhow;
 use byteorder::BigEndian;
+use dotstar_toolkit_utils::bytes::{read_string_at, read_u32_at, read_u64_at};
 use dotstar_toolkit_utils::testing::TestResult;
 use dotstar_toolkit_utils::testing::{test, test_any};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
@@ -12,11 +12,8 @@ use super::{
     types::Platform, Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR,
     UNK1, UNK2, UNK3, UNK6,
 };
-use crate::utils::{
-    self,
-    bytes::{read_string_at, read_u32_at, read_u64_at},
-    string_id_2, Game, GamePlatform, PathId, SplitPath,
-};
+use crate::utils::errors::ParserError;
+use crate::utils::{self, string_id_2, Game, GamePlatform, PathId, SplitPath};
 
 /// Parse a bytearray-like source as a IPK bundle
 ///
@@ -27,7 +24,7 @@ use crate::utils::{
 /// - Unexpected values (i.e. wrong magic)
 /// - Invalid UTF-8 (i.e. in paths)
 /// - Source has an unexpected size (i.e. not enough bytes, or too many bytes)
-pub fn parse(src: &[u8], lax: bool) -> Result<Bundle, anyhow::Error> {
+pub fn parse(src: &[u8], lax: bool) -> Result<Bundle, ParserError> {
     // Keep track of where we are
     let mut pos = 0;
     // Read the header
@@ -108,12 +105,16 @@ pub fn parse(src: &[u8], lax: bool) -> Result<Bundle, anyhow::Error> {
 
         // Compute the right offset and size
         let asize = if is_compressed { compressed_size } else { size };
-        let foff_from = base_offset
-            .checked_add(offset)
-            .ok_or_else(|| anyhow!("Cannot add {base_offset} and {offset}, it would overflow!"))?;
-        let foff_to = foff_from
-            .checked_add(asize)
-            .ok_or_else(|| anyhow!("Cannot add {foff_from} and {asize}, it would overflow!"))?;
+        let foff_from = base_offset.checked_add(offset).ok_or_else(|| {
+            ParserError::custom(format!(
+                "Cannot add {base_offset} and {offset}, it would overflow!"
+            ))
+        })?;
+        let foff_to = foff_from.checked_add(asize).ok_or_else(|| {
+            ParserError::custom(format!(
+                "Cannot add {foff_from} and {asize}, it would overflow!"
+            ))
+        })?;
         let data = &src[foff_from..foff_to];
 
         let data = if is_compressed {

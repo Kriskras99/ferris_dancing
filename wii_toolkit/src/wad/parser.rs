@@ -90,7 +90,7 @@ fn parse_installable<'a>(
     // TODO: implement verification of cert chain
     *position = position
         .checked_add(round_to_boundary(usize::try_from(cert_chain_size)?))
-        .expect("Overflow occurred!");
+        .ok_or_else(|| anyhow!("Overflow occured!"))?;
 
     // parse ticket data
     let ticket_start = *position;
@@ -137,7 +137,9 @@ const COMMON_KEY: [u8; 0x10] = [
 fn parse_ticket(src: &[u8], position: &mut usize) -> Result<TicketMetadata, Error> {
     // skip signature, padding, issuer and ECDH data
     // TODO: Verify signature
-    *position = position.checked_add(0x1BC).expect("Overflow occurred!");
+    *position = position
+        .checked_add(0x1BC)
+        .ok_or_else(|| anyhow!("Overflow occured!"))?;
     // Read the metadata
     let format_version = read_u8_at(src, position)?;
     let unk1 = read_u16_at::<BigEndian>(src, position)?;
@@ -166,7 +168,9 @@ fn parse_ticket(src: &[u8], position: &mut usize) -> Result<TicketMetadata, Erro
     test(&common_key_index, &0x0)?;
     // Skip remainder of the header
     // TODO: Parse this?
-    *position = position.checked_add(0xB2).expect("Overflow occurred!");
+    *position = position
+        .checked_add(0xB2)
+        .ok_or_else(|| anyhow!("Overflow occured!"))?;
 
     if format_version > 0 {
         return Err(anyhow!("Ticket: V1 header not yet supported!"));
@@ -199,7 +203,9 @@ fn parse_tmd<'a>(src: &'a [u8], position: &mut usize) -> Result<TitleMetadata<'a
     test(&signature_type, &0x10001)?;
     // skip signature, padding and issuer
     // TODO: Verify signature
-    *position = position.checked_add(0x17C).expect("Overflow occurred!");
+    *position = position
+        .checked_add(0x17C)
+        .ok_or_else(|| anyhow!("Overflow occured!"))?;
     let version = read_u8_at(src, position)?;
     test(&version, &0)?;
     let ca_crl_version = read_u8_at(src, position)?;
@@ -286,7 +292,9 @@ fn parse_content<'a>(
         let mut iv = [0; 0x10];
         iv[..2].copy_from_slice(&metadata.index.to_be_bytes());
         let start = *position;
-        let end = start.checked_add(size).expect("Overflow occurred!");
+        let end = start
+            .checked_add(size)
+            .ok_or_else(|| anyhow!("Overflow occured!"))?;
         let data = &src[start..end];
         let new_content = Content {
             data,

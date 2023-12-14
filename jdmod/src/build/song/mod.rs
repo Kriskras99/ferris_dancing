@@ -113,11 +113,11 @@ pub fn build(
     bf.generated_files.add_file(
         format!("{cache_map_path}/{lower_map_name}_main_scene.sgs.ckd"),
         scene_settings,
-    );
+    )?;
     bf.generated_files.add_file(
         format!("{cache_map_path}/{lower_map_name}_main_scene.isc.ckd"),
         main_scene_vec,
-    );
+    )?;
 
     Ok(ses.song.map_name.to_string())
 }
@@ -173,7 +173,7 @@ fn graph_scene(
     bf.generated_files.add_file(
         format!("{cache_map_path}/{lower_map_name}_graph.isc.ckd"),
         graph_scene_vec,
-    );
+    )?;
 
     Ok(cooked::isc::WrappedScene { scene: root.scene })
 }

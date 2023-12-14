@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs::File, path::PathBuf};
 use anyhow::Error;
 use ubiart_toolkit::{
     cooked,
-    json_types::{self, v22::GameManagerConfig22, PortraitBordersDatabase},
+    json_types::{self, isg::PortraitBordersDatabase, v22::GameManagerConfig22},
 };
 
 use crate::{
@@ -42,7 +42,7 @@ pub fn build(
         bf.generated_files.add_file(
             cook_path(&desc.background_texture_path, bs.platform)?,
             background_texture_vec,
-        );
+        )?;
 
         if let Some(foreground_texture_path) = &pb.foreground_texture_path {
             let foreground_texture_encoded = encode_texture(
@@ -54,7 +54,7 @@ pub fn build(
             bf.generated_files.add_file(
                 cook_path(&desc.foreground_texture_path, bs.platform)?,
                 foreground_texture_vec,
-            );
+            )?;
         }
 
         bf.static_files.add_file(
@@ -85,7 +85,7 @@ pub fn build(
     bf.generated_files.add_file(
         cook_path(&gameconfig.config_files_path.portraitborders, bs.platform)?,
         template_vec,
-    );
+    )?;
 
     Ok(())
 }

@@ -1,10 +1,10 @@
-mod isg;
-mod just_dance;
+pub mod isg;
+pub mod just_dance;
 #[cfg(feature = "full_json_types")]
-mod msh;
-mod tape;
-mod tpl;
-mod v1719;
+pub mod msh;
+pub mod tape;
+pub mod tpl;
+pub mod v1719;
 
 pub mod v17;
 pub mod v18;
@@ -16,17 +16,8 @@ pub mod v22;
 
 use std::{borrow::Cow, collections::HashMap};
 
-use anyhow::{anyhow, Error};
-pub use isg::*;
-pub use just_dance::*;
-#[cfg(feature = "full_json_types")]
-pub use msh::*;
+use isg::Rarity;
 use serde::{Deserialize, Serialize};
-use stable_deref_trait::StableDeref;
-pub use tape::*;
-pub use tpl::*;
-pub use v1719::*;
-use yoke::{Yoke, Yokeable};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
@@ -36,7 +27,7 @@ pub struct Empty<'a> {
 }
 
 pub type AliasesObjectives<'a> = HashMap<u16, Cow<'a, str>>;
-pub type DifficultyColors<'a> = HashMap<u8, Cow<'a, str>>;
+pub type DifficultyColors<'a> = HashMap<Rarity, Cow<'a, str>>;
 pub type MapsGoals<'a> = HashMap<Cow<'a, str>, Vec<Cow<'a, str>>>;
 pub type MapsObjectives<'a> = HashMap<Cow<'a, str>, Cow<'a, str>>;
 pub type OfflineRecommendation<'a> = Vec<Cow<'a, str>>;

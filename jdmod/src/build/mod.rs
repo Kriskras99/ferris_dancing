@@ -47,7 +47,7 @@ impl BuildFiles<'_> {
 
     /// Get the size of a build file
     pub fn size(&self) -> Result<u64, Error> {
-        Ok(self.generated_files.size() + self.static_files.size()?)
+        Ok(self.generated_files.size()? + self.static_files.size()?)
     }
 }
 
@@ -158,16 +158,16 @@ pub fn song_database(
     let skuscene_maps_sgs_vec = sgs::create_sgs_vec(&sgs_skuscene)?;
 
     bf.generated_files
-        .add_file(sgscontainer_path, sgscontainer_vec);
+        .add_file(sgscontainer_path, sgscontainer_vec)?;
 
     bf.generated_files.add_file(
         cook_path("world/skuscenes/skuscene_maps_nx_all.sgs", bs.platform)?,
         skuscene_maps_sgs_vec.clone(),
-    );
+    )?;
     bf.generated_files.add_file(
         cook_path("world/skuscenes/skuscene_maps_pc_all.sgs", bs.platform)?,
         skuscene_maps_sgs_vec,
-    );
+    )?;
 
     // Create world/skuscenes/skuscene_maps_{nx,pc}_all.isc
     let isc_skuscene_nx = isc::Root {
@@ -200,11 +200,11 @@ pub fn song_database(
     bf.generated_files.add_file(
         cook_path("world/skuscenes/skuscene_maps_nx_all.isc", bs.platform)?,
         skuscene_maps_isc_vec.clone(),
-    );
+    )?;
     bf.generated_files.add_file(
         cook_path("world/skuscenes/skuscene_maps_pc_all.isc", bs.platform)?,
         skuscene_maps_isc_vec,
-    );
+    )?;
 
     Ok(())
 }

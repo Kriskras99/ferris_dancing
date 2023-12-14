@@ -21,7 +21,7 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
         .collect();
 
     let objective_database =
-        json_types::v22::Template22::ObjectivesDatabase(json_types::ObjectivesDatabase {
+        json_types::v22::Template22::ObjectivesDatabase(json_types::isg::ObjectivesDatabase {
             class: None,
             objective_descs,
         });
@@ -30,7 +30,7 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
     bf.generated_files.add_file(
         cook_path("enginedata/gameconfig/objectives.isg", bs.platform)?,
         objective_database_vec,
-    );
+    )?;
 
     Ok(())
 }

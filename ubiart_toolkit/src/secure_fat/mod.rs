@@ -17,9 +17,7 @@
 //!
 //! ## Limitations
 //! A secure_fat.gf can only reference 256 bundles, as the bundle ID is only u8. This means that on FAT32 or similar
-//! filesystems the game is limited to 1 TiB as a individual bundle is limited to 4 GiB. On exFAT and other modern
-//! filesystems the limit is 4 ZiB as a individual bundle is limited to 16 EiB. If every byte was stored on a single
-//! silicon atom you would have 4500 kg of silicon!
+//! filesystems the game is limited to 1 TiB as a individual bundle is limited to 4 GiB.
 //!
 //! ## File structure
 //! | Offset     | Type     | Description                                           |

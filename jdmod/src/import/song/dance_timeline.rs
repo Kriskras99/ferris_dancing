@@ -51,8 +51,8 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
 
     for clip in tape.clips {
         let new_clip = match clip {
-            json_types::Clip::GoldEffect(goldeffect) => Clip::GoldEffect(goldeffect.into()),
-            json_types::Clip::Motion(motion) => {
+            json_types::tape::Clip::GoldEffect(goldeffect) => Clip::GoldEffect(goldeffect.into()),
+            json_types::tape::Clip::Motion(motion) => {
                 let classifier_path = motion.classifier_path.clone();
                 let new_motion: MotionClip = motion.try_into()?;
 
@@ -73,7 +73,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                 }
                 Clip::Motion(new_motion)
             }
-            json_types::Clip::Pictogram(pictogram) => {
+            json_types::tape::Clip::Pictogram(pictogram) => {
                 let picto_path = pictogram.picto_path.clone();
                 let new_picto: PictogramClip = pictogram.try_into()?;
                 if let Some(ref mut vec) = montage_vec {

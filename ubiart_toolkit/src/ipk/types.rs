@@ -1,10 +1,9 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use anyhow::{anyhow, Error};
 use nohash_hasher::IntMap;
 use yoke::Yokeable;
 
-use crate::utils::{self, GamePlatform, PathId, SplitPath};
+use crate::utils::{self, errors::ParserError, GamePlatform, PathId, SplitPath};
 
 // More values!
 // https://github.com/RayCarrot/RayCarrot.RCP.Metro/blob/190c884a7745dedde6a33337a4c9684e5094c90a/src/RayCarrot.RCP.Metro/Archive/Manager/UbiArt_Ipk/UbiArtIPKArchiveConfigViewModel.cs#L85
@@ -21,7 +20,7 @@ pub enum Platform {
 }
 
 impl TryFrom<u32> for Platform {
-    type Error = Error;
+    type Error = ParserError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
@@ -30,7 +29,7 @@ impl TryFrom<u32> for Platform {
             0x5 => Ok(Self::Wii),
             0x8 => Ok(Self::WiiU),
             0xB => Ok(Self::Nx),
-            _ => Err(anyhow!("Unknown platform id {value}!")),
+            _ => Err(ParserError::custom(format!("Unknown platform id {value}!"))),
         }
     }
 }

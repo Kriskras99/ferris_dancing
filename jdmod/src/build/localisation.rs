@@ -110,7 +110,7 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
                 .ok_or_else(|| anyhow!("Impossible! Did I forget a language?"))?,
         )?;
 
-        bf.generated_files.add_file(String::from(*file), loc8_vec);
+        bf.generated_files.add_file(String::from(*file), loc8_vec)?;
     }
 
     Ok(())

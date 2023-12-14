@@ -1,10 +1,9 @@
 use std::io::{Cursor, Write};
 
-use anyhow::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::Png;
-use crate::cooked::xtx;
+use crate::{cooked::xtx, utils::errors::WriterError};
 
 /// Create the cooked PNG file in a newly allocated `Vec`
 ///
@@ -14,7 +13,7 @@ use crate::cooked::xtx;
 ///
 /// # Panics
 /// Will panic if the png does not contain any images
-pub fn create<W: Write>(mut src: W, png: &Png) -> Result<(), Error> {
+pub fn create<W: Write>(mut src: W, png: &Png) -> Result<(), WriterError> {
     src.write_u64::<BigEndian>(0x9_5445_5800)?;
     src.write_u32::<BigEndian>(0x2C)?;
     let unk2 = png.xtx.images.first().unwrap().header.image_size + 0x80;
@@ -37,7 +36,7 @@ pub fn create<W: Write>(mut src: W, png: &Png) -> Result<(), Error> {
 ///
 /// # Errors
 /// Will error when the image size is too big or the color BPP is too large
-pub fn create_vec(png: &Png) -> Result<Vec<u8>, Error> {
+pub fn create_vec(png: &Png) -> Result<Vec<u8>, WriterError> {
     // Calculate required capacity: png header + xtx header/footer + per image(header size + data size)
     // We can't use a static capacity as image sizes range from 66KB to 2MB
     let capacity = 44

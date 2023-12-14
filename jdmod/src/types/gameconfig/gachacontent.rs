@@ -1,7 +1,7 @@
 //! # Gacha machine
 //! Types for dealing with the gacha machine
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::json_types::{
+use ubiart_toolkit::json_types::isg::{
     CollectibleGachaItem, CollectibleGachaItemAlias, CollectibleGachaItemAvatar,
     CollectibleGachaItemPortraitBorder,
 };

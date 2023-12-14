@@ -1,11 +1,8 @@
 use std::path::PathBuf;
 
-use anyhow::Context;
 use clap::Parser;
-use ubiart_toolkit::{
-    cooked::act,
-    utils::{bytes::read_to_vec, Game},
-};
+use dotstar_toolkit_utils::bytes::read_to_vec;
+use ubiart_toolkit::{cooked::act, utils::Game};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -31,9 +28,7 @@ fn main() {
     };
 
     let data = read_to_vec(&cli.source).unwrap();
-    let actors = act::parse(&data, game)
-        .with_context(|| format!("{:?}", cli.source))
-        .unwrap();
+    let actors = act::parse(&data, game).unwrap();
 
     for template in &actors.components {
         println!("{template:#?}");

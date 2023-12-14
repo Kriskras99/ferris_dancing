@@ -2,7 +2,8 @@ mod parser;
 mod types;
 mod writer;
 
-use anyhow::Error;
+use std::num::TryFromIntError;
+
 pub use parser::*;
 pub use types::*;
 pub use writer::*;
@@ -43,6 +44,10 @@ const fn round_size(mut size: u32, pad: u32) -> u32 {
     size
 }
 
+/// Get the address in the (de)swizzled data
+///
+/// # Errors
+/// Will error if the address is larger than [`usize::MAX`]
 fn get_addr(
     mut x: u32,
     mut y: u32,
@@ -50,7 +55,7 @@ fn get_addr(
     yb: u32,
     rounded_width: u32,
     x_base: u32,
-) -> Result<usize, Error> {
+) -> Result<usize, TryFromIntError> {
     let mut x_cnt = x_base;
     let mut y_cnt = 1;
     let mut x_used = 0;
@@ -75,5 +80,5 @@ fn get_addr(
 
     address |= (x + (y * (rounded_width >> x_used))) << (x_used + y_used);
 
-    Ok(usize::try_from(address)?)
+    usize::try_from(address)
 }

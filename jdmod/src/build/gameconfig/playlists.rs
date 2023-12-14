@@ -28,8 +28,8 @@ pub fn build(
     let mut requests = Vec::new();
 
     for (name, playlist) in saved_playlists {
-        requests.push(json_types::CarouselRequestDesc::Playlists(
-            json_types::CarouselPlaylistsRequestDesc {
+        requests.push(json_types::isg::CarouselRequestDesc::Playlists(
+            json_types::isg::CarouselPlaylistsRequestDesc {
                 playlist_id: name.clone(),
                 ..Default::default()
             },
@@ -50,28 +50,29 @@ pub fn build(
         bf.generated_files.add_file(
             cook_path(offline_playlist.cover_path.as_ref(), bs.platform)?,
             cover_actor_vec,
-        );
+        )?;
         bf.generated_files.add_file(
             cook_path(
                 &format!("world/ui/textures/covers/playlists_offline/{tga}"),
                 bs.platform,
             )?,
             cooked_cover_vec,
-        );
+        )?;
 
         playlists.insert(name, offline_playlist);
     }
 
-    let template = json_types::v22::Template22::PlaylistDatabase(json_types::PlaylistDatabase {
-        class: None,
-        playlists,
-    });
+    let template =
+        json_types::v22::Template22::PlaylistDatabase(json_types::isg::PlaylistDatabase {
+            class: None,
+            playlists,
+        });
 
     let template_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
         cook_path(&gameconfig.config_files_path.playlist, bs.platform)?,
         template_vec,
-    );
+    )?;
 
     build_carousel(bs, bf, requests, &gameconfig.carousel_rules)?;
 
@@ -82,7 +83,7 @@ pub fn build(
 fn build_carousel(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    mut requests: Vec<json_types::CarouselRequestDesc<'_>>,
+    mut requests: Vec<json_types::isg::CarouselRequestDesc<'_>>,
     carousel_rules: &str,
 ) -> Result<(), Error> {
     let carousel_rules_path = cook_path(carousel_rules, bs.platform)?;
@@ -112,8 +113,8 @@ fn build_carousel(
 
     // Add a new playlist carousel called 'Themed Playlists' for all other playlists
     // TODO: Investigate adding a carousel per Game
-    let category_rule = json_types::CategoryRule {
-        class: Some(json_types::CategoryRule::CLASS),
+    let category_rule = json_types::isg::CategoryRule {
+        class: Some(json_types::isg::CategoryRule::CLASS),
         act: Cow::Borrowed("ui_carousel"),
         isc: Cow::Borrowed("grp_row"),
         title: Cow::Borrowed("Themed"),
@@ -129,7 +130,7 @@ fn build_carousel(
         100_000,
     )?;
     bf.generated_files
-        .add_file(carousel_rules_path, carousel_vec);
+        .add_file(carousel_rules_path, carousel_vec)?;
 
     Ok(())
 }
@@ -174,5 +175,5 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
         }],
     };
 
-    cooked::act::create_vec(&actor)
+    Ok(cooked::act::create_vec(&actor)?)
 }

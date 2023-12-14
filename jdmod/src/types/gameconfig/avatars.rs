@@ -3,6 +3,7 @@
 use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::testing::{test, test_any, test_not, TestResult};
 use serde::{Deserialize, Serialize};
 
 /// Description of an avatar
@@ -65,7 +66,14 @@ impl From<&UnlockType<'_>> for u8 {
 
 impl<'a> UnlockType<'a> {
     /// Convert from the UbiArt representation
+    ///
+    /// # Errors
+    /// Will error if the quest type is unknown or a quest name is required for a quest type but missing
     pub fn from_unlock_type(n: u8, quest: Option<&Cow<'a, str>>) -> Result<Self, Error> {
+        TestResult::or(
+            TestResult::and(test(&quest.is_some(), &true), test_any(&n, &[0, 21])),
+            TestResult::and(test(&quest.is_none(), &true), test_not(&n, &21)),
+        )?;
         assert!(
             (quest.is_some() && (n == 21 || n == 0)) || (quest.is_none() && n != 21),
             "Type: {n}, quest: {quest:?}"

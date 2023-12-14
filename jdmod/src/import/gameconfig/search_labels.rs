@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::Error;
-use ubiart_toolkit::json_types::SongsSearchTags;
+use ubiart_toolkit::json_types::isg::SongsSearchTags;
 
 use crate::types::{gameconfig::search_labels::SearchLabel, ImportState};
 

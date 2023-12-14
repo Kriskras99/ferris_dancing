@@ -1,11 +1,8 @@
 use std::path::PathBuf;
 
-use anyhow::Context;
 use clap::Parser;
-use ubiart_toolkit::{
-    cooked,
-    utils::{bytes::read_to_vec, Game},
-};
+use dotstar_toolkit_utils::bytes::read_to_vec;
+use ubiart_toolkit::{cooked, utils::Game};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -29,43 +26,29 @@ fn main() {
     };
 
     let path = cli.source;
-    let data = read_to_vec(&path).unwrap();
+    let data = read_to_vec(path).unwrap();
 
     match game {
         Game::JustDance2017 => {
-            cooked::json::parse_v17(&data, false)
-                .with_context(|| format!("{path:?}"))
-                .unwrap();
+            cooked::json::parse_v17(&data, false).unwrap();
         }
         Game::JustDance2018 => {
-            cooked::json::parse_v18(&data, false)
-                .with_context(|| format!("{path:?}"))
-                .unwrap();
+            cooked::json::parse_v18(&data, false).unwrap();
         }
         Game::JustDance2019 => {
-            cooked::json::parse_v19(&data, false)
-                .with_context(|| format!("{path:?}"))
-                .unwrap();
+            cooked::json::parse_v19(&data, false).unwrap();
         }
         Game::JustDance2020 => {
-            cooked::json::parse_v20(&data, false)
-                .with_context(|| format!("{path:?}"))
-                .unwrap();
+            cooked::json::parse_v20(&data, false).unwrap();
         }
         Game::JustDanceChina => {
-            cooked::json::parse_v20c(&data, false)
-                .with_context(|| format!("{path:?}"))
-                .unwrap();
+            cooked::json::parse_v20c(&data, false).unwrap();
         }
         Game::JustDance2021 => {
-            cooked::json::parse_v21(&data, false)
-                .with_context(|| format!("{path:?}"))
-                .unwrap();
+            cooked::json::parse_v21(&data, false).unwrap();
         }
         Game::JustDance2022 => {
-            cooked::json::parse_v22(&data, false)
-                .with_context(|| format!("{path:?}"))
-                .unwrap();
+            cooked::json::parse_v22(&data, false).unwrap();
         }
         _ => panic!("Unsupported game version: {game}"),
     }

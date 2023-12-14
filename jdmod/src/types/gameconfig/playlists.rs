@@ -28,7 +28,7 @@ impl<'a> Playlist<'a> {
     /// Will error if the parsing of the filename fails or if the game is not supported
     pub fn from_offline_playlist(
         is: &ImportState<'_>,
-        offline_playlist: &json_types::OfflinePlaylist<'a>,
+        offline_playlist: &json_types::isg::OfflinePlaylist<'a>,
     ) -> Result<Self, Error> {
         let file_stem = AsRef::<Path>::as_ref(offline_playlist.cover_path.as_ref())
             .file_stem()
@@ -93,13 +93,13 @@ impl<'a> Playlist<'a> {
     ///
     /// # Errors
     /// Will error if parsing the filename fails
-    pub fn to_offline_playlist(self) -> Result<json_types::OfflinePlaylist<'a>, Error> {
+    pub fn to_offline_playlist(self) -> Result<json_types::isg::OfflinePlaylist<'a>, Error> {
         let file_stem = AsRef::<Path>::as_ref(self.cover.as_ref())
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
             .ok_or_else(|| anyhow!("Failure parsing filename!"))?;
-        Ok(json_types::OfflinePlaylist {
-            class: Some(json_types::OfflinePlaylist::CLASS),
+        Ok(json_types::isg::OfflinePlaylist {
+            class: Some(json_types::isg::OfflinePlaylist::CLASS),
             title_id: self.title,
             description_id: self.description,
             cover_path: Cow::Owned(format!(

@@ -61,17 +61,15 @@ impl SymlinkFs<'_> {
     /// Get the size of the entire filesystem
     ///
     /// # Errors
-    /// Will error if retrieving the metadata from the backing filesystem fails
-    ///
-    /// # Panics
-    /// Will panic if an integer overflow occurs
+    /// - Backing filesystem fails on retrieving the metadata
+    /// - The total size is larger than [`u64::MAX`]
     pub fn size(&self) -> Result<u64> {
         let mut size: u64 = 0;
         for path in self.mapping.values() {
             let metadata = self.backing_fs.metadata(path)?;
             size = size
                 .checked_add(metadata.file_size())
-                .expect("Overflow occurred!");
+                .ok_or_else(|| std::io::Error::other("Overflow occured"))?;
         }
         Ok(size)
     }

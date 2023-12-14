@@ -1,19 +1,16 @@
-#![allow(clippy::module_name_repetitions)]
-
 use std::{io::ErrorKind, path::Path};
 
-use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 use yoke::Yoke;
 
 use super::IpkFile;
 use crate::utils::path_id;
 
-pub struct VfsIpkFilesystem<'f> {
+pub struct IpkFilesystem<'f> {
     ipk: Yoke<super::Bundle<'static>, VirtualFile<'f>>,
 }
 
-impl VfsIpkFilesystem<'_> {
+impl IpkFilesystem<'_> {
     #[must_use]
     pub fn engine_version(&self) -> u32 {
         self.ipk.get().engine_version
@@ -25,7 +22,7 @@ impl VfsIpkFilesystem<'_> {
     }
 }
 
-impl<'f> VfsIpkFilesystem<'f> {
+impl<'f> IpkFilesystem<'f> {
     /// Create a new virtual filesystem from the IPK file at `path`.
     ///
     /// # Errors
@@ -34,23 +31,24 @@ impl<'f> VfsIpkFilesystem<'f> {
         fs: &'f dyn VirtualFileSystem,
         path: &Path,
         lax: bool,
-    ) -> Result<VfsIpkFilesystem<'f>, Error> {
+    ) -> Result<IpkFilesystem<'f>, std::io::Error> {
         let ipk_file = fs.open(path)?;
         let ipk: Yoke<super::Bundle<'_>, VirtualFile<'_>> =
-            Yoke::try_attach_to_cart(ipk_file, |data: &[u8]| super::parse(data, lax))?;
+            Yoke::try_attach_to_cart(ipk_file, |data: &[u8]| super::parse(data, lax))
+                .map_err(|e| std::io::Error::other(format!("Parsing of IPK failed: {e:?}")))?;
         Ok(Self { ipk })
     }
 }
 
 #[derive(Clone)]
-pub struct VfsIpkMetadata {
+pub struct IpkMetadata {
     pub timestamp: u64,
     pub is_cooked: bool,
     pub is_compressed: bool,
     pub size: u64,
 }
 
-impl VirtualFileMetadata for VfsIpkMetadata {
+impl VirtualFileMetadata for IpkMetadata {
     fn file_size(&self) -> u64 {
         self.size
     }
@@ -60,7 +58,7 @@ impl VirtualFileMetadata for VfsIpkMetadata {
     }
 }
 
-impl From<&IpkFile<'_>> for VfsIpkMetadata {
+impl From<&IpkFile<'_>> for IpkMetadata {
     fn from(value: &IpkFile<'_>) -> Self {
         Self {
             timestamp: value.timestamp,
@@ -71,7 +69,7 @@ impl From<&IpkFile<'_>> for VfsIpkMetadata {
     }
 }
 
-impl<'fs> VirtualFileSystem for VfsIpkFilesystem<'fs> {
+impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
     fn open<'f>(&'f self, path: &Path) -> std::io::Result<VirtualFile<'f>> {
         let path_id = path_id(path);
         let file = self.ipk.get().files.get(&path_id).ok_or_else(|| {
@@ -95,7 +93,7 @@ impl<'fs> VirtualFileSystem for VfsIpkFilesystem<'fs> {
         let path_id = path_id(path);
         let file = self.ipk.get().files.get(&path_id);
         match file {
-            Some(file) => Ok(Box::new(VfsIpkMetadata::from(file))),
+            Some(file) => Ok(Box::new(IpkMetadata::from(file))),
             None => Err(std::io::Error::new(
                 ErrorKind::NotFound,
                 format!("Could not get metadata for {path:?}, file not found!"),

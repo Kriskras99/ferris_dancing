@@ -2,12 +2,12 @@
 //! Types for dealing with aliases
 use std::{borrow::Cow, collections::HashMap};
 
-use anyhow::{anyhow, Error};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
     json_types::{
-        AliasesObjectives, UnlockObjectiveOnlineInfo, UnlockableAliasDescriptor,
-        UnlockableAliasDescriptor1719,
+        isg::{UnlockObjectiveOnlineInfo, UnlockableAliasDescriptor},
+        v1719::UnlockableAliasDescriptor1719,
+        AliasesObjectives,
     },
     utils::LocaleId,
 };
@@ -30,42 +30,46 @@ pub struct Aliases<'a> {
 }
 
 /// How rare is the alias
-#[repr(u8)]
+///
+/// Wrapper type around [`ubiart_toolkit::json_types::isg::Rarity`] that serializes in a more readable way
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub enum Rarity {
     /// Common
-    Common = 0,
+    Common,
     /// Uncommon
-    Uncommon = 1,
+    Uncommon,
     /// Rare
-    Rare = 2,
+    Rare,
     /// Epic
-    Epic = 3,
+    Epic,
     /// Legendary
-    Legendary = 4,
+    Legendary,
     /// Exotic
-    Exotic = 5,
+    Exotic,
 }
 
-impl From<Rarity> for u8 {
-    #[allow(clippy::as_conversions)]
+impl From<Rarity> for ubiart_toolkit::json_types::isg::Rarity {
     fn from(value: Rarity) -> Self {
-        value as Self
+        match value {
+            Rarity::Common => Self::Common,
+            Rarity::Uncommon => Self::Uncommon,
+            Rarity::Rare => Self::Rare,
+            Rarity::Epic => Self::Epic,
+            Rarity::Legendary => Self::Legendary,
+            Rarity::Exotic => Self::Exotic,
+        }
     }
 }
 
-impl TryFrom<u8> for Rarity {
-    type Error = Error;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+impl From<ubiart_toolkit::json_types::isg::Rarity> for Rarity {
+    fn from(value: ubiart_toolkit::json_types::isg::Rarity) -> Self {
         match value {
-            0 => Ok(Self::Common),
-            1 => Ok(Self::Uncommon),
-            2 => Ok(Self::Rare),
-            3 => Ok(Self::Epic),
-            4 => Ok(Self::Legendary),
-            5 => Ok(Self::Exotic),
-            _ => Err(anyhow!("Unknown DifficultyColor {value}")),
+            ubiart_toolkit::json_types::isg::Rarity::Common => Self::Common,
+            ubiart_toolkit::json_types::isg::Rarity::Uncommon => Self::Uncommon,
+            ubiart_toolkit::json_types::isg::Rarity::Rare => Self::Rare,
+            ubiart_toolkit::json_types::isg::Rarity::Epic => Self::Epic,
+            ubiart_toolkit::json_types::isg::Rarity::Legendary => Self::Legendary,
+            ubiart_toolkit::json_types::isg::Rarity::Exotic => Self::Exotic,
         }
     }
 }
@@ -96,10 +100,10 @@ impl<'c> Alias<'c> {
         descriptor: UnlockableAliasDescriptor<'a>,
         aliasesobjectives: &HashMap<u16, Cow<'b, str>>,
         locale_id_map: &LocaleIdMap,
-    ) -> Result<Self, Error> {
+    ) -> Self {
         let unlock_objective = aliasesobjectives.get(&descriptor.id).cloned();
 
-        Ok(Self {
+        Self {
             name_placeholder: descriptor.string_placeholder,
             name: locale_id_map
                 .get(descriptor.string_loc_id)
@@ -111,9 +115,9 @@ impl<'c> Alias<'c> {
                 .get(descriptor.description_loc_id)
                 .unwrap_or_default(),
             unlocked_by_default: descriptor.unlocked_by_default,
-            rarity: descriptor.difficulty_color.try_into()?,
+            rarity: descriptor.difficulty_color.into(),
             unlock_objective,
-        })
+        }
     }
 
     /// Convert from old UbiArt representation
@@ -121,26 +125,26 @@ impl<'c> Alias<'c> {
         descriptor: UnlockableAliasDescriptor1719<'a>,
         locale_id_map: &LocaleIdMap,
         objectives: &mut Objectives<'a>,
-    ) -> Result<Self, Error> {
+    ) -> Self {
         let unlock_objective = Some(Cow::Owned(objectives.add_objective(
             Objective::from_old_descriptor(
                 &descriptor.unlock_objective,
                 descriptor.restricted_to_unlimited_songs,
                 locale_id_map,
             ),
-        )?));
+        )));
         let name = locale_id_map
             .get(descriptor.string_loc_id)
             .unwrap_or_default();
-        Ok(Self {
+        Self {
             name_placeholder: descriptor.string_placeholder,
             name_female: name,
             name,
             description: LocaleId::EMPTY,
             unlocked_by_default: false,
-            rarity: descriptor.difficulty_color.try_into()?,
+            rarity: descriptor.difficulty_color.into(),
             unlock_objective,
-        })
+        }
     }
 
     /// Convert to the UbiArt representation

@@ -5,7 +5,7 @@ use std::fs::File;
 use anyhow::{anyhow, Context, Error};
 use ubiart_toolkit::{
     cooked,
-    json_types::{ScheduledQuestDesc1819, ScheduledQuestSetup},
+    json_types::{isg::ScheduledQuestSetup, v1719::ScheduledQuestDesc1819},
 };
 
 use super::objectives::{load_objectives, save_objectives};
@@ -73,6 +73,9 @@ pub fn import_v20v22(
 }
 
 /// Import scheduled quests for Just Dance 2018-2019
+///
+/// # Errors
+/// Will error if the IO fails or deserializing the objectives fails
 pub fn import_v18v19(
     is: &ImportState<'_>,
     quest_descriptions: Vec<ScheduledQuestDesc1819<'_>>,
@@ -92,7 +95,7 @@ pub fn import_v18v19(
         .map(|q| {
             QuestDescription::from_scheduled_quest_desc_1819(q, &mut objectives, &is.locale_id_map)
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Vec<_>>();
     scheduled_quests.quests.extend(quests);
 
     save_objectives(is, &objectives)?;

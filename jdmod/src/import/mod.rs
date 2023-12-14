@@ -8,7 +8,7 @@ use dotstar_toolkit_utils::testing::test;
 use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
 use ubiart_toolkit::{
     alias8, cooked,
-    secure_fat::vfs::VfsSfatFilesystem,
+    secure_fat::vfs::SfatFilesystem,
     utils::{Game, Platform},
 };
 
@@ -58,7 +58,7 @@ pub fn import(game_path: &Path, dir_root: &Path, lax: bool, songs_only: bool) ->
                 .parent()
                 .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
         )?;
-        let sfat_vfs = VfsSfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"), lax)?;
+        let sfat_vfs = SfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"), lax)?;
 
         // TODO: Check engine version and warn user they're missing an update
 

@@ -1,15 +1,14 @@
 //! A parser for the secure_fat.gf file format
 
-use anyhow::Error;
 use byteorder::BigEndian;
-use dotstar_toolkit_utils::testing::{test, test_le, test_not};
+use dotstar_toolkit_utils::{
+    bytes::{read_string_at, read_u32_at, read_u8_at},
+    testing::{test, test_le, test_not},
+};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use super::{BundleId, SecureFat, MAGIC, UNK1};
-use crate::utils::{
-    bytes::{read_string_at, read_u32_at, read_u8_at},
-    GamePlatform, PathId,
-};
+use crate::utils::{errors::ParserError, GamePlatform, PathId};
 
 /// Parse a bytearray-like source as a secure_fat.gf
 ///
@@ -20,7 +19,7 @@ use crate::utils::{
 /// - Unexpected values (i.e. wrong magic)
 /// - Invalid UTF-8 (i.e. in bundle names)
 /// - Source has an unexpected size (i.e. not enough bytes, or too many bytes)
-pub fn parse(src: &[u8]) -> Result<SecureFat, Error> {
+pub fn parse(src: &[u8]) -> Result<SecureFat, ParserError> {
     // Keep track of where we are
     let mut pos = 0;
     // Read the header

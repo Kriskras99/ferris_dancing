@@ -5,13 +5,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::Error;
 use clap::Parser;
 use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
 use memmap2::Mmap;
 use ubiart_toolkit::{
     ipk::{self, Bundle},
-    utils::{GamePlatform, PathId},
+    utils::{
+        errors::{ParserError, WriterError},
+        GamePlatform, PathId,
+    },
 };
 
 #[derive(Parser)]
@@ -34,7 +36,7 @@ struct Cli {
     lax: bool,
 }
 
-fn main() -> Result<(), Error> {
+fn main() {
     let cli = Cli::parse();
 
     let source = &cli.source;
@@ -45,11 +47,11 @@ fn main() -> Result<(), Error> {
             temp.push_str(".ipk");
             PathBuf::from(temp)
         });
-        create_ipk(source, &destination)?;
+        create_ipk(source, &destination).unwrap();
     } else {
-        let file = File::open(source)?;
-        let mmap = unsafe { Mmap::map(&file)? };
-        let ipk = ipk::parse(&mmap, cli.lax)?;
+        let file = File::open(source).unwrap();
+        let mmap = unsafe { Mmap::map(&file).unwrap() };
+        let ipk = ipk::parse(&mmap, cli.lax).unwrap();
 
         if cli.check {
             check_ipk(&ipk, source);
@@ -66,10 +68,9 @@ fn main() -> Result<(), Error> {
                     .expect("No parent!")
                     .join(source.file_stem().unwrap())
             });
-            unpack_ipk(&ipk, &destination, cli.overwrite)?;
+            unpack_ipk(&ipk, &destination, cli.overwrite).unwrap();
         }
     }
-    Ok(())
 }
 
 pub fn list_ipk(ipk: &Bundle) {
@@ -100,7 +101,7 @@ pub fn list_ipk(ipk: &Bundle) {
 ///
 /// # Errors
 /// Will return an error if the IO fails or the file is corrupt
-pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(), Error> {
+pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(), ParserError> {
     create_dir_all(destination)?;
 
     for fil in ipk.files.values() {
@@ -117,11 +118,9 @@ pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(
                 ipk::Data::Compressed(data) => {
                     let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
                     let mut decompress = flate2::Decompress::new(true);
-                    decompress.decompress_vec(
-                        data.data,
-                        &mut vec,
-                        flate2::FlushDecompress::Finish,
-                    )?;
+                    decompress
+                        .decompress_vec(data.data, &mut vec, flate2::FlushDecompress::Finish)
+                        .unwrap();
                     file.write_all(&vec)?;
                 }
             }
@@ -157,7 +156,7 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
 ///
 /// # Errors
 /// Will error if the IO fails or there are too many files
-pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), anyhow::Error> {
+pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> {
     let vfs = Native::new(source)?;
     let file_list = vfs.list_files(&PathBuf::from(""))?;
     let files: Vec<_> = file_list.iter().map(String::as_str).collect();
