@@ -1,7 +1,6 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::{serde_as, DisplayFromStr};
 
 use super::{
@@ -70,9 +69,29 @@ impl UnlockableAliasDescriptor<'_> {
     pub const CLASS: &'static str = "JD_UnlockableAliasDescriptor";
 }
 
+impl Default for UnlockableAliasDescriptor<'static> {
+    fn default() -> Self {
+        Self {
+            class: Some(UnlockableAliasDescriptor::CLASS),
+            id: Default::default(),
+            string_loc_id: Default::default(),
+            string_loc_id_female: Default::default(),
+            string_online_localized: Cow::default(),
+            string_online_localized_female: Cow::default(),
+            string_placeholder: Default::default(),
+            unlocked_by_default: Default::default(),
+            description_loc_id: Default::default(),
+            description_localized: Cow::default(),
+            unlock_objective: Some(UnlockObjectiveOnlineInfo::default()),
+            difficulty_color: Rarity::Common,
+            visibility: 0,
+        }
+    }
+}
+
 /// How rare is the alias
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Serialize_repr, Deserialize_repr, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum Rarity {
     /// Common
     Common = 0,
@@ -86,6 +105,71 @@ pub enum Rarity {
     Legendary = 4,
     /// Exotic
     Exotic = 5,
+}
+
+impl<'de> Deserialize<'de> for Rarity {
+    fn deserialize<D>(deserializer: D) -> Result<Rarity, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct RarityVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for RarityVisitor {
+            type Value = Rarity;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("an integer between 0 and 5")
+            }
+
+            fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match v {
+                    0 => Ok(Rarity::Common),
+                    1 => Ok(Rarity::Uncommon),
+                    2 => Ok(Rarity::Rare),
+                    3 => Ok(Rarity::Epic),
+                    4 => Ok(Rarity::Legendary),
+                    5 => Ok(Rarity::Exotic),
+                    _ => Err(E::custom(format!("Rarity is unknown: {}", v))),
+                }
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match v {
+                    "0" => Ok(Rarity::Common),
+                    "1" => Ok(Rarity::Uncommon),
+                    "2" => Ok(Rarity::Rare),
+                    "3" => Ok(Rarity::Epic),
+                    "4" => Ok(Rarity::Legendary),
+                    "5" => Ok(Rarity::Exotic),
+                    _ => Err(E::custom(format!("Rarity is unknown: {}", v))),
+                }
+            }
+
+            // Similar for other methods:
+            //   - visit_i16
+            //   - visit_u8
+            //   - visit_u16
+            //   - visit_u32
+            //   - visit_u64
+        }
+
+        deserializer.deserialize_any(RarityVisitor)
+    }
+}
+
+impl Serialize for Rarity {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&format!("{}", *self as u8))
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

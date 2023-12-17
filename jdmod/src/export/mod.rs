@@ -28,7 +28,7 @@ pub struct Build {
     /// Directory to put the bundles
     destination: PathBuf,
     /// Create a patch file instead of a bundle file
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = false)]
     patch: bool,
 }
 

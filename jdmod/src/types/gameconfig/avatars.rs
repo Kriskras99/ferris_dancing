@@ -102,11 +102,10 @@ impl<'a> UnlockType<'a> {
     /// Normalize the unlock type to [`UnlockType::Quest`] or [`UnlockType::Unlocked`]
     pub fn normalize(self) -> Self {
         match self {
-            Self::GiftMachine
-            | Self::PlayPreviousJD
-            | Self::Unlimited
-            | Self::Unlocked
-            | Self::Unknown => Self::Unlocked,
+            Self::GiftMachine => Self::GiftMachine,
+            Self::PlayPreviousJD | Self::Unlimited | Self::Unlocked | Self::Unknown => {
+                Self::Unlocked
+            }
             Self::Quest(s) => Self::Quest(s),
         }
     }
