@@ -32,8 +32,9 @@ pub fn build(
 
     let mut aliases_vec = Vec::with_capacity(aliases.aliases.len());
     for alias in aliases.aliases {
+        let is_gacha = !alias.unlocked_by_default && alias.unlock_objective.is_none();
         let new_alias = alias.to_unlockable_alias_descriptor(aliasesobjectives);
-        if !new_alias.unlocked_by_default && new_alias.unlock_objective.is_none() {
+        if is_gacha {
             gacha_items.push(GachaItem::Alias(new_alias.id));
         }
         aliases_vec.push(new_alias);

@@ -5,9 +5,7 @@ use std::{borrow::Cow, collections::HashMap};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
     json_types::{
-        isg::{UnlockObjectiveOnlineInfo, UnlockableAliasDescriptor},
-        v1719::UnlockableAliasDescriptor1719,
-        AliasesObjectives,
+        isg::UnlockableAliasDescriptor, v1719::UnlockableAliasDescriptor1719, AliasesObjectives,
     },
     utils::LocaleId,
 };
@@ -159,19 +157,14 @@ impl<'c> Alias<'c> {
             aliasesobjectives.remove(&id);
         }
         UnlockableAliasDescriptor {
-            class: Some(UnlockableAliasDescriptor::CLASS),
             id,
             string_loc_id: self.name,
             string_loc_id_female: self.name_female,
-            string_online_localized: Cow::Borrowed(""),
-            string_online_localized_female: Cow::Borrowed(""),
             string_placeholder: self.name_placeholder,
             unlocked_by_default: self.unlocked_by_default,
             description_loc_id: self.description,
-            description_localized: Cow::Borrowed(""),
-            unlock_objective: Some(UnlockObjectiveOnlineInfo::default()),
             difficulty_color: self.rarity.into(),
-            visibility: 0,
+            ..Default::default()
         }
     }
 }

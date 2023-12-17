@@ -219,7 +219,7 @@ impl TryFrom<u32> for GamePlatform {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Game {
     JustDance2014 = 20140,
     JustDance2015 = 20150,
