@@ -34,6 +34,12 @@ pub fn main(cli: &New) -> Result<(), Error> {
 }
 
 /// Create a new game at `dir_root` with the secure_fat.gf at `game_path`
+///
+/// # Errors
+/// - When `dir_root` exists and is not empty or not a directory
+/// - When `game_path` is not a secure_fat.gf
+/// - Invalid secure_fat.gf or .ipks or missing .ipks
+/// - The secure_fat.gf is not for the Nintendo Switch
 pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
     // Check that the target directory either doesn't exist yet or is empty
     // We do not want to potentially override existing files and/or directories

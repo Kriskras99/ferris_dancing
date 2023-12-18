@@ -46,6 +46,9 @@ pub fn main(cli: &Build) -> Result<(), anyhow::Error> {
 }
 
 /// Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
+///
+/// # Panics
+/// Will panic if any of the threads it creates return an error
 pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Error> {
     // Check the directory structure
     let dir_tree = DirectoryTree::new(source);

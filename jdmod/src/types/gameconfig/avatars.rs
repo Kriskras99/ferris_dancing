@@ -74,18 +74,11 @@ impl<'a> UnlockType<'a> {
             TestResult::and(test(&quest.is_some(), &true), test_any(&n, &[0, 21])),
             TestResult::and(test(&quest.is_none(), &true), test_not(&n, &21)),
         )?;
-        assert!(
-            (quest.is_some() && (n == 21 || n == 0)) || (quest.is_none() && n != 21),
-            "Type: {n}, quest: {quest:?}"
-        );
         match n {
-            0 => {
-                if quest.is_some() {
-                    Ok(Self::Quest(quest.cloned().unwrap()))
-                } else {
-                    Ok(Self::Unknown)
-                }
-            }
+            0 => match quest {
+                Some(quest) => Ok(Self::Quest(quest.clone())),
+                None => Ok(Self::Unknown),
+            },
             18 => Ok(Self::GiftMachine),
             19 => Ok(Self::PlayPreviousJD),
             20 => Ok(Self::Unlocked),

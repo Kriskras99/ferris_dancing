@@ -8,7 +8,10 @@ use std::{
 
 use anyhow::{anyhow, Error};
 use clap::Args;
-use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
+use dotstar_toolkit_utils::{
+    testing::test,
+    vfs::{native::Native, VirtualFileSystem},
+};
 use ubiart_toolkit::{ipk, secure_fat};
 
 use crate::FileConflictStrategy;
@@ -36,8 +39,8 @@ pub struct Extract {
 /// If `files` is specified, it will only extract those files
 pub fn main(extract: Extract) -> Result<(), Error> {
     let source = extract.source;
-    assert!(source.try_exists()?, "Source does not exist!");
-    assert!(source.is_file(), "Source is not a file!");
+    test(&source.try_exists()?, &true).context("Source does not exist!")?;
+    test(&source.is_file(), &true).context("Source is not a file!")?;
     let destination = extract.destination.unwrap_or(fs::canonicalize(".")?);
     // Create the export directory
     if destination.exists() && destination.read_dir()?.next().is_some() {
@@ -176,7 +179,7 @@ fn save_file(
     fs::create_dir_all(
         destination
             .parent()
-            .expect("File should have a parent directory!"),
+            .ok_or_else(|| anyhow!("File should have a parent directory!"))?,
     )?;
     match (destination.exists(), conflicts) {
         (true, FileConflictStrategy::Error) => Err(anyhow!("{destination:?} already exists!")),

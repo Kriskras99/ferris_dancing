@@ -10,10 +10,6 @@ use super::types::{Alias, Alias8};
 use crate::utils::{bytes::read_path_at, errors::ParserError};
 
 /// Parse an .alias8 file
-///
-/// # Errors
-///
-/// Returns [`Err`] if the source is corrupt or not an alias8 file
 pub fn parse(src: &[u8]) -> Result<Alias8<'_>, ParserError> {
     let mut position = 0;
 

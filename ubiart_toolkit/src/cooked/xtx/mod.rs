@@ -45,9 +45,6 @@ const fn round_size(mut size: u32, pad: u32) -> u32 {
 }
 
 /// Get the address in the (de)swizzled data
-///
-/// # Errors
-/// Will error if the address is larger than [`usize::MAX`]
 fn get_addr(
     mut x: u32,
     mut y: u32,

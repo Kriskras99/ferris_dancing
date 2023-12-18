@@ -2,10 +2,13 @@
 //! Contains the code for bundling files into .ipk files
 use std::{fs::File, path::Path};
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use crossbeam::channel::Receiver;
-use dotstar_toolkit_utils::vfs::{
-    layeredfs::OverlayFs, native::Native, symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem,
+use dotstar_toolkit_utils::{
+    testing::test,
+    vfs::{
+        layeredfs::OverlayFs, native::Native, symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem,
+    },
 };
 use ubiart_toolkit::{
     ipk::{self, vfs::IpkFilesystem},
@@ -30,10 +33,8 @@ pub fn bundle(
     patch: bool,
 ) -> Result<(), Error> {
     // Make sure the destination directory actually exists
-    assert!(
-        destination.exists(),
-        "Destination directory {destination:?} does not exist!"
-    );
+    test(&destination.exists(), &true)
+        .with_context(|| format!("Destination directory {destination:?} does not exist!"))?;
 
     // For files that go into the main (logic) bundle
     let mut bundle_files = BuildFiles {
@@ -62,7 +63,9 @@ pub fn bundle(
                 if song_files.size()? + new_song_files.size()? >= MAX_BUNDLE_SIZE_FAT32 {
                     // Save this bundle and create a new one
                     save_songs_bundle(&mut sfat, &song_files, bundle_n, config, destination)?;
-                    bundle_n = bundle_n.checked_add(1).expect("Overflow occurred");
+                    bundle_n = bundle_n
+                        .checked_add(1)
+                        .ok_or_else(|| anyhow!("Overflow occurred"))?;
                     song_files = BuildFiles {
                         generated_files: VecFs::with_capacity(1000),
                         static_files: SymlinkFs::with_capacity(native_vfs, 500),

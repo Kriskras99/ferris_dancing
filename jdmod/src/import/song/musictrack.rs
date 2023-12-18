@@ -2,7 +2,8 @@
 //! Imports the main sequence and audio file
 use std::{fs::File, io::Write};
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::testing::test;
 use ubiart_toolkit::cooked;
 
 use super::SongImportState;
@@ -15,10 +16,7 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         .open(cook_path(musictrack_path, sis.platform)?.as_ref())?;
     let template = cooked::json::parse_v22(&mainsequence_file, sis.lax)?;
     let mut actor = template.actor()?;
-    assert!(
-        actor.components.len() == 1,
-        "More than one component in musictrack"
-    );
+    test(&actor.components.len(), &1).context("More than one component in muisctrack")?;
     let track_data = actor
         .components
         .swap_remove(0)
@@ -29,14 +27,20 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
 
     // TODO: Decook WAV!
     let audio_filename = if sis.vfs.exists(path.as_ref()) {
-        let audio_filename = path.rsplit_once('/').unwrap().1.to_string();
+        let audio_filename = path
+            .rsplit_once('/')
+            .map(|p| p.1.to_string())
+            .ok_or_else(|| anyhow!("Invalid path! {path:?}"))?;
         let from = sis.vfs.open(path.as_ref())?;
         let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
         to.write_all(&from)?;
         audio_filename
     } else {
         let cooked_path = cook_path(path, sis.platform)?;
-        let audio_filename = cooked_path.rsplit_once('/').unwrap().1.to_string();
+        let audio_filename = cooked_path
+            .rsplit_once('/')
+            .map(|p| p.1.to_string())
+            .ok_or_else(|| anyhow!("Invalid cooked path! {cooked_path:?}"))?;
         let from = sis.vfs.open(cooked_path.as_ref())?;
         let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
         to.write_all(&from)?;

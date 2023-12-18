@@ -2,7 +2,7 @@
 //! Builds the menuart textures and phone images
 use std::{borrow::Cow, fs::File, path::PathBuf};
 
-use anyhow::Error;
+use anyhow::{bail, Error};
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
@@ -64,7 +64,7 @@ pub fn build(
                     "coach2" => format!("{textures_dir}/{lower_map_name}_coach_2_phone.png"),
                     "coach3" => format!("{textures_dir}/{lower_map_name}_coach_3_phone.png"),
                     "coach4" => format!("{textures_dir}/{lower_map_name}_coach_4_phone.png"),
-                    _ => panic!("Unknown phone image name: {phone:?}"),
+                    _ => bail!("Unknown phone image name: {phone:?}"),
                 };
                 bf.static_files.add_file(from, PathBuf::from(to))?;
             }

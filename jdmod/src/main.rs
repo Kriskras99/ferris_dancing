@@ -14,6 +14,7 @@
 #![allow(clippy::option_if_let_else)]
 // Not reliable enough
 #![allow(clippy::doc_markdown)]
+#![allow(clippy::missing_errors_doc)]
 
 //! # JDMod
 //! Application for modding Just Dance games.

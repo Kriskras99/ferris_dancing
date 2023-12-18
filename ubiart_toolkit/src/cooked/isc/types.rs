@@ -1,3 +1,8 @@
+#![allow(
+    clippy::struct_excessive_bools,
+    reason = "The booleans are imposed by the UbiArt engine"
+)]
+
 use std::borrow::Cow;
 
 use dotstar_toolkit_utils::testing::test;
@@ -84,9 +89,6 @@ impl Default for Scene<'_> {
 
 impl<'a> Scene<'a> {
     /// Get an `SubSceneActor` from `self.actors` matching `userfriendly`
-    ///
-    /// # Errors
-    /// Will error if there is no `SubSceneActor` matching `userfriendly`
     pub fn get_subscene_by_userfriendly(
         &self,
         userfriendly: &str,
@@ -109,9 +111,6 @@ impl<'a> Scene<'a> {
     }
 
     /// Get an `SubSceneActor` from `self.actors` ending in `userfriendly`
-    ///
-    /// # Errors
-    /// Will error if there is no `SubSceneActor` ending in `userfriendly`
     pub fn get_subscene_by_userfriendly_end(
         &self,
         userfriendly: &str,
@@ -148,9 +147,6 @@ impl<'a> Scene<'a> {
     }
 
     /// Get an `Actor` from `self.actors` matching `userfriendly`
-    ///
-    /// # Errors
-    /// Will error if there is no `Actor` matching `userfriendly`
     pub fn get_actor_by_userfriendly_end(
         &self,
         userfriendly: &str,
@@ -187,9 +183,6 @@ impl<'a> Scene<'a> {
     }
 
     /// Get an actor from `self.actors` matching `userfriendly`
-    ///
-    /// # Errors
-    /// Will error if there is no actor matching `userfriendly`
     pub fn get_actor_by_userfriendly(&self, userfriendly: &str) -> Result<&Actor, ParserError> {
         self.actors
             .iter()
@@ -2594,9 +2587,6 @@ pub struct TargetFilterObject<'a> {
 }
 
 /// Serialize a boolean as a "1" or a "0"
-///
-/// # Errors
-/// Will error if the underlying `ser` fails
 #[allow(clippy::trivially_copy_pass_by_ref)]
 fn ser_bool<S>(data: &bool, ser: S) -> Result<S::Ok, S::Error>
 where
@@ -2611,8 +2601,7 @@ where
 
 /// Serialize a Option<boolean> as a "1" or a "0"
 ///
-/// # Errors
-/// Will error if the underlying `ser` fails or the Option is None
+/// The Option needs to be Some!
 #[allow(clippy::trivially_copy_pass_by_ref)]
 fn ser_option_bool<S>(data: &Option<bool>, ser: S) -> Result<S::Ok, S::Error>
 where
@@ -2628,9 +2617,6 @@ where
 }
 
 /// Serialize the separator as a string
-///
-/// # Errors
-/// Will error if the underlying `ser` fails
 fn ser_separator<S>(data: &[Color; 4], ser: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -2640,9 +2626,6 @@ where
 }
 
 /// Deserialize the separator from a string
-///
-/// # Errors
-/// Will error if the underlying `deser` fails or if the separator is wrong
 fn deser_separator<'de, D>(deser: D) -> Result<[Color; 4], D::Error>
 where
     D: Deserializer<'de>,
@@ -2819,9 +2802,6 @@ mod wrapped_actors {
 
     impl<'a> WrappedActors<'a> {
         /// Convert this Actors to a `Actor`.
-        ///
-        /// # Errors
-        /// Will error if this Actors is not a `Actor`.
         pub fn actor(&'a self) -> Result<&'a Actor<'a>, ParserError> {
             if let WrappedActors::Actor(actor) = self {
                 Ok(&actor.actor)
@@ -2833,9 +2813,6 @@ mod wrapped_actors {
         }
 
         /// Convert this Actors to a `SubSceneActor`.
-        ///
-        /// # Errors
-        /// Will error if this Actors is not a `SubSceneActor`.
         pub fn sub_scene_actor(&'a self) -> Result<&'a SubSceneActor<'a>, ParserError> {
             if let WrappedActors::SubSceneActor(ss_actor) = self {
                 Ok(&ss_actor.sub_scene_actor)
@@ -3516,9 +3493,6 @@ mod wrapped_component {
 
     impl<'a> WrappedComponent<'a> {
         /// Convert this component to a `PleoComponent`.
-        ///
-        /// # Errors
-        /// Will error if this component is not a `PleoComponent`.
         pub fn pleo_component(&'a self) -> Result<&'a PleoComponent, ParserError> {
             if let Self::Pleo(pleo_component) = self {
                 Ok(&pleo_component.pleo_component)
@@ -3530,9 +3504,6 @@ mod wrapped_component {
         }
 
         /// Convert this component to a `MaterialGraphicComponent`.
-        ///
-        /// # Errors
-        /// Will error if this component is not a `MaterialGraphicComponent`.
         pub fn material_graphic_component(
             &'a self,
         ) -> Result<&'a MaterialGraphicComponent, ParserError> {

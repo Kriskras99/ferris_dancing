@@ -6,9 +6,6 @@ use super::Root;
 use crate::utils::errors::WriterError;
 
 /// Write the `Root` to the writer
-///
-/// # Errors
-/// Will error when serialisation fails or the writer fails
 pub fn create<W: Write>(mut src: W, root: &Root) -> Result<(), WriterError> {
     let mut buf = String::with_capacity(1000);
     buf.push_str("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n");
@@ -21,9 +18,6 @@ pub fn create<W: Write>(mut src: W, root: &Root) -> Result<(), WriterError> {
 }
 
 /// Create a `Vec` with the XML representation of `root`
-///
-/// # Errors
-/// Will error when serialisation fails
 pub fn create_vec(root: &Root) -> Result<Vec<u8>, WriterError> {
     let mut buf = String::with_capacity(1000);
     buf.push_str("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n");
@@ -36,9 +30,6 @@ pub fn create_vec(root: &Root) -> Result<Vec<u8>, WriterError> {
 }
 
 /// Create a `Vec` with the XML representation of `root`, providing a capacity hint to prevent reallocations.
-///
-/// # Errors
-/// Will error when serialisation fails
 pub fn create_vec_with_capacity_hint(root: &Root, capacity: usize) -> Result<Vec<u8>, WriterError> {
     let mut buf = String::with_capacity(capacity);
     buf.push_str("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n");

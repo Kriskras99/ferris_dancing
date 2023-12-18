@@ -38,10 +38,13 @@ pub fn build(
 
     // the actual video
     let video_path = ses.dirs.song().join(ses.song.videofile.as_ref());
-    assert!(
-        video_path.extension().and_then(OsStr::to_str) == Some("webm"),
-        "Video file is not a webm! Transcoding is not supported: {video_path:?}"
-    );
+    test(
+        &video_path.extension().and_then(OsStr::to_str),
+        &Some("webm"),
+    )
+    .with_context(|| {
+        format!("Video file is not a webm! Transcoding is not supported: {video_path:?}")
+    })?;
     test(&video_path.exists(), &true)
         .with_context(|| format!("Video file does not exist at {video_path:?}!"))?;
 

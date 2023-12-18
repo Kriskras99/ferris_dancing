@@ -1,3 +1,8 @@
+#![allow(
+    clippy::struct_excessive_bools,
+    reason = "The booleans are imposed by the UbiArt engine"
+)]
+
 pub mod isg;
 pub mod just_dance;
 #[cfg(feature = "full_json_types")]

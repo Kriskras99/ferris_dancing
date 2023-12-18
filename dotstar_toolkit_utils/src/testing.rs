@@ -188,6 +188,16 @@ pub enum TestError {
         /// Backtrace
         backtrace: Backtrace,
     },
+    /// The value is smaller than it's supposed to be
+    #[error("Test failed: {left} is smaller than {right}")]
+    SmallerThan {
+        /// Left value
+        left: String,
+        /// Right value
+        right: String,
+        /// Backtrace
+        backtrace: Backtrace,
+    },
     /// Both tests failed
     #[error("Both tests failed:\n    {source:?}\n    {other:?}")]
     And {
@@ -242,6 +252,15 @@ impl TestError {
             backtrace: Backtrace::capture(),
         }
     }
+
+    /// Create the [`TestError::SmallerThan`] error
+    fn smaller_than<T: Debug>(left: &T, right: &T) -> Self {
+        Self::GreaterThan {
+            left: format!("{left:?}"),
+            right: format!("{right:?}"),
+            backtrace: Backtrace::capture(),
+        }
+    }
 }
 
 /// Test if `one` == `two` returning a descriptive error if they're not the same.
@@ -290,5 +309,17 @@ pub fn test_le<T: PartialOrd + Debug>(left: &T, right: &T) -> TestResult {
         TestResult::Ok
     } else {
         TestResult::Err(TestError::greater_than(left, right))
+    }
+}
+
+/// Test if `one` >= `two` returning a descriptive error if `one` is smaller.
+///
+/// # Errors
+/// Will return an error if `one` is smaller than `two`, with a description of the values.
+pub fn test_ge<T: PartialOrd + Debug>(left: &T, right: &T) -> TestResult {
+    if left >= right {
+        TestResult::Ok
+    } else {
+        TestResult::Err(TestError::smaller_than(left, right))
     }
 }

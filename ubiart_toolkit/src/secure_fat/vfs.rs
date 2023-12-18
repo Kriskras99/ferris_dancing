@@ -54,12 +54,6 @@ impl SfatFilesystem<'_> {
 
 impl<'f> SfatFilesystem<'f> {
     /// Create a new virtual filesystem from a secure_fat.gf at `path`
-    ///
-    /// # Errors
-    /// Will error if the file does not exist or if the .gf/.ipk files are invalid
-    ///
-    /// # Panics
-    /// Will panic if the secure_fat.gf file does not reference any IPKs
     pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path, lax: bool) -> std::io::Result<Self> {
         let sfat_file = fs.open(path).map_err(|error| {
             std::io::Error::other(format!("Failed to open {path:?}: {error:?}"))
@@ -67,10 +61,11 @@ impl<'f> SfatFilesystem<'f> {
         let sfat = super::parse(&sfat_file).map_err(|error| {
             std::io::Error::other(format!("Failed to parse secure_fat.gf: {error:?}"))
         })?;
-        assert!(
-            sfat.bundle_count() >= 1,
-            "secure_fat.gf does not have any IPKs"
-        );
+        if sfat.bundle_count() == 0 {
+            return Err(std::io::Error::other(
+                "secure_fat.gf does not have any IPKs",
+            ));
+        }
         let mut bundles =
             IntMap::with_capacity_and_hasher(sfat.bundle_count(), BuildNoHashHasher::default());
         let parent = path

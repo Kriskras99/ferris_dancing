@@ -13,12 +13,6 @@ use crate::utils::{errors::ParserError, GamePlatform, PathId};
 /// Parse a bytearray-like source as a secure_fat.gf
 ///
 /// This will parse the source from start to end.
-///
-/// # Errors
-/// This function will error when it encounters the following:
-/// - Unexpected values (i.e. wrong magic)
-/// - Invalid UTF-8 (i.e. in bundle names)
-/// - Source has an unexpected size (i.e. not enough bytes, or too many bytes)
 pub fn parse(src: &[u8]) -> Result<SecureFat, ParserError> {
     // Keep track of where we are
     let mut pos = 0;

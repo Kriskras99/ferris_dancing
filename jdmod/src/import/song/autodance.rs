@@ -3,6 +3,7 @@
 use std::{borrow::Cow, fs::File, io::Write};
 
 use anyhow::Error;
+use dotstar_toolkit_utils::testing::test;
 use ubiart_toolkit::cooked;
 
 use super::SongImportState;
@@ -14,10 +15,7 @@ pub fn import(sis: &SongImportState<'_>, autodance_path: &str) -> Result<(), Err
         .vfs
         .open(cook_path(autodance_path, sis.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&autodance_file, sis.lax)?.actor()?;
-    assert!(
-        actor.components.len() == 1,
-        "More than one component in actor!"
-    );
+    test(&actor.components.len(), &1).context("More than one component in actor!")?;
     let autodance = actor.components.swap_remove(0).autodance_component()?;
 
     let data = &autodance.autodance_data;

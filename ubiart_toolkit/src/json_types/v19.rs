@@ -338,9 +338,6 @@ pub enum Template19<'a> {
 
 impl<'a> Template19<'a> {
     /// Convert this template to a `GameManagerConfig19`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `GameManagerConfig19`.
     pub fn game_manager_config(self) -> Result<GameManagerConfig19<'a>, ParserError> {
         if let Template19::GameManagerConfig(gmc) = self {
             Ok(*gmc)
@@ -352,9 +349,6 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `ObjectivesDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `ObjectivesDatabase`.
     pub fn objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
         if let Template19::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
@@ -366,9 +360,6 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `ScheduledQuestDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `ScheduledQuestDatabase`.
     pub fn scheduled_quests_database(
         &'a self,
     ) -> Result<&'a ScheduledQuestDatabase<'a>, ParserError> {
@@ -382,9 +373,6 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `PlaylistDatabase`.
     pub fn playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
         if let Template19::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
@@ -396,9 +384,6 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `LocalAliases1719`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `LocalAliases1719`.
     pub fn local_aliases(self) -> Result<LocalAliases1719<'a>, ParserError> {
         if let Template19::LocalAliases(local_aliases) = self {
             Ok(local_aliases)

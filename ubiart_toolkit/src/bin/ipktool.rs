@@ -1,3 +1,5 @@
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::missing_errors_doc)]
 use std::{
     collections::HashSet,
     fs::{create_dir_all, File},
@@ -98,9 +100,6 @@ pub fn list_ipk(ipk: &Bundle) {
 }
 
 /// Extract a IPK bundle to destination
-///
-/// # Errors
-/// Will return an error if the IO fails or the file is corrupt
 pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(), ParserError> {
     create_dir_all(destination)?;
 
@@ -153,9 +152,6 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
 }
 
 /// Create a IPK bundle from all files and directories in `source`
-///
-/// # Errors
-/// Will error if the IO fails or there are too many files
 pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> {
     let vfs = Native::new(source)?;
     let file_list = vfs.list_files(&PathBuf::from(""))?;

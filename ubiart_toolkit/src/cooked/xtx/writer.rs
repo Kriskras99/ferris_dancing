@@ -6,9 +6,6 @@ use super::{count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Format, 
 use crate::utils::errors::WriterError;
 
 /// Writes the XTX texture to the file
-///
-/// # Errors
-/// Will error when the writer fails or when the color BPP is too high
 pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriterError> {
     src.write_u32::<LittleEndian>(0x4E76_4644)?;
     src.write_u32::<LittleEndian>(0x10)?;
@@ -83,9 +80,6 @@ pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriterError> {
 }
 
 /// Swizzle the image in `data`
-///
-/// # Errors
-/// Will error if the BPP is not supported or values don't fit in [`usize::MAX`]
 fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, WriterError> {
     let (origin_width, origin_height) = if format.is_bcn() {
         ((width + 3) / 4, (height + 3) / 4)
