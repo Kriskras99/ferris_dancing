@@ -74,13 +74,13 @@ impl Default for UnlockableAliasDescriptor<'static> {
         Self {
             class: Some(UnlockableAliasDescriptor::CLASS),
             id: Default::default(),
-            string_loc_id: Default::default(),
-            string_loc_id_female: Default::default(),
+            string_loc_id: LocaleId::default(),
+            string_loc_id_female: LocaleId::default(),
             string_online_localized: Cow::default(),
             string_online_localized_female: Cow::default(),
-            string_placeholder: Default::default(),
+            string_placeholder: Cow::default(),
             unlocked_by_default: Default::default(),
-            description_loc_id: Default::default(),
+            description_loc_id: LocaleId::default(),
             description_localized: Cow::default(),
             unlock_objective: Some(UnlockObjectiveOnlineInfo::default()),
             difficulty_color: Rarity::Common,
@@ -108,7 +108,7 @@ pub enum Rarity {
 }
 
 impl<'de> Deserialize<'de> for Rarity {
-    fn deserialize<D>(deserializer: D) -> Result<Rarity, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
@@ -132,7 +132,7 @@ impl<'de> Deserialize<'de> for Rarity {
                     3 => Ok(Rarity::Epic),
                     4 => Ok(Rarity::Legendary),
                     5 => Ok(Rarity::Exotic),
-                    _ => Err(E::custom(format!("Rarity is unknown: {}", v))),
+                    _ => Err(E::custom(format!("Rarity is unknown: {v}"))),
                 }
             }
 
@@ -147,7 +147,7 @@ impl<'de> Deserialize<'de> for Rarity {
                     "3" => Ok(Rarity::Epic),
                     "4" => Ok(Rarity::Legendary),
                     "5" => Ok(Rarity::Exotic),
-                    _ => Err(E::custom(format!("Rarity is unknown: {}", v))),
+                    _ => Err(E::custom(format!("Rarity is unknown: {v}"))),
                 }
             }
 
@@ -164,6 +164,7 @@ impl<'de> Deserialize<'de> for Rarity {
 }
 
 impl Serialize for Rarity {
+    #![allow(clippy::as_conversions)]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

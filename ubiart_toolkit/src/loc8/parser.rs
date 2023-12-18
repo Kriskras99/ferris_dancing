@@ -18,9 +18,6 @@ use crate::{
 };
 
 /// Parse a .loc8 file
-///
-/// # Errors
-/// -  the file is not a loc8 file or the parser encounters an unexpected value.
 pub fn parse(src: &[u8]) -> Result<Loc8<'_>, ParserError> {
     let mut position = 0;
 

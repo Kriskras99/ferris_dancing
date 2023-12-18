@@ -15,9 +15,6 @@ use super::{
 /// Read a `SplitPath` from `source` at position `position` and check the CRC
 ///
 /// This function increments `position` with the size of the string + 12 if successful
-///
-/// # Errors
-/// This function will return an error when the string would be (partially) outside the source.
 pub fn read_path_at<'b, T: ByteOrder>(
     source: &'b [u8],
     position: &mut usize,
@@ -47,9 +44,6 @@ pub fn read_path_at<'b, T: ByteOrder>(
 
 pub trait WriteBytesExtUbiArt: std::io::Write {
     // Writes the components of the split path and the crc to the writer
-    ///
-    /// # Errors
-    /// Will error if the individual components are longer than `u32::MAX` or if the writer fails
     fn write_path<T: ByteOrder>(&mut self, path: &SplitPath<'_>) -> Result<(), WriterError> {
         if path.is_empty() {
             self.write_u32::<T>(0)?; // filename length
@@ -64,9 +58,6 @@ pub trait WriteBytesExtUbiArt: std::io::Write {
     }
 
     /// Writes the length of a string and the string itself to the writer.
-    ///
-    /// # Errors
-    /// Will error if the string is longer than `u32::MAX` or if the writer fails
     fn write_string<T: ByteOrder>(&mut self, string: &str) -> Result<(), WriterError> {
         self.write_u32::<T>(u32::try_from(string.len())?)?;
         self.write_all(string.as_bytes())?;

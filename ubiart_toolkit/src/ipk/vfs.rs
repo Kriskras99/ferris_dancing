@@ -24,9 +24,6 @@ impl IpkFilesystem<'_> {
 
 impl<'f> IpkFilesystem<'f> {
     /// Create a new virtual filesystem from the IPK file at `path`.
-    ///
-    /// # Errors
-    /// Will error if the parsing of the IPK file fails or the file fails to open
     pub fn new(
         fs: &'f dyn VirtualFileSystem,
         path: &Path,

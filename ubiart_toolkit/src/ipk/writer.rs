@@ -64,12 +64,6 @@ struct ReducedMetadata<'a> {
 const STATIC_HEADER_SIZE: usize = 0x30;
 
 /// Create a secure_fat.gf file at the path
-///
-/// # Errors
-/// This function errors in various ways:
-/// - The file cannot be opened
-/// - Something goes wrong with writing to the writer
-/// - There are too many bundles (more than 256)
 pub fn create<P: AsRef<Path>>(
     path: P,
     game_platform: GamePlatform,
@@ -93,9 +87,6 @@ pub fn create<P: AsRef<Path>>(
 }
 
 /// Create an .ipk file with the specified files.
-///
-/// # Errors
-/// When the writer fails: `ParserError::IO`.
 pub fn write<W: Write + Seek>(
     mut writer: W,
     game_platform: GamePlatform,

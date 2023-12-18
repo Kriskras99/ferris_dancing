@@ -10,9 +10,6 @@ use super::MovementSpaceMove;
 use crate::utils::errors::ParserError;
 
 /// Parse a MovementSpaceMove file
-///
-/// # Errors
-/// -  the file is not a MovementSpaceMove file or the parser encounters an unexpected value.
 pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, ParserError> {
     let mut position = 0;
 

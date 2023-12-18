@@ -107,7 +107,9 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
         let loc8_vec = loc8::create_vec(
             *lang,
             map.get(lang)
-                .ok_or_else(|| anyhow!("Impossible! Did I forget a language?"))?,
+                .ok_or_else(|| anyhow!("Impossible! Did I forget a language?"))?
+                .iter()
+                .map(|(i, s)| (*i, *s)),
         )?;
 
         bf.generated_files.add_file(String::from(*file), loc8_vec)?;

@@ -12,12 +12,6 @@ use super::{SecureFat, MAGIC, UNK1};
 use crate::utils::errors::WriterError;
 
 /// Create a secure_fat.gf file at the path
-///
-/// # Errors
-/// This function errors in various ways:
-/// - The file cannot be opened
-/// - Something goes wrong with writing to the writer
-/// - There are too many bundles (more than 256)
 pub fn create<P: AsRef<Path>>(path: P, sfat: &SecureFat) -> Result<(), WriterError> {
     let file = File::create(path)?;
     let writer = BufWriter::new(file);
@@ -25,11 +19,6 @@ pub fn create<P: AsRef<Path>>(path: P, sfat: &SecureFat) -> Result<(), WriterErr
 }
 
 /// Write a secure_fat.gf file to the writer.
-///
-/// # Errors
-/// This function errors in various ways:
-/// - Something goes wrong with writing to the writer
-/// - There are too many bundles (more than 256)
 pub fn write<W: Write>(mut writer: W, sfat: &SecureFat) -> Result<(), WriterError> {
     // Write the header
     writer.write_u32::<BigEndian>(MAGIC)?;

@@ -17,11 +17,6 @@ const DATA_BLK_TYPE: u32 = 0x3;
 const UNKNOWN_BLK_TYPE_THREE: u32 = 0x5;
 
 /// Parse an Nvidia Tegra Texture file
-///
-/// # Errors
-/// - The file is not a Tegra Texture file
-/// - The parser encounters an unexpected value
-/// - The `src` is not large enough
 pub fn parse(src: &[u8]) -> Result<Xtx, ParserError> {
     let mut position = 0;
 
@@ -227,9 +222,6 @@ fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, 
 }
 
 /// Deswizzle the image in `data`
-///
-/// # Errors
-/// Will error if the BPP is not supported or values don't fit in [`usize::MAX`]
 fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, ParserError> {
     let (origin_width, origin_height) = if format.is_bcn() {
         ((width + 3) / 4, (height + 3) / 4)

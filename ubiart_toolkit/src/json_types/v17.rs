@@ -337,9 +337,6 @@ pub enum Template17<'a> {
 
 impl<'a> Template17<'a> {
     /// Convert this template to a `GameManagerConfig17`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `GameManagerConfig17`.
     pub fn game_manager_config(self) -> Result<GameManagerConfig17<'a>, ParserError> {
         if let Template17::GameManagerConfig(gmc) = self {
             Ok(*gmc)
@@ -351,9 +348,6 @@ impl<'a> Template17<'a> {
     }
 
     /// Convert this template to a `ObjectivesDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `ObjectivesDatabase`.
     pub fn objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
         if let Template17::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
@@ -365,9 +359,6 @@ impl<'a> Template17<'a> {
     }
 
     /// Convert this template to a `ScheduledQuestDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `ScheduledQuestDatabase`.
     pub fn scheduled_quests_database(
         &'a self,
     ) -> Result<&'a ScheduledQuestDatabase<'a>, ParserError> {
@@ -381,9 +372,6 @@ impl<'a> Template17<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `PlaylistDatabase`.
     pub fn playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
         if let Template17::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)

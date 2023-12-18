@@ -330,9 +330,6 @@ pub enum Template22<'a> {
 
 impl<'a> Template22<'a> {
     /// Convert this template to a `GameManagerConfig22`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `GameManagerConfig22`.
     pub fn game_manager_config(self) -> Result<GameManagerConfig22<'a>, ParserError> {
         if let Template22::GameManagerConfig(gmc) = self {
             Ok(*gmc)
@@ -344,9 +341,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `ObjectivesDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `ObjectivesDatabase`.
     pub fn objectives_database(self) -> Result<ObjectivesDatabase<'a>, ParserError> {
         if let Template22::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
@@ -358,9 +352,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `ScheduledQuestDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `ScheduledQuestDatabase`.
     pub fn scheduled_quests_database(self) -> Result<ScheduledQuestDatabase<'a>, ParserError> {
         if let Template22::ScheduledQuestDatabase(sqst_db) = self {
             Ok(sqst_db)
@@ -372,9 +363,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `PlaylistDatabase`.
     pub fn playlists_database(self) -> Result<PlaylistDatabase<'a>, ParserError> {
         if let Template22::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
@@ -386,9 +374,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `LocalAliases`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `LocalAliases`.
     pub fn local_aliases(self) -> Result<LocalAliases<'a>, ParserError> {
         if let Template22::LocalAliases(local_aliases) = self {
             Ok(local_aliases)
@@ -400,9 +385,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `PortraitBordersDatabase`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `PortraitBordersDatabase`.
     pub fn portrait_borders_database(self) -> Result<PortraitBordersDatabase<'a>, ParserError> {
         if let Template22::PortraitBordersDatabase(portrait_borders_database) = self {
             Ok(portrait_borders_database)
@@ -414,9 +396,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `Actor22`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `Actor22`.
     pub fn actor(self) -> Result<Actor22<'a>, ParserError> {
         if let Template22::Actor(actor) = self {
             Ok(actor)
@@ -428,9 +407,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `AvatarDescription22`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `AvatarDescription22`.
     pub fn avatar_description(&'a self) -> Result<&'a AvatarDescription22<'a>, ParserError> {
         if let Template22::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
@@ -442,9 +418,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `SongDescription`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `SongDescription`.
     pub fn song_description(self) -> Result<SongDescription<'a>, ParserError> {
         if let Template22::SongDescription(song_description) = self {
             Ok(song_description)
@@ -456,9 +429,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `AutodanceComponent`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `AutodanceComponent`.
     pub fn autodance_component(self) -> Result<AutodanceComponent<'a>, ParserError> {
         if let Template22::AutodanceComponent(autodance_component) = self {
             Ok(autodance_component)
@@ -470,9 +440,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `MasterTape`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `MasterTape`.
     pub fn master_tape(self) -> Result<MasterTape<'a>, ParserError> {
         if let Template22::MasterTape(master_tape) = self {
             Ok(master_tape)
@@ -484,9 +451,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `MusicTrackComponent`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `MusicTrackComponent`.
     pub fn tape_case_component(self) -> Result<MasterTape<'a>, ParserError> {
         if let Template22::TapeCase(tape_case_component) = self {
             Ok(tape_case_component)
@@ -498,9 +462,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `CarouselRules`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `CarouselRules`.
     pub fn carousel_rules(self) -> Result<CarouselRules<'a>, ParserError> {
         if let Template22::CarouselRules(carousel_rules) = self {
             Ok(carousel_rules)
@@ -512,9 +473,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `Tape`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `Tape`.
     pub fn tape(self) -> Result<Tape<'a>, ParserError> {
         if let Template22::Tape(tape) = self {
             Ok(tape)
@@ -526,9 +484,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `SoundComponent`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `SoundComponent`.
     pub fn sound_component(&'a self) -> Result<&'a SoundComponent<'a>, ParserError> {
         if let Template22::SoundComponent(sound_component) = self {
             Ok(sound_component)
@@ -540,9 +495,6 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `MusicTrackComponent`.
-    ///
-    /// # Errors
-    /// Will error if this template is not a `MusicTrackComponent`.
     pub fn musictrack_component(self) -> Result<MusicTrackComponent<'a>, ParserError> {
         if let Template22::MusicTrackComponent(musictrack_component) = self {
             Ok(musictrack_component)

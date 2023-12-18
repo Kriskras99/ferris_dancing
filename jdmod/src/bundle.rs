@@ -156,7 +156,7 @@ pub fn bundle(
                 } else if path.starts_with(path_maps) {
                     path.replace(path_maps, "")
                 } else {
-                    panic!("File doesn't belong anywhere!");
+                    bail!("File doesn't belong anywhere!");
                 };
                 map_name.truncate(
                     map_name

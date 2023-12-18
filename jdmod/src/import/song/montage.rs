@@ -1,6 +1,7 @@
 //! # Pictogram Spritesheest
 //! Code for converting pictogram spritesheets into individual pictograms
 use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::testing::{test, test_ge, test_le};
 use image::{imageops, ImageBuffer, RgbaImage};
 use texpresso::Format;
 use ubiart_toolkit::cooked::{self, xtx};
@@ -28,42 +29,34 @@ pub fn import(
     let picto_width = match montage.width {
         0xB90 => 0x2E4,
         0x800 | 0x1000 => 0x200,
-        _ => panic!("Unknown width! {:x}", montage.width),
+        _ => return Err(anyhow!("Unknown width! {:x}", montage.width)),
     };
 
     // Calculate the amount of pictos in the montage
     let pictos_horizontal = montage_width / picto_width;
     let pictos_vertical = montage_height / PICTO_HEIGHT;
-    assert!(
-        montage_width % picto_width == 0,
-        "Montage is not divisble by expected pictogram width!"
-    );
-    assert!(
-        montage_height % PICTO_HEIGHT == 0,
-        "Montage is not divisible by pictogram height!"
-    );
-    assert!(
-        picto_filenames.len() >= usize::try_from(pictos_horizontal * (pictos_vertical - 1) + 1)?,
-        "Not enough filenames for montage size!"
-    );
-    assert!(
-        picto_filenames.len() <= usize::try_from(pictos_horizontal * pictos_vertical)?,
-        "Too many filenames for montage size!"
-    );
+    test(&(montage_width % picto_width), &0)
+        .context("Montage is not divisble by expected pictogram width!")?;
+    test(&(montage_height % PICTO_HEIGHT), &0)
+        .context("Montage is not divisible by pictogram height!")?;
+    test_ge(
+        &picto_filenames.len(),
+        &usize::try_from(pictos_horizontal * (pictos_vertical - 1) + 1)?,
+    )
+    .context("Not enough filenames for montage size!")?;
+    test_le(
+        &picto_filenames.len(),
+        &usize::try_from(pictos_horizontal * pictos_vertical)?,
+    )
+    .context("Too many filenames for montage size!")?;
 
     // Never encountered this, so better quit early
-    assert!(
-        montage.xtx.images.len() == 1,
-        "More than one image in montage!"
-    );
+    test(&montage.xtx.images.len(), &1).context("More than one image in montage!")?;
 
     let big_image = &montage.xtx.images[0];
     let header = &big_image.header;
-    assert!(
-        header.format == xtx::Format::DXT5,
-        "Codec is not DXT5! {:?}",
-        header.format
-    );
+    test(&header.format, &xtx::Format::DXT5)
+        .with_context(|| format!("Codec is not DXT5! {:?}", header.format))?;
 
     // Decode the image
     let data_compressed = &big_image.data[0];

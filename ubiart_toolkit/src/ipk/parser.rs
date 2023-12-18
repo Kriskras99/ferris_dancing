@@ -18,12 +18,6 @@ use crate::utils::{self, string_id_2, Game, GamePlatform, PathId, SplitPath};
 /// Parse a bytearray-like source as a IPK bundle
 ///
 /// This will parse the source from start to end.
-///
-/// # Errors
-/// This function will error when it encounters the following:
-/// - Unexpected values (i.e. wrong magic)
-/// - Invalid UTF-8 (i.e. in paths)
-/// - Source has an unexpected size (i.e. not enough bytes, or too many bytes)
 pub fn parse(src: &[u8], lax: bool) -> Result<Bundle, ParserError> {
     // Keep track of where we are
     let mut pos = 0;

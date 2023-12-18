@@ -56,10 +56,8 @@ pub fn import_v18v22(
             .open(cook_path(actor.lua.as_ref(), is.platform)?.as_ref())?;
         let template = cooked::json::parse_v22(&file, is.lax)?;
         let actor_template = template.actor()?;
-        assert!(
-            actor_template.components.len() == 2,
-            "Not exactly two components in actor"
-        );
+        test(&actor_template.components.len(), &2)
+            .context("Not exactly two components in actor")?;
         let avatar_desc = actor_template.components[1].avatar_description()?;
 
         // Create a (hopefully) unique name for the avatar
@@ -163,17 +161,21 @@ pub fn import_v18v22(
     Ok(())
 }
 
+/// Maps avatar ids to their proper names for each game
 static GAME_AVATAR_ID_NAME_MAP: OnceLock<HashMap<Game, HashMap<u16, &'static str>>> =
     OnceLock::new();
 
-fn get_name(game: Game, id: u16) -> &'static str {
+/// Get the name for the `avatar_id` for `game`
+fn get_name(game: Game, avatar_id: u16) -> Result<&'static str, Error> {
     get_map()
         .get(&game)
-        .expect("Unsupported game {game:?}")
-        .get(&id)
-        .expect("Unknown ID!")
+        .ok_or_else(|| anyhow!("Unsupported game: {game}"))?
+        .get(&avatar_id)
+        .copied()
+        .ok_or_else(|| anyhow!("Unknown ID: {avatar_id}"))
 }
 
+/// Get the static map which maps avatar ids to their proper names for each game
 fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
     GAME_AVATAR_ID_NAME_MAP.get_or_init(|| {
         HashMap::from([
@@ -861,12 +863,3 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
         ])
     })
 }
-
-/*
-let vikings = HashMap::from([
-    ("Norway", 25),
-    ("Denmark", 24),
-    ("Iceland", 12),
-]);
-
-*/

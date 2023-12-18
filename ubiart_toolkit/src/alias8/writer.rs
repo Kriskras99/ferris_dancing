@@ -7,10 +7,6 @@ use super::Alias8;
 use crate::utils::{bytes::WriteBytesExtUbiArt, errors::WriterError};
 
 /// Write an alias8 file.
-///
-/// # Errors
-/// When there are too many aliases or the aliases are too long: `ParserError::IntegerConversionError`.
-/// When the writer fails: `ParserError::IO`.
 pub fn create<W: Write + Seek>(mut writer: W, alias8: &Alias8) -> Result<(), WriterError> {
     writer.write_u32::<BigEndian>(0x2)?;
     let alias_count = u32::try_from(alias8.aliases.len())?;

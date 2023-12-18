@@ -157,9 +157,6 @@ pub enum ComponentData<'a> {
 
 impl ComponentData<'_> {
     /// Convert this component data to a `MaterialGraphicComponent`.
-    ///
-    /// # Errors
-    /// Will error if this component data is not a `MaterialGraphicComponent`.
     pub fn material_graphics_component(
         &self,
     ) -> Result<&MaterialGraphicComponent<'_>, ParserError> {

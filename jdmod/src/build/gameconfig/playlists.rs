@@ -3,6 +3,7 @@
 use std::{borrow::Cow, collections::HashMap, fs::File, path::Path};
 
 use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::testing::test;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
@@ -101,10 +102,8 @@ fn build_carousel(
     carousel_rule
         .categories
         .retain(|c| c.title == "Recommended for me");
-    assert!(
-        carousel_rule.categories.len() == 1,
-        "More than one category in carousel_rule!"
-    );
+    test(&carousel_rule.categories.len(), &1)
+        .context("More than one category in carousel_rule!")?;
     let recommended = carousel_rule
         .categories
         .first()

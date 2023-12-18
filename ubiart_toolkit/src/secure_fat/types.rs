@@ -155,10 +155,6 @@ impl SecureFat {
 }
 
 /// Convert a bundle name to a filename based on the platform
-///
-/// # Errors
-/// This function will return an error when the platform is not yet supported.
-/// Please open an issue if this happens.
 #[must_use]
 pub fn bundle_name_to_filename(name: &str, platform: Platform) -> String {
     match platform {

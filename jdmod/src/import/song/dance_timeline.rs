@@ -3,6 +3,7 @@
 use std::{collections::BinaryHeap, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::testing::test;
 use ubiart_toolkit::{cooked, json_types};
 
 use super::{montage, SongImportState};
@@ -17,10 +18,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
         .vfs
         .open(cook_path(dance_timeline_path, sis.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&dance_timeline_file, sis.lax)?.actor()?;
-    assert!(
-        actor.components.len() == 1,
-        "More than one component in actor!"
-    );
+    test(&actor.components.len(), &1).context("More than one component in actor!")?;
     let tape_case = actor.components.swap_remove(0).tape_case_component()?;
     let tape_case_path = tape_case
         .tapes_rack

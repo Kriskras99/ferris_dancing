@@ -10,9 +10,6 @@ use super::Png;
 use crate::{cooked::xtx, utils::errors::ParserError};
 
 /// Parse a .png.ckd file
-///
-/// # Errors
-/// -  the file is not a .png.ckd file or the parser encounters an unexpected value.
 pub fn parse(src: &[u8]) -> Result<Png, ParserError> {
     let mut position = 0;
 

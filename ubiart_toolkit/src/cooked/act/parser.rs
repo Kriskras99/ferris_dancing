@@ -17,13 +17,6 @@ use crate::utils::{bytes::read_path_at, errors::ParserError, Game, SplitPath};
 /// Parse a bytearray-like source as a actor file
 ///
 /// This will parse the source from start to end.
-///
-/// # Errors
-/// This function will error when it encounters the following:
-/// - Unexpected values (i.e. wrong magic)
-/// - Invalid UTF-8 (i.e. in paths)
-/// - Source has an unexpected size (i.e. not enough bytes, or too many bytes)
-/// - If there are too many templates
 pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
     // Keep track of where we are
     let mut pos = 0;
@@ -176,9 +169,6 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
 }
 
 /// Parse the registration component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_registration_component<'a>(
     src: &'a [u8],
     _game: Game,
@@ -192,9 +182,6 @@ fn parse_registration_component<'a>(
 }
 
 /// Parse the box interpolator component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_box_interpolator_component<'a>(
     src: &'a [u8],
     _game: Game,
@@ -220,9 +207,6 @@ fn parse_box_interpolator_component<'a>(
 }
 
 /// Parse the AFX post process component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_afx_post_process_component<'a>(
     src: &'a [u8],
     _game: Game,
@@ -236,9 +220,6 @@ fn parse_afx_post_process_component<'a>(
 }
 
 /// Parse the converted tml tape component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_converted_tml_tape<'a>(
     src: &'a [u8],
     _game: Game,
@@ -250,9 +231,6 @@ fn parse_converted_tml_tape<'a>(
 }
 
 /// Parse the credits component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_credits_component<'a>(
     src: &'a [u8],
     game: Game,
@@ -289,9 +267,6 @@ fn parse_credits_component<'a>(
 }
 
 /// Parse the fixed camera component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_fixed_camera_component<'a>(
     src: &'a [u8],
     _game: Game,
@@ -309,9 +284,6 @@ fn parse_fixed_camera_component<'a>(
 }
 
 /// Parse the fx controller component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_fx_controller<'a>(
     src: &'a [u8],
     _game: Game,
@@ -323,9 +295,6 @@ fn parse_fx_controller<'a>(
 }
 
 /// Parse the fx bank component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_fx_bank_component<'a>(
     src: &'a [u8],
     _game: Game,
@@ -347,9 +316,6 @@ fn parse_fx_bank_component<'a>(
 }
 
 /// Parse the bezier tree component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_bezier_tree_component<'a>(
     src: &'a [u8],
     _game: Game,
@@ -389,9 +355,6 @@ fn parse_bezier_tree_component<'a>(
 }
 
 /// Parse the material graphic component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_material_graphic_component<'a>(
     src: &'a [u8],
     game: Game,
@@ -536,9 +499,6 @@ fn parse_material_graphic_component<'a>(
 }
 
 // /// Parse the music track component of an actor
-// ///
-// /// # Errors
-// /// Will error on unexpected values
 // fn parse_music_track_component<'a>(src: 'a '[u8], _game: Game, path: &Path, pos: &mut usize) -> Result<TemplateData<'a>, Error> {
 //     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
 //     test(
@@ -610,9 +570,6 @@ fn parse_material_graphic_component<'a>(
 // }
 
 /// Parse the pleo component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_pleo_component<'a>(
     src: &'a [u8],
     _game: Game,
@@ -634,9 +591,6 @@ fn parse_pleo_component<'a>(
 }
 
 /// Parse the property patcher component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_property_patcher<'a>(
     src: &'a [u8],
     game: Game,
@@ -654,9 +608,6 @@ fn parse_property_patcher<'a>(
 }
 
 /// Parse the ui textbox component of an actor
-///
-/// # Errors
-/// Will error on unexpected values
 fn parse_ui_text_box<'a>(
     src: &'a [u8],
     game: Game,

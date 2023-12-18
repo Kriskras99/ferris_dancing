@@ -9,9 +9,6 @@ use super::{Actor, ComponentData, MaterialGraphicComponent, PleoComponent};
 use crate::utils::{bytes::WriteBytesExtUbiArt, errors::WriterError};
 
 /// Write the `Actor` to the writer
-///
-/// # Errors
-/// Will error if the writer fails or the paths are too long or there are too many templates
 pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), WriterError> {
     writer.write_u32::<BigEndian>(1)?;
     writer.write_u32::<BigEndian>(actor.unk1)?;
@@ -45,9 +42,6 @@ pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), Write
 }
 
 /// Create an `Actor` in a newly allocated `Vec`
-///
-/// # Errors
-/// Will error the paths are too long or there are too many templates
 pub fn create_vec(actor: &Actor) -> Result<Vec<u8>, WriterError> {
     let mut vec = Vec::with_capacity(700);
     let cursor = Cursor::new(&mut vec);
@@ -57,9 +51,6 @@ pub fn create_vec(actor: &Actor) -> Result<Vec<u8>, WriterError> {
 }
 
 /// Write the `MaterialGraphicComponent` part of the actor to the writer
-///
-/// # Errors
-/// Will error if the writer fails or the paths are too long
 fn write_material_graphic_component<W: Write + Seek>(
     writer: &mut W,
     mgc: &MaterialGraphicComponent,
@@ -107,9 +98,6 @@ fn write_material_graphic_component<W: Write + Seek>(
 }
 
 /// Write the `PleoComponent` part of the actor to the writer
-///
-/// # Errors
-/// Will error if the writer fails or the paths are too long
 fn write_pleo_component<W: Write + Seek>(
     writer: &mut W,
     pleo_component: &PleoComponent,
