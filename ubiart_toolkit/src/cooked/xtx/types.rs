@@ -83,7 +83,10 @@ impl TryFrom<u32> for Format {
 }
 
 impl From<Format> for u32 {
-    #[allow(clippy::as_conversions)]
+    #[allow(
+        clippy::as_conversions,
+        reason = "Format is repr(u32) thus this is always safe"
+    )]
     fn from(value: Format) -> Self {
         value as Self
     }

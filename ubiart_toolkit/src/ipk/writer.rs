@@ -208,7 +208,10 @@ pub fn write<W: Write + Seek>(
     }
 
     // Go back to the start of the metadata portion of the header
-    #[allow(clippy::as_conversions)]
+    #[allow(
+        clippy::as_conversions,
+        reason = "STATIC_HEADER_SIZE is 0x30 thus this is always safe"
+    )]
     writer.seek(io::SeekFrom::Start(STATIC_HEADER_SIZE as u64))?;
 
     // Write all the metadata

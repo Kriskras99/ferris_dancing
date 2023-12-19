@@ -58,7 +58,7 @@ impl<'f> SfatFilesystem<'f> {
         let sfat_file = fs.open(path).map_err(|error| {
             std::io::Error::other(format!("Failed to open {path:?}: {error:?}"))
         })?;
-        let sfat = super::parse(&sfat_file).map_err(|error| {
+        let sfat = super::parse(&sfat_file, lax).map_err(|error| {
             std::io::Error::other(format!("Failed to parse secure_fat.gf: {error:?}"))
         })?;
         if sfat.bundle_count() == 0 {

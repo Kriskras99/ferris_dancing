@@ -58,7 +58,10 @@ impl TryFrom<u32> for Language {
 }
 
 impl From<Language> for u32 {
-    #[allow(clippy::as_conversions)]
+    #[allow(
+        clippy::as_conversions,
+        reason = "Language is repr(u32) thus this is safe"
+    )]
     fn from(value: Language) -> Self {
         value as Self
     }

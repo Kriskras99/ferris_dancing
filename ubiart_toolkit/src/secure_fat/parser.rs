@@ -8,20 +8,31 @@ use dotstar_toolkit_utils::{
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use super::{BundleId, SecureFat, MAGIC, UNK1};
-use crate::utils::{errors::ParserError, GamePlatform, PathId};
+use crate::utils::{self, errors::ParserError, Game, GamePlatform, PathId};
 
 /// Parse a bytearray-like source as a secure_fat.gf
 ///
 /// This will parse the source from start to end.
-pub fn parse(src: &[u8]) -> Result<SecureFat, ParserError> {
+pub fn parse(src: &[u8], lax: bool) -> Result<SecureFat, ParserError> {
     // Keep track of where we are
     let mut pos = 0;
     // Read the header
     let magic = read_u32_at::<BigEndian>(src, &mut pos)?;
     test(&magic, &MAGIC)?;
-    let game_platform = GamePlatform::try_from(read_u32_at::<BigEndian>(src, &mut pos)?)?;
+    let game_platform = match (
+        GamePlatform::try_from(read_u32_at::<BigEndian>(src, &mut pos)?),
+        lax,
+    ) {
+        (Ok(game_platform), _) => game_platform,
+        (Err(_), true) => GamePlatform {
+            game: Game::JustDance2022,
+            platform: utils::Platform::Nx,
+            id: 0x1DDB_2268,
+        },
+        (err @ Err(_), false) => err?,
+    };
     let unk1 = read_u32_at::<BigEndian>(src, &mut pos)?;
-    test(&unk1, &UNK1)?;
+    test(&unk1, &UNK1).lax(lax)?;
 
     // Read how many path IDs there are and prepare a map
     let path_id_count = usize::try_from(read_u32_at::<BigEndian>(src, &mut pos)?)?;
@@ -48,7 +59,7 @@ pub fn parse(src: &[u8]) -> Result<SecureFat, ParserError> {
 
     // Read how many bundles there are and prepare a map
     let bundle_count = usize::try_from(read_u32_at::<BigEndian>(src, &mut pos)?)?;
-    test_le(&bundle_count, &0xFF)?;
+    test_le(&bundle_count, &0xFF).lax(lax)?;
     let mut bundle_id_to_bundle_name =
         IntMap::with_capacity_and_hasher(bundle_count, BuildNoHashHasher::default());
 
@@ -64,7 +75,7 @@ pub fn parse(src: &[u8]) -> Result<SecureFat, ParserError> {
     }
 
     // Make sure we're at the end of the file
-    test(&src.len(), &pos)?;
+    test(&src.len(), &pos).lax(lax)?;
 
     Ok(SecureFat {
         game_platform,

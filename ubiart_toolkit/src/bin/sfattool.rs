@@ -12,6 +12,9 @@ struct Cli {
     list: bool,
     #[arg(short, long, default_value_t = false)]
     header: bool,
+    /// Ignore mistakes in the file format (useful for modded files)
+    #[arg(long, default_value_t = false)]
+    lax: bool,
 }
 
 fn main() {
@@ -20,7 +23,7 @@ fn main() {
     let file = File::open(cli.source).unwrap();
     let mmap = unsafe { Mmap::map(&file).unwrap() };
 
-    let sfat = secure_fat::parse(&mmap).unwrap();
+    let sfat = secure_fat::parse(&mmap, cli.lax).unwrap();
 
     if cli.header {
         for (bundle_id, name) in sfat.bundle_ids_and_names() {

@@ -19,7 +19,6 @@
 //! | ... | 2            | `u16be`     | `unk2`       | Always 0xFFFF                               |
 //! | ... | 2            | `u16be`     | `unk3`       | Unknown, possible values in [`Alias::UNK3`] |
 #![deny(clippy::missing_docs_in_private_items)]
-#![deny(clippy::missing_panics_doc)]
 
 mod parser;
 mod types;

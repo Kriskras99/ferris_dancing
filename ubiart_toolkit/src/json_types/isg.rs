@@ -164,7 +164,10 @@ impl<'de> Deserialize<'de> for Rarity {
 }
 
 impl Serialize for Rarity {
-    #![allow(clippy::as_conversions)]
+    #![allow(
+        clippy::as_conversions,
+        reason = "Rarity is repr(u8) and thus this is safe"
+    )]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

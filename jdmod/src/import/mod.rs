@@ -34,15 +34,35 @@ pub struct Import {
     /// Only import the songs
     #[arg(long, default_value_t = false)]
     songs: bool,
+    /// Overwrite game
+    #[arg(long)]
+    game: Option<Game>,
+    /// Overwrite platform
+    #[arg(long)]
+    platform: Option<Platform>,
 }
 
 /// Wrapper around [`import`]
 pub fn main(cli: &Import) -> Result<(), Error> {
-    import(&cli.game_path, &cli.mod_path, cli.lax, cli.songs)
+    import(
+        &cli.game_path,
+        &cli.mod_path,
+        cli.lax,
+        cli.songs,
+        cli.game,
+        cli.platform,
+    )
 }
 
 /// Import a game at `game_path` into the mod at `dir_root`
-pub fn import(game_path: &Path, dir_root: &Path, lax: bool, songs_only: bool) -> Result<(), Error> {
+pub fn import(
+    game_path: &Path,
+    dir_root: &Path,
+    lax: bool,
+    songs_only: bool,
+    game: Option<Game>,
+    platform: Option<Platform>,
+) -> Result<(), Error> {
     // Check the directory structure
     let dir_tree = DirectoryTree::new(dir_root);
     if !dir_tree.exists() {
@@ -63,8 +83,8 @@ pub fn import(game_path: &Path, dir_root: &Path, lax: bool, songs_only: bool) ->
         // TODO: Check engine version and warn user they're missing an update
 
         // Make game and platform easily accessible
-        let platform = sfat_vfs.game_platform().platform;
-        let game = sfat_vfs.game_platform().game;
+        let platform = platform.unwrap_or_else(|| sfat_vfs.game_platform().platform);
+        let game = game.unwrap_or_else(|| sfat_vfs.game_platform().game);
 
         // Import songs and other content from the game
         import_vfs(&sfat_vfs, dir_root, game, platform, lax, songs_only)?;
@@ -73,8 +93,8 @@ pub fn import(game_path: &Path, dir_root: &Path, lax: bool, songs_only: bool) ->
         import_vfs(
             &native_vfs,
             dir_root,
-            Game::JustDance2022,
-            Platform::Nx,
+            game.unwrap_or(Game::JustDance2022),
+            platform.unwrap_or(Platform::Nx),
             lax,
             songs_only,
         )?;

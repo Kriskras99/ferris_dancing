@@ -528,7 +528,10 @@ pub struct MaterialGraphicDiffuseColorClip<'a> {
     pub curve_b: Curve<'a>,
 }
 
-#[allow(clippy::module_name_repetitions)]
+#[allow(
+    clippy::module_name_repetitions,
+    reason = "Name is required by the engine"
+)]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct TapeReferenceClip<'a> {
