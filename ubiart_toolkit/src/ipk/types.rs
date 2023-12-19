@@ -35,7 +35,10 @@ impl TryFrom<u32> for Platform {
 }
 
 impl From<Platform> for u32 {
-    #[allow(clippy::as_conversions)]
+    #[allow(
+        clippy::as_conversions,
+        reason = "Platform is repr(u32) thus this is always safe"
+    )]
     fn from(value: Platform) -> Self {
         value as Self
     }

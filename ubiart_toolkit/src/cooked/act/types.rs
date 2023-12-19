@@ -130,8 +130,10 @@ impl TryFrom<u32> for ComponentType {
 }
 
 impl From<ComponentType> for u32 {
-    // Type is repr(u32) thus 'as' is always safe
-    #[allow(clippy::as_conversions)]
+    #[allow(
+        clippy::as_conversions,
+        reason = "ComponentType is repr(u32) thus this is always safe"
+    )]
     fn from(value: ComponentType) -> Self {
         value as Self
     }

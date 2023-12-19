@@ -24,7 +24,7 @@
 //! It can import and export songs, playlists, quests/objectives, avatars, aliases, portraitborders, gacha machine, and search labels.
 
 use bundle::Bundle;
-use check::Check;
+// use check::Check;
 use clap::{Parser, Subcommand, ValueEnum};
 use export::Build;
 use extract::Extract;
@@ -33,7 +33,7 @@ use new::New;
 
 mod build;
 mod bundle;
-mod check;
+// mod check;
 mod export;
 mod extract;
 mod import;
@@ -65,8 +65,8 @@ enum Commands {
     Extract(Extract),
     /// Export the mod
     Export(Build),
-    /// Check the completeness of the mod
-    Check(Check),
+    // /// Check the completeness of the mod
+    // Check(Check),
     /// Check the completeness of the mod
     Bundle(Bundle),
 }
@@ -90,7 +90,7 @@ fn main() -> Result<(), anyhow::Error> {
         Commands::Import(data) => import::main(&data)?,
         Commands::Extract(data) => extract::main(data)?,
         Commands::Export(data) => export::main(&data)?,
-        Commands::Check(data) => check::main(&data)?,
+        // Commands::Check(data) => check::main(&data)?,
         Commands::Bundle(data) => bundle::main(&data)?,
     }
     Ok(())

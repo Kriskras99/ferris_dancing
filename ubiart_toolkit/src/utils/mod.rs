@@ -4,6 +4,7 @@ pub mod errors;
 use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
 
 use byteorder::LittleEndian;
+use clap::ValueEnum;
 use dotstar_toolkit_utils::bytes::read_u32_at;
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
@@ -219,7 +220,7 @@ impl TryFrom<u32> for GamePlatform {
     }
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Serialize, Deserialize, ValueEnum)]
 pub enum Game {
     JustDance2014 = 20140,
     JustDance2015 = 20150,
@@ -239,7 +240,10 @@ impl PartialOrd for Game {
         if *self == Self::Unknown || *other == Self::Unknown {
             None
         } else {
-            #[allow(clippy::as_conversions)]
+            #[allow(
+                clippy::as_conversions,
+                reason = "the enum values are in the range of 20140-20220 so is always safe"
+            )]
             (*self as u32).partial_cmp(&(*other as u32))
         }
     }
@@ -263,7 +267,7 @@ impl Display for Game {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum Platform {
     X360,
     Ps3,
@@ -427,8 +431,8 @@ pub fn ubi_crc(data: &[u8]) -> u32 {
 }
 
 #[cfg(target_pointer_width = "64")]
-#[allow(clippy::as_conversions)]
-#[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::as_conversions, reason = "truncation is prevented")]
+#[allow(clippy::cast_possible_truncation, reason = "truncation is prevented")]
 #[must_use]
 /// Convenience function for wrapping add
 const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
@@ -441,8 +445,14 @@ const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
     target_pointer_width = "16",
     target_pointer_width = "8"
 ))]
-#[allow(clippy::as_conversions)]
-#[allow(clippy::cast_possible_truncation)]
+#[allow(
+    clippy::as_conversions,
+    reason = "usize is always larger or equal to u32 on 32, 16 and 8-bit systems"
+)]
+#[allow(
+    clippy::cast_possible_truncation,
+    reason = "usize is always larger or equal to u32 on 32, 16 and 8-bit systems"
+)]
 #[must_use]
 /// Convenience function for wrapping add
 const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
