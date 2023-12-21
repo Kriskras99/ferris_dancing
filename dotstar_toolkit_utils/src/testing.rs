@@ -86,7 +86,7 @@ impl TestResult {
     }
 
     /// Convert this to a normal Result
-    #[allow(clippy::missing_errors_doc)]
+    #[allow(clippy::missing_errors_doc, reason = "It does not actually error")]
     pub fn result(self) -> Result<(), TestError> {
         self.into()
     }
@@ -291,7 +291,7 @@ pub fn test_any<T: PartialEq + Debug>(left: &T, right: &[T]) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if the two inputs are the same, with a description of the values.
-#[allow(clippy::if_not_else)] // Much clearer this way
+#[allow(clippy::if_not_else, reason = "Much clearer this way")]
 pub fn test_not<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
     if left != right {
         TestResult::Ok
