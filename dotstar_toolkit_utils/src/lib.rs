@@ -1,3 +1,6 @@
+#![feature(try_trait_v2)]
+#![feature(error_generic_member_access)]
+#![feature(lint_reasons)]
 // Everything should be documented
 #![deny(missing_docs)]
 #![deny(clippy::missing_docs_in_private_items)]
@@ -7,8 +10,6 @@
 #![allow(clippy::option_if_let_else)]
 // Not reliable enough
 #![allow(clippy::doc_markdown)]
-#![feature(try_trait_v2)]
-#![feature(error_generic_member_access)]
 
 //! # .* Toolkit Utils
 //! This library contains various utilities for writing parsers.
@@ -22,5 +23,6 @@
 //!
 
 pub mod bytes;
+pub mod bytes_new;
 pub mod testing;
 pub mod vfs;
