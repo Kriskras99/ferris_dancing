@@ -1,15 +1,21 @@
 #![feature(try_trait_v2)]
 #![feature(error_generic_member_access)]
 #![feature(lint_reasons)]
-// Everything should be documented
-#![deny(missing_docs)]
-#![deny(clippy::missing_docs_in_private_items)]
-// If an overflow or underflow occurs it's a good indication that something broke
-#![deny(clippy::arithmetic_side_effects)]
-// Significantly less readable than the original
-#![allow(clippy::option_if_let_else)]
-// Not reliable enough
-#![allow(clippy::doc_markdown)]
+#![feature(try_blocks)]
+#![deny(missing_docs, reason = "Everything should be documented")]
+#![deny(
+    clippy::missing_docs_in_private_items,
+    reason = "Everything should be documented"
+)]
+#![deny(
+    clippy::arithmetic_side_effects,
+    reason = "If an overflow or underflow occurs it's a good indication that something broke"
+)]
+#![allow(
+    clippy::option_if_let_else,
+    reason = "Significantly less readable than the original"
+)]
+#![allow(clippy::doc_markdown, reason = "Not reliable enough")]
 
 //! # .* Toolkit Utils
 //! This library contains various utilities for writing parsers.
