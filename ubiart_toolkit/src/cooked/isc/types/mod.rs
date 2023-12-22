@@ -2491,17 +2491,17 @@ macro_rules! impl_deserialize_for_internally_tagged_enum {
             ($variant_tag:literal => $($variant:tt)+ )
         ),* $(,)?
     ) => {
-        impl<'de: 'a, 'a> serde::de::Deserialize<'de> for $enum {
+        impl<'de: 'a, 'a> ::serde::de::Deserialize<'de> for $enum {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::de::Deserializer<'de>,
+                D: ::serde::de::Deserializer<'de>,
             {
-                use serde::de::{Error, MapAccess, Visitor};
+                use ::serde::de::{Error, MapAccess, Visitor};
 
                 // The Visitor struct is normally used for state, but none is needed
                 #[derive(Default)]
                 struct TheVisitor<'a> {
-                    _lifetime: std::marker::PhantomData<&'a ()>
+                    _lifetime: ::std::marker::PhantomData<&'a ()>
                 }
 
                 // The main logic of the deserializing happens in the Visitor trait
@@ -2511,7 +2511,7 @@ macro_rules! impl_deserialize_for_internally_tagged_enum {
                     type Value = $enum;
 
                     // Try to give a better error message when this is used wrong
-                    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                    fn expecting(&self, f: &mut std::fmt::Formatter) -> ::std::fmt::Result {
                         f.write_str("expecting map with tag in ")?;
                         f.write_str($tag)
                     }
@@ -2524,7 +2524,7 @@ macro_rules! impl_deserialize_for_internally_tagged_enum {
                     {
                         // Here the assumption is made that only one attribute
                         // exists and it's the discriminator (enum "tag").
-                        let entry: Option<(String, String)> = map.next_entry()?;
+                        let entry: Option<(::std::string::String, ::std::string::String)> = map.next_entry()?;
                         // If there are more attributes those would need
                         // to be parsed as well.
                         let tag = match entry {
@@ -2544,7 +2544,7 @@ macro_rules! impl_deserialize_for_internally_tagged_enum {
                             }
                         }?;
 
-                        let de = serde::de::value::MapAccessDeserializer::new(map);
+                        let de = ::serde::de::value::MapAccessDeserializer::new(map);
                         match tag.as_ref() {
                             $(
                                 $variant_tag => Ok(crate::cooked::isc::types::deserialize_variant!( de, $enum, $($variant)+ )),
@@ -2573,7 +2573,7 @@ macro_rules! deserialize_variant {
     } ) => ({
         let var = {
             // Create anonymous type
-            #[derive(serde::Deserialize)]
+            #[derive(::serde::Deserialize)]
             struct $variant {
                 $(
                     $(#[$meta])*
@@ -2598,7 +2598,7 @@ macro_rules! deserialize_variant {
 
     // Produce unit enum variant
     ( $de:expr, $enum:tt, $variant:ident ) => ({
-        serde::de::IgnoredAny::deserialize($de)?;
+        ::serde::de::IgnoredAny::deserialize($de)?;
         <$enum> :: $variant
     });
 }
