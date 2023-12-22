@@ -9,6 +9,14 @@ use thiserror::Error;
 /// Errors returend when the test* functions fail
 #[derive(Error, Debug)]
 pub enum ReadError {
+    /// ReadError with context
+    #[error("{source:?}\n    Context: {context}")]
+    Context {
+        /// The original error
+        source: Box<Self>,
+        /// Added context
+        context: String,
+    },
     /// Trying to read outside source
     #[error("source is not large enough, attempted to read {n} bytes at {position} but source is only {size} bytes")]
     SourceTooSmall {
@@ -137,11 +145,34 @@ impl ReadError {
             backtrace: Backtrace::capture(),
         }
     }
+
+    /// Add context for this error
+    #[must_use]
+    pub fn context<C: std::fmt::Debug>(self, context: C) -> Self {
+        Self::Context {
+            source: Box::new(self),
+            context: format!("{context:?}"),
+        }
+    }
+
+    /// Add context for this error
+    #[must_use]
+    pub fn with_context<C: std::fmt::Debug, F: FnOnce() -> C>(self, f: F) -> Self {
+        Self::Context {
+            source: Box::new(self),
+            context: format!("{:?}", f()),
+        }
+    }
 }
 
 /// Represents a object that can be deserialized from a binary file
 pub trait BinaryDeserialize<'de>: Sized {
     /// Deserialize the object from the reader
+    ///
+    /// Note: Must restore position to the original value on error!
+    ///
+    /// # Errors
+    /// This function will return an error when deserializing fails.
     fn deserialize<B, R>(reader: &R) -> Result<Self, ReadError>
     where
         B: ByteOrder,
@@ -151,6 +182,11 @@ pub trait BinaryDeserialize<'de>: Sized {
     }
 
     /// Deserialize the object from the reader at `position`
+    ///
+    /// Note: Must restore position to the original value on error!
+    ///
+    /// # Errors
+    /// This function will return an error when deserializing fails.
     fn deserialize_at<B, R>(reader: &R, position: &mut u64) -> Result<Self, ReadError>
     where
         B: ByteOrder,
@@ -163,8 +199,7 @@ impl<'de> BinaryDeserialize<'de> for u8 {
         B: ByteOrder,
         R: ZeroCopyReadAt<'de> + ?Sized,
     {
-        let result = reader.read_u8_at(position)?;
-        Ok(result)
+        reader.read_u8_at(position)
     }
 }
 
@@ -174,8 +209,7 @@ impl<'de> BinaryDeserialize<'de> for u16 {
         B: ByteOrder,
         R: ZeroCopyReadAt<'de> + ?Sized,
     {
-        let result = reader.read_u16_at::<B>(position)?;
-        Ok(result)
+        reader.read_u16_at::<B>(position)
     }
 }
 
@@ -185,8 +219,7 @@ impl<'de> BinaryDeserialize<'de> for u32 {
         B: ByteOrder,
         R: ZeroCopyReadAt<'de> + ?Sized,
     {
-        let result = reader.read_u32_at::<B>(position)?;
-        Ok(result)
+        reader.read_u32_at::<B>(position)
     }
 }
 
@@ -196,64 +229,56 @@ impl<'de> BinaryDeserialize<'de> for u64 {
         B: ByteOrder,
         R: ZeroCopyReadAt<'de> + ?Sized,
     {
-        let result = reader.read_u64_at::<B>(position)?;
-        Ok(result)
-    }
-}
-
-/// Blablabla
-pub struct Example<'a> {
-    /// Blablabla
-    pub name: Cow<'a, str>,
-    /// Blablabla
-    pub level: u32,
-}
-
-impl<'de> BinaryDeserialize<'de> for Example<'de> {
-    fn deserialize_at<B, R>(reader: &R, position: &mut u64) -> Result<Self, ReadError>
-    where
-        B: ByteOrder,
-        R: ZeroCopyReadAt<'de> + ?Sized,
-    {
-        Ok(Self {
-            name: reader.read_u32_string_at::<B>(position)?,
-            level: reader.read_at::<B, _>(position)?,
-        })
+        reader.read_u64_at::<B>(position)
     }
 }
 
 /// Represents the length of a string or slice to read from the reader
-pub trait Len<'de>: TryInto<u64> + BinaryDeserialize<'de> + Sized {}
+pub trait Len<'de>: TryInto<u64> + BinaryDeserialize<'de> + Sized {
+    /// Read the length at `position`
+    ///
+    /// Will increment position with the size of length if successful
+    ///
+    /// # Errors
+    /// This function will return an error when `Len` would be (partially) outside the source or the `Len` does not fit into a u64.
+    fn read_len_at<B, R>(reader: &R, position: &mut u64) -> Result<u64, ReadError>
+    where
+        B: ByteOrder,
+        R: ZeroCopyReadAt<'de> + ?Sized,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let len = Self::deserialize_at::<B, R>(reader, position)?;
+            TryInto::<u64>::try_into(len).map_err(|_| ReadError::too_many_bytes(old_position))?
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
+}
 impl<'de> Len<'de> for u8 {}
 impl<'de> Len<'de> for u16 {}
 impl<'de> Len<'de> for u32 {}
 impl<'de> Len<'de> for u64 {}
 
-
 /// Represents a byte source which uses Cow's to stay zerocopy
 pub trait ZeroCopyReadAt<'de> {
-    /// Read a `T` at position `position`
+    /// Read a `T` at `position`
     ///
     /// This function increments `position` with what `T` reads if successful
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the source.
-    fn read_at<B, T>(&self, position: &mut u64) -> Result<T, ReadError>
+    fn read_type_at<B, T>(&self, position: &mut u64) -> Result<T, ReadError>
     where
         B: ByteOrder,
         T: BinaryDeserialize<'de>,
     {
-        let old_position = *position;
-        match T::deserialize_at::<B, Self>(self, position) {
-            Ok(result) => Ok(result),
-            Err(error) => {
-                *position = old_position;
-                Err(error)
-            }
-        }
+        T::deserialize_at::<B, Self>(self, position)
     }
 
-    /// Read a `u8` at position `position`
+    /// Read a `u8` at `position`
     ///
     /// This function increments `position` with 1 if successful
     ///
@@ -265,7 +290,7 @@ pub trait ZeroCopyReadAt<'de> {
         Ok(slice[0])
     }
 
-    /// Read a `u16` at position `position` with byteorder `T`
+    /// Read a `u16` at `position` with byteorder `B`
     ///
     /// This function increments `position` with 2 if successful
     ///
@@ -274,11 +299,10 @@ pub trait ZeroCopyReadAt<'de> {
     #[inline(always)]
     fn read_u16_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u16, ReadError> {
         let slice: [u8; 2] = self.read_fixed_slice_at(position)?;
-        let data = B::read_u16(slice.as_ref());
-        Ok(data)
+        Ok(B::read_u16(slice.as_ref()))
     }
 
-    /// Read a `u24` at position `position` with byteorder `T`
+    /// Read a `u24` at `position` with byteorder `B`
     ///
     /// This function increments `position` with 3 if successful
     ///
@@ -287,11 +311,10 @@ pub trait ZeroCopyReadAt<'de> {
     #[inline(always)]
     fn read_u24_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u32, ReadError> {
         let slice: [u8; 3] = self.read_fixed_slice_at(position)?;
-        let data = B::read_u24(slice.as_ref());
-        Ok(data)
+        Ok(B::read_u24(slice.as_ref()))
     }
 
-    /// Read a `u32` at position `position` with byteorder `T`
+    /// Read a `u32` at `position` with byteorder `B`
     ///
     /// This function increments `position` with 4 if successful
     ///
@@ -300,11 +323,10 @@ pub trait ZeroCopyReadAt<'de> {
     #[inline(always)]
     fn read_u32_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u32, ReadError> {
         let slice: [u8; 4] = self.read_fixed_slice_at(position)?;
-        let data = B::read_u32(slice.as_ref());
-        Ok(data)
+        Ok(B::read_u32(slice.as_ref()))
     }
 
-    /// Read a `u64` at position `position` with byteorder `T`
+    /// Read a `u64` at `position` with byteorder `B`
     ///
     /// This function increments `position` with 8 if successful
     ///
@@ -313,11 +335,10 @@ pub trait ZeroCopyReadAt<'de> {
     #[inline(always)]
     fn read_u64_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u64, ReadError> {
         let slice: [u8; 8] = self.read_fixed_slice_at(position)?;
-        let data = B::read_u64(slice.as_ref());
-        Ok(data)
+        Ok(B::read_u64(slice.as_ref()))
     }
 
-    /// Read a `&[u8: N]` at position `position`
+    /// Read a `&[u8: N]` at `position`
     ///
     /// This function increments `position` with N if successful
     ///
@@ -338,7 +359,7 @@ pub trait ZeroCopyReadAt<'de> {
         Ok(fixed_slice)
     }
 
-    /// Read a `&[u8]` of length `len` at position `position`
+    /// Read a `&[u8]` of length `len` at `position`
     ///
     /// This function increments `position` with N if successful
     ///
@@ -346,107 +367,95 @@ pub trait ZeroCopyReadAt<'de> {
     /// This function will return an error when the data would be (partially) outside the source.
     fn read_slice_at(&self, position: &mut u64, len: u64) -> Result<Cow<'de, [u8]>, ReadError>;
 
-    /// Read a `&str` at position `position`
+    /// Read a string at `position`
     ///
-    /// It will first read the length of the string as a `u32` with byteorder `T`
-    /// This function increments `position` with the size of the string + 4 if successful
-    ///
-    /// # Errors
-    /// This function will return an error when the string would be (partially) outside the source.
-    #[inline(always)]
-    fn read_u32_string_at<B: ByteOrder>(
-        &self,
-        position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError> {
-        let len = u64::from(self.read_u32_at::<B>(position)?);
-        match self.read_slice_at(position, len) {
-            Ok(Cow::Borrowed(slice)) => {
-                match std::str::from_utf8(slice)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e))
-                {
-                    Ok(str) => Ok(Cow::Borrowed(str)),
-                    Err(error) => {
-                        // Reset the read position
-                        *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
-                        *position = position.checked_sub(len).unwrap_or_else(|| unreachable!());
-                        Err(error)
-                    }
-                }
-            }
-            Ok(Cow::Owned(vec)) => {
-                match String::from_utf8(vec)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))
-                {
-                    Ok(string) => Ok(Cow::Owned(string)),
-                    Err(error) => {
-                        // Reset the read position
-                        *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
-                        *position = position.checked_sub(len).unwrap_or_else(|| unreachable!());
-                        Err(error)
-                    }
-                }
-            }
-            Err(error) => {
-                // Reset the read position
-                *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
-                Err(error)
-            }
-        }
-    }
-
-    /// Read a `&str` at position `position`
-    ///
-    /// It will first read the length of the string as a `Len` with byteorder `T`
-    /// This function increments `position` with the size of the string + the size of len if successful
+    /// It will first read the length of the string as a [`Len`] with byteorder `B`
+    /// This function increments `position` with the size of the string + the size of `Len` if successful
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline(always)]
-    fn read_len_string_at<B, L>(
-        &self,
-        position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError>
-        where B: ByteOrder,
-        L: Len<'de> {
-            let old_position = *position;
-            let len1 = Len::deserialize_at(self, position);
-        let len = u64::try_from(len1)?;
-        match self.read_slice_at(position, len) {
-            Ok(Cow::Borrowed(slice)) => {
-                match std::str::from_utf8(slice)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e))
-                {
-                    Ok(str) => Ok(Cow::Borrowed(str)),
-                    Err(error) => {
-                        // Reset the read position
-                        *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
-                        *position = position.checked_sub(len).unwrap_or_else(|| unreachable!());
-                        Err(error)
-                    }
-                }
+    fn read_len_string_at<B, L>(&self, position: &mut u64) -> Result<Cow<'de, str>, ReadError>
+    where
+        B: ByteOrder,
+        L: Len<'de>,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let len = L::read_len_at::<B, Self>(self, position)?;
+            match self.read_slice_at(position, len)? {
+                Cow::Borrowed(slice) => std::str::from_utf8(slice)
+                    .map(Cow::Borrowed)
+                    .map_err(|e| ReadError::invalid_utf8(len, *position, e))?,
+                Cow::Owned(vec) => String::from_utf8(vec)
+                    .map(Cow::Owned)
+                    .map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))?,
             }
-            Ok(Cow::Owned(vec)) => {
-                match String::from_utf8(vec)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))
-                {
-                    Ok(string) => Ok(Cow::Owned(string)),
-                    Err(error) => {
-                        // Reset the read position
-                        *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
-                        *position = position.checked_sub(len).unwrap_or_else(|| unreachable!());
-                        Err(error)
-                    }
-                }
-            }
-            Err(error) => {
-                // Reset the read position
-                *position = position.checked_sub(4).unwrap_or_else(|| unreachable!());
-                Err(error)
-            }
+        };
+        if result.is_err() {
+            *position = old_position;
         }
+        result
     }
 
-    /// Read a `&str` from `source` at position `position`
+    /// Read a byte slice at `position`
+    ///
+    /// It will first read the length of the byte slice as a [`Len`] with byteorder `B`
+    /// This function increments `position` with the size of the byte slice + the size of `Len` if successful
+    ///
+    /// # Errors
+    /// This function will return an error when the string would be (partially) outside the source.
+    #[inline(always)]
+    fn read_len_slice_at<B, L>(&self, position: &mut u64) -> Result<Cow<'de, [u8]>, ReadError>
+    where
+        B: ByteOrder,
+        L: Len<'de>,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let len = L::read_len_at::<B, Self>(self, position)?;
+            self.read_slice_at(position, len)?
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
+
+    /// Read a vector of `T` at `position`
+    ///
+    /// It will first read the length of the vector as a [`Len`] with byteorder `B`
+    /// This function increments `position` with the size of the vector + the size of `Len` if successful
+    ///
+    /// Note: This will read `Len` * `T` bytes, not `Len` bytes of `T`!
+    ///
+    /// # Errors
+    /// This function will return an error when the string would be (partially) outside the source.
+    #[inline(always)]
+    fn read_len_type_at<B, L, T>(&self, position: &mut u64) -> Result<Vec<T>, ReadError>
+    where
+        B: ByteOrder,
+        L: Len<'de>,
+        T: BinaryDeserialize<'de>,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let len = L::read_len_at::<B, Self>(self, position)?;
+            let capacity =
+                usize::try_from(len).map_err(|_| ReadError::too_many_bytes(old_position))?;
+            let mut buf = Vec::with_capacity(capacity);
+            for _ in 0..len {
+                buf.push(self.read_type_at::<B, T>(position)?);
+            }
+            buf
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
+
+    /// Read a `&str` from `source` at `position`
     ///
     /// It will read until it finds a null byte, excluding it from the string.
     /// This function increments `position` with the size of the string + 1 if successful

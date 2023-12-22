@@ -1,6 +1,6 @@
 //! # Bytes
 //! Contains functions to read integers and strings from byte slices.
-use std::{fmt::Debug, fs::File, path::Path, str::Utf8Error};
+use std::{backtrace::Backtrace, fmt::Debug, fs::File, path::Path, str::Utf8Error};
 
 pub use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use thiserror::Error;
@@ -40,6 +40,8 @@ pub enum ReadError {
         position: usize,
         /// The total size of the source
         size: usize,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     /// Encountered invalid UTF-8 when trying to read a string from source
     #[error("invalid UTF-8 encountered, attempted to read a string of length {n} at {position}")]
@@ -50,12 +52,16 @@ pub enum ReadError {
         position: usize,
         /// Original UTF-8 error
         error: Utf8Error,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     #[error("no null-byte for null terminated string, attempted to read a string at {position}")]
     /// Encountered no null byte when trying to read a null-terminated string
     NoNullByte {
         /// Position in the source
         position: usize,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     #[error("attempted to increment position {position} by {n}, but that would overflow")]
     /// Increasing the position would overflow the number
@@ -64,49 +70,63 @@ pub enum ReadError {
         position: usize,
         /// How much the increment would be
         n: usize,
+        /// Backtrace
+        backtrace: Backtrace,
     },
     #[error("attempted to read more bytes than can be pointed to")]
     /// Attempted to read more bytes than can be pointed to
     TooManyBytes {
         /// Position in the source
         position: usize,
+        /// Backtrace
+        backtrace: Backtrace,
     },
 }
 
 impl ReadError {
     /// Create the [`ReadError::SourceTooSmall`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
-    #[allow(clippy::missing_const_for_fn)]
     fn source_too_small(n: usize, position: usize, size: usize) -> Self {
-        Self::SourceTooSmall { n, position, size }
+        Self::SourceTooSmall {
+            n,
+            position,
+            size,
+            backtrace: Backtrace::capture(),
+        }
     }
 
     /// Create the [`ReadError::InvalidUTF8`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
-    #[allow(clippy::missing_const_for_fn)]
     fn invalid_utf8(n: usize, position: usize, error: Utf8Error) -> Self {
-        Self::InvalidUTF8 { n, position, error }
+        Self::InvalidUTF8 {
+            n,
+            position,
+            error,
+            backtrace: Backtrace::capture(),
+        }
     }
 
     /// Create the [`ReadError::NoNullByte`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
-    #[allow(clippy::missing_const_for_fn)]
     fn no_null_byte(position: usize) -> Self {
-        Self::NoNullByte { position }
+        Self::NoNullByte {
+            position,
+            backtrace: Backtrace::capture(),
+        }
     }
 
     /// Create the [`ReadError::PositionOverflow`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
-    #[allow(clippy::missing_const_for_fn)]
     fn position_overflow(position: usize, n: usize) -> Self {
-        Self::PositionOverflow { position, n }
+        Self::PositionOverflow {
+            position,
+            n,
+            backtrace: Backtrace::capture(),
+        }
     }
 
     /// Create the [`ReadError::TooManyBytes`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
-    #[allow(clippy::missing_const_for_fn)]
     fn too_many_bytes(position: usize) -> Self {
-        Self::TooManyBytes { position }
+        Self::TooManyBytes {
+            position,
+            backtrace: Backtrace::capture(),
+        }
     }
 
     /// Add context for this error
