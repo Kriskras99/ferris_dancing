@@ -195,42 +195,57 @@ pub trait BinaryDeserialize<'de>: Sized {
     ///
     /// # Errors
     /// This function will return an error when deserializing fails.
-    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'de> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
     where
         B: ByteOrder;
 }
 
 impl<'de> BinaryDeserialize<'de> for u8 {
-    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'de> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
     where
-        B: ByteOrder
+        B: ByteOrder,
     {
         reader.read_u8_at(position)
     }
 }
 
 impl<'de> BinaryDeserialize<'de> for u16 {
-    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'de> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
     where
-        B: ByteOrder
+        B: ByteOrder,
     {
         reader.read_u16_at::<B>(position)
     }
 }
 
 impl<'de> BinaryDeserialize<'de> for u32 {
-    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'de> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
     where
-        B: ByteOrder
+        B: ByteOrder,
     {
         reader.read_u32_at::<B>(position)
     }
 }
 
 impl<'de> BinaryDeserialize<'de> for u64 {
-    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'de> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
     where
-        B: ByteOrder
+        B: ByteOrder,
     {
         reader.read_u64_at::<B>(position)
     }
@@ -244,9 +259,12 @@ pub trait Len<'de>: TryInto<u64> + BinaryDeserialize<'de> + Sized {
     ///
     /// # Errors
     /// This function will return an error when `Len` would be (partially) outside the source or the `Len` does not fit into a u64.
-    fn read_len_at<B>(reader: &(impl ZeroCopyReadAt<'de> + ?Sized), position: &mut u64) -> Result<u64, NewReadError>
+    fn read_len_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<u64, NewReadError>
     where
-        B: ByteOrder
+        B: ByteOrder,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -556,7 +574,8 @@ impl<'de> ZeroCopyReadAt<'de> for &'de [u8] {
 impl<'de> ZeroCopyReadAt<'de> for File {
     #[inline(always)]
     fn read_slice_at(&self, position: &mut u64, len: u64) -> Result<Cow<'de, [u8]>, NewReadError> {
-        let len_usize = usize::try_from(len).map_err(|_| NewReadError::too_many_bytes(*position))?;
+        let len_usize =
+            usize::try_from(len).map_err(|_| NewReadError::too_many_bytes(*position))?;
         let new_position = position
             .checked_add(len)
             .ok_or_else(|| NewReadError::position_overflow(*position, len))?;

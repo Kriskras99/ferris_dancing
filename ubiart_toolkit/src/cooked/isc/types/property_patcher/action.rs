@@ -87,9 +87,7 @@ pub struct WrappedFormattedDate<'a> {
     formatted_string: FormattedString<'a>,
 }
 
-impl<'a> AsRef<FormattedString<'a>>
-    for WrappedFormattedDate<'a>
-{
+impl<'a> AsRef<FormattedString<'a>> for WrappedFormattedDate<'a> {
     fn as_ref(&self) -> &FormattedString<'a> {
         &self.formatted_string
     }
@@ -103,9 +101,7 @@ pub struct WrappedFormattedText<'a> {
     formatted_string: FormattedString<'a>,
 }
 
-impl<'a> AsRef<FormattedString<'a>>
-    for WrappedFormattedText<'a>
-{
+impl<'a> AsRef<FormattedString<'a>> for WrappedFormattedText<'a> {
     fn as_ref(&self) -> &FormattedString<'a> {
         &self.formatted_string
     }

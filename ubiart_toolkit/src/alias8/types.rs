@@ -3,7 +3,10 @@
 use std::borrow::Cow;
 
 use byteorder::ByteOrder;
-use dotstar_toolkit_utils::{bytes_new::{BinaryDeserialize, ZeroCopyReadAt, NewReadError}, testing::{test, test_any}};
+use dotstar_toolkit_utils::{
+    bytes_new::{BinaryDeserialize, NewReadError, ZeroCopyReadAt},
+    testing::{test, test_any},
+};
 
 use crate::utils::SplitPath;
 
@@ -21,32 +24,36 @@ pub struct Alias<'a> {
 }
 
 impl<'a> BinaryDeserialize<'a> for Alias<'a> {
-    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'a> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'a> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
     where
-        B: ByteOrder {
-            let old_position = *position;
-            let result: Result<_, _> = try {
-                // Read the strings
-                let first_alias = reader.read_len_string_at::<B, u32>(position)?;
-                let second_alias = reader.read_len_string_at::<B, u32>(position)?;
-                let path = reader.read_type_at::<B, _>(position)?;
+        B: ByteOrder,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            // Read the strings
+            let first_alias = reader.read_len_string_at::<B, u32>(position)?;
+            let second_alias = reader.read_len_string_at::<B, u32>(position)?;
+            let path = reader.read_type_at::<B, _>(position)?;
 
-                // Read the unknown values and check them
-                let unk2 = reader.read_u16_at::<B>(position)?;
-                let unk3 = reader.read_u16_at::<B>(position)?;
-                test(&unk2, &Self::UNK2)?;
-                test_any(&unk3, Self::UNK3)?;
-                Self {
-                    first_alias,
-                    second_alias,
-                    path,
-                    unk3,
-                }
-            };
-            if result.is_err() {
-                *position = old_position;
+            // Read the unknown values and check them
+            let unk2 = reader.read_u16_at::<B>(position)?;
+            let unk3 = reader.read_u16_at::<B>(position)?;
+            test(&unk2, &Self::UNK2)?;
+            test_any(&unk3, Self::UNK3)?;
+            Self {
+                first_alias,
+                second_alias,
+                path,
+                unk3,
             }
-            result
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
     }
 }
 
@@ -69,25 +76,27 @@ pub struct Alias8<'a> {
 }
 
 impl<'a> BinaryDeserialize<'a> for Alias8<'a> {
-    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'a> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'a> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
     where
-        B: ByteOrder {
-            let old_position = *position;
-            let result: Result<_, _> = try {
-                // Read the unknown value at the beginning and check it's correct
-                let unk1 = reader.read_u32_at::<B>(position)?;
-                test(&unk1, &0x2)?;
-    
-                // Read the aliases
-                let aliases = reader.read_len_type_at::<B, u32, _>(position)?;
-                Alias8 {
-                    aliases,
-                }
-            };
-            if result.is_err() {
-                *position = old_position;
-            }
-            result
+        B: ByteOrder,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            // Read the unknown value at the beginning and check it's correct
+            let unk1 = reader.read_u32_at::<B>(position)?;
+            test(&unk1, &0x2)?;
+
+            // Read the aliases
+            let aliases = reader.read_len_type_at::<B, u32, _>(position)?;
+            Alias8 { aliases }
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
     }
 }
 
