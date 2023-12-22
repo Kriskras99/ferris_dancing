@@ -3,9 +3,9 @@ pub mod errors;
 
 use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
 
-use byteorder::LittleEndian;
+use byteorder::{LittleEndian, ByteOrder};
 use clap::ValueEnum;
-use dotstar_toolkit_utils::bytes::read_u32_at;
+use dotstar_toolkit_utils::{bytes::read_u32_at, bytes_new::{BinaryDeserialize, NewReadError, ZeroCopyReadAt}, testing::test};
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
 
@@ -61,6 +61,38 @@ impl From<LocaleId> for u32 {
 pub struct SplitPath<'a> {
     pub path: Cow<'a, str>,
     pub filename: Cow<'a, str>,
+}
+
+impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
+    fn deserialize_at<B>(reader: &(impl ZeroCopyReadAt<'de> + ?Sized), position: &mut u64) -> Result<Self, NewReadError>
+    where
+        B: ByteOrder {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let filename = reader.read_len_string_at::<B, u32>(position)?;
+            let path = reader.read_len_string_at::<B, u32>(position)?;
+            let path_id = reader.read_u32_at::<B>(position)?;
+            let split_path = if path.is_empty() && filename.is_empty() {
+                test(&path_id, &PathId::from(0xFFFF_FFFF))?;
+                SplitPath::default()
+            } else {
+                let split_path = SplitPath {
+                    path,
+                    filename,
+                };
+                let path_id_calc = PathId::from(&split_path);
+                test(&path_id, &path_id_calc)?;
+                split_path
+            };
+            let padding = reader.read_u32_at::<B>(position)?;
+            test(&padding, &0)?;
+            split_path
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
 }
 
 impl SplitPath<'_> {
