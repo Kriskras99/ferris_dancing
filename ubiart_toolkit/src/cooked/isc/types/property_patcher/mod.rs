@@ -10,7 +10,10 @@ pub mod value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[allow(clippy::module_name_repetitions, reason = "Otherwise it's `Wrapped` or conflicts with `PropertyPatcher`")]
+#[allow(
+    clippy::module_name_repetitions,
+    reason = "Otherwise it's `Wrapped` or conflicts with `PropertyPatcher`"
+)]
 #[repr(transparent)]
 pub struct WrappedPropertyPatcher<'a> {
     #[serde(borrow)]
