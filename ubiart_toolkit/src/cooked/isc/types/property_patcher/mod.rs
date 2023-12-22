@@ -2,14 +2,15 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use self::action::WrappedPropertyPatchAction;
-use self::value::WrappedPropertyPatchValue;
+use self::action::Action;
+use self::value::Value;
 
 pub mod action;
 pub mod value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
+#[allow(clippy::module_name_repetitions, reason = "Otherwise it's `Wrapped` or conflicts with `PropertyPatcher`")]
 #[repr(transparent)]
 pub struct WrappedPropertyPatcher<'a> {
     #[serde(borrow)]
@@ -64,7 +65,7 @@ pub struct PropertyPatch<'a> {
     )]
     pub patched_on_data_status_changed: Option<Cow<'a, str>>,
     #[serde(borrow)]
-    pub action: WrappedPropertyPatchAction<'a>,
+    pub action: Action<'a>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub values: Vec<WrappedPropertyPatchValue<'a>>,
+    pub values: Vec<Value<'a>>,
 }

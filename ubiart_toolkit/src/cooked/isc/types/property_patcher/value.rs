@@ -2,84 +2,84 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::cooked::isc::types::{impl_deserialize_for_internally_tagged_enum, Color};
+use crate::cooked::isc::types::impl_deserialize_for_internally_tagged_enum;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "@NAME", deny_unknown_fields)]
-pub enum WrappedPropertyPatchValue<'a> {
+pub enum Value<'a> {
     #[serde(rename = "PropertyPatchValue_Color")]
-    Color(WrappedPropertyPatchValueColor),
+    Color(WrappedColor),
     #[serde(rename = "PropertyPatchValue_ColorSet")]
-    ColorSet(WrappedPropertyPatchValueColorSet<'a>),
+    ColorSet(WrappedColorSet<'a>),
     #[serde(rename = "PropertyPatchValue_Float")]
-    Float(WrappedPropertyPatchValueFloat),
+    Float(WrappedFloat),
     #[serde(rename = "PropertyPatchValue_Int")]
-    Int(WrappedPropertyPatchValueInt),
+    Int(WrappedInt),
     #[serde(rename = "PropertyPatchValue_Path")]
-    Path(WrappedPropertyPatchValuePath<'a>),
+    Path(WrappedPath<'a>),
     #[serde(rename = "PropertyPatchValue_String")]
-    String(WrappedPropertyPatchValueString<'a>),
+    String(WrappedString<'a>),
     #[serde(rename = "PropertyPatchValue_Time")]
-    Time(WrappedPropertyPatchValueBase),
+    Time(WrappedBase),
 }
 
 impl_deserialize_for_internally_tagged_enum! {
-    WrappedPropertyPatchValue<'a>, "@NAME",
-    ("PropertyPatchValue_Color" => Color(WrappedPropertyPatchValueColor)),
-    ("PropertyPatchValue_ColorSet" => ColorSet(WrappedPropertyPatchValueColorSet<'a>)),
-    ("PropertyPatchValue_Float" => Float(WrappedPropertyPatchValueFloat)),
-    ("PropertyPatchValue_Int" => Int(WrappedPropertyPatchValueInt)),
-    ("PropertyPatchValue_Path" => Path(WrappedPropertyPatchValuePath<'a>)),
-    ("PropertyPatchValue_String" => String(WrappedPropertyPatchValueString<'a>)),
-    ("PropertyPatchValue_Time" => Time(WrappedPropertyPatchValueBase)),
+    Value<'a>, "@NAME",
+    ("PropertyPatchValue_Color" => Color(WrappedColor)),
+    ("PropertyPatchValue_ColorSet" => ColorSet(WrappedColorSet<'a>)),
+    ("PropertyPatchValue_Float" => Float(WrappedFloat)),
+    ("PropertyPatchValue_Int" => Int(WrappedInt)),
+    ("PropertyPatchValue_Path" => Path(WrappedPath<'a>)),
+    ("PropertyPatchValue_String" => String(WrappedString<'a>)),
+    ("PropertyPatchValue_Time" => Time(WrappedBase)),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchValueBase {
+pub struct WrappedBase {
     #[serde(rename = "PropertyPatchValue_Base")]
-    property_patch_value_base: (),
+    base: (),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchValueColor {
+pub struct WrappedColor {
     #[serde(rename = "PropertyPatchValue_Color")]
-    property_patch_value_color: PropertyPatchValueColor,
+    color: Color,
 }
 
-impl AsRef<PropertyPatchValueColor> for WrappedPropertyPatchValueColor {
-    fn as_ref(&self) -> &PropertyPatchValueColor {
-        &self.property_patch_value_color
+impl AsRef<Color> for WrappedColor {
+    fn as_ref(&self) -> &Color {
+        &self.color
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchValueColor {
+pub struct Color {
     #[serde(rename = "@VALUE")]
-    pub value: Color,
+    pub value: crate::cooked::isc::types::Color,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchValueColorSet<'a> {
+pub struct WrappedColorSet<'a> {
     #[serde(borrow, rename = "PropertyPatchValue_ColorSet")]
-    property_patch_value_color_set: PropertyPatchValueColorSet<'a>,
+    color_set: ColorSets<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchValueColorSet<'a>> for WrappedPropertyPatchValueColorSet<'a> {
-    fn as_ref(&self) -> &PropertyPatchValueColorSet<'a> {
-        &self.property_patch_value_color_set
+impl<'a> AsRef<ColorSets<'a>> for WrappedColorSet<'a> {
+    fn as_ref(&self) -> &ColorSets<'a> {
+        &self.color_set
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchValueColorSet<'a> {
+pub struct ColorSets<'a> {
     #[serde(borrow, rename = "colorSet")]
     pub color_set: Vec<ColorSet<'a>>,
 }
@@ -90,26 +90,26 @@ pub struct ColorSet<'a> {
     #[serde(rename = "@KEY")]
     pub key: Cow<'a, str>,
     #[serde(rename = "@VAL")]
-    pub value: Color,
+    pub value: crate::cooked::isc::types::Color,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchValueFloat {
+pub struct WrappedFloat {
     #[serde(rename = "PropertyPatchValue_Float")]
-    property_patch_value_float: PropertyPatchValueFloat,
+    float: Float,
 }
 
-impl AsRef<PropertyPatchValueFloat> for WrappedPropertyPatchValueFloat {
-    fn as_ref(&self) -> &PropertyPatchValueFloat {
-        &self.property_patch_value_float
+impl AsRef<Float> for WrappedFloat {
+    fn as_ref(&self) -> &Float {
+        &self.float
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchValueFloat {
+pub struct Float {
     #[serde(rename = "@VALUE")]
     pub value: f32,
 }
@@ -117,20 +117,20 @@ pub struct PropertyPatchValueFloat {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchValueInt {
+pub struct WrappedInt {
     #[serde(rename = "PropertyPatchValue_Int")]
-    property_patch_value_int: PropertyPatchValueInt,
+    int: Int,
 }
 
-impl AsRef<PropertyPatchValueInt> for WrappedPropertyPatchValueInt {
-    fn as_ref(&self) -> &PropertyPatchValueInt {
-        &self.property_patch_value_int
+impl AsRef<Int> for WrappedInt {
+    fn as_ref(&self) -> &Int {
+        &self.int
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchValueInt {
+pub struct Int {
     #[serde(rename = "@VALUE")]
     pub value: u32,
 }
@@ -138,20 +138,20 @@ pub struct PropertyPatchValueInt {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchValuePath<'a> {
+pub struct WrappedPath<'a> {
     #[serde(borrow, rename = "PropertyPatchValue_Path")]
-    property_patch_value_path: PropertyPatchValuePath<'a>,
+    path: Path<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchValuePath<'a>> for WrappedPropertyPatchValuePath<'a> {
-    fn as_ref(&self) -> &PropertyPatchValuePath<'a> {
-        &self.property_patch_value_path
+impl<'a> AsRef<Path<'a>> for WrappedPath<'a> {
+    fn as_ref(&self) -> &Path<'a> {
+        &self.path
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchValuePath<'a> {
+pub struct Path<'a> {
     #[serde(rename = "@VALUE")]
     pub value: Cow<'a, str>,
 }
@@ -159,20 +159,20 @@ pub struct PropertyPatchValuePath<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchValueString<'a> {
+pub struct WrappedString<'a> {
     #[serde(borrow, rename = "PropertyPatchValue_String")]
-    property_patch_value_string: PropertyPatchValueString<'a>,
+    string: String<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchValueString<'a>> for WrappedPropertyPatchValueString<'a> {
-    fn as_ref(&self) -> &PropertyPatchValueString<'a> {
-        &self.property_patch_value_string
+impl<'a> AsRef<String<'a>> for WrappedString<'a> {
+    fn as_ref(&self) -> &String<'a> {
+        &self.string
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchValueString<'a> {
+pub struct String<'a> {
     #[serde(rename = "@VALUE")]
     pub value: Cow<'a, str>,
 }

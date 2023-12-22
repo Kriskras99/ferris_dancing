@@ -6,66 +6,66 @@ use crate::cooked::isc::types::impl_deserialize_for_internally_tagged_enum;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "@NAME", deny_unknown_fields)]
-pub enum WrappedPropertyPatchAction<'a> {
+pub enum Action<'a> {
     #[serde(rename = "PropertyPatchAction_ColorActor")]
     ColorActor,
     #[serde(rename = "PropertyPatchAction_ColorDiffuse")]
-    ColorDiffuse(WrappedPropertyPatchActionColorDiffuse<'a>),
+    ColorDiffuse(WrappedColorDiffuse<'a>),
     #[serde(rename = "PropertyPatchAction_FormattedDate")]
-    FormattedDate(WrappedPropertyPatchActionFormattedDate<'a>),
+    FormattedDate(WrappedFormattedDate<'a>),
     #[serde(rename = "PropertyPatchAction_FormattedText")]
-    FormattedText(WrappedPropertyPatchActionFormattedText<'a>),
+    FormattedText(WrappedFormattedText<'a>),
     #[serde(rename = "")]
     Empty,
     #[serde(rename = "PropertyPatchAction_PleoTextureChannel")]
     PleoTextureChannel,
     #[serde(rename = "PropertyPatchAction_Redirection")]
-    Redirection(WrappedPropertyPatchActionRedirection<'a>),
+    Redirection(WrappedRedirection<'a>),
     #[serde(rename = "PropertyPatchAction_Spinner")]
-    Spinner(WrappedPropertyPatchActionSpinner<'a>),
+    Spinner(WrappedSpinner<'a>),
     #[serde(rename = "PropertyPatchAction_TapeSlider")]
-    TapeSlider(WrappedPropertyPatchActionTapeSlider<'a>),
+    TapeSlider(WrappedTapeSlider<'a>),
     #[serde(rename = "PropertyPatchAction_TapeSwitch")]
-    TapeSwitch(WrappedPropertyPatchActionTapeSwitch<'a>),
+    TapeSwitch(WrappedTapeSwitch<'a>),
     #[serde(rename = "PropertyPatchAction_Text")]
-    Text(WrappedPropertyPatchActionText<'a>),
+    Text(WrappedText<'a>),
     #[serde(rename = "PropertyPatchAction_Texture")]
-    Texture(WrappedPropertyPatchActionTexture<'a>),
+    Texture(WrappedTexture<'a>),
 }
 
 impl_deserialize_for_internally_tagged_enum! {
-    WrappedPropertyPatchAction<'a>, "@NAME",
+    Action<'a>, "@NAME",
     ("PropertyPatchAction_ColorActor" => ColorActor),
-    ("PropertyPatchAction_ColorDiffuse" => ColorDiffuse(WrappedPropertyPatchActionColorDiffuse)),
-    ("PropertyPatchAction_FormattedDate" => FormattedDate(WrappedPropertyPatchActionFormattedDate)),
-    ("PropertyPatchAction_FormattedText" => FormattedText(WrappedPropertyPatchActionFormattedText)),
+    ("PropertyPatchAction_ColorDiffuse" => ColorDiffuse(WrappedColorDiffuse)),
+    ("PropertyPatchAction_FormattedDate" => FormattedDate(WrappedFormattedDate)),
+    ("PropertyPatchAction_FormattedText" => FormattedText(WrappedFormattedText)),
     ("" => Empty),
     ("PropertyPatchAction_PleoTextureChannel" => PleoTextureChannel),
-    ("PropertyPatchAction_Redirection" => Redirection(WrappedPropertyPatchActionRedirection)),
-    ("PropertyPatchAction_Spinner" => Spinner(WrappedPropertyPatchActionSpinner)),
-    ("PropertyPatchAction_TapeSlider" => TapeSlider(WrappedPropertyPatchActionTapeSlider)),
-    ("PropertyPatchAction_TapeSwitch" => TapeSwitch(WrappedPropertyPatchActionTapeSwitch)),
-    ("PropertyPatchAction_Text" => Text(WrappedPropertyPatchActionText)),
-    ("PropertyPatchAction_Texture" => Texture(WrappedPropertyPatchActionTexture)),
+    ("PropertyPatchAction_Redirection" => Redirection(WrappedRedirection)),
+    ("PropertyPatchAction_Spinner" => Spinner(WrappedSpinner)),
+    ("PropertyPatchAction_TapeSlider" => TapeSlider(WrappedTapeSlider)),
+    ("PropertyPatchAction_TapeSwitch" => TapeSwitch(WrappedTapeSwitch)),
+    ("PropertyPatchAction_Text" => Text(WrappedText)),
+    ("PropertyPatchAction_Texture" => Texture(WrappedTexture)),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionColorDiffuse<'a> {
+pub struct WrappedColorDiffuse<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_ColorDiffuse")]
-    property_patch_action_color_diffuse: PropertyPatchActionColorDiffuse<'a>,
+    color_diffuse: ColorDiffuse<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionColorDiffuse<'a>> for WrappedPropertyPatchActionColorDiffuse<'a> {
-    fn as_ref(&self) -> &PropertyPatchActionColorDiffuse<'a> {
-        &self.property_patch_action_color_diffuse
+impl<'a> AsRef<ColorDiffuse<'a>> for WrappedColorDiffuse<'a> {
+    fn as_ref(&self) -> &ColorDiffuse<'a> {
+        &self.color_diffuse
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionColorDiffuse<'a> {
+pub struct ColorDiffuse<'a> {
     #[serde(borrow, rename = "ColorPatches")]
     pub color_patches: Vec<ColorPatch<'a>>,
 }
@@ -82,38 +82,38 @@ pub struct ColorPatch<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionFormattedDate<'a> {
+pub struct WrappedFormattedDate<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_FormattedDate")]
-    property_patch_action_formatted_string: PropertyPatchActionFormattedString<'a>,
+    formatted_string: FormattedString<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionFormattedString<'a>>
-    for WrappedPropertyPatchActionFormattedDate<'a>
+impl<'a> AsRef<FormattedString<'a>>
+    for WrappedFormattedDate<'a>
 {
-    fn as_ref(&self) -> &PropertyPatchActionFormattedString<'a> {
-        &self.property_patch_action_formatted_string
+    fn as_ref(&self) -> &FormattedString<'a> {
+        &self.formatted_string
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionFormattedText<'a> {
+pub struct WrappedFormattedText<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_FormattedText")]
-    property_patch_action_formatted_string: PropertyPatchActionFormattedString<'a>,
+    formatted_string: FormattedString<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionFormattedString<'a>>
-    for WrappedPropertyPatchActionFormattedText<'a>
+impl<'a> AsRef<FormattedString<'a>>
+    for WrappedFormattedText<'a>
 {
-    fn as_ref(&self) -> &PropertyPatchActionFormattedString<'a> {
-        &self.property_patch_action_formatted_string
+    fn as_ref(&self) -> &FormattedString<'a> {
+        &self.formatted_string
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionFormattedString<'a> {
+pub struct FormattedString<'a> {
     #[serde(rename = "@formatLocId")]
     pub format_loc_id: u32,
     #[serde(rename = "@formatRawText")]
@@ -127,20 +127,20 @@ pub struct PropertyPatchActionFormattedString<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionRedirection<'a> {
+pub struct WrappedRedirection<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_Redirection")]
-    property_patch_action_redirection: PropertyPatchActionRedirection<'a>,
+    redirection: Redirection<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionRedirection<'a>> for WrappedPropertyPatchActionRedirection<'a> {
-    fn as_ref(&self) -> &PropertyPatchActionRedirection<'a> {
-        &self.property_patch_action_redirection
+impl<'a> AsRef<Redirection<'a>> for WrappedRedirection<'a> {
+    fn as_ref(&self) -> &Redirection<'a> {
+        &self.redirection
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionRedirection<'a> {
+pub struct Redirection<'a> {
     #[serde(rename = "@subMarker")]
     pub sub_marker: Cow<'a, str>,
 }
@@ -148,20 +148,20 @@ pub struct PropertyPatchActionRedirection<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionSpinner<'a> {
+pub struct WrappedSpinner<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_Spinner")]
-    property_patch_action_spinner: PropertyPatchActionSpinner<'a>,
+    spinner: Spinner<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionSpinner<'a>> for WrappedPropertyPatchActionSpinner<'a> {
-    fn as_ref(&self) -> &PropertyPatchActionSpinner<'a> {
-        &self.property_patch_action_spinner
+impl<'a> AsRef<Spinner<'a>> for WrappedSpinner<'a> {
+    fn as_ref(&self) -> &Spinner<'a> {
+        &self.spinner
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionSpinner<'a> {
+pub struct Spinner<'a> {
     #[serde(rename = "@loadingAnim")]
     pub loading_anim: Cow<'a, str>,
     #[serde(rename = "@loadedAnim")]
@@ -171,20 +171,20 @@ pub struct PropertyPatchActionSpinner<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionTapeSlider<'a> {
+pub struct WrappedTapeSlider<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_TapeSlider")]
-    property_patch_action_tape_slider: PropertyPatchActionTapeSlider<'a>,
+    tape_slider: TapeSlider<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionTapeSlider<'a>> for WrappedPropertyPatchActionTapeSlider<'a> {
-    fn as_ref(&self) -> &PropertyPatchActionTapeSlider<'a> {
-        &self.property_patch_action_tape_slider
+impl<'a> AsRef<TapeSlider<'a>> for WrappedTapeSlider<'a> {
+    fn as_ref(&self) -> &TapeSlider<'a> {
+        &self.tape_slider
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionTapeSlider<'a> {
+pub struct TapeSlider<'a> {
     #[serde(rename = "@TapeLabel")]
     pub tape_label: Cow<'a, str>,
 }
@@ -192,20 +192,20 @@ pub struct PropertyPatchActionTapeSlider<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionTapeSwitch<'a> {
+pub struct WrappedTapeSwitch<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_TapeSwitch")]
-    property_patch_action_tape_switch: PropertyPatchActionTapeSwitch<'a>,
+    tape_switch: TapeSwitches<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionTapeSwitch<'a>> for WrappedPropertyPatchActionTapeSwitch<'a> {
-    fn as_ref(&self) -> &PropertyPatchActionTapeSwitch<'a> {
-        &self.property_patch_action_tape_switch
+impl<'a> AsRef<TapeSwitches<'a>> for WrappedTapeSwitch<'a> {
+    fn as_ref(&self) -> &TapeSwitches<'a> {
+        &self.tape_switch
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionTapeSwitch<'a> {
+pub struct TapeSwitches<'a> {
     #[serde(borrow, rename = "TapeSwitch")]
     pub tape_switches: Vec<TapeSwitch<'a>>,
 }
@@ -222,20 +222,20 @@ pub struct TapeSwitch<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionText<'a> {
+pub struct WrappedText<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_Text")]
-    property_patch_action_text: PropertyPatchActionText<'a>,
+    text: Text<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionText<'a>> for WrappedPropertyPatchActionText<'a> {
-    fn as_ref(&self) -> &PropertyPatchActionText<'a> {
-        &self.property_patch_action_text
+impl<'a> AsRef<Text<'a>> for WrappedText<'a> {
+    fn as_ref(&self) -> &Text<'a> {
+        &self.text
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionText<'a> {
+pub struct Text<'a> {
     #[serde(rename = "@duplicationCount")]
     pub duplication_count: Cow<'a, str>,
     #[serde(rename = "@duplicationSeperator")]
@@ -245,20 +245,20 @@ pub struct PropertyPatchActionText<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 #[repr(transparent)]
-pub struct WrappedPropertyPatchActionTexture<'a> {
+pub struct WrappedTexture<'a> {
     #[serde(borrow, rename = "PropertyPatchAction_Texture")]
-    property_patch_action_texture: PropertyPatchActionTexture<'a>,
+    texture: Texture<'a>,
 }
 
-impl<'a> AsRef<PropertyPatchActionTexture<'a>> for WrappedPropertyPatchActionTexture<'a> {
-    fn as_ref(&self) -> &PropertyPatchActionTexture<'a> {
-        &self.property_patch_action_texture
+impl<'a> AsRef<Texture<'a>> for WrappedTexture<'a> {
+    fn as_ref(&self) -> &Texture<'a> {
+        &self.texture
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct PropertyPatchActionTexture<'a> {
+pub struct Texture<'a> {
     #[serde(
         rename = "@MaterialIndex",
         default,
