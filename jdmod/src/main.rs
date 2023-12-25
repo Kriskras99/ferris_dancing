@@ -41,10 +41,6 @@ mod new;
 mod types;
 mod utils;
 
-/// Use the snmalloc allocator
-#[global_allocator]
-static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
-
 /// The command line interface generated with Clap derive
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
