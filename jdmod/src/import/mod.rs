@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::bytes::BigEndian;
-use dotstar_toolkit_utils::bytes_new::BinaryDeserialize;
+use dotstar_toolkit_utils::bytes_new::read::BinaryDeserialize;
 use dotstar_toolkit_utils::testing::test;
 use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
 use ubiart_toolkit::alias8::Alias8;

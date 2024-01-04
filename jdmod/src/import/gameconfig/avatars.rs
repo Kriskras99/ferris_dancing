@@ -1189,7 +1189,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (835, "SwishSwish_2"),
                     (836, "SwishSwish_3"),
                     (837, "WakaWakaALT_1"),
-                ])
+                ]),
             ),
             (
                 Game::JustDance2017,
@@ -1240,7 +1240,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (274, "Chiwawa_0"),
                     (309, "UbiSoft_ACUnity_Arno"),
                     (314, "UbiSoft_ChildOfLight_Aurora"),
-                    (345, "GangnamStyleDLC_1_C2"), // C2
+                    (345, "GangnamStyleDLC_1_C2"),    // C2
                     (346, "GangnamStyleDLC_1_C1_V2"), // C1
                     (347, "GangnamStyleDLC_0"),
                     (353, "DieYoungDLC_1"),
@@ -1346,8 +1346,8 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     // (641, "?"),
                     // (642, "?"),
                     (646, "HowDeep_0"),
-                ])
-            )
+                ]),
+            ),
         ])
     })
 }

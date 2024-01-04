@@ -1,11 +1,13 @@
-#![allow(clippy::inline_always, reason = "This is probably a good idea")]
-//! Contains the new byte reading implementation
+//! Contains the new byte reading traits
+
 use std::{backtrace::Backtrace, borrow::Cow, fs::File, str::Utf8Error};
 
-pub use byteorder::ByteOrder;
 use positioned_io::ReadAt;
 use thiserror::Error;
+use ux::u24;
 
+use super::ByteOrder;
+use super::Len;
 use crate::testing::TestError;
 
 /// Errors returend when the test* functions fail
@@ -90,7 +92,6 @@ pub enum NewReadError {
 
 impl NewReadError {
     /// Create the [`ReadError::SourceTooSmall`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
     #[must_use]
     pub fn source_too_small(n: u64, position: u64, size: u64) -> Self {
         Self::SourceTooSmall {
@@ -102,7 +103,6 @@ impl NewReadError {
     }
 
     /// Create the [`ReadError::InvalidUTF8`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
     #[must_use]
     pub fn invalid_utf8(n: u64, position: u64, error: Utf8Error) -> Self {
         Self::InvalidUTF8 {
@@ -114,7 +114,6 @@ impl NewReadError {
     }
 
     /// Create the [`ReadError::NoNullByte`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
     #[must_use]
     pub fn no_null_byte(position: u64) -> Self {
         Self::NoNullByte {
@@ -124,7 +123,6 @@ impl NewReadError {
     }
 
     /// Create the [`ReadError::IoError`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
     #[must_use]
     pub fn io_error(position: u64, error: std::io::Error) -> Self {
         Self::IoError {
@@ -135,7 +133,6 @@ impl NewReadError {
     }
 
     /// Create the [`ReadError::PositionOverflow`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
     #[must_use]
     pub fn position_overflow(position: u64, n: u64) -> Self {
         Self::PositionOverflow {
@@ -146,7 +143,6 @@ impl NewReadError {
     }
 
     /// Create the [`ReadError::TooManyBytes`] error
-    // Want to add std::backtrace::Backtrace, but blocked on https://github.com/rust-lang/rust/issues/99301
     #[must_use]
     pub fn too_many_bytes(position: u64) -> Self {
         Self::TooManyBytes {
@@ -211,7 +207,8 @@ impl<'de> BinaryDeserialize<'de> for u8 {
     where
         B: ByteOrder,
     {
-        reader.read_u8_at(position)
+        let slice: [Self; 1] = reader.read_fixed_slice_at(position)?;
+        Ok(slice[0])
     }
 }
 
@@ -223,7 +220,22 @@ impl<'de> BinaryDeserialize<'de> for u16 {
     where
         B: ByteOrder,
     {
-        reader.read_u16_at::<B>(position)
+        let slice: [u8; 2] = reader.read_fixed_slice_at(position)?;
+        Ok(B::read_u16(slice.as_ref()))
+    }
+}
+
+impl<'de> BinaryDeserialize<'de> for u24 {
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
+    where
+        B: ByteOrder,
+    {
+        let slice: [u8; 3] = reader.read_fixed_slice_at(position)?;
+        let temp = B::read_u24(slice.as_ref());
+        Ok(Self::new(temp))
     }
 }
 
@@ -235,7 +247,8 @@ impl<'de> BinaryDeserialize<'de> for u32 {
     where
         B: ByteOrder,
     {
-        reader.read_u32_at::<B>(position)
+        let slice: [u8; 4] = reader.read_fixed_slice_at(position)?;
+        Ok(B::read_u32(slice.as_ref()))
     }
 }
 
@@ -247,40 +260,10 @@ impl<'de> BinaryDeserialize<'de> for u64 {
     where
         B: ByteOrder,
     {
-        reader.read_u64_at::<B>(position)
+        let slice: [u8; 8] = reader.read_fixed_slice_at(position)?;
+        Ok(B::read_u64(slice.as_ref()))
     }
 }
-
-/// Represents the length of a string or slice to read from the reader
-pub trait Len<'de>: TryInto<u64> + BinaryDeserialize<'de> + Sized {
-    /// Read the length at `position`
-    ///
-    /// Will increment position with the size of length if successful
-    ///
-    /// # Errors
-    /// This function will return an error when `Len` would be (partially) outside the source or the `Len` does not fit into a u64.
-    fn read_len_at<B>(
-        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
-        position: &mut u64,
-    ) -> Result<u64, NewReadError>
-    where
-        B: ByteOrder,
-    {
-        let old_position = *position;
-        let result: Result<_, _> = try {
-            let len = Self::deserialize_at::<B>(reader, position)?;
-            TryInto::<u64>::try_into(len).map_err(|_| NewReadError::too_many_bytes(old_position))?
-        };
-        if result.is_err() {
-            *position = old_position;
-        }
-        result
-    }
-}
-impl<'de> Len<'de> for u8 {}
-impl<'de> Len<'de> for u16 {}
-impl<'de> Len<'de> for u32 {}
-impl<'de> Len<'de> for u64 {}
 
 /// Represents a byte source which uses Cow's to stay zerocopy
 pub trait ZeroCopyReadAt<'de> {
@@ -290,72 +273,12 @@ pub trait ZeroCopyReadAt<'de> {
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the source.
-    fn read_type_at<B, T>(&self, position: &mut u64) -> Result<T, NewReadError>
+    fn read_at<B, T>(&self, position: &mut u64) -> Result<T, NewReadError>
     where
         B: ByteOrder,
         T: BinaryDeserialize<'de>,
     {
         T::deserialize_at::<B>(self, position)
-    }
-
-    /// Read a `u8` at `position`
-    ///
-    /// This function increments `position` with 1 if successful
-    ///
-    /// # Errors
-    /// This function will return an error when the u8 would be (partially) outside the source.
-    #[inline(always)]
-    fn read_u8_at(&self, position: &mut u64) -> Result<u8, NewReadError> {
-        let slice: [u8; 1] = self.read_fixed_slice_at(position)?;
-        Ok(slice[0])
-    }
-
-    /// Read a `u16` at `position` with byteorder `B`
-    ///
-    /// This function increments `position` with 2 if successful
-    ///
-    /// # Errors
-    /// This function will return an error when the u16 would be (partially) outside the source.
-    #[inline(always)]
-    fn read_u16_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u16, NewReadError> {
-        let slice: [u8; 2] = self.read_fixed_slice_at(position)?;
-        Ok(B::read_u16(slice.as_ref()))
-    }
-
-    /// Read a `u24` at `position` with byteorder `B`
-    ///
-    /// This function increments `position` with 3 if successful
-    ///
-    /// # Errors
-    /// This function will return an error when the u24 would be (partially) outside the source.
-    #[inline(always)]
-    fn read_u24_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u32, NewReadError> {
-        let slice: [u8; 3] = self.read_fixed_slice_at(position)?;
-        Ok(B::read_u24(slice.as_ref()))
-    }
-
-    /// Read a `u32` at `position` with byteorder `B`
-    ///
-    /// This function increments `position` with 4 if successful
-    ///
-    /// # Errors
-    /// This function will return an error when the u32 would be (partially) outside the source.
-    #[inline(always)]
-    fn read_u32_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u32, NewReadError> {
-        let slice: [u8; 4] = self.read_fixed_slice_at(position)?;
-        Ok(B::read_u32(slice.as_ref()))
-    }
-
-    /// Read a `u64` at `position` with byteorder `B`
-    ///
-    /// This function increments `position` with 8 if successful
-    ///
-    /// # Errors
-    /// This function will return an error when the u64 would be (partially) outside the source.
-    #[inline(always)]
-    fn read_u64_at<B: ByteOrder>(&self, position: &mut u64) -> Result<u64, NewReadError> {
-        let slice: [u8; 8] = self.read_fixed_slice_at(position)?;
-        Ok(B::read_u64(slice.as_ref()))
     }
 
     /// Read a `&[u8: N]` at `position`
@@ -465,7 +388,7 @@ pub trait ZeroCopyReadAt<'de> {
                 usize::try_from(len).map_err(|_| NewReadError::too_many_bytes(old_position))?;
             let mut buf = Vec::with_capacity(capacity);
             for _ in 0..len {
-                buf.push(self.read_type_at::<B, T>(position)?);
+                buf.push(self.read_at::<B, T>(position)?);
             }
             buf
         };
