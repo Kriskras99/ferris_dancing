@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use byteorder::BigEndian;
 use clap::Parser;
-use dotstar_toolkit_utils::{bytes::read_to_vec, bytes_new::BinaryDeserialize};
+use dotstar_toolkit_utils::{bytes::read_to_vec, bytes_new::read::BinaryDeserialize};
 use ubiart_toolkit::alias8::Alias8;
 
 #[derive(Parser)]

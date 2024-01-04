@@ -7,7 +7,10 @@ use byteorder::{ByteOrder, LittleEndian};
 use clap::ValueEnum;
 use dotstar_toolkit_utils::{
     bytes::read_u32_at,
-    bytes_new::{BinaryDeserialize, NewReadError, ZeroCopyReadAt},
+    bytes_new::{
+        read::{BinaryDeserialize, NewReadError, ZeroCopyReadAt},
+        write::BinarySerialize,
+    },
     testing::test,
 };
 use nohash_hasher::IsEnabled;
@@ -67,6 +70,11 @@ pub struct SplitPath<'a> {
     pub filename: Cow<'a, str>,
 }
 
+impl SplitPath<'_> {
+    const EMPTY_PATH_ID: u32 = 0xFFFF_FFFF;
+    const PADDING: u32 = 0x0;
+}
+
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
     fn deserialize_at<B>(
         reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
@@ -79,9 +87,9 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
         let result: Result<_, _> = try {
             let filename = reader.read_len_string_at::<B, u32>(position)?;
             let path = reader.read_len_string_at::<B, u32>(position)?;
-            let path_id = reader.read_u32_at::<B>(position)?;
+            let path_id: u32 = reader.read_at::<B, _>(position)?;
             let split_path = if path.is_empty() && filename.is_empty() {
-                test(&path_id, &PathId::from(0xFFFF_FFFF))?;
+                test(&path_id, &Self::EMPTY_PATH_ID)?;
                 SplitPath::default()
             } else {
                 let split_path = SplitPath { path, filename };
@@ -89,14 +97,36 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
                 test(&path_id, &path_id_calc)?;
                 split_path
             };
-            let padding = reader.read_u32_at::<B>(position)?;
-            test(&padding, &0)?;
+            let padding = reader.read_at::<B, _>(position)?;
+            test(&padding, &Self::PADDING)?;
             split_path
         };
         if result.is_err() {
             *position = old_position;
         }
         result
+    }
+}
+
+impl BinarySerialize for SplitPath<'_> {
+    fn serialize_at<B>(
+        &self,
+        writer: &mut (impl dotstar_toolkit_utils::bytes_new::write::ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), dotstar_toolkit_utils::bytes_new::write::NewWriteError>
+    where
+        B: ByteOrder,
+    {
+        writer.write_len_string_at::<B, u32>(position, &self.filename)?;
+        writer.write_len_string_at::<B, u32>(position, &self.path)?;
+        if self.path.is_empty() && self.filename.is_empty() {
+            writer.write_at::<B>(position, &Self::EMPTY_PATH_ID)?;
+        } else {
+            writer.write_at::<B>(position, &u32::from(PathId::from(self)))?;
+        }
+        writer.write_at::<B>(position, &Self::PADDING)?;
+
+        Ok(())
     }
 }
 
