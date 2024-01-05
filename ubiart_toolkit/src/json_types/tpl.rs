@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "full_json_types")]
 use super::Empty;
+use crate::utils::Color;
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,7 +22,7 @@ pub struct SingleInstanceMesh3DComponent<'a> {
     pub angle_offset: f32,
     pub blendmode: u32,
     pub materialtype: u32,
-    pub self_illum_color: (f32, f32, f32, f32),
+    pub self_illum_color: Color,
     pub disable_light: u32,
     pub force_disable_light: u32,
     pub use_shadow: u32,
@@ -40,7 +41,7 @@ pub struct SingleInstanceMesh3DComponent<'a> {
     pub skeleton_3d: Cow<'a, str>,
     #[serde(rename = "animation3D")]
     pub animation_3d: Cow<'a, str>,
-    pub default_color: (f32, f32, f32, f32),
+    pub default_color: Color,
     pub animation_tree: Empty<'a>,
     pub animation_list: Empty<'a>,
 }
@@ -61,7 +62,7 @@ pub struct UINineSliceMaskComponent<'a> {
     pub angle_offset: f32,
     pub blendmode: u32,
     pub materialtype: u32,
-    pub self_illum_color: (f32, f32, f32, f32),
+    pub self_illum_color: Color,
     pub disable_light: u32,
     pub force_disable_light: u32,
     pub use_shadow: u32,
@@ -73,7 +74,7 @@ pub struct UINineSliceMaskComponent<'a> {
     pub shadow_offset_pos: (u32, u32, u32),
     pub angle_limit: u32,
     pub material: GFXMaterialSerializable<'a>,
-    pub default_color: (f32, f32, f32, f32),
+    pub default_color: Color,
     pub z_offset: u32,
     pub mask_ratio: u32,
     pub mask_texture_path: Cow<'a, str>,
@@ -97,11 +98,11 @@ pub struct Style<'a> {
     pub font_set: FontSet<'a>,
     pub font_size: u32,
     pub font_size_min: i32,
-    pub color: (f32, f32, f32, f32),
-    pub progressive_color: (f32, f32, f32, f32),
+    pub color: Color,
+    pub progressive_color: Color,
     pub blend_mode: u32,
     pub shadow_offset: (u32, u32),
-    pub shadow_color: (f32, f32, f32, f32),
+    pub shadow_color: Color,
     pub line_spacing: u32,
     pub paragraph_spacing: u32,
     pub anchor: u32,
@@ -109,7 +110,7 @@ pub struct Style<'a> {
     pub v_alignment: u32,
     pub use_gradient: u32,
     pub gradient_size: u32,
-    pub gradient_color: (f32, f32, f32, f32),
+    pub gradient_color: Color,
 }
 
 #[cfg(feature = "full_json_types")]
@@ -214,7 +215,7 @@ pub struct FxBankComponent<'a> {
     pub angle_offset: f32,
     pub blendmode: u32,
     pub materialtype: u32,
-    pub self_illum_color: (f32, f32, f32, f32),
+    pub self_illum_color: Color,
     pub disable_light: u32,
     pub force_disable_light: u32,
     pub use_shadow: u32,
@@ -302,7 +303,7 @@ pub struct ParticleGeneratorParameters<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     class: Option<&'a str>,
     pub max_particles: u32,
-    pub default_color: (f32, f32, f32, f32),
+    pub default_color: Color,
     pub emit_particles_count: u32,
     pub force_no_dynamic_fog: u32,
     pub render_in_reflection: u32,
@@ -670,7 +671,7 @@ pub struct MaterialGraphicComponent<'a> {
     pub angle_offset: f32,
     pub blendmode: u32,
     pub materialtype: u32,
-    pub self_illum_color: (f32, f32, f32, f32),
+    pub self_illum_color: Color,
     pub disable_light: u32,
     pub force_disable_light: u32,
     pub use_shadow: u32,
@@ -682,7 +683,7 @@ pub struct MaterialGraphicComponent<'a> {
     pub shadow_offset_pos: (u32, u32, u32),
     pub angle_limit: u32,
     pub material: Box<GFXMaterialSerializable<'a>>,
-    pub default_color: (f32, f32, f32, f32),
+    pub default_color: Color,
     pub z_offset: u32,
 }
 
@@ -733,7 +734,7 @@ pub struct TextureGraphicComponent<'a> {
     pub angle_offset: f32,
     pub blendmode: u32,
     pub materialtype: u32,
-    pub self_illum_color: (f32, f32, f32, f32),
+    pub self_illum_color: Color,
     pub disable_light: u32,
     pub force_disable_light: u32,
     pub use_shadow: u32,
@@ -745,7 +746,7 @@ pub struct TextureGraphicComponent<'a> {
     pub shadow_offset_pos: (u32, u32, u32),
     pub angle_limit: u32,
     pub material: GFXMaterialSerializable<'a>,
-    pub default_color: (f32, f32, f32, f32),
+    pub default_color: Color,
     pub angle_x: u32,
     pub angle_y: u32,
     pub angle_z: u32,
@@ -772,7 +773,7 @@ pub struct PleoTextureGraphicComponent<'a> {
     pub angle_offset: f32,
     pub blendmode: u32,
     pub materialtype: u32,
-    pub self_illum_color: (f32, f32, f32, f32),
+    pub self_illum_color: Color,
     pub disable_light: u32,
     pub force_disable_light: u32,
     pub use_shadow: u32,
@@ -784,7 +785,7 @@ pub struct PleoTextureGraphicComponent<'a> {
     pub shadow_offset_pos: (u32, u32, u32),
     pub angle_limit: u32,
     pub material: GFXMaterialSerializable<'a>,
-    pub default_color: (f32, f32, f32, f32),
+    pub default_color: Color,
     pub z_offset: u32,
     #[serde(rename = "channelID")]
     pub channel_id: Cow<'a, str>,
@@ -804,8 +805,10 @@ pub struct GFXMaterialSerializable<'a> {
     pub atl_path: Cow<'a, str>,
     pub shader_path: Cow<'a, str>,
     pub material_params: GFXMaterialSerializableParam<'a>,
+    /// Not in nx2017-nx2019
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outlined_mask_params: Option<OutlinedMaskMaterialParams<'a>>,
+    /// Only in nx2017-nx2019 and nx2020_japan
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stencil_test: Option<u32>,
     pub alpha_test: u32,
@@ -822,8 +825,8 @@ impl Default for GFXMaterialSerializable<'_> {
             class: Some(Self::CLASS),
             texture_set: GFXMaterialTexturePathSet::default(),
             atl_channel: 0,
-            atl_path: Cow::Borrowed(""),
-            shader_path: Cow::Borrowed(""),
+            atl_path: Cow::default(),
+            shader_path: Cow::default(),
             material_params: GFXMaterialSerializableParam::default(),
             outlined_mask_params: Some(OutlinedMaskMaterialParams::default()),
             stencil_test: None,
@@ -858,15 +861,15 @@ impl Default for GFXMaterialTexturePathSet<'_> {
     fn default() -> Self {
         Self {
             class: Some(Self::CLASS),
-            diffuse: Cow::Borrowed(""),
-            back_light: Cow::Borrowed(""),
-            normal: Cow::Borrowed(""),
-            separate_alpha: Cow::Borrowed(""),
-            diffuse_2: Cow::Borrowed(""),
-            back_light_2: Cow::Borrowed(""),
-            anim_impostor: Cow::Borrowed(""),
-            diffuse_3: Cow::Borrowed(""),
-            diffuse_4: Cow::Borrowed(""),
+            diffuse: Cow::default(),
+            back_light: Cow::default(),
+            normal: Cow::default(),
+            separate_alpha: Cow::default(),
+            diffuse_2: Cow::default(),
+            back_light_2: Cow::default(),
+            anim_impostor: Cow::default(),
+            diffuse_3: Cow::default(),
+            diffuse_4: Cow::default(),
         }
     }
 }
@@ -898,8 +901,8 @@ impl Default for GFXMaterialSerializableParam<'_> {
 pub struct OutlinedMaskMaterialParams<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub mask_color: (f32, f32, f32, f32),
-    pub outline_color: (f32, f32, f32, f32),
+    pub mask_color: Color,
+    pub outline_color: Color,
     pub thickness: u32,
 }
 
@@ -978,10 +981,10 @@ impl Default for SoundDescriptor<'_> {
     fn default() -> Self {
         Self {
             class: Some(Self::CLASS),
-            name: Cow::Borrowed(""),
+            name: Cow::default(),
             volume: 0.0,
             category: Cow::Borrowed("amb"),
-            limit_category: Cow::Borrowed(""),
+            limit_category: Cow::default(),
             limit_mode: 0,
             max_instances: u32::MAX,
             files: Vec::new(),
@@ -1034,7 +1037,7 @@ impl Default for SoundParams<'_> {
             class: Some(Self::CLASS),
             loop_it: 0,
             play_mode: 1,
-            play_mode_input: Cow::Borrowed(""),
+            play_mode_input: Cow::default(),
             random_vol_min: 0.0,
             random_vol_max: 0.0,
             delay: 0,

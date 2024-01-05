@@ -138,7 +138,7 @@ impl<'a> Objective<'a> {
 
     /// Convert from the old UbiArt represntation
     pub fn from_old_descriptor(
-        descriptor: &json_types::v1719::ObjectiveDesc1819<'a>,
+        descriptor: &json_types::v1819::ObjectiveDesc1819<'a>,
         unlimited_only: bool,
         locale_id_map: &LocaleIdMap,
     ) -> Self {
@@ -576,7 +576,7 @@ impl<'a> ObjectiveType<'a> {
 
     /// Convert from the old UbiArt representation
     pub fn from_old_descriptor(
-        descriptor: &json_types::v1719::ObjectiveDesc1819<'a>,
+        descriptor: &json_types::v1819::ObjectiveDesc1819<'a>,
         unlimited_only: bool,
     ) -> (Self, bool) {
         let mut components = if unlimited_only {
@@ -590,7 +590,7 @@ impl<'a> ObjectiveType<'a> {
         match descriptor {
             // The comments matter!
             #[allow(clippy::match_same_arms)]
-            json_types::v1719::ObjectiveDesc1819::Base(data) => match data.objective_type {
+            json_types::v1819::ObjectiveDesc1819::Base(data) => match data.objective_type {
                 0 => {
                     components.push(Component {
                         c_type: ComponentType::MapLaunchLocationRequirement(
@@ -1105,7 +1105,7 @@ impl<'a> ObjectiveType<'a> {
                     (Self::SwitchSweatMode, true)
                 }
             },
-            json_types::v1719::ObjectiveDesc1819::MinStarsReachedSongCount(data) => {
+            json_types::v1819::ObjectiveDesc1819::MinStarsReachedSongCount(data) => {
                 if data.objective_type != 18 {
                     println!("Warning!: ObjectiveDesc1819::MinStarsReachedSongCount does not have objective type 18");
                     println!("{data:?}");
@@ -1142,7 +1142,7 @@ impl<'a> ObjectiveType<'a> {
                     true,
                 )
             }
-            json_types::v1719::ObjectiveDesc1819::PlaySpecificMap(data) => {
+            json_types::v1819::ObjectiveDesc1819::PlaySpecificMap(data) => {
                 if data.objective_type != 10 {
                     println!("Warning!: ObjectiveDesc1819::PlaySpecificMap does not have objective type 10");
                     println!("{data:?}");
@@ -1183,7 +1183,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1719::ObjectiveDesc1819::GatherStarsWDF(data) => {
+            json_types::v1819::ObjectiveDesc1819::GatherStarsWDF(data) => {
                 if data.objective_type != 0 {
                     println!("Warning!: ObjectiveDesc1819::GatherStarsWDF does not have objective type 0");
                     println!("{data:?}");
@@ -1216,7 +1216,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1719::ObjectiveDesc1819::SweatSongCount(data) => {
+            json_types::v1819::ObjectiveDesc1819::SweatSongCount(data) => {
                 if data.objective_type != 11 {
                     println!("Warning!: ObjectiveDesc1819::SweatSongCount does not have objective type 11");
                     println!("{data:?}");
@@ -1249,7 +1249,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1719::ObjectiveDesc1819::WDFSongCount(data) => {
+            json_types::v1819::ObjectiveDesc1819::WDFSongCount(data) => {
                 if data.objective_type != 11 {
                     println!(
                         "Warning!: ObjectiveDesc1819::WDFSongCount does not have objective type 11"
@@ -1284,7 +1284,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1719::ObjectiveDesc1819::RecommendSongCount(data) => {
+            json_types::v1819::ObjectiveDesc1819::RecommendSongCount(data) => {
                 // Recommend songs don't exist anymore as objective type, so changed to quickplay songs
                 if data.objective_type != 19 {
                     println!("Warning!: ObjectiveDesc1819::RecommendSongCount does not have objective type 19");
@@ -1307,7 +1307,7 @@ impl<'a> ObjectiveType<'a> {
                     true,
                 )
             }
-            json_types::v1719::ObjectiveDesc1819::ClassicTournamentRank(data) => {
+            json_types::v1819::ObjectiveDesc1819::ClassicTournamentRank(data) => {
                 // Classic Tournament doesn't exist anymore so map to regular rank
                 if data.objective_type != 54 {
                     println!("Warning!: ObjectiveDesc1819::ClassicTournamentRank does not have objective type 54");

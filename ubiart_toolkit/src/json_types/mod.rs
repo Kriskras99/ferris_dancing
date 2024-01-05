@@ -3,13 +3,15 @@
     reason = "The booleans are imposed by the UbiArt engine"
 )]
 
+#[cfg(feature = "full_json_types")]
+pub mod frt;
 pub mod isg;
 pub mod just_dance;
 #[cfg(feature = "full_json_types")]
 pub mod msh;
 pub mod tape;
 pub mod tpl;
-pub mod v1719;
+pub mod v1819;
 
 pub mod v17;
 pub mod v18;
@@ -38,22 +40,3 @@ pub type MapsObjectives<'a> = HashMap<Cow<'a, str>, Cow<'a, str>>;
 pub type OfflineRecommendation<'a> = Vec<Cow<'a, str>>;
 pub type AvatarsObjectives<'a> = HashMap<u16, Cow<'a, str>>;
 pub type PhoneImages<'a> = HashMap<Cow<'a, str>, Cow<'a, str>>;
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct FeedbackFXManager<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
-    pub bus_list: Vec<Buses<'a>>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Buses<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
-    pub actor_type: Cow<'a, str>,
-    pub bus: Cow<'a, str>,
-}

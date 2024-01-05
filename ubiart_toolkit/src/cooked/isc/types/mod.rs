@@ -8,6 +8,8 @@ use std::borrow::Cow;
 use dotstar_toolkit_utils::testing::test;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::utils::Color;
+
 pub mod property_patcher;
 
 use property_patcher::WrappedPropertyPatcher;
@@ -18,8 +20,6 @@ pub struct Root<'a> {
     #[serde(borrow)]
     pub scene: Scene<'a>,
 }
-
-pub type Color = (f32, f32, f32, f32);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]

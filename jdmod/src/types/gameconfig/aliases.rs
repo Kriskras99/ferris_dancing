@@ -5,7 +5,7 @@ use std::{borrow::Cow, collections::HashMap};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
     json_types::{
-        isg::UnlockableAliasDescriptor, v1719::UnlockableAliasDescriptor1719, AliasesObjectives,
+        isg::UnlockableAliasDescriptor, v19::UnlockableAliasDescriptor19, AliasesObjectives,
     },
     utils::LocaleId,
 };
@@ -119,8 +119,8 @@ impl<'c> Alias<'c> {
     }
 
     /// Convert from old UbiArt representation
-    pub fn from_unlockable_alias_descriptor_1719<'a: 'c>(
-        descriptor: UnlockableAliasDescriptor1719<'a>,
+    pub fn from_unlockable_alias_descriptor_19<'a: 'c>(
+        descriptor: UnlockableAliasDescriptor19<'a>,
         locale_id_map: &LocaleIdMap,
         objectives: &mut Objectives<'a>,
     ) -> Self {

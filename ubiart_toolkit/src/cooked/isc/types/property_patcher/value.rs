@@ -60,7 +60,7 @@ impl AsRef<Color> for WrappedColor {
 #[serde(deny_unknown_fields)]
 pub struct Color {
     #[serde(rename = "@VALUE")]
-    pub value: crate::cooked::isc::types::Color,
+    pub value: crate::utils::Color,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,7 +90,7 @@ pub struct ColorSet<'a> {
     #[serde(rename = "@KEY")]
     pub key: Cow<'a, str>,
     #[serde(rename = "@VAL")]
-    pub value: crate::cooked::isc::types::Color,
+    pub value: crate::utils::Color,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

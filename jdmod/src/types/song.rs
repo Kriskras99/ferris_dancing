@@ -411,7 +411,7 @@ pub struct Color {
     pub blue: u8,
 }
 
-impl From<&Color> for (f32, f32, f32, f32) {
+impl From<&Color> for ubiart_toolkit::utils::Color {
     fn from(color: &Color) -> Self {
         (
             f32::from(color.transparency) / 255.0,
@@ -422,8 +422,8 @@ impl From<&Color> for (f32, f32, f32, f32) {
     }
 }
 
-impl From<&(f32, f32, f32, f32)> for Color {
-    fn from(value: &(f32, f32, f32, f32)) -> Self {
+impl From<&ubiart_toolkit::utils::Color> for Color {
+    fn from(value: &ubiart_toolkit::utils::Color) -> Self {
         Self {
             transparency: map_range_to_u8(value.0, 0.0, 1.0),
             red: map_range_to_u8(value.1, 0.0, 1.0),

@@ -2,6 +2,8 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 
+use crate::utils::Color;
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Tape<'a> {
@@ -219,16 +221,14 @@ pub struct PictogramClip<'a> {
     pub start_time: i32,
     pub duration: u32,
     pub picto_path: Cow<'a, str>,
-    /// Not used in nx2019 or later
+    /// Only in nx2017-nx2018, only has non-empty values in nx2018
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub montage_path: Option<Cow<'a, str>>,
-    /// Not used in nx2019 or later
+    /// Only in nx2017-nx2018
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub atl_index: Option<u32>,
     pub coach_count: i64,
 }
-
-pub type Color = (f32, f32, f32, f32);
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
@@ -454,7 +454,7 @@ pub struct ProportionClip<'a> {
 }
 
 #[cfg(feature = "full_json_types")]
-#[allow(clippy::module_name_repetitions)]
+#[allow(clippy::module_name_repetitions, reason = "Name is enforced by UbiArt")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct TapeLauncherClip<'a> {

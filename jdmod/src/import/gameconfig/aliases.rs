@@ -87,7 +87,7 @@ pub fn import_v19(is: &ImportState<'_>, alias_db_path: &str) -> Result<(), Error
         {
             aliases.aliases.insert(
                 index,
-                Alias::from_unlockable_alias_descriptor_1719(
+                Alias::from_unlockable_alias_descriptor_19(
                     alias,
                     &is.locale_id_map,
                     &mut objectives,

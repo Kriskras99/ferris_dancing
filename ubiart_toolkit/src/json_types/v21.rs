@@ -6,11 +6,12 @@ use yoke::Yokeable;
 
 #[cfg(feature = "full_json_types")]
 use super::{
+    frt::FeedbackFXManager,
     isg::{
-        AchievementsDatabase, AnthologyConfig, CameraShakeConfig, CarouselManager, CarouselRules,
-        FTUESteps, FontEffectList, GachaContentDatabase, PadRumbleManager, QuickplayRules,
-        SoundConfig, TRCLocalisation, UITextManager, VibrationManager, WDFLinearRewards,
-        ZInputConfig, ZInputManager,
+        AchievementsDatabase, CameraShakeConfig, CarouselManager, CarouselRules, FTUESteps,
+        FontEffectList, GachaContentDatabase, PadRumbleManager, QuickplayRules, SoundConfig,
+        TRCLocalisation, UITextManager, VibrationManager, WDFLinearRewards, ZInputConfig,
+        ZInputManager,
     },
     just_dance::{
         AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
@@ -22,7 +23,7 @@ use super::{
         SingleInstanceMesh3DComponent, TextureGraphicComponent, UINineSliceMaskComponent,
         UITextBox,
     },
-    Empty, FeedbackFXManager,
+    Empty,
 };
 use super::{
     isg::{
@@ -325,9 +326,6 @@ pub enum Template21<'a> {
     ZInputManager(ZInputManager<'a>),
     #[serde(borrow, rename = "Tape")]
     Tape(Tape<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_AnthologyConfig")]
-    AnthologyConfig(AnthologyConfig<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "FeedbackFXManager_Template")]
     FeedbackFXManager(FeedbackFXManager<'a>),

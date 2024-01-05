@@ -6,11 +6,11 @@ use yoke::Yokeable;
 
 #[cfg(feature = "full_json_types")]
 use super::{
+    frt::FeedbackFXManager,
     isg::{
         AchievementsDatabase, AnthologyConfig, CameraShakeConfig, CarouselManager, CarouselRules,
-        FTUESteps, FontEffectList, GachaContentDatabase, PadRumbleManager, QuickplayRules,
-        SoundConfig, TRCLocalisation, UITextManager, VibrationManager, WDFLinearRewards,
-        ZInputConfig, ZInputManager,
+        FTUESteps, FontEffectList, GachaContentDatabase, PadRumbleManager, SoundConfig,
+        TRCLocalisation, UITextManager, VibrationManager, ZInputConfig, ZInputManager,
     },
     just_dance::{
         AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
@@ -22,7 +22,7 @@ use super::{
         SingleInstanceMesh3DComponent, TextureGraphicComponent, UINineSliceMaskComponent,
         UITextBox,
     },
-    Empty, FeedbackFXManager,
+    Empty,
 };
 use super::{
     isg::{
@@ -124,9 +124,6 @@ pub enum Template20<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_SongDescTemplate")]
     SongDescription(SongDescription<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_StickerGrid_Template")]
-    StickerGrid(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_SubtitleComponent_Template")]
     SubtitleComponent(Empty<'a>),
@@ -300,9 +297,6 @@ pub enum Template20<'a> {
     PlaylistDatabase(PlaylistDatabase<'a>),
     #[serde(borrow, rename = "JD_PortraitBordersDatabase_Template")]
     PortraitBordersDatabase(PortraitBordersDatabase<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_QuickplayRules_Template")]
-    QuickplayRules(QuickplayRules<'a>),
     #[serde(borrow, rename = "JD_ScheduledQuestDatabase_Template")]
     ScheduledQuestDatabase(ScheduledQuestDatabase<'a>),
     #[cfg(feature = "full_json_types")]
@@ -314,9 +308,6 @@ pub enum Template20<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "VibrationManager_Template")]
     VibrationManager(VibrationManager<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_WDFLinearRewards")]
-    WDFLinearRewards(WDFLinearRewards<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "ZInputConfig_Template")]
     ZInputConfig(ZInputConfig<'a>),
