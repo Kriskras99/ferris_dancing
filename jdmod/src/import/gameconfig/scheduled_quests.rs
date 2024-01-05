@@ -5,7 +5,7 @@ use std::fs::File;
 use anyhow::{anyhow, Context, Error};
 use ubiart_toolkit::{
     cooked,
-    json_types::{isg::ScheduledQuestSetup, v1719::ScheduledQuestDesc1819},
+    json_types::{isg::ScheduledQuestSetup, v1819::ScheduledQuestDesc1819},
 };
 
 use super::objectives::{load_objectives, save_objectives};

@@ -5,10 +5,10 @@ use serde_with::{serde_as, DisplayFromStr};
 
 use super::{
     just_dance::{AutoDanceFxDesc, PlaybackEvent},
-    v1719::ObjectiveDesc1819,
+    v1819::ObjectiveDesc1819,
     DifficultyColors, Empty,
 };
-use crate::utils::LocaleId;
+use crate::utils::{Color, LocaleId};
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1295,7 +1295,7 @@ pub struct ItemColorLookUp<'a> {
 pub struct ItemColorMap<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub colors: HashMap<Cow<'a, str>, (f32, f32, f32, f32)>,
+    pub colors: HashMap<Cow<'a, str>, Color>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1322,8 +1322,8 @@ pub struct VideoBrickDescriptor<'a> {
 pub struct HueConfig<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub menu_color: (f32, f32, f32, f32),
-    pub gold_effect_color: (f32, f32, f32, f32),
+    pub menu_color: Color,
+    pub gold_effect_color: Color,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

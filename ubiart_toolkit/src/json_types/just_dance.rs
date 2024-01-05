@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
 use super::{isg::AutodanceVideoStructure, PhoneImages};
-use crate::utils::LocaleId;
+use crate::utils::{Color, LocaleId};
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -720,16 +720,16 @@ const fn default_sweat_difficulty() -> u8 {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DefaultColors {
-    pub theme: (f32, f32, f32, f32),
-    pub lyrics: (f32, f32, f32, f32),
+    pub theme: Color,
+    pub lyrics: Color,
     #[serde(alias = "songColor_1A", skip_serializing_if = "Option::is_none")]
-    pub songcolor_1a: Option<(f32, f32, f32, f32)>,
+    pub songcolor_1a: Option<Color>,
     #[serde(alias = "songColor_1B", skip_serializing_if = "Option::is_none")]
-    pub songcolor_1b: Option<(f32, f32, f32, f32)>,
+    pub songcolor_1b: Option<Color>,
     #[serde(alias = "songColor_2A", skip_serializing_if = "Option::is_none")]
-    pub songcolor_2a: Option<(f32, f32, f32, f32)>,
+    pub songcolor_2a: Option<Color>,
     #[serde(alias = "songColor_2B", skip_serializing_if = "Option::is_none")]
-    pub songcolor_2b: Option<(f32, f32, f32, f32)>,
+    pub songcolor_2b: Option<Color>,
 }
 
 impl SongDescription<'_> {

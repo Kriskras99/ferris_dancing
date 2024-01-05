@@ -105,7 +105,7 @@ impl<'a> From<QuestDescription<'a>> for json_types::isg::ScheduledQuestDesc<'a> 
 impl<'a> QuestDescription<'a> {
     /// Convert an old quest description into the modern format
     pub fn from_scheduled_quest_desc_1819(
-        description: json_types::v1719::ScheduledQuestDesc1819<'a>,
+        description: json_types::v1819::ScheduledQuestDesc1819<'a>,
         objectives: &mut Objectives<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Self {

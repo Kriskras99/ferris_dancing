@@ -6,6 +6,7 @@ use yoke::Yokeable;
 
 #[cfg(feature = "full_json_types")]
 use super::{
+    frt::FeedbackFXManager,
     isg::{
         AchievementsDatabase, CameraShakeConfig, CarouselManager, FTUESteps, FontEffectList,
         PadRumbleManager, QuickplayRules, SoundConfig, TRCLocalisation, UITextManager,
@@ -19,7 +20,7 @@ use super::{
         SingleInstanceMesh3DComponent, TextureGraphicComponent, UINineSliceMaskComponent,
         UITextBox,
     },
-    Empty, FeedbackFXManager,
+    Empty,
 };
 use super::{
     isg::{
@@ -73,7 +74,7 @@ pub enum Template22<'a> {
     #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
     AutodanceComponent(AutodanceComponent<'a>),
     #[serde(borrow, rename = "JD_AvatarDescTemplate")]
-    AvatarDescription(AvatarDescription22<'a>),
+    AvatarDescription(AvatarDescription2022<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_Carousel_Template")]
     Carousel(Empty<'a>),
@@ -407,7 +408,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `AvatarDescription22`.
-    pub fn avatar_description(&'a self) -> Result<&'a AvatarDescription22<'a>, ParserError> {
+    pub fn avatar_description(&'a self) -> Result<&'a AvatarDescription2022<'a>, ParserError> {
         if let Template22::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {
@@ -672,7 +673,7 @@ pub struct Actor22<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
-pub struct AvatarDescription22<'a> {
+pub struct AvatarDescription2022<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub jd_version: u16,
@@ -699,52 +700,44 @@ pub struct AvatarDescription22<'a> {
     pub used_as_coach_map_name: Cow<'a, str>,
     #[serde(rename = "UsedAsCoach_CoachId")]
     pub used_as_coach_coach_id: u8,
-    #[serde(
-        rename = "specialEffect",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub special_effect: Option<u8>,
-    #[serde(
-        rename = "mainAvatarId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub main_avatar_id: Option<u16>,
+    #[serde(rename = "specialEffect")]
+    pub special_effect: u8,
+    #[serde(rename = "mainAvatarId")]
+    pub main_avatar_id: u16,
 }
 
-impl Default for AvatarDescription22<'static> {
+impl Default for AvatarDescription2022<'static> {
     fn default() -> Self {
         Self {
             class: Option::default(),
             jd_version: 2022,
-            relative_song_name: Cow::Borrowed(""),
-            relative_quest_id: Cow::Borrowed(""),
-            relative_wdf_boss_name: Cow::Borrowed(""),
-            relative_wdf_tournament_name: Cow::Borrowed(""),
-            relative_jd_rank: Cow::Borrowed(""),
-            relative_game_mode_name: Cow::Borrowed(""),
-            sound_family: Cow::Borrowed(""),
+            relative_song_name: Cow::default(),
+            relative_quest_id: Cow::default(),
+            relative_wdf_boss_name: Cow::default(),
+            relative_wdf_tournament_name: Cow::default(),
+            relative_jd_rank: Cow::default(),
+            relative_game_mode_name: Cow::default(),
+            sound_family: Cow::default(),
             status: Default::default(),
             unlock_type: Default::default(),
             mojo_price: 0,
             wdf_level: 1,
             count_in_progression: 1,
-            actor_path: Cow::Borrowed(""),
-            phone_image: Cow::Borrowed(""),
+            actor_path: Cow::default(),
+            phone_image: Cow::default(),
             avatar_id: Default::default(),
-            used_as_coach_map_name: Cow::Borrowed(""),
+            used_as_coach_map_name: Cow::default(),
             used_as_coach_coach_id: Default::default(),
-            special_effect: Option::default(),
-            main_avatar_id: Option::default(),
+            special_effect: 0,
+            main_avatar_id: u16::MAX,
         }
     }
 }
 
-impl AvatarDescription22<'_> {
+impl AvatarDescription2022<'_> {
     #[must_use]
-    pub fn to_owned(&self) -> AvatarDescription22Owned {
-        AvatarDescription22Owned {
+    pub fn to_owned(&self) -> AvatarDescription2022Owned {
+        AvatarDescription2022Owned {
             jd_version: self.jd_version,
             relative_song_name: self.relative_song_name.to_string(),
             relative_quest_id: self.relative_quest_id.to_string(),
@@ -771,7 +764,7 @@ impl AvatarDescription22<'_> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
-pub struct AvatarDescription22Owned {
+pub struct AvatarDescription2022Owned {
     pub jd_version: u16,
     pub relative_song_name: String,
     #[serde(rename = "RelativeQuestID")]
@@ -796,16 +789,8 @@ pub struct AvatarDescription22Owned {
     pub used_as_coach_map_name: String,
     #[serde(rename = "UsedAsCoach_CoachId")]
     pub used_as_coach_coach_id: u8,
-    #[serde(
-        rename = "specialEffect",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub special_effect: Option<u8>,
-    #[serde(
-        rename = "mainAvatarId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub main_avatar_id: Option<u16>,
+    #[serde(rename = "specialEffect")]
+    pub special_effect: u8,
+    #[serde(rename = "mainAvatarId")]
+    pub main_avatar_id: u16,
 }

@@ -66,7 +66,7 @@ pub fn import_v18v22(
             "{}_{}{}{}",
             avatar_desc.used_as_coach_map_name.as_ref(),
             avatar_desc.used_as_coach_coach_id,
-            if avatar_desc.special_effect == Some(1) {
+            if avatar_desc.special_effect == 1 {
                 "_Gold"
             } else {
                 ""
@@ -87,6 +87,24 @@ pub fn import_v18v22(
 
     for avatar_desc in avatar_descriptions {
         let name = &id_map[&avatar_desc.avatar_id];
+        let main_avatar = if avatar_desc.main_avatar_id == u16::MAX {
+            None
+        } else {
+            let main = id_map
+                .get(&avatar_desc.main_avatar_id)
+                .map(String::as_str)
+                .map(Cow::Borrowed);
+            if main.is_none() {
+                println!(
+                    "Warning! Avatar id {} does not exist!",
+                    avatar_desc.main_avatar_id
+                );
+                println!("Failed to add main avatar for {name}");
+            } else {
+                println!("Adding main avatar {main:?} for {name}");
+            }
+            main
+        };
         // Only add new avatars
         if !avatars.contains_key(name) {
             let avatar_named_dir_path = is.dirs.avatars().join(name);
@@ -106,21 +124,8 @@ pub fn import_v18v22(
                 )?,
                 used_as_coach_map_name: Cow::Owned(avatar_desc.used_as_coach_map_name),
                 used_as_coach_coach_id: avatar_desc.used_as_coach_coach_id,
-                special_effect: avatar_desc.special_effect == Some(1),
-                main_avatar: avatar_desc.main_avatar_id.and_then(|main_id| {
-                    if main_id == u16::MAX {
-                        None
-                    } else {
-                        let main = id_map.get(&main_id).map(String::as_str).map(Cow::Borrowed);
-                        if main.is_none() {
-                            println!("Warning! Avatar id {main_id} does not exist!");
-                            println!("Failed to add main avatar for {name}");
-                        } else {
-                            println!("Adding main avatar {main:?} for {name}");
-                        }
-                        main
-                    }
-                }),
+                special_effect: avatar_desc.special_effect == 1,
+                main_avatar,
                 image_path: Cow::Owned(avatar_image_path),
                 image_phone_path: Cow::Owned(avatar_image_phone_path),
             };

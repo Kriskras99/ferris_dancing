@@ -1,39 +1,38 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, DisplayFromStr};
 
-use super::{isg::Rarity, DifficultyColors};
 use crate::utils::LocaleId;
 
-#[serde_as]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct LocalAliases1719<'a> {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase", deny_unknown_fields)]
+pub struct AvatarDescription1819<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub locked_color: Cow<'a, str>,
-    pub difficulty_colors: DifficultyColors<'a>,
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    pub aliases: HashMap<u16, UnlockableAliasDescriptor1719<'a>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct UnlockableAliasDescriptor1719<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    #[serde(rename = "StringLocID")]
-    pub string_loc_id: LocaleId,
-    pub string_online_localized: Cow<'a, str>,
-    pub string_placeholder: Cow<'a, str>,
-    pub difficulty_color: Rarity,
-    pub restricted_to_unlimited_songs: bool,
-    pub unlock_objective: ObjectiveDesc1819<'a>,
-}
-
-impl UnlockableAliasDescriptor1719<'_> {
-    pub const CLASS: &'static str = "JD_UnlockableAliasDescriptor";
+    pub jd_version: u16,
+    pub relative_song_name: Cow<'a, str>,
+    #[serde(rename = "RelativeQuestID")]
+    pub relative_quest_id: Cow<'a, str>,
+    #[serde(rename = "RelativeWDFBossName")]
+    pub relative_wdf_boss_name: Cow<'a, str>,
+    #[serde(rename = "RelativeWDFTournamentName")]
+    pub relative_wdf_tournament_name: Cow<'a, str>,
+    #[serde(rename = "RelativeJDRank")]
+    pub relative_jd_rank: Cow<'a, str>,
+    pub relative_game_mode_name: Cow<'a, str>,
+    pub sound_family: Cow<'a, str>,
+    pub status: u8,
+    pub unlock_type: u8,
+    pub mojo_price: u16,
+    pub wdf_level: u8,
+    pub count_in_progression: u8,
+    pub actor_path: Cow<'a, str>,
+    pub phone_image: Cow<'a, str>,
+    pub avatar_id: u16,
+    #[serde(rename = "UsedAsCoach_MapName")]
+    pub used_as_coach_map_name: Cow<'a, str>,
+    #[serde(rename = "UsedAsCoach_CoachId")]
+    pub used_as_coach_coach_id: u8,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -19,6 +19,9 @@ use serde::{Deserialize, Serialize};
 use self::errors::ParserError;
 use crate::ipk;
 
+/// A RGBA color encoded in f32 (0.0 is black, 1.0 is white)
+pub type Color = (f32, f32, f32, f32);
+
 /// Represents the id of a localised string
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[repr(transparent)]

@@ -7,7 +7,7 @@ use ubiart_toolkit::{
     cooked,
     json_types::{
         self,
-        v22::{AvatarDescription22, GameManagerConfig22},
+        v22::{AvatarDescription2022, GameManagerConfig22},
     },
     utils::SplitPath,
 };
@@ -83,7 +83,7 @@ pub fn build(
                         ..Default::default()
                     },
                 ),
-                json_types::v22::Template22::AvatarDescription(AvatarDescription22 {
+                json_types::v22::Template22::AvatarDescription(AvatarDescription2022 {
                     relative_song_name: avatar.used_as_coach_map_name.clone(),
                     sound_family: avatar.sound_family,
                     status: avatar.status,
@@ -93,14 +93,12 @@ pub fn build(
                     avatar_id: id,
                     used_as_coach_map_name: avatar.used_as_coach_map_name,
                     used_as_coach_coach_id: avatar.used_as_coach_coach_id,
-                    special_effect: Some(u8::from(avatar.special_effect)),
-                    main_avatar_id: Some(
-                        avatar
-                            .main_avatar
-                            .and_then(|name| id_map.get(name.as_ref()))
-                            .copied()
-                            .unwrap_or(u16::MAX),
-                    ),
+                    special_effect: u8::from(avatar.special_effect),
+                    main_avatar_id: avatar
+                        .main_avatar
+                        .and_then(|name| id_map.get(name.as_ref()))
+                        .copied()
+                        .unwrap_or(u16::MAX),
                     ..Default::default()
                 }),
             ],
