@@ -1,4 +1,4 @@
-cargo-features = ["codegen-backend"]
+#cargo-features = ["codegen-backend"]
 [workspace]
 
 members = [
@@ -14,8 +14,8 @@ resolver = "2"
 [profile.release]
 debug = true
 
-[profile.dev]
-codegen-backend = "cranelift"
+#[profile.dev]
+#codegen-backend = "cranelift"
 [profile.dev.package.ubiart_toolkit]
 opt-level = 3
 [profile.dev.package.dotstar_toolkit_utils]
