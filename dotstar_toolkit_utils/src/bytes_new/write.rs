@@ -210,6 +210,18 @@ impl BinarySerialize for u64 {
     }
 }
 
+impl<const N: usize> BinarySerialize for [u8; N] {
+    fn serialize_at<B>(
+        &self,
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), NewWriteError>
+    where
+        B: ByteOrder {
+        writer.write_slice_at(position, self.as_slice())
+    }
+}
+
 /// Represents a byte source which uses Cow's to stay zerocopy
 pub trait ZeroCopyWriteAt {
     /// Read a `T` at `position`

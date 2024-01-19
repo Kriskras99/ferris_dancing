@@ -88,6 +88,12 @@ pub enum NewReadError {
         #[from]
         test: TestError,
     },
+    /// A custom error
+    #[error("{string}")]
+    Custom {
+        /// The error description
+        string: String,
+    }
 }
 
 impl NewReadError {
@@ -166,6 +172,22 @@ impl NewReadError {
         Self::Context {
             source: Box::new(self),
             context: format!("{:?}", f()),
+        }
+    }
+
+    /// Add context for this error
+    #[must_use]
+    pub fn custom(string: String) -> Self {
+        Self::Custom {
+            string
+        }
+    }
+
+    /// Add context for this error
+    #[must_use]
+    pub fn with_custom<F: FnOnce() -> String>(f: F) -> Self {
+        Self::Custom {
+            string: f(),
         }
     }
 }
