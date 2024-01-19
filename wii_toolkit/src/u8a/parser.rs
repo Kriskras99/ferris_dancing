@@ -1,35 +1,18 @@
 //! Contains the parser implementation
 
-use std::{fs, path::Path};
-
 use anyhow::Error;
 use byteorder::BigEndian;
 use dotstar_toolkit_utils::{
     bytes::{read_null_terminated_string_at, read_slice_at, read_u24_at, read_u32_at, read_u8_at},
     testing::test,
 };
-use memmap2::Mmap;
-use yoke::Yoke;
 
-use super::types::{Node, NodeType, U8Archive, U8ArchiveOwned, UnparsedNode};
+use super::types::{Node, NodeType, U8Archive, UnparsedNode};
 
 /// Check if these bytes match the magic for a U8 archive
 #[must_use]
 pub fn can_parse(first_bytes: &[u8; 0x8]) -> bool {
     first_bytes == &[0x2D, 0x38, 0x55, 0xAA, 0x0, 0x0, 0x0, 0x20]
-}
-
-/// Open the file at the given path and parse it as a Wii U8 file
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P) -> Result<U8ArchiveOwned<Mmap>, Error> {
-    let file = fs::File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    let yoke = Yoke::try_attach_to_cart(mmap, |data: &[u8]| parse(data))?;
-    Ok(U8ArchiveOwned::from(yoke))
 }
 
 /// Parse a Wii U8 file

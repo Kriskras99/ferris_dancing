@@ -5,6 +5,7 @@ use std::{
 };
 
 use clap::Parser;
+use dotstar_toolkit_utils::bytes::read_to_vec;
 use wii_toolkit::u8a;
 
 #[derive(Parser)]
@@ -27,11 +28,12 @@ fn main() {
             .to_path_buf()
     });
 
-    let u8a = u8a::parser::open(source).expect("Could not parse file!");
+    let data = read_to_vec(&source).unwrap();
+    let u8a = u8a::parser::parse(&data).expect("Could not parse file!");
 
     create_dir_all(&destination).expect("Could not create directory!");
 
-    for packedfile in u8a.files() {
+    for packedfile in u8a.files {
         let mut path = destination.clone();
         path.extend(&packedfile.path);
         create_dir_all(&path).unwrap();

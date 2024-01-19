@@ -1,30 +1,22 @@
 //! Contains the types that describe the usefull information in this filetype
 
+use std::borrow::Cow;
+use std::collections::{hash_map::Entry, HashMap};
+
 use anyhow::anyhow;
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
+use byteorder::ByteOrder;
+use dotstar_toolkit_utils::{
+    bytes_new::{
+        read::{BinaryDeserialize, NewReadError, ZeroCopyReadAt},
+        write::{BinarySerialize, NewWriteError, ZeroCopyWriteAt},
+    },
+    testing::test,
+};
+use ux::u24;
 
-/// Owned version of the decoded U8 archive that can be easily moved around
-pub struct U8ArchiveOwned<C: StableDeref> {
-    /// The yoke is used to store the backing with the reference
-    yoke: Yoke<U8Archive<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<U8Archive<'static>, C>> for U8ArchiveOwned<C> {
-    fn from(yoke: Yoke<U8Archive<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> U8ArchiveOwned<C> {
-    /// Get a reference to all files in this archive
-    pub fn files(&'a self) -> &[Node<'a>] {
-        &self.yoke.get().files
-    }
-}
+use crate::round_to_boundary;
 
 /// The decoded U8 archive
-#[derive(Yokeable)]
 pub struct U8Archive<'a> {
     /// The files
     pub files: Vec<Node<'a>>,
@@ -68,6 +60,14 @@ pub struct Node<'a> {
     pub data: &'a [u8],
 }
 
+/// A file in a U8 archive
+pub struct NewNode<'a> {
+    /// The filename
+    pub name: Cow<'a, str>,
+    /// The data
+    pub data: Cow<'a, [u8]>,
+}
+
 /// A yet to be parsed node
 #[derive(Clone, Copy)]
 pub(crate) struct UnparsedNode {
@@ -79,4 +79,351 @@ pub(crate) struct UnparsedNode {
     pub data_offset: usize,
     /// The size of the data if a file, the max index if a directory
     pub size: usize,
+}
+
+/// A unparsed node
+enum NewUnparsedNode {
+    /// A unparsed directory node
+    Directory(NewUnparsedDirectory),
+    /// A unparsed file node
+    File(NewUnparsedFile),
+}
+
+impl NewUnparsedNode {
+    const MAGIC_FILE: u8 = 0x0;
+    const MAGIC_DIRECTORY: u8 = 0x1;
+}
+
+impl<'de> BinaryDeserialize<'de> for NewUnparsedNode {
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
+    where
+        B: byteorder::ByteOrder,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let node_type = reader.read_at::<B, u8>(position)?;
+            let name_offset = reader.read_at::<B, u24>(position)?;
+            let data_offset = reader.read_at::<B, u32>(position)?;
+            let size = reader.read_at::<B, u32>(position)?;
+
+            match node_type {
+                Self::MAGIC_FILE => Ok(NewUnparsedNode::File(NewUnparsedFile {
+                    name_offset,
+                    data_offset,
+                    size,
+                })),
+                Self::MAGIC_DIRECTORY => Ok(NewUnparsedNode::Directory(NewUnparsedDirectory {
+                    name_offset,
+                    last_included_node_index: size,
+                })),
+                _ => Err(NewReadError::custom("Node magic is unknown!".into())),
+            }?
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
+}
+
+/// A unparsed directory node
+pub struct NewUnparsedDirectory {
+    /// Offset to the name from the start of the string table
+    pub name_offset: u24,
+    /// The index of the last node included in this directory
+    pub last_included_node_index: u32,
+}
+
+impl BinarySerialize for NewUnparsedDirectory {
+    fn serialize_at<B>(
+        &self,
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), NewWriteError>
+    where
+        B: byteorder::ByteOrder,
+    {
+        writer.write_at::<B>(position, &NewUnparsedNode::MAGIC_DIRECTORY)?;
+        writer.write_at::<B>(position, &self.name_offset)?;
+        writer.write_at::<B>(position, &0x0u32)?;
+        writer.write_at::<B>(position, &self.last_included_node_index)?;
+        Ok(())
+    }
+}
+
+/// A unparsed file node
+pub struct NewUnparsedFile {
+    /// Offset to the name from the start of the string table
+    pub name_offset: u24,
+    /// Offset to the data from the start of the file
+    pub data_offset: u32,
+    /// The size of the data
+    pub size: u32,
+}
+impl BinarySerialize for NewUnparsedFile {
+    fn serialize_at<B>(
+        &self,
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), NewWriteError>
+    where
+        B: byteorder::ByteOrder,
+    {
+        writer.write_at::<B>(position, &NewUnparsedNode::MAGIC_FILE)?;
+        writer.write_at::<B>(position, &self.name_offset)?;
+        writer.write_at::<B>(position, &self.data_offset)?;
+        writer.write_at::<B>(position, &self.size)?;
+        Ok(())
+    }
+}
+
+/// The contents of a U8 archive
+pub struct NewU8Archive<'a> {
+    /// The complete file tree of the archive
+    pub file_tree: FileTree<'a>,
+}
+
+impl NewU8Archive<'_> {
+    const MAGIC: u32 = 0x55AA382D;
+    const ROOTNODE_OFFSET: u32 = 0x20;
+    const PADDING: [u8; 16] = [0; 16];
+}
+
+impl<'de> BinaryDeserialize<'de> for NewU8Archive<'de> {
+    fn deserialize_at<B>(
+        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, NewReadError>
+    where
+        B: byteorder::ByteOrder,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let begin_position = *position;
+            // Check the magic value
+            let magic = reader.read_at::<B, _>(position)?;
+            test(&magic, &Self::MAGIC)?;
+            // Check the rootnode offset
+            let rootnode_offset = reader.read_at::<B, _>(position)?;
+            test(&rootnode_offset, &Self::ROOTNODE_OFFSET)?;
+            // Check that the data offset equals the header size plus the rootnode offset
+            let header_size = reader.read_at::<B, u32>(position)?;
+            let data_offset = reader.read_at::<B, u32>(position)?;
+            test(
+                &round_to_boundary(Self::ROOTNODE_OFFSET + header_size),
+                &data_offset,
+            )?;
+            // Check the padding
+            let padding = reader.read_fixed_slice_at::<16>(position)?;
+            test(&padding, &Self::PADDING)?;
+
+            let rootnode = reader.read_at::<B, NewUnparsedNode>(position)?;
+            let NewUnparsedNode::Directory(rootnode) = rootnode else {
+                Err(NewReadError::custom("Rootnode is not a directory!".into()))?
+            };
+
+            let total_nodes = rootnode.last_included_node_index;
+            let string_table_offset =
+                u64::from(Self::ROOTNODE_OFFSET + total_nodes * 12) + begin_position;
+
+            let file_tree = FileTree {
+                directories: HashMap::new(),
+                files: HashMap::new(),
+            };
+
+            let mut trees = vec![(Cow::from(""), file_tree)];
+            let mut indexes = vec![total_nodes];
+
+            for index in 2..=total_nodes {
+                let node = reader.read_at::<B, NewUnparsedNode>(position)?;
+                match node {
+                    NewUnparsedNode::Directory(node) => {
+                        let mut string_offset = u64::from(node.name_offset) + string_table_offset;
+                        let name = reader.read_null_terminated_string_at(&mut string_offset)?;
+                        let tree = FileTree {
+                            directories: HashMap::new(),
+                            files: HashMap::new(),
+                        };
+                        trees.push((name, tree));
+                        indexes.push(node.last_included_node_index);
+                    }
+                    NewUnparsedNode::File(node) => {
+                        let mut data_offset = u64::from(node.data_offset) + begin_position;
+                        let size = u64::from(node.size);
+                        let mut string_offset = u64::from(node.name_offset) + string_table_offset;
+                        let name = reader.read_null_terminated_string_at(&mut string_offset)?;
+                        let data = reader.read_slice_at(&mut data_offset, size)?;
+
+                        trees
+                            .last_mut()
+                            .unwrap_or_else(|| unreachable!())
+                            .1
+                            .files
+                            .insert(name, data);
+                        while indexes.last() != indexes.first()
+                            && index == *indexes.last().unwrap_or_else(|| unreachable!())
+                        {
+                            let tree = trees.pop().unwrap_or_else(|| unreachable!());
+                            trees
+                                .last_mut()
+                                .unwrap_or_else(|| unreachable!())
+                                .1
+                                .directories
+                                .insert(tree.0, tree.1);
+                            assert!(!indexes.pop().is_none());
+                        }
+                    }
+                }
+            }
+
+            NewU8Archive {
+                file_tree: trees.pop().unwrap_or_else(|| unreachable!()).1,
+            }
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
+}
+
+impl BinarySerialize for NewU8Archive<'_> {
+    fn serialize_at<B>(
+        &self,
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), NewWriteError>
+    where
+        B: byteorder::ByteOrder,
+    {
+        let count = self.file_tree.count();
+        let (string_table_size, string_table) = self.file_tree.string_table();
+
+        // Write the magic value
+        writer.write_at::<B>(position, &Self::MAGIC)?;
+        // Write the rootnode offset
+        writer.write_at::<B>(position, &Self::ROOTNODE_OFFSET)?;
+        // Calculate and write the header size and data offset
+        let header_size = count * 12 + u32::try_from(string_table_size).expect("UGH");
+        let mut data_offset = round_to_boundary(Self::ROOTNODE_OFFSET + header_size);
+        writer.write_at::<B>(position, &header_size)?;
+        writer.write_at::<B>(position, &data_offset)?;
+        // Write the padding
+        writer.write_at::<B>(position, &Self::PADDING)?;
+
+        fn write_filetree_rec<B: ByteOrder>(
+            writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+            position: &mut u64,
+            data_offset: &mut u32,
+            file_tree: &FileTree,
+            string_table: &HashMap<Cow<'_, str>, u24>,
+            current_idx: &mut u32, // start with one
+            name: &str,
+        ) -> Result<(), NewWriteError> {
+            // Create and write this directory node
+            let count = file_tree.count();
+            let node = NewUnparsedDirectory {
+                name_offset: *string_table.get(name).unwrap(),
+                last_included_node_index: *current_idx + count,
+            };
+            writer.write_at::<B>(position, &node)?;
+            *current_idx += 1;
+            // Write all files directly in this directory
+            for (filename, data) in &file_tree.files {
+                let size = u32::try_from(data.len()).unwrap();
+                let node = NewUnparsedFile {
+                    name_offset: *string_table
+                        .get(filename.as_ref())
+                        .unwrap_or_else(|| unreachable!()),
+                    data_offset: *data_offset,
+                    size: data.len() as u32,
+                };
+                // Write the data
+                let mut data_offset_u64 = u64::from(*data_offset);
+                writer.write_slice_at(&mut data_offset_u64, data.as_ref())?;
+                *data_offset += size;
+                // Write the file node
+                writer.write_at::<B>(position, &node)?;
+                *current_idx += 1;
+            }
+
+            // Write all subdirectories and files
+            for (name, tree) in &file_tree.directories {
+                write_filetree_rec::<B>(
+                    writer,
+                    position,
+                    data_offset,
+                    tree,
+                    string_table,
+                    current_idx,
+                    name.as_ref(),
+                )?;
+            }
+
+            Ok(())
+        }
+
+        let mut current_idx = 1;
+        write_filetree_rec::<B>(
+            writer,
+            position,
+            &mut data_offset,
+            &self.file_tree,
+            &string_table,
+            &mut current_idx,
+            "",
+        )?;
+
+        Ok(())
+    }
+}
+
+/// A recursive file tree
+pub struct FileTree<'a> {
+    /// The directories at this level
+    pub directories: HashMap<Cow<'a, str>, FileTree<'a>>,
+    /// The files at this level
+    pub files: HashMap<Cow<'a, str>, Cow<'a, [u8]>>,
+}
+
+impl FileTree<'_> {
+    fn count(&self) -> u32 {
+        let n = self.directories.len() + self.files.len();
+        let mut n = u32::try_from(n).expect("Too many nodes!");
+        for directory in self.directories.values() {
+            n = n.checked_add(directory.count()).expect("Too many nodes");
+        }
+        n
+    }
+}
+
+impl<'a> FileTree<'a> {
+    fn string_table(&self) -> (u24, HashMap<Cow<'a, str>, u24>) {
+        let mut string_map = HashMap::new();
+        let mut offset = u24::new(1);
+        self.string_table_rec(&mut string_map, &mut offset);
+        (offset, string_map)
+    }
+
+    fn string_table_rec(&self, string_map: &mut HashMap<Cow<'a, str>, u24>, offset: &mut u24) {
+        for file in &self.files {
+            if let Entry::Vacant(entry) = string_map.entry(file.0.clone()) {
+                let length = entry.key().len();
+                let length = u24::try_from(length).expect("Really?");
+                entry.insert(*offset);
+                offset.wrapping_add(length).wrapping_add(u24::new(1));
+            }
+        }
+        for directory in &self.directories {
+            if let Entry::Vacant(entry) = string_map.entry(directory.0.clone()) {
+                let length = entry.key().len();
+                let length = u24::try_from(length).expect("Really?");
+                entry.insert(*offset);
+                offset.wrapping_add(length).wrapping_add(u24::new(1));
+            }
+        }
+    }
 }
