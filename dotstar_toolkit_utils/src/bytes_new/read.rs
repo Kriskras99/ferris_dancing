@@ -93,7 +93,7 @@ pub enum NewReadError {
     Custom {
         /// The error description
         string: String,
-    }
+    },
 }
 
 impl NewReadError {
@@ -178,17 +178,13 @@ impl NewReadError {
     /// Add context for this error
     #[must_use]
     pub fn custom(string: String) -> Self {
-        Self::Custom {
-            string
-        }
+        Self::Custom { string }
     }
 
     /// Add context for this error
     #[must_use]
     pub fn with_custom<F: FnOnce() -> String>(f: F) -> Self {
-        Self::Custom {
-            string: f(),
-        }
+        Self::Custom { string: f() }
     }
 }
 

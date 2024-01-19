@@ -217,7 +217,8 @@ impl<const N: usize> BinarySerialize for [u8; N] {
         position: &mut u64,
     ) -> Result<(), NewWriteError>
     where
-        B: ByteOrder {
+        B: ByteOrder,
+    {
         writer.write_slice_at(position, self.as_slice())
     }
 }
