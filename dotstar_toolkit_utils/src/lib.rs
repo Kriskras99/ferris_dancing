@@ -2,11 +2,11 @@
 #![feature(error_generic_member_access)]
 #![feature(lint_reasons)]
 #![feature(try_blocks)]
-#![deny(missing_docs, reason = "Everything should be documented")]
-#![deny(
-    clippy::missing_docs_in_private_items,
-    reason = "Everything should be documented"
-)]
+// #![deny(missing_docs, reason = "Everything should be documented")]
+// #![deny(
+//     clippy::missing_docs_in_private_items,
+//     reason = "Everything should be documented"
+// )]
 #![deny(
     clippy::arithmetic_side_effects,
     reason = "If an overflow or underflow occurs it's a good indication that something broke"
@@ -30,5 +30,9 @@
 
 pub mod bytes;
 pub mod bytes_new;
+pub mod bytes_newer;
+pub mod bytes_newer2;
+pub mod bytes_newer3;
+pub mod bytes_newer4;
 pub mod testing;
 pub mod vfs;

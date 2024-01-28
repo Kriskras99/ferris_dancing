@@ -18,9 +18,6 @@ fn main() {
     let alias8 = Alias8::deserialize::<BigEndian>(&data.as_slice()).unwrap();
 
     for alias in alias8.aliases {
-        println!(
-            "{:04x} {} {} {}",
-            alias.unk3, alias.first_alias, alias.second_alias, alias.path
-        );
+        println!("{:04b} {} {}", alias.unk3 >> 12, alias.alias, alias.path);
     }
 }
