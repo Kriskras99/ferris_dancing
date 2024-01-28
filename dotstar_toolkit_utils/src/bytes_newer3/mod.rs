@@ -44,7 +44,7 @@ pub trait Len<'de>: BinaryDeserialize<'de> + Sized + TryFrom<usize> + TryInto<us
         position: &mut u64,
     ) -> Result<Cow<'de, [u8]>, ReadError>
     where
-        L: Len<'de>,
+        L: Len<'de>
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -70,7 +70,7 @@ pub trait Len<'de>: BinaryDeserialize<'de> + Sized + TryFrom<usize> + TryInto<us
         position: &mut u64,
     ) -> Result<Cow<'de, str>, ReadError>
     where
-        L: Len<'de>,
+        L: Len<'de>
     {
         let old_position = *position;
         let result: Result<_, _> = try {

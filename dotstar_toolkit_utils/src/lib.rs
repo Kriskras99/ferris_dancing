@@ -2,7 +2,10 @@
 #![feature(error_generic_member_access)]
 #![feature(lint_reasons)]
 #![feature(try_blocks)]
+<<<<<<< HEAD
 #![feature(once_cell_try)]
+=======
+>>>>>>> ed9674d3 ([.* Toolkit Utils] Iterate over bytes utilities)
 // #![deny(missing_docs, reason = "Everything should be documented")]
 // #![deny(
 //     clippy::missing_docs_in_private_items,

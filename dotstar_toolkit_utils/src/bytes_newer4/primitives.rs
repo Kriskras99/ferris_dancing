@@ -8,7 +8,12 @@ use super::{
 };
 
 macro_rules! create_uint {
+<<<<<<< HEAD
     ( $name:ident, $lename:ident, $bename:ident, $native:ident, $n_bytes:literal ) => {
+=======
+    ( $name:ident, $lename:ident, $bename:ident, $native:ident, $n_bytes:literal, $max:literal ) => {
+        //#[doc = concat!("You can call this as `myfoo(", stringify!($name), ")`.")]
+>>>>>>> ed9674d3 ([.* Toolkit Utils] Iterate over bytes utilities)
         #[doc = concat!(r" Unsigned integer type of ", stringify!($n_bytes), r" bytes invariant over [`Endianness`].")]
         #[doc = r""]
         #[doc = r" The alignment of this type is 1 byte."]
