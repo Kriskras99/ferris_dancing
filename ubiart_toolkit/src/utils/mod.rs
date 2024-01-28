@@ -3,13 +3,14 @@ pub mod errors;
 
 use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
 
-use byteorder::{ByteOrder, LittleEndian};
+use byteorder::LittleEndian;
 use clap::ValueEnum;
 use dotstar_toolkit_utils::{
     bytes::read_u32_at,
-    bytes_new::{
-        read::{BinaryDeserialize, NewReadError, ZeroCopyReadAt},
-        write::BinarySerialize,
+    bytes_newer4::{
+        primitives::u32be,
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAt},
+        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
     },
     testing::test,
 };
@@ -79,18 +80,15 @@ impl SplitPath<'_> {
 }
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
-    fn deserialize_at<B>(
-        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+    fn deserialize_at(
+        reader: &impl ZeroCopyReadAt<'de>,
         position: &mut u64,
-    ) -> Result<Self, NewReadError>
-    where
-        B: ByteOrder,
-    {
+    ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
-            let filename = reader.read_len_string_at::<B, u32>(position)?;
-            let path = reader.read_len_string_at::<B, u32>(position)?;
-            let path_id: u32 = reader.read_at::<B, _>(position)?;
+            let filename = reader.read_len_string_at::<u32be>(position)?;
+            let path = reader.read_len_string_at::<u32be>(position)?;
+            let path_id = reader.read_at::<u32be>(position)?.into();
             let split_path = if path.is_empty() && filename.is_empty() {
                 test(&path_id, &Self::EMPTY_PATH_ID)?;
                 SplitPath::default()
@@ -100,7 +98,7 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
                 test(&path_id, &path_id_calc)?;
                 split_path
             };
-            let padding = reader.read_at::<B, _>(position)?;
+            let padding = reader.read_at::<u32be>(position)?.into();
             test(&padding, &Self::PADDING)?;
             split_path
         };
@@ -112,22 +110,19 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
 }
 
 impl BinarySerialize for SplitPath<'_> {
-    fn serialize_at<B>(
+    fn serialize_at(
         &self,
-        writer: &mut (impl dotstar_toolkit_utils::bytes_new::write::ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
         position: &mut u64,
-    ) -> Result<(), dotstar_toolkit_utils::bytes_new::write::NewWriteError>
-    where
-        B: ByteOrder,
-    {
-        writer.write_len_string_at::<B, u32>(position, &self.filename)?;
-        writer.write_len_string_at::<B, u32>(position, &self.path)?;
+    ) -> Result<(), WriteError> {
+        writer.write_len_string_at::<u32be>(position, &self.filename)?;
+        writer.write_len_string_at::<u32be>(position, &self.path)?;
         if self.path.is_empty() && self.filename.is_empty() {
-            writer.write_at::<B>(position, &Self::EMPTY_PATH_ID)?;
+            writer.write_at(position, &u32be::from(Self::EMPTY_PATH_ID))?;
         } else {
-            writer.write_at::<B>(position, &u32::from(PathId::from(self)))?;
+            writer.write_at(position, &u32be::from(u32::from(PathId::from(self))))?;
         }
-        writer.write_at::<B>(position, &Self::PADDING)?;
+        writer.write_at(position, &u32be::from(Self::PADDING))?;
 
         Ok(())
     }

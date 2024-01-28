@@ -1,6 +1,8 @@
 use std::{fmt::Debug, num::TryFromIntError, str::Utf8Error};
 
-use dotstar_toolkit_utils::{bytes::ReadError, bytes_new::read::NewReadError, testing::TestError};
+use dotstar_toolkit_utils::{
+    bytes::ReadError, bytes_newer4::read::ReadError as NewReadError, testing::TestError,
+};
 use thiserror::Error;
 
 /// Errors returend when parsers fail
