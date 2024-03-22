@@ -39,6 +39,12 @@ fn isg_parse_nx2020_japan(input: &Path) -> datatest_stable::Result<()> {
     Ok(())
 }
 
+fn isg_parse_nx2021_unpatched(input: &Path) -> datatest_stable::Result<()> {
+    let data = read_to_vec(input)?;
+    let _ = json::parse_v21(&data, false)?;
+    Ok(())
+}
+
 fn isg_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
     let _ = json::parse_v21(&data, false)?;
@@ -69,6 +75,9 @@ datatest_stable::harness!(
     r".*\.isg\.ckd",
     isg_parse_nx2020_japan,
     "tests/isg/files/nx2020_japan",
+    r".*\.isg\.ckd",
+    isg_parse_nx2021_unpatched,
+    "tests/isg/files/nx2021_unpatched",
     r".*\.isg\.ckd",
     isg_parse_nx2021,
     "tests/isg/files/nx2021",
