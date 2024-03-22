@@ -6,7 +6,7 @@ use std::{
 
 use clap::Parser;
 use dotstar_toolkit_utils::bytes::read_to_vec;
-use image::{imageops, ImageBuffer, ImageOutputFormat, Rgba};
+use image::{imageops, ImageBuffer, ImageFormat, Rgba};
 use serde::Serialize;
 use ubiart_toolkit::cooked::{
     self,
@@ -118,7 +118,7 @@ fn main() {
 
         let path = savepath.join(format!("{stem}.png"));
         let mut fout = File::create(path).unwrap();
-        buffer.write_to(&mut fout, ImageOutputFormat::Png).unwrap();
+        buffer.write_to(&mut fout, ImageFormat::Png).unwrap();
     }
 
     if let Some(json_path) = cli.json {
