@@ -24,6 +24,7 @@ fn main() {
     let sfat = SecureFat::deserialize(&file).unwrap();
 
     if cli.header {
+        println!("GamePlatform: {:?}", sfat.game_platform());
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             println!("BundleId: {:x}, Name: {name}", u8::from(*bundle_id));
         }
