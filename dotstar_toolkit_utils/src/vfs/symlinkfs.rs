@@ -136,6 +136,6 @@ impl VirtualFileSystem for SymlinkFs<'_> {
     }
 
     fn exists(&self, path: &Path) -> bool {
-        self.mapping.get(path).is_some()
+        self.mapping.contains_key(path)
     }
 }

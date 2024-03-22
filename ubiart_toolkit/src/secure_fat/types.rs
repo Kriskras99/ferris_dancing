@@ -41,8 +41,6 @@ impl From<BundleId> for u8 {
 }
 impl IsEnabled for BundleId {}
 
-pub struct Path<'a>(&'a str, &'a str);
-
 /// Representation of secure_fat.gf
 pub struct SecureFat {
     pub(super) game_platform: GamePlatform,
