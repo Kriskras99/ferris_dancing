@@ -26,6 +26,7 @@ fn main() {
     let sfat = secure_fat::parse(&mmap, cli.lax).unwrap();
 
     if cli.header {
+        println!("GamePlatform: {:?}", sfat.game_platform());
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             println!("BundleId: {:x}, Name: {name}", u8::from(*bundle_id));
         }

@@ -425,7 +425,7 @@ pub struct GameManagerConfig21<'a> {
     #[serde(rename = "flagdb_scene")]
     pub flagdb_scene: Cow<'a, str>,
     pub wdf_player_name_prefix_on_xbox_one: Cow<'a, str>,
-    pub wdf_player_name_prefix_on_stadia: Cow<'a, str>,
+    pub wdf_player_name_prefix_on_stadia: Option<Cow<'a, str>>,
     #[serde(rename = "wdfPlayerNamePrefixNonPS4")]
     pub wdf_player_name_prefix_non_ps4: Cow<'a, str>,
     pub shortcut_descriptors: HashMap<Cow<'a, str>, ShortcutDesc1719<'a>>,
