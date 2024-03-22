@@ -10,7 +10,7 @@ struct Cli {
     source: PathBuf,
     #[arg(short, long, default_value_t = false)]
     list: bool,
-    #[arg(short, long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     header: bool,
     /// Ignore mistakes in the file format (useful for modded files)
     #[arg(long, default_value_t = false)]

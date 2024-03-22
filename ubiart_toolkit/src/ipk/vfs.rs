@@ -118,6 +118,6 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
     }
 
     fn exists(&self, path: &Path) -> bool {
-        self.ipk.get().files.get(&path_id(path)).is_some()
+        self.ipk.get().files.contains_key(&path_id(path))
     }
 }
