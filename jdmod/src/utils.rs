@@ -21,10 +21,6 @@ use ubiart_toolkit::{
 pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
     let path = path.strip_prefix('/').unwrap_or(path);
 
-    if path.ends_with('/') {
-        return Err(anyhow!("No filename specified! Path: {path}"));
-    }
-
     // Just return if it is already cooked
     if path.starts_with("cache/itf_cooked/") {
         return Ok(path.to_string());
@@ -41,6 +37,11 @@ pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
     };
 
     cooked.push_str(path);
+
+    // Early exit if there's no filename
+    if path.ends_with('/') {
+        return Ok(cooked);
+    }
 
     if let Some((_, extension)) = path.rsplit_once('.') {
         match extension {
