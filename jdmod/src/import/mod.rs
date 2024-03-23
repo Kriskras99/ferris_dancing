@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::bytes::BigEndian;
-use dotstar_toolkit_utils::bytes_new::read::BinaryDeserialize;
+use dotstar_toolkit_utils::bytes_newer4::read::BinaryDeserialize;
 use dotstar_toolkit_utils::testing::test;
 use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
 use ubiart_toolkit::alias8::Alias8;
@@ -126,7 +126,7 @@ pub fn import_vfs(
 
     // Load alias8, which contains the locations of important files
     let alias8_file = vfs.open(String::from("enginedata/common.alias8").as_ref())?;
-    let aliases = Alias8::deserialize::<BigEndian>(&alias8_file.as_ref())?;
+    let aliases = Alias8::deserialize(&alias8_file.as_ref())?;
 
     // Collect common required items in a convenient place
     let is = ImportState {

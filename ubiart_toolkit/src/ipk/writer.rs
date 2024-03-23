@@ -7,7 +7,7 @@ use std::{
 
 use byteorder::{BigEndian, WriteBytesExt};
 use dotstar_toolkit_utils::testing::test;
-use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use dotstar_toolkit_utils::vfs2::VirtualFileSystem;
 use flate2::{write::ZlibEncoder, Compression};
 
 use super::{Platform, MAGIC};
@@ -70,7 +70,7 @@ pub fn create<P: AsRef<Path>>(
     unk4: u32,
     engine_version: u32,
     options: Options,
-    vfs: &dyn VirtualFileSystem,
+    vfs: &impl VirtualFileSystem,
     files: &[&str],
 ) -> Result<(), WriterError> {
     let file = File::create(path)?;
@@ -93,7 +93,7 @@ pub fn write<W: Write + Seek>(
     unk4: u32,
     engine_version: u32,
     options: Options,
-    vfs: &dyn VirtualFileSystem,
+    vfs: &impl VirtualFileSystem,
     files: &[&str],
 ) -> Result<(), WriterError> {
     // Calculate the size of the header, starting with the static size

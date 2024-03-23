@@ -205,17 +205,17 @@ pub trait ZeroCopyWriteAt {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline(always)]
-    fn write_len_type_at<'de, L>(
+    fn write_len_type_at<'de, 'a, L>(
         &mut self,
         position: &mut u64,
-        ty: impl Iterator<Item = impl BinarySerialize> + ExactSizeIterator,
+        ty: impl Iterator<Item = &'a (impl BinarySerialize + 'a)> + ExactSizeIterator,
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
     {
         L::write_len_at(self, position, ty.len())?;
         for t in ty {
-            self.write_at(position, &t)?;
+            self.write_at(position, t)?;
         }
         Ok(())
     }

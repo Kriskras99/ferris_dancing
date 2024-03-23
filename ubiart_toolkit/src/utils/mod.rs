@@ -9,7 +9,7 @@ use dotstar_toolkit_utils::{
     bytes::read_u32_at,
     bytes_newer4::{
         primitives::u32be,
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAt},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
     },
     testing::test,
@@ -81,7 +81,7 @@ impl SplitPath<'_> {
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
     fn deserialize_at(
-        reader: &impl ZeroCopyReadAt<'de>,
+        reader: &'de impl ZeroCopyReadAtExt,
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;

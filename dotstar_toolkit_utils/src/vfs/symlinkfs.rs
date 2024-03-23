@@ -1,9 +1,7 @@
 //! # Symlink Filesystem
 //! This filesystem creates a new view of it's backing filesystem
 use std::{
-    collections::HashMap,
-    io::{Error, ErrorKind, Result},
-    path::{Path, PathBuf},
+    collections::HashMap, io::{Error, ErrorKind, Result}, path::{Path, PathBuf}, sync::Arc
 };
 
 use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
@@ -104,7 +102,7 @@ impl<'fs> SymlinkFs<'fs> {
 }
 
 impl VirtualFileSystem for SymlinkFs<'_> {
-    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<VirtualFile<'fs>> {
+    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<Arc<VirtualFile<'fs>>> {
         let actual_path = self
             .mapping
             .get(path)

@@ -1,5 +1,5 @@
 use std::{
-    backtrace::Backtrace, borrow::Cow, fs::File, marker::PhantomData, ops::Deref, rc::Rc,
+    backtrace::Backtrace, borrow::Cow, fs::File, marker::PhantomData, rc::Rc,
     str::Utf8Error, sync::Arc,
 };
 
@@ -140,7 +140,7 @@ impl ReadError {
 /// Represents a object that can be deserialized from a binary file
 pub trait BinaryDeserialize<'de>: Sized {
     /// Deserialize the object from the reader
-    fn deserialize(reader: &impl ZeroCopyReadAt<'de>) -> Result<Self, ReadError> {
+    fn deserialize(reader: &'de impl ZeroCopyReadAtExt) -> Result<Self, ReadError> {
         Self::deserialize_at(reader, &mut 0)
     }
 
@@ -148,39 +148,39 @@ pub trait BinaryDeserialize<'de>: Sized {
     ///
     /// Implementation note: Must restore position to the original value on error!
     fn deserialize_at(
-        reader: &impl ZeroCopyReadAt<'de>,
+        reader: &'de impl ZeroCopyReadAtExt,
         position: &mut u64,
     ) -> Result<Self, ReadError>;
 }
 
 impl<'de> BinaryDeserialize<'de> for u8 {
     fn deserialize_at(
-        reader: &impl ZeroCopyReadAt<'de>,
+        reader: &'de impl ZeroCopyReadAtExt,
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         reader.read_fixed_slice_at::<1>(position).map(|s| s[0])
     }
 }
 
-pub trait InnerZeroCopyReadAt<'de> {
+pub trait ZeroCopyReadAt {
     /// Read a `&str` from `source` at `position`
     ///
     /// It will read until it finds a null byte, excluding it from the string.
     /// This function increments `position` with the size of the string + 1 if successful
-    fn read_null_terminated_string_at(
-        &self,
+    fn read_null_terminated_string_at<'rf>(
+        &'rf self,
         position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError>;
+    ) -> Result<Cow<'rf, str>, ReadError>;
 
     /// Read a `&[u8]` of length `len` at `position`
     ///
     /// This function increments `position` with `len` if successful
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'de, [u8]>, ReadError>;
+    fn read_slice_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, [u8]>, ReadError>;
 
     /// Read a `&str` of length `len` at `position`
     ///
     /// This function increments `position` with `len` if successful
-    fn read_string_at(&self, position: &mut u64, len: usize) -> Result<Cow<'de, str>, ReadError> {
+    fn read_string_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, str>, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
             match self.read_slice_at(position, len)? {
@@ -217,9 +217,9 @@ pub trait InnerZeroCopyReadAt<'de> {
     }
 }
 
-impl<'de> InnerZeroCopyReadAt<'de> for File {
+impl ZeroCopyReadAt for File {
     #[inline(always)]
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'de, [u8]>, ReadError> {
+    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'static, [u8]>, ReadError> {
         let len_u64 = u64::try_from(len).unwrap();
         let new_position = position.checked_add(len_u64).ok_or_else(|| {
             ReadError::custom(format!(
@@ -237,7 +237,7 @@ impl<'de> InnerZeroCopyReadAt<'de> for File {
     fn read_null_terminated_string_at(
         &self,
         position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError> {
+    ) -> Result<Cow<'static, str>, ReadError> {
         // Buffer used to read parts from the file
         let mut read_buf = vec![0; 0x10];
         // Buffer that stores the resulting string
@@ -289,9 +289,9 @@ impl<'de> InnerZeroCopyReadAt<'de> for File {
     }
 }
 
-impl<'de> InnerZeroCopyReadAt<'de> for RandomAccessFile {
+impl ZeroCopyReadAt for RandomAccessFile {
     #[inline(always)]
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'de, [u8]>, ReadError> {
+    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'static, [u8]>, ReadError> {
         let len_u64 = u64::try_from(len).unwrap();
         let new_position = position.checked_add(len_u64).ok_or_else(|| {
             ReadError::custom(format!(
@@ -309,7 +309,7 @@ impl<'de> InnerZeroCopyReadAt<'de> for RandomAccessFile {
     fn read_null_terminated_string_at(
         &self,
         position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError> {
+    ) -> Result<Cow<'static, str>, ReadError> {
         // Buffer used to read parts from the file
         let mut read_buf = vec![0; 0x10];
         // Buffer that stores the resulting string
@@ -361,9 +361,9 @@ impl<'de> InnerZeroCopyReadAt<'de> for RandomAccessFile {
     }
 }
 
-impl<'de> InnerZeroCopyReadAt<'de> for &'de [u8] {
+impl ZeroCopyReadAt for [u8] {
     #[inline(always)]
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'de, [u8]>, ReadError> {
+    fn read_slice_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, [u8]>, ReadError> {
         let new_position = position.checked_add(len as u64).unwrap();
         let new_position_usize = usize::try_from(new_position).unwrap();
         let position_usize = usize::try_from(*position).unwrap();
@@ -376,10 +376,10 @@ impl<'de> InnerZeroCopyReadAt<'de> for &'de [u8] {
     }
 
     #[inline(always)]
-    fn read_null_terminated_string_at(
-        &self,
+    fn read_null_terminated_string_at<'rf>(
+        &'rf self,
         position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError> {
+    ) -> Result<Cow<'rf, str>, ReadError> {
         let position_usize = usize::try_from(*position).unwrap();
         // Find the null byte, starting at `position_usize`
         let null_pos = self.iter().skip(position_usize).position(|b| b == &0);
@@ -400,57 +400,62 @@ impl<'de> InnerZeroCopyReadAt<'de> for &'de [u8] {
     }
 }
 
-impl<'de, T> InnerZeroCopyReadAt<'de> for Arc<T>
-where
-    T: InnerZeroCopyReadAt<'de>,
-{
-    fn read_null_terminated_string_at(
-        &self,
+impl ZeroCopyReadAt for Vec<u8> {
+    fn read_slice_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, [u8]>, ReadError> {
+        let new_position = position.checked_add(len as u64).unwrap();
+        let new_position_usize = usize::try_from(new_position).unwrap();
+        let position_usize = usize::try_from(*position).unwrap();
+        if self.len() < (new_position_usize) {
+            todo!()
+        } else {
+            *position = new_position;
+            Ok(Cow::Borrowed(&self[position_usize..new_position_usize]))
+        }
+    }
+
+    fn read_null_terminated_string_at<'rf>(
+        &'rf self,
         position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError> {
-        self.deref().read_null_terminated_string_at(position)
-    }
-
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'de, [u8]>, ReadError> {
-        self.deref().read_slice_at(position, len)
-    }
-}
-
-impl<'de, T> InnerZeroCopyReadAt<'de> for Rc<T>
-where
-    T: InnerZeroCopyReadAt<'de>,
-{
-    fn read_null_terminated_string_at(
-        &self,
-        position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError> {
-        self.deref().read_null_terminated_string_at(position)
-    }
-
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'de, [u8]>, ReadError> {
-        self.deref().read_slice_at(position, len)
+    ) -> Result<Cow<'rf, str>, ReadError> {
+        let position_usize = usize::try_from(*position).unwrap();
+        // Find the null byte, starting at `position_usize`
+        let null_pos = self.iter().skip(position_usize).position(|b| b == &0);
+        if let Some(null_pos) = null_pos {
+            let null_pos_u64 = u64::try_from(null_pos).unwrap();
+            match std::str::from_utf8(&self[position_usize..null_pos]) {
+                Ok(str) => {
+                    *position = null_pos_u64
+                        .checked_add(1)
+                        .unwrap_or_else(|| unreachable!());
+                    Ok(Cow::Borrowed(str))
+                }
+                Err(_error) => todo!(),
+            }
+        } else {
+            Err(ReadError::no_null_byte(*position))
+        }
     }
 }
 
 /// Mark this type as trivial to clone.
 ///
 /// What is trivial?
-/// Trivial is relative, but [`Arc`] is considered trivial while `[Vec]` is not.
+/// Trivial is relative, but [`Arc`] is considered trivial while [`Vec`] is not.
 pub trait TrivialClone: Clone {}
 
 impl<T> TrivialClone for Arc<T> {}
 impl<T> TrivialClone for Rc<T> {}
 
-pub trait ZeroCopyReadAt<'de>: InnerZeroCopyReadAt<'de> + TrivialClone {
+pub trait ZeroCopyReadAtExt: ZeroCopyReadAt + TrivialClone {
     /// Read a `T` at `position`
     ///
     /// This function increments `position` with what `T` reads if successful
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the source.
-    fn read_at<T>(&self, position: &mut u64) -> Result<T, ReadError>
+    fn read_at<'rf, T>(&'rf self, position: &mut u64) -> Result<T, ReadError>
     where
-        T: BinaryDeserialize<'de>,
+        T: BinaryDeserialize<'rf>,
     {
         T::deserialize_at(self, position)
     }
@@ -463,9 +468,9 @@ pub trait ZeroCopyReadAt<'de>: InnerZeroCopyReadAt<'de> + TrivialClone {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline(always)]
-    fn read_len_string_at<L>(&self, position: &mut u64) -> Result<Cow<'de, str>, ReadError>
+    fn read_len_string_at<'rf, L>(&'rf self, position: &mut u64) -> Result<Cow<'rf, str>, ReadError>
     where
-        L: Len<'de>,
+        L: Len<'rf>,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -489,9 +494,9 @@ pub trait ZeroCopyReadAt<'de>: InnerZeroCopyReadAt<'de> + TrivialClone {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline(always)]
-    fn read_len_slice_at<L>(&self, position: &mut u64) -> Result<Cow<'de, [u8]>, ReadError>
+    fn read_len_slice_at<'rf, L>(&'rf self, position: &mut u64) -> Result<Cow<'rf, [u8]>, ReadError>
     where
-        L: Len<'de>,
+        L: Len<'rf>,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -514,13 +519,13 @@ pub trait ZeroCopyReadAt<'de>: InnerZeroCopyReadAt<'de> + TrivialClone {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline(always)]
-    fn read_len_type_at<L, T>(
-        &self,
+    fn read_len_type_at<'rf, L, T>(
+        &'rf self,
         position: &mut u64,
     ) -> Result<impl Iterator<Item = Result<T, ReadError>>, ReadError>
     where
-        L: Len<'de>,
-        T: BinaryDeserialize<'de>,
+        L: Len<'rf>,
+        T: BinaryDeserialize<'rf>,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -529,8 +534,7 @@ pub trait ZeroCopyReadAt<'de>: InnerZeroCopyReadAt<'de> + TrivialClone {
                 remaining: len,
                 position: *position,
                 _type: PhantomData,
-                _life: PhantomData,
-                reader: self.clone(),
+                reader: self,
             }
         };
         if result.is_err() {
@@ -540,37 +544,36 @@ pub trait ZeroCopyReadAt<'de>: InnerZeroCopyReadAt<'de> + TrivialClone {
     }
 }
 
-impl<'de, T> ZeroCopyReadAt<'de> for T where T: InnerZeroCopyReadAt<'de> + TrivialClone {}
+impl<T> ZeroCopyReadAtExt for T where T: ZeroCopyReadAt + TrivialClone {}
 
-pub struct LenTypeIterator<'de, T, R: ZeroCopyReadAt<'de>>
+pub struct LenTypeIterator<'rf, T, R: ZeroCopyReadAtExt>
 where
-    T: BinaryDeserialize<'de>,
+    T: BinaryDeserialize<'rf>,
 {
     remaining: usize,
     position: u64,
     _type: PhantomData<T>,
-    _life: PhantomData<&'de bool>,
-    reader: R,
+    reader: &'rf R,
 }
 
-impl<'de, T, R: ZeroCopyReadAt<'de>> LenTypeIterator<'de, T, R>
+impl<'rf, T, R: ZeroCopyReadAtExt> LenTypeIterator<'rf, T, R>
 where
-    T: BinaryDeserialize<'de>,
+    T: BinaryDeserialize<'rf>,
 {
     pub fn current_position(&self) -> u64 {
         self.position
     }
 }
 
-impl<'de, T, R: ZeroCopyReadAt<'de>> Iterator for LenTypeIterator<'de, T, R>
+impl<'rf, T, R: ZeroCopyReadAtExt> Iterator for LenTypeIterator<'rf, T, R>
 where
-    T: BinaryDeserialize<'de>,
+    T: BinaryDeserialize<'rf>,
 {
     type Item = Result<T, ReadError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.remaining > 0 {
-            let res = T::deserialize_at(&self.reader, &mut self.position);
+            let res = T::deserialize_at(self.reader, &mut self.position);
             if res.is_ok() {
                 self.remaining -= 1;
             }

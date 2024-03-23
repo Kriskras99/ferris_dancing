@@ -1,18 +1,19 @@
 pub mod endian;
 pub mod primitives;
+pub mod primitives2;
 pub mod read;
 pub mod write;
 
 use self::read::BinaryDeserialize;
 use self::read::ReadError;
-use self::read::ZeroCopyReadAt;
+use self::read::ZeroCopyReadAtExt;
 use self::write::BinarySerialize;
 use self::write::WriteError;
 use self::write::ZeroCopyWriteAt;
 
 /// Represents the length of a string or slice to read from the reader
-pub trait Len<'de>:
-    BinaryDeserialize<'de> + BinarySerialize + Sized + TryFrom<usize> + TryInto<usize>
+pub trait Len<'rf>:
+    BinaryDeserialize<'rf> + BinarySerialize + Sized + TryFrom<usize> + TryInto<usize>
 {
     /// Read the length at `position`
     ///
@@ -21,7 +22,7 @@ pub trait Len<'de>:
     /// # Errors
     /// This function will return an error when `Len` would be (partially) outside the source or the `Len` does not fit into a u64.
     fn read_len_at(
-        reader: &impl ZeroCopyReadAt<'de>,
+        reader: &'rf impl ZeroCopyReadAtExt,
         position: &mut u64,
     ) -> Result<usize, ReadError> {
         let old_position = *position;

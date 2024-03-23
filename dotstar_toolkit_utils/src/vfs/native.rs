@@ -1,10 +1,7 @@
 //! # Native Filesystem
 //! This implements the virtual filesystem for the local filesystem (aka [`std::fs`])
 use std::{
-    fs::{self, OpenOptions},
-    io::{self, Error, ErrorKind, Result},
-    path::{Path, PathBuf},
-    time::SystemTime,
+    collections::{hash_map::Entry, HashMap}, fs::{self, OpenOptions}, io::{self, Error, ErrorKind, Result}, path::{Path, PathBuf}, sync::{Arc, Mutex, Weak}, time::SystemTime
 };
 
 use memmap2::Mmap;
@@ -15,6 +12,8 @@ use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
 pub struct Native {
     /// The root of this filesystem, no operations are allowed outside it
     root: PathBuf,
+    /// Cache open files
+    cache: Mutex<HashMap<PathBuf, Weak<VirtualFile<'static>>>>,
 }
 
 impl Native {
@@ -25,6 +24,7 @@ impl Native {
     pub fn new(root: &Path) -> Result<Self> {
         Ok(Self {
             root: fs::canonicalize(root)?,
+            cache: Mutex::new(HashMap::new()),
         })
     }
 
@@ -72,10 +72,31 @@ impl Native {
 }
 
 impl VirtualFileSystem for Native {
-    fn open(&self, path: &Path) -> std::io::Result<VirtualFile<'static>> {
+    fn open(&self, path: &Path) -> std::io::Result<Arc<VirtualFile<'static>>> {
         let path = Self::canonicalize(self, path)?;
-        let mmap = unsafe { Mmap::map(&OpenOptions::new().read(true).open(path)?)? };
-        Ok(VirtualFile::from(mmap))
+        let mut cache = self.cache.lock().unwrap();
+        let vfile = match cache.entry(path) {
+            Entry::Occupied(mut entry) => {
+                match entry.get().upgrade() {
+                    Some(vfile) => vfile,
+                    None => {
+                        let mmap = unsafe { Mmap::map(&OpenOptions::new().read(true).open(entry.key())?)? };
+                        let vfile = Arc::new(VirtualFile::Mmap(mmap));
+                        let weak = Arc::downgrade(&vfile);
+                        entry.insert(weak);
+                        vfile
+                    },
+                }
+            },
+            Entry::Vacant(entry) => {
+                let mmap = unsafe { Mmap::map(&OpenOptions::new().read(true).open(entry.key())?)? };
+                let vfile = Arc::new(VirtualFile::Mmap(mmap));
+                let weak = Arc::downgrade(&vfile);
+                entry.insert(weak);
+                vfile
+            },
+        };
+        Ok(vfile)
     }
 
     fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
