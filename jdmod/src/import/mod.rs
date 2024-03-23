@@ -93,11 +93,26 @@ pub fn import(
         import_vfs(&sfat_vfs, dir_root, game, platform, lax, songs_only)?;
     } else if game_path.is_dir() {
         let native_vfs = Native::new(game_path)?;
+
+        let game = if let Some(game) = game {
+            game
+        } else {
+            println!("No game specified, assuming {}", Game::JustDance2022);
+            Game::JustDance2022
+        };
+
+        let platform = if let Some(platform) = platform {
+            platform
+        } else {
+            println!("No platform specified, assuming {}", Platform::Nx);
+            Platform::Nx
+        };
+
         import_vfs(
             &native_vfs,
             dir_root,
-            game.unwrap_or(Game::JustDance2022),
-            platform.unwrap_or(Platform::Nx),
+            game,
+            platform,
             lax,
             songs_only,
         )?;
@@ -117,6 +132,8 @@ pub fn import_vfs(
     lax: bool,
     songs_only: bool,
 ) -> Result<(), Error> {
+    println!("Importing {game} for {platform}");
+
     // Make sure the directory tree is intact
     let dirs = DirectoryTree::new(dir_root);
     test(&dirs.exists(), &true)?;
