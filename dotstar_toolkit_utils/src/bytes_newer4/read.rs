@@ -1,6 +1,6 @@
 use std::{
-    backtrace::Backtrace, borrow::Cow, fs::File, marker::PhantomData, rc::Rc,
-    str::Utf8Error, sync::Arc,
+    backtrace::Backtrace, borrow::Cow, fs::File, marker::PhantomData, rc::Rc, str::Utf8Error,
+    sync::Arc,
 };
 
 use positioned_io::{RandomAccessFile, ReadAt as PRead};
@@ -175,12 +175,20 @@ pub trait ZeroCopyReadAt {
     /// Read a `&[u8]` of length `len` at `position`
     ///
     /// This function increments `position` with `len` if successful
-    fn read_slice_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, [u8]>, ReadError>;
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError>;
 
     /// Read a `&str` of length `len` at `position`
     ///
     /// This function increments `position` with `len` if successful
-    fn read_string_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, str>, ReadError> {
+    fn read_string_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, str>, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
             match self.read_slice_at(position, len)? {
@@ -219,7 +227,11 @@ pub trait ZeroCopyReadAt {
 
 impl ZeroCopyReadAt for File {
     #[inline(always)]
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'static, [u8]>, ReadError> {
+    fn read_slice_at(
+        &self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'static, [u8]>, ReadError> {
         let len_u64 = u64::try_from(len).unwrap();
         let new_position = position.checked_add(len_u64).ok_or_else(|| {
             ReadError::custom(format!(
@@ -291,7 +303,11 @@ impl ZeroCopyReadAt for File {
 
 impl ZeroCopyReadAt for RandomAccessFile {
     #[inline(always)]
-    fn read_slice_at(&self, position: &mut u64, len: usize) -> Result<Cow<'static, [u8]>, ReadError> {
+    fn read_slice_at(
+        &self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'static, [u8]>, ReadError> {
         let len_u64 = u64::try_from(len).unwrap();
         let new_position = position.checked_add(len_u64).ok_or_else(|| {
             ReadError::custom(format!(
@@ -363,7 +379,11 @@ impl ZeroCopyReadAt for RandomAccessFile {
 
 impl ZeroCopyReadAt for [u8] {
     #[inline(always)]
-    fn read_slice_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, [u8]>, ReadError> {
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError> {
         let new_position = position.checked_add(len as u64).unwrap();
         let new_position_usize = usize::try_from(new_position).unwrap();
         let position_usize = usize::try_from(*position).unwrap();
@@ -401,7 +421,11 @@ impl ZeroCopyReadAt for [u8] {
 }
 
 impl ZeroCopyReadAt for Vec<u8> {
-    fn read_slice_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, [u8]>, ReadError> {
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError> {
         let new_position = position.checked_add(len as u64).unwrap();
         let new_position_usize = usize::try_from(new_position).unwrap();
         let position_usize = usize::try_from(*position).unwrap();

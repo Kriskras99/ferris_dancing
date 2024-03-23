@@ -293,7 +293,8 @@ impl BinarySerialize for NewU8Archive<'_> {
         writer.write_at(position, &Self::ROOTNODE_OFFSET)?;
         // Calculate and write the header size and data offset
         let header_size = u32be::from(count * 12 + u32::try_from(string_table_size).expect("UGH"));
-        let data_offset = round_to_boundary(Self::ROOTNODE_OFFSET.checked_add(header_size).unwrap());
+        let data_offset =
+            round_to_boundary(Self::ROOTNODE_OFFSET.checked_add(header_size).unwrap());
         writer.write_at(position, &header_size)?;
         writer.write_at(position, &data_offset)?;
         // Write the padding
@@ -320,9 +321,12 @@ impl BinarySerialize for NewU8Archive<'_> {
             for (filename, data) in &file_tree.files {
                 let size = u32::try_from(data.len()).unwrap();
                 let node = NewUnparsedFile {
-                    name_offset: u24be::try_from(*string_table
-                        .get(filename.as_ref())
-                        .unwrap_or_else(|| unreachable!())).unwrap(),
+                    name_offset: u24be::try_from(
+                        *string_table
+                            .get(filename.as_ref())
+                            .unwrap_or_else(|| unreachable!()),
+                    )
+                    .unwrap(),
                     data_offset: u32be::from(*data_offset),
                     size: u32be::try_from(data.len()).unwrap(),
                 };
@@ -398,14 +402,22 @@ impl<'a> FileTree<'a> {
             if let Entry::Vacant(entry) = string_map.entry(file.0.clone()) {
                 let length = entry.key().len();
                 entry.insert(*offset);
-                offset.checked_add(length.try_into().unwrap()).unwrap().checked_add(1).unwrap();
+                offset
+                    .checked_add(length.try_into().unwrap())
+                    .unwrap()
+                    .checked_add(1)
+                    .unwrap();
             }
         }
         for directory in &self.directories {
             if let Entry::Vacant(entry) = string_map.entry(directory.0.clone()) {
                 let length = entry.key().len();
                 entry.insert(*offset);
-                offset.checked_add(length.try_into().unwrap()).unwrap().checked_add(1).unwrap();
+                offset
+                    .checked_add(length.try_into().unwrap())
+                    .unwrap()
+                    .checked_add(1)
+                    .unwrap();
             }
         }
     }

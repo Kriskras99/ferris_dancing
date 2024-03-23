@@ -50,7 +50,7 @@ impl<'f, Vfs: VirtualFileSystem> SfatFilesystem<'f, Vfs> {
                 .unwrap_or_else(|| unreachable!())
         }
     }
-    
+
     /// Create a new virtual filesystem from a secure_fat.gf at `path`
     pub fn new(fs: &'f Vfs, path: &Path, lax: bool) -> std::io::Result<Self> {
         let sfat_file = fs.open(path).map_err(|error| {

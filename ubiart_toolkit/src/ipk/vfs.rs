@@ -1,4 +1,8 @@
-use std::{io::ErrorKind, path::Path, sync::{Arc, Weak}};
+use std::{
+    io::ErrorKind,
+    path::Path,
+    sync::{Arc, Weak},
+};
 
 use dotstar_toolkit_utils::vfs2::{VirtualFile, VirtualFileSystem};
 use nohash_hasher::IntMap;
@@ -29,13 +33,9 @@ impl<'fs, Fs: VirtualFileSystem> IpkFilesystem<'fs, Fs::VirtualFile<'fs>> {
     pub fn unk4(&self) -> u32 {
         self.unk4
     }
-    
+
     /// Create a new virtual filesystem from the IPK file at `path`.
-    pub fn new(
-        fs: &'fs Fs,
-        path: &Path,
-        lax: bool,
-    ) -> Result<Self, std::io::Error> {
+    pub fn new(fs: &'fs Fs, path: &Path, lax: bool) -> Result<Self, std::io::Error> {
         let ipk_file = fs.open(path)?;
         let mut engine_version = 0;
         let mut unk4 = 0;
@@ -45,7 +45,8 @@ impl<'fs, Fs: VirtualFileSystem> IpkFilesystem<'fs, Fs::VirtualFile<'fs>> {
                 engine_version = bundle.engine_version;
                 unk4 = bundle.unk4;
                 bundle.files
-            }).map_err(|e| std::io::Error::other(format!("Parsing of IPK failed: {e:?}")))?;
+            })
+            .map_err(|e| std::io::Error::other(format!("Parsing of IPK failed: {e:?}")))?;
         Ok(Self {
             ipk,
             cache: IntMap::default(),
@@ -119,7 +120,7 @@ impl<'fs, Vf: VirtualFile<'fs>> VirtualFileSystem for IpkFilesystem<'fs, Vf> {
     // }
 
     fn list_files(&self, path: &Path) -> std::io::Result<impl Iterator<Item = &'fs Path>> {
-        self.ipk.get().files()
+        self.ipk.get().files();
 
         if let Some(path) = path.to_str() {
             Ok(self

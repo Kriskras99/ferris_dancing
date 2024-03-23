@@ -1,9 +1,12 @@
-use std::{borrow::Cow, collections::HashMap, io::{self, ErrorKind}, path::{Path, PathBuf}};
-
-use crate::bytes_newer4::read::{ReadError, TrivialClone, ZeroCopyReadAt};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    io::{self, ErrorKind},
+    path::{Path, PathBuf},
+};
 
 use super::{VirtualFile, VirtualFileSystem};
-
+use crate::bytes_newer4::read::{ReadError, TrivialClone, ZeroCopyReadAt};
 
 /// A completely in-memory filesystem, storing files as [`Vec`]s.
 #[derive(Debug, Clone, Default)]
@@ -84,18 +87,20 @@ impl VirtualFileSystem for VecFs {
 
     fn open<'fs>(&'fs self, path: &Path) -> io::Result<Self::VirtualFile<'fs>> {
         if let Some(file) = self.files.get(path) {
-            Ok(VecFile { data: file.as_slice() })
+            Ok(VecFile {
+                data: file.as_slice(),
+            })
         } else {
             Err(ErrorKind::NotFound.into())
         }
     }
 
     fn list_files<'fs>(&'fs self, path: &Path) -> io::Result<impl Iterator<Item = &'fs Path>> {
-        Ok(
-            self.files.keys()
-                .filter(move |p| p.starts_with(path))
-                .map(|p| p.as_path())
-        )
+        Ok(self
+            .files
+            .keys()
+            .filter(move |p| p.starts_with(path))
+            .map(|p| p.as_path()))
     }
 
     fn exists(&self, path: &Path) -> bool {
@@ -105,7 +110,7 @@ impl VirtualFileSystem for VecFs {
 
 #[derive(Debug, Clone, Copy)]
 pub struct VecFile<'fs> {
-    data: &'fs [u8]
+    data: &'fs [u8],
 }
 
 impl TrivialClone for VecFile<'_> {}

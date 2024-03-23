@@ -159,10 +159,9 @@ macro_rules! impl_pow2_uint {
                     bytes: value.to_ne_bytes(),
                     byteorder: PhantomData,
                 }
-
             }
         }
-    }
+    };
 }
 
 impl_pow2_uint!(U16, u16);
@@ -205,8 +204,6 @@ macro_rules! impl_non_pow2_uint {
             }
         }
 
-
-
         impl<E: Endianness> $name<E> {
             pub const fn new(value: $native) -> Self {
                 if value > $max {
@@ -234,12 +231,10 @@ macro_rules! impl_non_pow2_uint {
                     bytes,
                     byteorder: PhantomData,
                 }
-
             }
         }
     };
 }
-
 
 impl_non_pow2_uint!(U24, u32, 3, 0xFFFF_FF);
 impl_non_pow2_uint!(U40, u64, 5, 0xFFFF_FFFF_FF);
@@ -254,16 +249,27 @@ macro_rules! impl_widening_pow2_uint {
                 let mut new_bytes = [0; std::mem::size_of::<$native>()];
                 #[cfg(target_endian = "big")]
                 {
-                    new_bytes.as_mut_slice().split_at_mut(std::mem::size_of::<$native>() - $n_bytes).1.copy_from_slice(value.bytes.as_slice());
+                    new_bytes
+                        .as_mut_slice()
+                        .split_at_mut(std::mem::size_of::<$native>() - $n_bytes)
+                        .1
+                        .copy_from_slice(value.bytes.as_slice());
                 }
                 #[cfg(target_endian = "little")]
                 {
-                    new_bytes.as_mut_slice().split_at_mut(std::mem::size_of::<$native>() - (std::mem::size_of::<$native>() - $n_bytes)).0.copy_from_slice(value.bytes.as_slice());
+                    new_bytes
+                        .as_mut_slice()
+                        .split_at_mut(
+                            std::mem::size_of::<$native>()
+                                - (std::mem::size_of::<$native>() - $n_bytes),
+                        )
+                        .0
+                        .copy_from_slice(value.bytes.as_slice());
                 }
                 $native::from_ne_bytes(new_bytes)
             }
         }
-    }
+    };
 }
 
 impl_widening_pow2_uint!(U24, u64, 3);
