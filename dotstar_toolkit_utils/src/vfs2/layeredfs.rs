@@ -1,12 +1,15 @@
 //! # Overlay Filesystem
 //! Implements a filesystem that overlays two filesystems, preferring the upper filesystem for operations.
 use std::{
-    borrow::Cow, collections::HashSet, io::{self, ErrorKind}, marker::PhantomData, path::Path
+    borrow::Cow,
+    collections::HashSet,
+    io::{self, ErrorKind},
+    marker::PhantomData,
+    path::Path,
 };
 
-use crate::bytes_newer4::read::{ReadError, TrivialClone, ZeroCopyReadAt};
-
 use super::{VirtualFile, VirtualFileSystem};
+use crate::bytes_newer4::read::{ReadError, TrivialClone, ZeroCopyReadAt};
 
 /// A filesystem that overlays two filesystems, preferring the upper filesystem for operations.
 pub struct OverlayFs<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> {
@@ -23,7 +26,9 @@ impl<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> OverlayFs<'fsa,
     }
 }
 
-impl<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> VirtualFileSystem for OverlayFs<'fsa, 'fsb, FsA, FsB> {
+impl<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> VirtualFileSystem
+    for OverlayFs<'fsa, 'fsb, FsA, FsB>
+{
     type VirtualFile<'fs> = OverlayFile<'fs, FsA::VirtualFile<'fs>, FsB::VirtualFile<'fs>> where FsA: 'fs, FsB: 'fs, Self: 'fs;
 
     fn open<'fs>(&'fs self, path: &Path) -> io::Result<Self::VirtualFile<'fs>> {
@@ -54,9 +59,14 @@ pub enum OverlayFile<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> {
     Phantom(PhantomData<&'fs u8>),
 }
 
-impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> TrivialClone for OverlayFile<'fs, VfA, VfB> {}
+impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> TrivialClone
+    for OverlayFile<'fs, VfA, VfB>
+{
+}
 
-impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> ZeroCopyReadAt for OverlayFile<'fs, VfA, VfB> {
+impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> ZeroCopyReadAt
+    for OverlayFile<'fs, VfA, VfB>
+{
     fn read_null_terminated_string_at<'rf>(
         &'rf self,
         position: &mut u64,
@@ -64,17 +74,24 @@ impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> ZeroCopyReadAt for Overl
         match self {
             OverlayFile::Upper(upper) => upper.read_null_terminated_string_at(position),
             OverlayFile::Lower(lower) => lower.read_null_terminated_string_at(position),
-            OverlayFile::Phantom(_) => unreachable!()
+            OverlayFile::Phantom(_) => unreachable!(),
         }
     }
 
-    fn read_slice_at<'rf>(&'rf self, position: &mut u64, len: usize) -> Result<Cow<'rf, [u8]>, ReadError> {
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError> {
         match self {
             OverlayFile::Upper(upper) => upper.read_slice_at(position, len),
             OverlayFile::Lower(lower) => lower.read_slice_at(position, len),
-            OverlayFile::Phantom(_) => unreachable!()
+            OverlayFile::Phantom(_) => unreachable!(),
         }
     }
 }
 
-impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> VirtualFile<'fs> for OverlayFile<'fs, VfA, VfB> {}
+impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> VirtualFile<'fs>
+    for OverlayFile<'fs, VfA, VfB>
+{
+}

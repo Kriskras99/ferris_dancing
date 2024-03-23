@@ -2,12 +2,14 @@ use std::path::Path;
 
 use crate::bytes_newer4::read::ZeroCopyReadAtExt;
 
-pub mod vecfs;
 pub mod layeredfs;
+pub mod vecfs;
 
 /// Represents the operations that can be done on a readonly filesystem
 pub trait VirtualFileSystem: Sync {
-    type VirtualFile<'fs>: VirtualFile<'fs> where Self: 'fs;
+    type VirtualFile<'fs>: VirtualFile<'fs>
+    where
+        Self: 'fs;
 
     /// Open a file at `path`
     ///
