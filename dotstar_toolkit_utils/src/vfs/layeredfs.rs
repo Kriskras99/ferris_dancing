@@ -1,8 +1,7 @@
 //! # Overlay Filesystem
 //! Implements a filesystem that overlays two filesystems, preferring the upper filesystem for operations.
 use std::{
-    io::{ErrorKind, Result},
-    path::Path,
+    io::{ErrorKind, Result}, path::Path, sync::Arc
 };
 
 use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
@@ -23,7 +22,7 @@ impl<'fs> OverlayFs<'fs> {
 }
 
 impl VirtualFileSystem for OverlayFs<'_> {
-    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<VirtualFile<'fs>> {
+    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<Arc<VirtualFile<'fs>>> {
         if let Ok(file) = self.upper.open(path) {
             Ok(file)
         } else if let Ok(file) = self.lower.open(path) {

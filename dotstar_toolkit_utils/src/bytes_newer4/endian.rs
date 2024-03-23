@@ -8,7 +8,7 @@ mod sealed {
 ///
 /// This trait is sealed, it's only implementers are [`LittleEndian`] and [`BigEndian`].
 /// There are also two type aliases, [`NativeEndian`] and [`NetworkEndian`].
-pub trait Endianness: Sealed {
+pub trait Endianness: Sealed + Clone + Copy + std::fmt::Debug + PartialEq {
     fn to_native(bytes: &mut [u8]);
 
     #[inline(always)]
@@ -17,6 +17,7 @@ pub trait Endianness: Sealed {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LittleEndian {}
 
 impl Sealed for LittleEndian {}
@@ -32,6 +33,7 @@ impl Endianness for LittleEndian {
     fn to_native(_bytes: &mut [u8]) {}
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BigEndian {}
 pub type NetworkEndian = BigEndian;
 

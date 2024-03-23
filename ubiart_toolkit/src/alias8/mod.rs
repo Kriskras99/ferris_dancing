@@ -25,8 +25,8 @@ use std::{borrow::Cow, collections::HashMap};
 use bitflags::bitflags;
 use dotstar_toolkit_utils::{
     bytes_newer4::{
-        primitives::{u16be, u32be, U16, U32},
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAt},
+        primitives::{u16be, u32be},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
     },
     testing::{test, test_any},
@@ -78,23 +78,22 @@ impl Alias<'_> {
     ];
 }
 
-impl<'a> BinaryDeserialize<'a> for Alias<'a> {
+impl<'de> BinaryDeserialize<'de> for Alias<'de> {
     fn deserialize_at(
-        reader: &impl ZeroCopyReadAt<'a>,
+        reader: &'de impl ZeroCopyReadAtExt,
         position: &mut u64,
     ) -> Result<Self, ReadError> {
-        use dotstar_toolkit_utils::bytes_newer4::endian::BigEndian;
         let old_position = *position;
         let result: Result<_, _> = try {
             // Read the strings
-            let alias = reader.read_len_string_at::<U32<BigEndian>>(position)?;
-            let second_alias = reader.read_len_string_at::<U32<BigEndian>>(position)?;
+            let alias = reader.read_len_string_at::<u32be>(position)?;
+            let second_alias = reader.read_len_string_at::<u32be>(position)?;
             test(&alias, &second_alias).context("1st and 2nd alias are not the same!")?;
             let path = reader.read_at(position)?;
 
             // Read the unknown values and check them
-            let unk2 = reader.read_at::<U16<BigEndian>>(position)?.into();
-            let unk3 = reader.read_at::<U16<BigEndian>>(position)?.into();
+            let unk2 = reader.read_at::<u16be>(position)?.into();
+            let unk3 = reader.read_at::<u16be>(position)?.into();
             test(&unk2, &Self::UNK2)?;
             test_any(&unk3, Self::UNK3)?;
 
@@ -129,7 +128,7 @@ pub struct Alias8<'a> {
     aliases: HashMap<Cow<'a, str>, Alias<'a>>,
 }
 
-impl Alias8<'_> {
+impl<'a> Alias8<'a> {
     /// UNK1 is always 0x2
     const UNK1: u32 = 0x2;
 
@@ -138,22 +137,25 @@ impl Alias8<'_> {
     pub fn get_path_for_alias(&self, alias: &str) -> Option<String> {
         self.aliases.get(alias).map(|a| a.path.to_string())
     }
+
+    pub fn aliases(&self) -> impl Iterator<Item = &Alias<'a>> {
+        self.aliases.values()
+    }
 }
 
-impl<'a> BinaryDeserialize<'a> for Alias8<'a> {
+impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
     fn deserialize_at(
-        reader: &impl ZeroCopyReadAt<'a>,
+        reader: &'de impl ZeroCopyReadAtExt,
         position: &mut u64,
     ) -> Result<Self, ReadError> {
-        use dotstar_toolkit_utils::bytes_newer4::endian::BigEndian;
         let old_position = *position;
         let result: Result<_, _> = try {
             // Read the unknown value at the beginning and check it's correct
-            let unk1 = reader.read_at::<U32<BigEndian>>(position)?.into();
+            let unk1 = reader.read_at::<u32be>(position)?.into();
             test(&unk1, &Self::UNK1)?;
 
             // Read the aliases
-            let lazy_aliases = reader.read_len_type_at::<U32<BigEndian>, Alias>(position)?;
+            let lazy_aliases = reader.read_len_type_at::<u32be, Alias>(position)?;
             let mut aliases = HashMap::with_capacity(lazy_aliases.size_hint().0);
             for alias in lazy_aliases {
                 let alias = alias?;
@@ -176,8 +178,7 @@ impl BinarySerialize for Alias8<'_> {
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_at(position, &u32be::from(Self::UNK1))?;
-        let aliases: Vec<_> = self.aliases.values().collect();
-        writer.write_len_type_at(position, &mut self.aliases.values())?;
+        writer.write_len_type_at::<u32be>(position, &mut self.aliases.values())?;
         Ok(())
     }
 }

@@ -1,9 +1,7 @@
 //! # Vec-backed Filesystem
 //! This is a completely in-memory filesystem, storing files as [`Vec`]s.
 use std::{
-    collections::HashMap,
-    io::{Error, ErrorKind, Result},
-    path::Path,
+    collections::HashMap, io::{Error, ErrorKind, Result}, path::Path, sync::Arc
 };
 
 use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
@@ -74,9 +72,9 @@ impl IntoIterator for VecFs {
 }
 
 impl VirtualFileSystem for VecFs {
-    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<VirtualFile<'fs>> {
+    fn open<'fs>(&'fs self, path: &Path) -> Result<Arc<VirtualFile<'fs>>> {
         if let Some(file) = path.to_str().and_then(|s| self.files.get(s)) {
-            Ok(VirtualFile::from(file.as_slice()))
+            Ok(Arc::new(VirtualFile::Slice(file.as_slice())))
         } else {
             Err(ErrorKind::NotFound.into())
         }

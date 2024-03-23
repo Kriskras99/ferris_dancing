@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-
 pub trait Endianness {
     fn to_native(bytes: &mut [u8]);
 }

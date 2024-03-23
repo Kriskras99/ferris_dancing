@@ -17,6 +17,8 @@
 //! This crate has no features that can be enabled
 //!
 
+use dotstar_toolkit_utils::bytes_newer4::primitives::u32be;
+
 pub mod u8a; // wii .app files
 pub mod wad; // wii .wad files
 
@@ -24,8 +26,8 @@ pub mod wad; // wii .wad files
 ///
 /// # Panics
 /// Will panic if the rounding would overflow
-fn round_to_boundary(n: u32) -> u32 {
-    n.checked_add(0x3F)
-        .map(|n| n & (!0x3F))
+fn round_to_boundary(n: u32be) -> u32be {
+    n.checked_add(u32be::from(0x3F))
+        .map(|n| n & (!u32be::from(0x3F)))
         .expect("Overflow occurred!")
 }

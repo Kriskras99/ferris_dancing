@@ -1,9 +1,10 @@
 //! Virtual Filesystem
 //! Contains traits for a virtual filesystem and implementations of some basic filesystems.
-use std::{io::Result, ops::Deref, path::Path};
+use std::{borrow::Cow, ops::Deref, path::Path, sync::Arc};
 
 use memmap2::Mmap;
-use stable_deref_trait::StableDeref;
+
+use crate::bytes_newer4::read::{ZeroCopyReadAt, ReadError};
 
 pub mod layeredfs;
 pub mod native;
@@ -16,19 +17,19 @@ pub trait VirtualFileSystem: Sync {
     ///
     /// # Errors
     /// Can error if the file does not exist or if file access failed
-    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<VirtualFile<'fs>>;
+    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<Arc<VirtualFile<'fs>>>;
 
     /// Get the metadata for the file at `path`
     ///
     /// # Errors
     /// Can error if the file does not exist or if file access failed
-    fn metadata(&self, path: &Path) -> Result<Box<dyn VirtualFileMetadata>>;
+    fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>>;
 
     /// List all files at `path` and deeper
     ///
     /// # Errors
     /// Can error if the directory does not exist or if directory access failed
-    fn list_files(&self, path: &Path) -> Result<Vec<String>>;
+    fn list_files(&self, path: &Path) -> std::io::Result<Vec<String>>;
 
     /// Check if `path` exists
     fn exists(&self, path: &Path) -> bool;
@@ -46,7 +47,7 @@ pub trait VirtualFileMetadata {
     ///
     /// # Errors
     /// Can error if creation time is not available or file access failed
-    fn created(&self) -> Result<u64>;
+    fn created(&self) -> std::io::Result<u64>;
 }
 
 /// The content of a file from a filesystem
@@ -57,6 +58,19 @@ pub enum VirtualFile<'f> {
     Vec(Vec<u8>),
     /// The content is is a mmap
     Mmap(Mmap),
+}
+
+impl<'vf> ZeroCopyReadAt for VirtualFile<'vf> {
+    fn read_null_terminated_string_at<'de>(
+        &'de self,
+        position: &mut u64,
+    ) -> Result<Cow<'de, str>, ReadError> {
+        self.deref().read_null_terminated_string_at(position)
+    }
+
+    fn read_slice_at<'de>(&'de self, position: &mut u64, len: usize) -> Result<Cow<'de, [u8]>, ReadError> {
+        self.deref().read_slice_at(position, len)
+    }
 }
 
 impl<'f> From<&'f [u8]> for VirtualFile<'f> {
@@ -76,17 +90,3 @@ impl From<Mmap> for VirtualFile<'_> {
         Self::Mmap(value)
     }
 }
-
-impl Deref for VirtualFile<'_> {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            VirtualFile::Slice(value) => value,
-            VirtualFile::Vec(value) => value,
-            VirtualFile::Mmap(value) => value,
-        }
-    }
-}
-
-unsafe impl StableDeref for VirtualFile<'_> {}
