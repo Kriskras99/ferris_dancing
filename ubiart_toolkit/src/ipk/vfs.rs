@@ -1,57 +1,96 @@
 use std::{
+    borrow::Cow,
+    collections::hash_map::Entry,
     io::ErrorKind,
-    path::Path,
-    sync::{Arc, Weak},
+    ops::Deref,
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex, OnceLock, Weak},
 };
 
-use dotstar_toolkit_utils::vfs2::{VirtualFile, VirtualFileSystem};
+use dotstar_toolkit_utils::{
+    bytes::read::{BinaryDeserialize, ReadError, TrivialClone, ZeroCopyReadAt},
+    vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata},
+};
 use nohash_hasher::IntMap;
-use yoke::Yoke;
 
-use super::IpkFile;
+use super::{Bundle, IpkFile};
 use crate::utils::{path_id, PathId};
 
-pub struct IpkFilesystem<'fs, VF: VirtualFile<'fs>> {
-    ipk: Yoke<IntMap<PathId, IpkFile<'static>>, VF>,
-    cache: IntMap<PathId, Weak<[u8]>>,
-    engine_version: u32,
-    unk4: u32,
+pub struct IpkFilesystem<'fs> {
+    bundle: Bundle<'fs>,
+    cache: Mutex<IntMap<PathId, Weak<Vec<u8>>>>,
+    list: OnceLock<Vec<PathBuf>>,
 }
 
+#[derive(Debug, Clone)]
 pub enum IpkFileS<'fs> {
     Uncompressed(&'fs [u8]),
-    Compressed(Arc<[u8]>),
+    Compressed(Arc<Vec<u8>>),
 }
 
-impl<'fs, Fs: VirtualFileSystem> IpkFilesystem<'fs, Fs::VirtualFile<'fs>> {
+impl TrivialClone for IpkFileS<'_> {}
+
+impl<'fs> VirtualFile<'fs> for IpkFileS<'fs> {
+    fn len(&self) -> usize {
+        match self {
+            IpkFileS::Uncompressed(data) => data.len(),
+            IpkFileS::Compressed(data) => data.len(),
+        }
+    }
+}
+
+impl Deref for IpkFileS<'_> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            IpkFileS::Uncompressed(data) => data,
+            IpkFileS::Compressed(data) => data.as_slice(),
+        }
+    }
+}
+
+impl ZeroCopyReadAt for IpkFileS<'_> {
+    fn read_null_terminated_string_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+    ) -> Result<Cow<'rf, str>, ReadError> {
+        match self {
+            IpkFileS::Uncompressed(data) => data.read_null_terminated_string_at(position),
+            IpkFileS::Compressed(data) => data.read_null_terminated_string_at(position),
+        }
+    }
+
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError> {
+        match self {
+            IpkFileS::Uncompressed(data) => data.read_slice_at(position, len),
+            IpkFileS::Compressed(data) => data.read_slice_at(position, len),
+        }
+    }
+}
+
+impl<'fs> IpkFilesystem<'fs> {
     #[must_use]
     pub fn engine_version(&self) -> u32 {
-        self.engine_version
+        self.bundle.engine_version
     }
 
     #[must_use]
     pub fn unk4(&self) -> u32 {
-        self.unk4
+        self.bundle.unk4
     }
 
     /// Create a new virtual filesystem from the IPK file at `path`.
-    pub fn new(fs: &'fs Fs, path: &Path, lax: bool) -> Result<Self, std::io::Error> {
-        let ipk_file = fs.open(path)?;
-        let mut engine_version = 0;
-        let mut unk4 = 0;
-        let ipk: Yoke<super::Bundle<'_>, VirtualFile<'_>> =
-            Yoke::try_attach_to_cart(ipk_file, |data: &[u8]| {
-                let bundle = super::parse(data, lax)?;
-                engine_version = bundle.engine_version;
-                unk4 = bundle.unk4;
-                bundle.files
-            })
-            .map_err(|e| std::io::Error::other(format!("Parsing of IPK failed: {e:?}")))?;
+    pub fn new(file: &'fs impl VirtualFile) -> Result<Self, std::io::Error> {
+        let bundle = Bundle::deserialize(file).unwrap();
         Ok(Self {
-            ipk,
-            cache: IntMap::default(),
-            engine_version,
-            unk4,
+            bundle,
+            cache: Mutex::new(IntMap::default()),
+            list: OnceLock::new(),
         })
     }
 }
@@ -64,15 +103,15 @@ pub struct IpkMetadata {
     pub size: u64,
 }
 
-// impl VirtualFileMetadata for IpkMetadata {
-//     fn file_size(&self) -> u64 {
-//         self.size
-//     }
+impl VirtualMetadata for IpkMetadata {
+    fn file_size(&self) -> u64 {
+        self.size
+    }
 
-//     fn created(&self) -> std::io::Result<u64> {
-//         Ok(self.timestamp)
-//     }
-// }
+    fn created(&self) -> std::io::Result<u64> {
+        Ok(self.timestamp)
+    }
+}
 
 impl From<&IpkFile<'_>> for IpkMetadata {
     fn from(value: &IpkFile<'_>) -> Self {
@@ -85,62 +124,90 @@ impl From<&IpkFile<'_>> for IpkMetadata {
     }
 }
 
-impl<'fs, Vf: VirtualFile<'fs>> VirtualFileSystem for IpkFilesystem<'fs, Vf> {
-    type VirtualFile<'f> = IpkFileS<'f>;
+impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
+    type VirtualFile<'f> = IpkFileS<'f> where Self: 'f;
+    type VirtualMetadata = IpkMetadata;
 
-    fn open(&self, path: &Path) -> std::io::Result<Self::VirtualFile<'fs>> {
+    fn open<'rf>(&'rf self, path: &Path) -> std::io::Result<Self::VirtualFile<'rf>> {
         let path_id = path_id(path);
-        let file = self.ipk.get().get(&path_id).ok_or_else(|| {
+        let file = self.bundle.files.get(&path_id).ok_or_else(|| {
             std::io::Error::new(
                 ErrorKind::NotFound,
                 format!("Could not open {path:?}, file not found!"),
             )
         })?;
         match &file.data {
-            super::Data::Uncompressed(data) => Ok(data.data),
+            super::Data::Uncompressed(data) => Ok(IpkFileS::Uncompressed(data.data.as_ref())),
             super::Data::Compressed(data) => {
-                let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
-                let mut decompress = flate2::Decompress::new(true);
-                decompress.decompress_vec(data.data, &mut vec, flate2::FlushDecompress::Finish)?;
-                Ok(VirtualFile::from(vec))
+                let mut cache = self.cache.lock().unwrap();
+                match cache.entry(path_id) {
+                    Entry::Occupied(mut entry) => {
+                        if let Some(arc) = entry.get().upgrade() {
+                            Ok(IpkFileS::Compressed(arc))
+                        } else {
+                            let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
+                            let mut decompress = flate2::Decompress::new(true);
+                            decompress.decompress_vec(
+                                data.data.as_ref(),
+                                &mut vec,
+                                flate2::FlushDecompress::Finish,
+                            )?;
+                            let arc = Arc::new(vec);
+                            entry.insert(Arc::downgrade(&arc));
+                            Ok(IpkFileS::Compressed(arc))
+                        }
+                    }
+                    Entry::Vacant(entry) => {
+                        let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
+                        let mut decompress = flate2::Decompress::new(true);
+                        decompress.decompress_vec(
+                            data.data.as_ref(),
+                            &mut vec,
+                            flate2::FlushDecompress::Finish,
+                        )?;
+                        let arc = Arc::new(vec);
+                        entry.insert(Arc::downgrade(&arc));
+                        Ok(IpkFileS::Compressed(arc))
+                    }
+                }
             }
         }
     }
 
-    // fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
-    //     let path_id = path_id(path);
-    //     let file = self.ipk.get().files.get(&path_id);
-    //     match file {
-    //         Some(file) => Ok(Box::new(IpkMetadata::from(file))),
-    //         None => Err(std::io::Error::new(
-    //             ErrorKind::NotFound,
-    //             format!("Could not get metadata for {path:?}, file not found!"),
-    //         )),
-    //     }
-    // }
-
-    fn list_files(&self, path: &Path) -> std::io::Result<impl Iterator<Item = &'fs Path>> {
-        self.ipk.get().files();
-
-        if let Some(path) = path.to_str() {
-            Ok(self
-                .ipk
-                .get()
-                .files
-                .values()
-                .map(|f| &f.path)
-                .map(ToString::to_string)
-                .filter_map(|s| {
-                    let ss = s.strip_prefix('/').unwrap_or(s.as_str());
-                    ss.starts_with(path).then(|| ss.to_string())
-                })
-                .collect())
-        } else {
-            Ok(Vec::new())
+    fn metadata(&self, path: &Path) -> std::io::Result<Self::VirtualMetadata> {
+        let path_id = path_id(path);
+        let file = self.bundle.files.get(&path_id);
+        match file {
+            Some(file) => Ok(IpkMetadata::from(file)),
+            None => Err(std::io::Error::new(
+                ErrorKind::NotFound,
+                format!("Could not get metadata for {path:?}, file not found!"),
+            )),
         }
     }
 
+    fn list_files<'rf>(&'rf self, path: &Path) -> std::io::Result<impl Iterator<Item = &'rf Path>> {
+        let list = self.list.get_or_init(|| {
+            self.bundle
+                .files
+                .values()
+                .map(|f| &f.path)
+                .map(|p| {
+                    let mut pb = PathBuf::with_capacity(p.len());
+                    pb.push(p.path.as_ref());
+                    pb.push(p.filename.as_ref());
+                    pb
+                })
+                .collect()
+        });
+
+        Ok(list
+            .iter()
+            .filter(move |p| p.starts_with(path))
+            .map(PathBuf::as_path))
+    }
+
     fn exists(&self, path: &Path) -> bool {
-        self.ipk.get().files.get(&path_id(path)).is_some()
+        self.bundle.files.get(&path_id(path)).is_some()
     }
 }

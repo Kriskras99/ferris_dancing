@@ -2,15 +2,16 @@
 #![feature(error_generic_member_access)]
 #![feature(lint_reasons)]
 #![feature(try_blocks)]
+#![feature(once_cell_try)]
 // #![deny(missing_docs, reason = "Everything should be documented")]
 // #![deny(
 //     clippy::missing_docs_in_private_items,
 //     reason = "Everything should be documented"
 // )]
-#![deny(
-    clippy::arithmetic_side_effects,
-    reason = "If an overflow or underflow occurs it's a good indication that something broke"
-)]
+// #![deny(
+//     clippy::arithmetic_side_effects,
+//     reason = "If an overflow or underflow occurs it's a good indication that something broke"
+// )]
 #![allow(
     clippy::option_if_let_else,
     reason = "Significantly less readable than the original"
@@ -28,12 +29,21 @@
 //! This crate has no features that can be enabled
 //!
 
-pub mod bytes;
+// pub mod bytes;
 // pub mod bytes_new;
 // pub mod bytes_newer;
 // pub mod bytes_newer2;
 // pub mod bytes_newer3;
-pub mod bytes_newer4;
+mod bytes_newer4;
+pub mod bytes {
+    pub use crate::bytes_newer4::*;
+}
+
 pub mod testing;
 // pub mod vfs;
-pub mod vfs2;
+
+mod vfs2;
+
+pub mod vfs {
+    pub use crate::vfs2::*;
+}

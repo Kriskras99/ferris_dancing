@@ -1,5 +1,7 @@
 //! Contains the types that describe the usefull information in this filetype
 
+use std::borrow::Cow;
+
 use serde::Serialize;
 
 use crate::utils::errors::ParserError;
@@ -124,8 +126,8 @@ impl Format {
 
 pub enum BlockData<'a> {
     TextureHeader(TextureHeader),
-    Data(&'a [u8]),
-    Three(&'a [u8]),
+    Data(Cow<'a, [u8]>),
+    Three(Cow<'a, [u8]>),
 }
 
 pub struct Block<'a> {

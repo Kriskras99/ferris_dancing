@@ -17,7 +17,7 @@
 //! This crate has no features that can be enabled
 //!
 
-use dotstar_toolkit_utils::bytes_newer4::primitives::u32be;
+use dotstar_toolkit_utils::bytes::primitives::u32be;
 
 pub mod u8a; // wii .app files
 pub mod wad; // wii .wad files

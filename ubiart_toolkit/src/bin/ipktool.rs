@@ -4,17 +4,16 @@ use std::{
     collections::HashSet,
     fs::{create_dir_all, File},
     io::Write,
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, rc::Rc,
 };
 
 use clap::Parser;
-use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
-use memmap2::Mmap;
+use dotstar_toolkit_utils::{bytes::read::BinaryDeserialize, vfs::{native::NativeFs, VirtualFileSystem}};
 use ubiart_toolkit::{
     ipk::{self, Bundle},
     utils::{
         errors::{ParserError, WriterError},
-        GamePlatform, PathId,
+        PathId, UniqueGameId,
     },
 };
 
@@ -51,9 +50,8 @@ fn main() {
         });
         create_ipk(source, &destination).unwrap();
     } else {
-        let file = File::open(source).unwrap();
-        let mmap = unsafe { Mmap::map(&file).unwrap() };
-        let ipk = ipk::parse(&mmap, cli.lax).unwrap();
+        let file = Rc::new(File::open(source).unwrap());
+        let ipk = Bundle::deserialize(&file).unwrap();
 
         if cli.check {
             check_ipk(&ipk, source);
@@ -112,13 +110,17 @@ pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(
             match &fil.data {
                 ipk::Data::Uncompressed(unc) => {
                     // Copy all the packed data into the file
-                    file.write_all(unc.data)?;
+                    file.write_all(unc.data.as_ref())?;
                 }
                 ipk::Data::Compressed(data) => {
                     let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
                     let mut decompress = flate2::Decompress::new(true);
                     decompress
-                        .decompress_vec(data.data, &mut vec, flate2::FlushDecompress::Finish)
+                        .decompress_vec(
+                            data.data.as_ref(),
+                            &mut vec,
+                            flate2::FlushDecompress::Finish,
+                        )
                         .unwrap();
                     file.write_all(&vec)?;
                 }
@@ -153,13 +155,15 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
 
 /// Create a IPK bundle from all files and directories in `source`
 pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> {
-    let vfs = Native::new(source)?;
-    let file_list = vfs.list_files(&PathBuf::from(""))?;
-    let files: Vec<_> = file_list.iter().map(String::as_str).collect();
-    let file = File::create(destination)?;
+    let vfs = NativeFs::new(source)?;
+    let root = PathBuf::from("");
+    let file_list = vfs.list_files(&root)?;
+    let files: Vec<_> = file_list.map(|p| p.to_str().unwrap()).collect();
+    let mut file = File::create(destination)?;
     ipk::write(
-        file,
-        GamePlatform::try_from(0x1DDB_2268)?,
+        &mut file,
+        &mut 0,
+        UniqueGameId::try_from(0x1DDB_2268)?,
         0x937D0,
         0x4FD39,
         ipk::Options {
@@ -167,6 +171,6 @@ pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> 
         },
         &vfs,
         &files,
-    )?;
+    ).unwrap();
     Ok(())
 }

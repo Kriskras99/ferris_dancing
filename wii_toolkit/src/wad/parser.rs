@@ -1,21 +1,19 @@
 //! Contains the parser implementation
-use std::{fs, path::Path};
 
-use anyhow::{anyhow, Error};
-use byteorder::BigEndian;
 use cipher::{generic_array::GenericArray, BlockDecryptMut, KeyIvInit};
 use dotstar_toolkit_utils::{
-    bytes::{read_slice_at, read_u16_at, read_u32_at, read_u64_at, read_u8_at},
+    bytes::{
+        primitives::{u16be, u32be, u64be},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    },
     testing::test,
 };
-use memmap2::Mmap;
-use yoke::Yoke;
 
 use super::types::{
     AccessRights, Aes128CbcDec, Content, ContentMetadata, ContentType, InstallableArchive, Region,
-    TicketMetadata, TitleMetadata, TitleType, WadArchive, WadArchiveOwned, WadType, MAGIC_BK,
-    MAGIC_IB, MAGIC_IS,
+    TicketMetadata, TitleMetadata, TitleType, WadArchive, WadType,
 };
+use crate::round_to_boundary;
 
 /// Decrypt the data inplace
 fn aes_128_cbc_decrypt_inplace(data: &mut [u8], iv: &[u8], key: &[u8]) {
@@ -26,40 +24,18 @@ fn aes_128_cbc_decrypt_inplace(data: &mut [u8], iv: &[u8], key: &[u8]) {
     }
 }
 
-/// Checks if this file is a WAD archive
-#[must_use]
-pub fn can_parse(first_bytes: &[u8; 0x8]) -> bool {
-    first_bytes[..0x6] == MAGIC_IS
-        || first_bytes[..0x6] == MAGIC_IB
-        || first_bytes[..0x6] == MAGIC_BK
-}
-
-/// Open the file at the given path and parse it as a Wii WAD file
-///
-/// # Errors
-/// In addition to the errors specified by [`parse`]:
-/// - Can't open the file
-/// - Can't memory map the file
-pub fn open<P: AsRef<Path>>(path: P) -> Result<WadArchiveOwned<Mmap>, Error> {
-    let file = fs::File::open(path)?;
-    let mmap = unsafe { Mmap::map(&file)? };
-    let yoke = Yoke::try_attach_to_cart(mmap, |data: &[u8]| parse(data))?;
-    Ok(WadArchiveOwned::from(yoke))
-}
-
-/// Parse a Wii WAD file
-///
-/// # Errors
-/// Will error if `src` is not large enough
-/// Will error if there is incorrect data
-pub fn parse(src: &[u8]) -> Result<WadArchive<'_>, Error> {
-    let mut position = 0;
-    let size = read_u32_at::<BigEndian>(src, &mut position)?;
-    let wad_type = WadType::try_from(read_u16_at::<BigEndian>(src, &mut position)?)?;
-    match (size, wad_type) {
-        (0x20, WadType::Bootable | WadType::Installable) => parse_installable(src, &mut position, wad_type),
-        (0x70, WadType::Backup) => Err(anyhow!("Backup WAD parsing not yet implemented!")),
-        _ => Err(anyhow!("Unknown WAD type found or file is not a WAD file! Metadata size: {size}, WAD type: {wad_type:?}")),
+impl<'de> BinaryDeserialize<'de> for WadArchive<'de> {
+    fn deserialize_at(
+        reader: &'de impl ZeroCopyReadAtExt,
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let size: u32 = reader.read_at::<u32be>(position)?.into();
+        let wad_type = reader.read_at::<WadType>(position)?;
+        match (size, wad_type) {
+            (0x20, WadType::Bootable | WadType::Installable) => parse_installable(reader, position, wad_type),
+            (0x70, WadType::Backup) => Err(ReadError::custom(format!("Backup WAD parsing not yet implemented!"))),
+            _ => Err(ReadError::custom(format!("Unknown WAD type found or file is not a WAD file! Metadata size: {size}, WAD type: {wad_type:?}"))),
+        }
     }
 }
 
@@ -68,51 +44,45 @@ pub fn parse(src: &[u8]) -> Result<WadArchive<'_>, Error> {
 /// # Errors
 /// Will error if `src` is not large enough
 /// Will error if there is incorrect data
-fn parse_installable<'a>(
-    src: &'a [u8],
-    position: &mut usize,
+fn parse_installable<'de>(
+    reader: &'de impl ZeroCopyReadAtExt,
+    position: &mut u64,
     wad_type: WadType,
-) -> Result<WadArchive<'a>, Error> {
+) -> Result<WadArchive<'de>, ReadError> {
     // parse header
-    let version = read_u16_at::<BigEndian>(src, position)?;
-    let cert_chain_size = read_u32_at::<BigEndian>(src, position)?;
-    let unk1 = read_u32_at::<BigEndian>(src, position)?;
-    let ticket_size = read_u32_at::<BigEndian>(src, position)?;
-    let tmd_size = read_u32_at::<BigEndian>(src, position)?;
-    let _content_size = read_u32_at::<BigEndian>(src, position)?;
-    let _footer_size = read_u32_at::<BigEndian>(src, position)?;
+    let version = reader.read_at::<u16be>(position)?.into();
+    let cert_chain_size = reader.read_at::<u32be>(position)?;
+    let unk1 = reader.read_at::<u32be>(position)?.into();
+    let ticket_size = u64::from(reader.read_at::<u32be>(position)?);
+    let tmd_size = u64::from(reader.read_at::<u32be>(position)?);
+    let _content_size = reader.read_at::<u32be>(position)?;
+    let _footer_size = reader.read_at::<u32be>(position)?;
 
     // verify known constant values`
-    test(&version, &0x0)?;
-    test(&unk1, &0x0)?;
+    test(&version, &0x0u16)?;
+    test(&unk1, &0x0u32)?;
 
     // skip cert chain
     // TODO: implement verification of cert chain
     *position = position
-        .checked_add(round_to_boundary(usize::try_from(cert_chain_size)?))
-        .ok_or_else(|| anyhow!("Overflow occured!"))?;
+        .checked_add(u64::from(round_to_boundary(cert_chain_size)))
+        .unwrap();
 
     // parse ticket data
     let ticket_start = *position;
-    let ticket_metadata = parse_ticket(src, position)?;
-    *position = round_to_boundary(*position);
+    let ticket_metadata = parse_ticket(reader, position)?;
+    *position = round_to_boundary_u64(*position);
     let ticket_end = *position;
-    test(
-        &ticket_end.checked_sub(ticket_start),
-        &Some(usize::try_from(ticket_size)?),
-    )?;
+    test(&ticket_end.checked_sub(ticket_start), &Some(ticket_size))?;
 
     // parse title_metadata
     let tmd_start = *position;
-    let title_metadata = parse_tmd(src, position)?;
-    *position = round_to_boundary(*position);
+    let title_metadata = parse_tmd(reader, position)?;
+    *position = round_to_boundary_u64(*position);
     let tmd_end = *position;
-    test(
-        &tmd_end.checked_sub(tmd_start),
-        &Some(usize::try_from(tmd_size)?),
-    )?;
+    test(&tmd_end.checked_sub(tmd_start), &Some(tmd_size))?;
 
-    let content = parse_content(src, position, &ticket_metadata, &title_metadata)?;
+    let content = parse_content(reader, position, &ticket_metadata, &title_metadata)?;
 
     // TODO: Parse footer?
 
@@ -134,46 +104,48 @@ const COMMON_KEY: [u8; 0x10] = [
 /// # Errors
 /// Will error if `src` is not large enough
 /// Will error if there is incorrect data
-fn parse_ticket(src: &[u8], position: &mut usize) -> Result<TicketMetadata, Error> {
+fn parse_ticket(
+    reader: &impl ZeroCopyReadAtExt,
+    position: &mut u64,
+) -> Result<TicketMetadata, ReadError> {
     // skip signature, padding, issuer and ECDH data
     // TODO: Verify signature
-    *position = position
-        .checked_add(0x1BC)
-        .ok_or_else(|| anyhow!("Overflow occured!"))?;
+    *position = position.checked_add(0x1BC).unwrap();
     // Read the metadata
-    let format_version = read_u8_at(src, position)?;
-    let unk1 = read_u16_at::<BigEndian>(src, position)?;
+    let format_version = reader.read_at::<u8>(position)?;
+    let unk1 = reader.read_at::<u16be>(position)?.into();
     test(&unk1, &0x0)?;
-    let title_key_orig: &[u8; 0x10] = read_slice_at(src, position)?;
-    let mut title_key = *title_key_orig;
-    let unk2 = read_u8_at(src, position)?; // TODO: Figure out this value
+    let mut title_key: [u8; 0x10] = reader.read_fixed_slice_at(position)?;
+    let unk2 = reader.read_at::<u8>(position)?; // TODO: Figure out this value
     test(&unk2, &0x0)?;
-    let ticket_id = read_u64_at::<BigEndian>(src, position)?;
-    let console_id = read_u32_at::<BigEndian>(src, position)?;
-    let title_id = read_u64_at::<BigEndian>(src, position)?;
-    let unk3 = read_u16_at::<BigEndian>(src, position)?;
+    let ticket_id = reader.read_at::<u64be>(position)?.into();
+    let console_id = reader.read_at::<u32be>(position)?.into();
+    let title_id: u64 = reader.read_at::<u64be>(position)?.into();
+    let unk3 = reader.read_at::<u16be>(position)?.into();
     test(&unk3, &0xFFFF)?;
-    let title_version = read_u16_at::<BigEndian>(src, position)?;
-    let permitted_titles_mask = read_u64_at::<BigEndian>(src, position)?;
-    let permit_mask = read_u64_at::<BigEndian>(src, position)?;
-    let tea = read_u8_at(src, position)?;
+    let title_version = reader.read_at::<u16be>(position)?.into();
+    let permitted_titles_mask = reader.read_at::<u64be>(position)?.into();
+    let permit_mask = reader.read_at::<u64be>(position)?.into();
+    let tea = reader.read_at::<u8>(position)?;
     let title_export_allowed = if tea == 1 {
         true
     } else if tea == 0 {
         false
     } else {
-        return Err(anyhow!("Title export allowed is not a boolean: {tea:x}"));
+        return Err(ReadError::custom(format!(
+            "Title export allowed is not a boolean: {tea:x}"
+        )));
     };
-    let common_key_index = read_u8_at(src, position)?;
+    let common_key_index = reader.read_at::<u8>(position)?;
     test(&common_key_index, &0x0)?;
     // Skip remainder of the header
     // TODO: Parse this?
-    *position = position
-        .checked_add(0xB2)
-        .ok_or_else(|| anyhow!("Overflow occured!"))?;
+    *position = position.checked_add(0xB2).unwrap();
 
     if format_version > 0 {
-        return Err(anyhow!("Ticket: V1 header not yet supported!"));
+        return Err(ReadError::custom(format!(
+            "Ticket: V1 header not yet supported!"
+        )));
     }
 
     // decrypt title key
@@ -198,54 +170,57 @@ fn parse_ticket(src: &[u8], position: &mut usize) -> Result<TicketMetadata, Erro
 /// # Errors
 /// Will error if the `src` is not large enough
 /// Will error if there is incorrect data
-fn parse_tmd<'a>(src: &'a [u8], position: &mut usize) -> Result<TitleMetadata<'a>, Error> {
-    let signature_type = read_u32_at::<BigEndian>(src, position)?;
-    test(&signature_type, &0x10001)?;
+fn parse_tmd(
+    reader: &impl ZeroCopyReadAtExt,
+    position: &mut u64,
+) -> Result<TitleMetadata, ReadError> {
+    let signature_type = reader.read_at::<u32be>(position)?.into();
+    test(&signature_type, &0x10001u32)?;
     // skip signature, padding and issuer
     // TODO: Verify signature
-    *position = position
-        .checked_add(0x17C)
-        .ok_or_else(|| anyhow!("Overflow occured!"))?;
-    let version = read_u8_at(src, position)?;
+    *position = position.checked_add(0x17C).unwrap();
+    let version = reader.read_at::<u8>(position)?;
     test(&version, &0)?;
-    let ca_crl_version = read_u8_at(src, position)?;
-    let signer_crl_version = read_u8_at(src, position)?;
-    let iw = read_u8_at(src, position)?;
+    let ca_crl_version = reader.read_at::<u8>(position)?;
+    let signer_crl_version = reader.read_at::<u8>(position)?;
+    let iw = reader.read_at::<u8>(position)?;
     let is_vwii = if iw == 1 {
         true
     } else if iw == 0 {
         false
     } else {
-        return Err(anyhow!("Is VWii is not a boolean: {iw:x}"));
+        return Err(ReadError::custom(format!(
+            "Is VWii is not a boolean: {iw:x}"
+        )));
     };
-    let system_version = read_u64_at::<BigEndian>(src, position)?;
-    let title_id = read_u64_at::<BigEndian>(src, position)?;
-    let title_type = TitleType::try_from(read_u32_at::<BigEndian>(src, position)?)?;
-    let group_id = read_u16_at::<BigEndian>(src, position)?;
-    let unk1 = read_u16_at::<BigEndian>(src, position)?;
+    let system_version = reader.read_at::<u64be>(position)?.into();
+    let title_id = reader.read_at::<u64be>(position)?.into();
+    let title_type = reader.read_at::<TitleType>(position)?;
+    let group_id = reader.read_at::<u16be>(position)?.into();
+    let unk1 = reader.read_at::<u16be>(position)?.into();
     test(&unk1, &0x0)?;
-    let region = Region::try_from(read_u16_at::<BigEndian>(src, position)?)?;
-    let ratings: &[u8; 0x10] = read_slice_at(src, position)?;
-    let reserved1: &[u8; 0xC] = read_slice_at(src, position)?;
-    test(reserved1, &[0; 0xC])?;
-    let ipc_mask: &[u8; 0xC] = read_slice_at(src, position)?;
-    let reserved2: &[u8; 0x12] = read_slice_at(src, position)?;
-    test(reserved2, &[0; 0x12])?;
-    let access_rights = AccessRights::try_from(read_u32_at::<BigEndian>(src, position)?)?;
-    let title_version = read_u16_at::<BigEndian>(src, position)?;
-    let number_of_contents = read_u16_at::<BigEndian>(src, position)?;
-    let boot_index = read_u16_at::<BigEndian>(src, position)?;
-    let minor_version = read_u16_at::<BigEndian>(src, position)?;
+    let region = reader.read_at::<Region>(position)?;
+    let ratings: [u8; 0x10] = reader.read_fixed_slice_at(position)?;
+    let reserved1: [u8; 0xC] = reader.read_fixed_slice_at(position)?;
+    test(&reserved1, &[0; 0xC])?;
+    let ipc_mask: [u8; 0xC] = reader.read_fixed_slice_at(position)?;
+    let reserved2: [u8; 0x12] = reader.read_fixed_slice_at(position)?;
+    test(&reserved2, &[0; 0x12])?;
+    let access_rights = reader.read_at::<AccessRights>(position)?;
+    let title_version = reader.read_at::<u16be>(position)?.into();
+    let number_of_contents: u16 = reader.read_at::<u16be>(position)?.into();
+    let boot_index = reader.read_at::<u16be>(position)?.into();
+    let minor_version = reader.read_at::<u16be>(position)?.into();
     test(&minor_version, &0x0)?;
 
     let mut contents = Vec::with_capacity(number_of_contents.into());
 
     for _ in 0..number_of_contents {
-        let content_id = read_u32_at::<BigEndian>(src, position)?;
-        let index = read_u16_at::<BigEndian>(src, position)?;
-        let content_type = ContentType::try_from(read_u16_at::<BigEndian>(src, position)?)?;
-        let size = read_u64_at::<BigEndian>(src, position)?;
-        let sha1_hash: &[u8; 0x14] = read_slice_at(src, position)?;
+        let content_id = reader.read_at::<u32be>(position)?.into();
+        let index = reader.read_at::<u16be>(position)?.into();
+        let content_type = reader.read_at::<ContentType>(position)?;
+        let size = reader.read_at::<u64be>(position)?.into();
+        let sha1_hash: [u8; 0x14] = reader.read_fixed_slice_at(position)?;
 
         contents.push(ContentMetadata {
             content_id,
@@ -278,12 +253,12 @@ fn parse_tmd<'a>(src: &'a [u8], position: &mut usize) -> Result<TitleMetadata<'a
 ///
 /// # Errors
 /// Will error if the various contents are too large
-fn parse_content<'a>(
-    src: &'a [u8],
-    position: &mut usize,
+fn parse_content<'de>(
+    reader: &'de impl ZeroCopyReadAtExt,
+    position: &mut u64,
     ticket: &TicketMetadata,
-    title: &TitleMetadata<'a>,
-) -> Result<Vec<Content<'a>>, Error> {
+    title: &TitleMetadata,
+) -> Result<Vec<Content<'de>>, ReadError> {
     let mut contents = Vec::with_capacity(title.contents.len());
     let key = ticket.title_key;
 
@@ -291,18 +266,14 @@ fn parse_content<'a>(
         let size = usize::try_from(metadata.size)?;
         let mut iv = [0; 0x10];
         iv[..2].copy_from_slice(&metadata.index.to_be_bytes());
-        let start = *position;
-        let end = start
-            .checked_add(size)
-            .ok_or_else(|| anyhow!("Overflow occured!"))?;
-        let data = &src[start..end];
+        let data = reader.read_slice_at(position, size)?;
         let new_content = Content {
             data,
             key,
             iv,
             metadata: *metadata,
         };
-        *position = round_to_boundary(end);
+        *position = round_to_boundary_u64(*position);
         contents.push(new_content);
     }
 
@@ -313,7 +284,7 @@ fn parse_content<'a>(
 ///
 /// # Panics
 /// Will panic if the rounding would overflow
-fn round_to_boundary(n: usize) -> usize {
+fn round_to_boundary_u64(n: u64) -> u64 {
     n.checked_add(0x3F)
         .map(|n| n & (!0x3F))
         .expect("Overflow occurred!")
@@ -321,16 +292,16 @@ fn round_to_boundary(n: usize) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::round_to_boundary;
+    use super::round_to_boundary_u64;
 
     #[test]
     fn test_rounding() {
-        assert_eq!(round_to_boundary(0x0), 0x0);
-        assert_eq!(round_to_boundary(0x1), 0x40);
-        assert_eq!(round_to_boundary(0x40), 0x40);
-        assert_eq!(round_to_boundary(0x41), 0x80);
-        assert_eq!(round_to_boundary(0xA00), 0xA00);
-        assert_eq!(round_to_boundary(0x2A4), 0x2C0);
-        assert_eq!(round_to_boundary(576), 576);
+        assert_eq!(round_to_boundary_u64(0x0), 0x0);
+        assert_eq!(round_to_boundary_u64(0x1), 0x40);
+        assert_eq!(round_to_boundary_u64(0x40), 0x40);
+        assert_eq!(round_to_boundary_u64(0x41), 0x80);
+        assert_eq!(round_to_boundary_u64(0xA00), 0xA00);
+        assert_eq!(round_to_boundary_u64(0x2A4), 0x2C0);
+        assert_eq!(round_to_boundary_u64(576), 576);
     }
 }

@@ -1,46 +1,7 @@
-use std::borrow::Cow;
-
 pub use byteorder::ByteOrder;
 use byteorder::WriteBytesExt;
-use dotstar_toolkit_utils::{
-    bytes::{read_string_at, read_u32_at},
-    testing::test,
-};
 
-use super::{
-    errors::{ParserError, WriterError},
-    PathId, SplitPath,
-};
-
-/// Read a `SplitPath` from `source` at position `position` and check the CRC
-///
-/// This function increments `position` with the size of the string + 12 if successful
-pub fn read_path_at<'b, T: ByteOrder>(
-    source: &'b [u8],
-    position: &mut usize,
-) -> Result<SplitPath<'b>, ParserError> {
-    let filename = read_string_at::<T>(source, position)?;
-    let path = read_string_at::<T>(source, position)?;
-    let path_id = PathId::from(read_u32_at::<T>(source, position)?);
-    let split_path = if path.is_empty() && filename.is_empty() {
-        test(&path_id, &PathId::from(0xFFFF_FFFF))?;
-        SplitPath {
-            path: Cow::Borrowed(""),
-            filename: Cow::Borrowed(""),
-        }
-    } else {
-        let split_path = SplitPath {
-            path: Cow::Borrowed(path),
-            filename: Cow::Borrowed(filename),
-        };
-        let path_id_calc = PathId::from(&split_path);
-        test(&path_id, &path_id_calc)?;
-        split_path
-    };
-    let padding = read_u32_at::<T>(source, position)?;
-    test(&padding, &0)?;
-    Ok(split_path)
-}
+use super::{errors::WriterError, PathId, SplitPath};
 
 pub trait WriteBytesExtUbiArt: std::io::Write {
     // Writes the components of the split path and the crc to the writer

@@ -2,10 +2,11 @@ use std::{
     borrow::Cow,
     collections::HashMap,
     io::{self, ErrorKind},
+    ops::Deref,
     path::{Path, PathBuf},
 };
 
-use super::{VirtualFile, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata};
 use crate::bytes_newer4::read::{ReadError, TrivialClone, ZeroCopyReadAt};
 
 /// A completely in-memory filesystem, storing files as [`Vec`]s.
@@ -84,6 +85,7 @@ impl IntoIterator for VecFs {
 
 impl VirtualFileSystem for VecFs {
     type VirtualFile<'fs> = VecFile<'fs>;
+    type VirtualMetadata = VecMetadata;
 
     fn open<'fs>(&'fs self, path: &Path) -> io::Result<Self::VirtualFile<'fs>> {
         if let Some(file) = self.files.get(path) {
@@ -104,7 +106,34 @@ impl VirtualFileSystem for VecFs {
     }
 
     fn exists(&self, path: &Path) -> bool {
-        self.files.get(path).is_some()
+        self.files.contains_key(path)
+    }
+
+    fn metadata(&self, path: &Path) -> std::io::Result<Self::VirtualMetadata> {
+        if let Some(file) = self.files.get(path) {
+            Ok(VecMetadata {
+                file_size: u64::try_from(file.len()).expect("File is bigger than u64!"),
+            })
+        } else {
+            Err(ErrorKind::NotFound.into())
+        }
+    }
+}
+
+/// Metadata about a file in this filesystem
+#[derive(Debug, Clone, Copy)]
+pub struct VecMetadata {
+    /// The size of the file
+    file_size: u64,
+}
+
+impl VirtualMetadata for VecMetadata {
+    fn file_size(&self) -> u64 {
+        self.file_size
+    }
+
+    fn created(&self) -> io::Result<u64> {
+        Err(ErrorKind::Unsupported.into())
     }
 }
 
@@ -127,4 +156,16 @@ impl<'fs> ZeroCopyReadAt for VecFile<'fs> {
     }
 }
 
-impl<'fs> VirtualFile<'fs> for VecFile<'fs> {}
+impl<'fs> Deref for VecFile<'fs> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.data
+    }
+}
+
+impl<'fs> VirtualFile<'fs> for VecFile<'fs> {
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+}

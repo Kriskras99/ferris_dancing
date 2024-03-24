@@ -1,77 +1,93 @@
 //! Contains the parser implementation
 
-use byteorder::BigEndian;
 use dotstar_toolkit_utils::{
-    bytes::{read_null_terminated_string_at, read_slice_at, read_u32_at},
+    bytes::{
+        primitives::u32be,
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    },
     testing::{test, test_le},
 };
 
 use super::MovementSpaceMove;
-use crate::utils::errors::ParserError;
 
-/// Parse a MovementSpaceMove file
-pub fn parse(src: &[u8]) -> Result<MovementSpaceMove<'_>, ParserError> {
-    let mut position = 0;
+impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
+    fn deserialize_at(
+        reader: &'de impl ZeroCopyReadAtExt,
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        // Check the magic
+        let unk1 = reader.read_at::<u32be>(position)?.into();
+        test(&unk1, &0x1u32)?;
+        let unk2 = reader.read_at::<u32be>(position)?.into();
+        test(&unk2, &0x7u32)?;
 
-    // Check the magic
-    let unk1 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk1, &0x1)?;
-    let unk2 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk2, &0x7)?;
+        // There are always 64 bytes for the string, so we read untill the null byte.
+        // If the null byte is past 64 bytes there's something wrong and we error.
+        let start = *position;
+        let name = reader.read_null_terminated_string_at(position)?;
+        if position.checked_sub(start).unwrap() > 64 {
+            return Err(ReadError::no_null_byte(start));
+        }
+        *position = start + 64;
 
-    // There are always 64 bytes for the string
-    let buffer: &[u8; 64] = read_slice_at(src, &mut position)?;
-    // Only save the part with the string
-    let name = read_null_terminated_string_at(buffer, &mut 0)?;
+        let start = *position;
+        let map = reader.read_null_terminated_string_at(position)?;
+        if position.checked_sub(start).unwrap() > 64 {
+            return Err(ReadError::no_null_byte(start));
+        }
+        *position = start + 64;
 
-    let buffer: &[u8; 64] = read_slice_at(src, &mut position)?;
-    let map = read_null_terminated_string_at(buffer, &mut 0)?;
+        let start = *position;
+        let device = reader.read_null_terminated_string_at(position)?;
+        if position.checked_sub(start).unwrap() > 64 {
+            return Err(ReadError::no_null_byte(start));
+        }
+        *position = start + 64;
 
-    let buffer: &[u8; 64] = read_slice_at(src, &mut position)?;
-    let device = read_null_terminated_string_at(buffer, &mut 0)?;
-    test(&device, &"Acc_Dev_Dir_NP")?;
+        test(&device.as_ref(), &"Acc_Dev_Dir_NP")?;
 
-    let unk3 = read_u32_at::<BigEndian>(src, &mut position)?;
-    let unk4 = read_u32_at::<BigEndian>(src, &mut position)?;
-    let unk5 = read_u32_at::<BigEndian>(src, &mut position)?;
-    let unk6 = read_u32_at::<BigEndian>(src, &mut position)?;
-    let unk7 = read_u32_at::<BigEndian>(src, &mut position)?;
+        let unk3 = reader.read_at::<u32be>(position)?.into();
+        let unk4 = reader.read_at::<u32be>(position)?.into();
+        let unk5 = reader.read_at::<u32be>(position)?.into();
+        let unk6 = reader.read_at::<u32be>(position)?.into();
+        let unk7 = reader.read_at::<u32be>(position)?.into();
 
-    let unk8 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk8, &0x211C_0000)?;
-    let unk9 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk9, &0x0)?;
-    let unk10 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test_le(&unk10, &0x3)?;
-    let points = read_u32_at::<BigEndian>(src, &mut position)?;
-    let unk12 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk12, &0x2)?;
-    let unk13 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk13, &0x0)?;
+        let unk8 = reader.read_at::<u32be>(position)?.into();
+        test(&unk8, &0x211C_0000u32)?;
+        let unk9 = reader.read_at::<u32be>(position)?.into();
+        test(&unk9, &0x0u32)?;
+        let unk10 = reader.read_at::<u32be>(position)?.into();
+        test_le(&unk10, &0x3u32)?;
+        let points = reader.read_at::<u32be>(position)?.into();
+        let unk12 = reader.read_at::<u32be>(position)?.into();
+        test(&unk12, &0x2u32)?;
+        let unk13 = reader.read_at::<u32be>(position)?.into();
+        test(&unk13, &0x0u32)?;
 
-    let unk14 = read_u32_at::<BigEndian>(src, &mut position)?;
-    let unk15 = read_u32_at::<BigEndian>(src, &mut position)?;
+        let unk14 = reader.read_at::<u32be>(position)?.into();
+        let unk15 = reader.read_at::<u32be>(position)?.into();
 
-    let mut data = Vec::with_capacity(usize::try_from(points)?);
-    for _ in 0..points {
-        let x = read_u32_at::<BigEndian>(src, &mut position)?;
-        let y = read_u32_at::<BigEndian>(src, &mut position)?;
-        data.push((x, y));
+        let mut data = Vec::with_capacity(usize::try_from(points)?);
+        for _ in 0..points {
+            let x = reader.read_at::<u32be>(position)?.into();
+            let y = reader.read_at::<u32be>(position)?.into();
+            data.push((x, y));
+        }
+
+        Ok(MovementSpaceMove {
+            name,
+            map,
+            device,
+            data,
+            points,
+            unk3,
+            unk4,
+            unk5,
+            unk6,
+            unk7,
+            unk10,
+            unk14,
+            unk15,
+        })
     }
-
-    Ok(MovementSpaceMove {
-        name,
-        map,
-        device,
-        data,
-        points,
-        unk3,
-        unk4,
-        unk5,
-        unk6,
-        unk7,
-        unk10,
-        unk14,
-        unk15,
-    })
 }
