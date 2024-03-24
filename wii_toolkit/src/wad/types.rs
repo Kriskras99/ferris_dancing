@@ -1,10 +1,14 @@
 //! Contains the types that describe the usefull information in this filetype
 
+use std::borrow::Cow;
+
 use aes::Aes128;
 use anyhow::{anyhow, Error};
 use cipher::{block_padding::NoPadding, generic_array::GenericArray, BlockDecryptMut, KeyIvInit};
-use stable_deref_trait::StableDeref;
-use yoke::{Yoke, Yokeable};
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u16be, u32be},
+    read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+};
 
 /// Describes which variant of WAD this is
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -16,6 +20,23 @@ pub enum WadType {
     Installable = 0x4973,
     /// Used for data stored on the SD card
     Backup = 0x426B,
+}
+
+impl BinaryDeserialize<'_> for WadType {
+    fn deserialize_at(
+        reader: &'_ impl ZeroCopyReadAtExt,
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        match value {
+            0x4962 => Ok(Self::Bootable),
+            0x4973 => Ok(Self::Installable),
+            0x426B => Ok(Self::Backup),
+            _ => Err(ReadError::custom(format!(
+                "Unknown value for WAD type: {value:x}"
+            ))),
+        }
+    }
 }
 
 impl TryFrom<u16> for WadType {
@@ -41,6 +62,23 @@ pub enum ContentType {
     DLC = 0x4001,
     /// Shared between various apps
     Shared = 0x8001,
+}
+
+impl BinaryDeserialize<'_> for ContentType {
+    fn deserialize_at(
+        reader: &'_ impl ZeroCopyReadAtExt,
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        match value {
+            0x0001 => Ok(Self::Normal),
+            0x4001 => Ok(Self::DLC),
+            0x8001 => Ok(Self::Shared),
+            _ => Err(ReadError::custom(format!(
+                "Unknown value for content type: {value:x}"
+            ))),
+        }
+    }
 }
 
 impl TryFrom<u16> for ContentType {
@@ -71,6 +109,21 @@ pub enum TitleType {
     Something = 0x19,
 }
 
+impl BinaryDeserialize<'_> for TitleType {
+    fn deserialize_at(
+        reader: &'_ impl ZeroCopyReadAtExt,
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let value: u32 = reader.read_at::<u32be>(position)?.into();
+        match value {
+            0x19 => Ok(Self::Something),
+            _ => Err(ReadError::custom(format!(
+                "Unknown value for title type: {value:x}"
+            ))),
+        }
+    }
+}
+
 impl TryFrom<u32> for TitleType {
     type Error = anyhow::Error;
 
@@ -98,6 +151,25 @@ pub enum Region {
     Korea = 0x4,
 }
 
+impl BinaryDeserialize<'_> for Region {
+    fn deserialize_at(
+        reader: &'_ impl ZeroCopyReadAtExt,
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        match value {
+            0x0 => Ok(Self::Japan),
+            0x1 => Ok(Self::UnitedStates),
+            0x2 => Ok(Self::Europe),
+            0x3 => Ok(Self::RegionFree),
+            0x4 => Ok(Self::Korea),
+            _ => Err(ReadError::custom(format!(
+                "Unknown value for region: {value:x}"
+            ))),
+        }
+    }
+}
+
 impl TryFrom<u16> for Region {
     type Error = anyhow::Error;
 
@@ -121,6 +193,21 @@ pub enum AccessRights {
     None = 0x0,
 }
 
+impl BinaryDeserialize<'_> for AccessRights {
+    fn deserialize_at(
+        reader: &'_ impl ZeroCopyReadAtExt,
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        match value {
+            0x0 => Ok(Self::None),
+            _ => Err(ReadError::custom(format!(
+                "Unknown value for access rights: {value:x}"
+            ))),
+        }
+    }
+}
+
 impl TryFrom<u32> for AccessRights {
     type Error = anyhow::Error;
 
@@ -133,8 +220,8 @@ impl TryFrom<u32> for AccessRights {
 }
 
 /// Header for content
-#[derive(Clone, Copy)]
-pub struct ContentMetadata<'a> {
+#[derive(Debug, Clone, Copy)]
+pub struct ContentMetadata {
     /// Unique ID
     pub content_id: u32,
     /// See [`ContentType`]
@@ -144,19 +231,20 @@ pub struct ContentMetadata<'a> {
     /// Size of data (excluding this header)
     pub size: u64,
     /// SHA1 hash of the decrypted data (excluding this header)
-    pub sha1_hash: &'a [u8; 0x14],
+    pub sha1_hash: [u8; 0x14],
 }
 
 /// Content with it's data, crypto, and metadata
+#[derive(Debug)]
 pub struct Content<'a> {
     /// The encrypted data
-    pub data: &'a [u8],
+    pub data: Cow<'a, [u8]>,
     /// Decryption key
     pub key: [u8; 0x10],
     /// Decryption IV
     pub iv: [u8; 0x10],
     /// The header
-    pub metadata: ContentMetadata<'a>,
+    pub metadata: ContentMetadata,
 }
 
 /// Convenience alias to make it clear which decryption is being done
@@ -170,12 +258,13 @@ impl Content<'_> {
     pub fn decrypt(&self) -> Result<Vec<u8>, Error> {
         let decryptor =
             Aes128CbcDec::new(&GenericArray::from(self.key), &GenericArray::from(self.iv));
-        Ok(decryptor.decrypt_padded_vec_mut::<NoPadding>(self.data)?)
+        Ok(decryptor.decrypt_padded_vec_mut::<NoPadding>(self.data.as_ref())?)
     }
 }
 
 /// Header of the WAD itself
-pub struct TitleMetadata<'a> {
+#[derive(Debug)]
+pub struct TitleMetadata {
     /// Unknown
     pub ca_crl_version: u8,
     /// Unknown
@@ -193,9 +282,9 @@ pub struct TitleMetadata<'a> {
     /// See [`Region`]
     pub region: Region,
     /// Ratings, format unknown
-    pub ratings: &'a [u8], // TODO: Actually parse this
+    pub ratings: [u8; 0x10], // TODO: Actually parse this
     /// Allowed IPC calls, format unknown
-    pub ipc_mask: &'a [u8], // TODO: Actually parse this
+    pub ipc_mask: [u8; 0xC], // TODO: Actually parse this
     /// See [`AccessRights`]
     pub access_rights: AccessRights,
     /// Version of the title
@@ -203,10 +292,11 @@ pub struct TitleMetadata<'a> {
     /// Content to index to start
     pub boot_index: u16,
     /// All contents
-    pub contents: Vec<ContentMetadata<'a>>,
+    pub contents: Vec<ContentMetadata>,
 }
 
 /// Ticket metadata
+#[derive(Debug)]
 pub struct TicketMetadata {
     /// Title key (already decrypted)
     pub title_key: [u8; 0x10],
@@ -227,18 +317,20 @@ pub struct TicketMetadata {
 }
 
 /// Represents an installable/bootable WAD
+#[derive(Debug)]
 pub struct InstallableArchive<'a> {
     /// See [`WadType`]
     pub wad_type: WadType,
     /// See [`TicketMetadata`]
     pub ticket_metadata: TicketMetadata,
     /// See [`TitleMetadata`]
-    pub title_metadata: TitleMetadata<'a>,
+    pub title_metadata: TitleMetadata,
     /// All content in this WAD
     pub content: Vec<Content<'a>>,
 }
 
 /// Represents a backup WAD
+#[derive(Debug)]
 pub struct BackupArchive<'a> {
     /// See [`WadType`]
     pub wad_type: WadType,
@@ -251,61 +343,18 @@ pub struct BackupArchive<'a> {
     /// See [`TicketMetadata`]
     pub ticket_metadata: TicketMetadata,
     /// See [`TitleMetadata`]
-    pub title_metadata: TitleMetadata<'a>,
+    pub title_metadata: TitleMetadata,
     /// All content in this WAD
     pub content: Vec<Content<'a>>,
 }
 
 /// The decoded WAD archive
-#[derive(Yokeable)]
+#[derive(Debug)]
 pub enum WadArchive<'a> {
     /// See [`InstallableArchive`]
     Installable(InstallableArchive<'a>),
     /// See [`BackupArchive`]
     Backup(BackupArchive<'a>),
-}
-
-/// Owned version of the decoded WAD archive that can be easily moved around
-pub struct WadArchiveOwned<C: StableDeref> {
-    /// The yoke is used to store the backing with the reference
-    yoke: Yoke<WadArchive<'static>, C>,
-}
-
-impl<C: StableDeref> From<Yoke<WadArchive<'static>, C>> for WadArchiveOwned<C> {
-    fn from(yoke: Yoke<WadArchive<'static>, C>) -> Self {
-        Self { yoke }
-    }
-}
-
-impl<'a, C: StableDeref> WadArchiveOwned<C> {
-    /// Get the internal WAD as an installable archive
-    ///
-    /// # Errors
-    /// Returns an error if the WAD is a backup archive
-    pub fn as_installable(&'a self) -> Result<&'a InstallableArchive<'a>, Error> {
-        if let WadArchive::Installable(installable) = self.yoke.get() {
-            Ok(installable)
-        } else {
-            Err(anyhow!("Not a installable archive!"))
-        }
-    }
-
-    /// Get the internal WAD as a backup archive
-    ///
-    /// # Errors
-    /// Returns an error if the WAD is an installable archive
-    pub fn as_backup(&'a self) -> Result<&'a BackupArchive<'a>, Error> {
-        if let WadArchive::Backup(backup) = self.yoke.get() {
-            Ok(backup)
-        } else {
-            Err(anyhow!("Not a backup archive!"))
-        }
-    }
-
-    /// Get the WAD archive
-    pub fn archive(&'a self) -> &'a WadArchive<'a> {
-        self.yoke.get()
-    }
 }
 
 /// MAGIC for bootable WAD

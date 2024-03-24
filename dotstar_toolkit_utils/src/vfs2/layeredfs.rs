@@ -5,37 +5,53 @@ use std::{
     collections::HashSet,
     io::{self, ErrorKind},
     marker::PhantomData,
+    ops::Deref,
     path::Path,
 };
 
-use super::{VirtualFile, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata};
 use crate::bytes_newer4::read::{ReadError, TrivialClone, ZeroCopyReadAt};
 
 /// A filesystem that overlays two filesystems, preferring the upper filesystem for operations.
-pub struct OverlayFs<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> {
+pub struct OverlayFs<'fs, FsA: VirtualFileSystem, FsB: VirtualFileSystem> {
     /// The upper filesystem, checked first for paths
-    upper: &'fsa FsA,
+    upper: &'fs FsA,
     /// The lower filesystem, checked if upper doesn't know about a path
-    lower: &'fsb FsB,
+    lower: &'fs FsB,
 }
 
-impl<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> OverlayFs<'fsa, 'fsb, FsA, FsB> {
+impl<'fs, FsA: VirtualFileSystem, FsB: VirtualFileSystem> OverlayFs<'fs, FsA, FsB> {
     /// Create a new overlay from two filesystems
-    pub fn new(upper: &'fsa FsA, lower: &'fsb FsB) -> Self {
+    pub fn new(upper: &'fs FsA, lower: &'fs FsB) -> Self {
         Self { upper, lower }
     }
 }
 
-impl<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> VirtualFileSystem
-    for OverlayFs<'fsa, 'fsb, FsA, FsB>
+impl<'fss, FsA: VirtualFileSystem, FsB: VirtualFileSystem> VirtualFileSystem
+    for OverlayFs<'fss, FsA, FsB>
 {
     type VirtualFile<'fs> = OverlayFile<'fs, FsA::VirtualFile<'fs>, FsB::VirtualFile<'fs>> where FsA: 'fs, FsB: 'fs, Self: 'fs;
+    type VirtualMetadata = OverlayMetadata<FsA::VirtualMetadata, FsB::VirtualMetadata>;
 
     fn open<'fs>(&'fs self, path: &Path) -> io::Result<Self::VirtualFile<'fs>> {
         if let Ok(file) = self.upper.open(path) {
             Ok(OverlayFile::Upper(file))
         } else if let Ok(file) = self.lower.open(path) {
             Ok(OverlayFile::Lower(file))
+        } else {
+            Err(ErrorKind::NotFound.into())
+        }
+    }
+
+    /// Get the metadata for the file at `path`
+    ///
+    /// # Errors
+    /// Can error if the file does not exist or if file access failed
+    fn metadata(&self, path: &Path) -> std::io::Result<Self::VirtualMetadata> {
+        if let Ok(metadata) = self.upper.metadata(path) {
+            Ok(OverlayMetadata::Upper(metadata))
+        } else if let Ok(metadata) = self.lower.metadata(path) {
+            Ok(OverlayMetadata::Lower(metadata))
         } else {
             Err(ErrorKind::NotFound.into())
         }
@@ -49,6 +65,28 @@ impl<'fsa, 'fsb, FsA: VirtualFileSystem, FsB: VirtualFileSystem> VirtualFileSyst
 
     fn exists(&self, path: &Path) -> bool {
         self.upper.exists(path) || self.lower.exists(path)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum OverlayMetadata<VmA: VirtualMetadata, VmB: VirtualMetadata> {
+    Upper(VmA),
+    Lower(VmB),
+}
+
+impl<VmA: VirtualMetadata, VmB: VirtualMetadata> VirtualMetadata for OverlayMetadata<VmA, VmB> {
+    fn file_size(&self) -> u64 {
+        match self {
+            OverlayMetadata::Upper(upper) => upper.file_size(),
+            OverlayMetadata::Lower(lower) => lower.file_size(),
+        }
+    }
+
+    fn created(&self) -> std::io::Result<u64> {
+        match self {
+            OverlayMetadata::Upper(upper) => upper.created(),
+            OverlayMetadata::Lower(lower) => lower.created(),
+        }
     }
 }
 
@@ -91,7 +129,26 @@ impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> ZeroCopyReadAt
     }
 }
 
+impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> Deref for OverlayFile<'fs, VfA, VfB> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            OverlayFile::Upper(file) => file.deref(),
+            OverlayFile::Lower(file) => file.deref(),
+            OverlayFile::Phantom(_) => unreachable!(),
+        }
+    }
+}
+
 impl<'fs, VfA: VirtualFile<'fs>, VfB: VirtualFile<'fs>> VirtualFile<'fs>
     for OverlayFile<'fs, VfA, VfB>
 {
+    fn len(&self) -> usize {
+        match self {
+            OverlayFile::Upper(file) => file.len(),
+            OverlayFile::Lower(file) => file.len(),
+            OverlayFile::Phantom(_) => unreachable!(),
+        }
+    }
 }

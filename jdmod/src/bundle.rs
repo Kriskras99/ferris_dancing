@@ -12,7 +12,7 @@ use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
 use ubiart_toolkit::{
     ipk,
     secure_fat::{self, SecureFat},
-    utils::{GamePlatform, PathId},
+    utils::{PathId, UniqueGameId},
 };
 
 use crate::types::Config;
@@ -61,7 +61,7 @@ pub fn main(data: &Bundle) -> Result<(), Error> {
             .ipk_unk4
             .ok_or_else(|| anyhow!("Missing --ipk-unk4 or --config"))?;
         Config {
-            game_platform: GamePlatform::try_from(gp)?,
+            game_platform: UniqueGameId::try_from(gp)?,
             engine_version: ev,
             ipk_unk4: iu,
         }

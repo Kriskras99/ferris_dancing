@@ -236,10 +236,10 @@ macro_rules! impl_non_pow2_uint {
     };
 }
 
-impl_non_pow2_uint!(U24, u32, 3, 0xFFFF_FF);
-impl_non_pow2_uint!(U40, u64, 5, 0xFFFF_FFFF_FF);
+impl_non_pow2_uint!(U24, u32, 3, 0x00FF_FFFF);
+impl_non_pow2_uint!(U40, u64, 5, 0x00FF_FFFF_FFFF);
 impl_non_pow2_uint!(U48, u64, 6, 0xFFFF_FFFF_FFFF);
-impl_non_pow2_uint!(U56, u64, 7, 0xFFFF_FFFF_FFFF_FF);
+impl_non_pow2_uint!(U56, u64, 7, 0x00FF_FFFF_FFFF_FFFF);
 
 macro_rules! impl_widening_pow2_uint {
     ( $name:ident, $native:ident, $n_bytes:literal ) => {

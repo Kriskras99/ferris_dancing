@@ -1,8 +1,8 @@
-use std::path::PathBuf;
+use std::{fs::File, path::PathBuf, rc::Rc};
 
 use clap::Parser;
-use dotstar_toolkit_utils::bytes::read_to_vec;
-use ubiart_toolkit::{cooked::act, utils::Game};
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use ubiart_toolkit::{cooked::act::Actor, utils::plumbing::{Nx2017, Nx2018, Nx2019, Nx2020, Nx2021, Nx2022, NxChina}};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -15,22 +15,16 @@ struct Cli {
 
 fn main() {
     let cli = Cli::parse();
+    let file = Rc::new(File::open(&cli.source).unwrap());
 
-    let game = match cli.game.to_lowercase().as_str() {
-        "2022" => Game::JustDance2022,
-        "2021" => Game::JustDance2021,
-        "2020" => Game::JustDance2020,
-        "china" => Game::JustDanceChina,
-        "2019" => Game::JustDance2019,
-        "2018" => Game::JustDance2018,
-        "2017" => Game::JustDance2017,
+    match cli.game.to_lowercase().as_str() {
+        "2022" => println!("{:#?}", Actor::<Nx2022>::deserialize(&file).unwrap()),
+        "2021" => println!("{:#?}", Actor::<Nx2021>::deserialize(&file).unwrap()),
+        "2020" => println!("{:#?}", Actor::<Nx2020>::deserialize(&file).unwrap()),
+        "china" => println!("{:#?}", Actor::<NxChina>::deserialize(&file).unwrap()),
+        "2019" => println!("{:#?}", Actor::<Nx2019>::deserialize(&file).unwrap()),
+        "2018" => println!("{:#?}", Actor::<Nx2018>::deserialize(&file).unwrap()),
+        "2017" => println!("{:#?}", Actor::<Nx2017>::deserialize(&file).unwrap()),
         _ => panic!("Unrecognized game version: {}", cli.game),
-    };
-
-    let data = read_to_vec(&cli.source).unwrap();
-    let actors = act::parse(&data, game).unwrap();
-
-    for template in &actors.components {
-        println!("{template:#?}");
     }
 }

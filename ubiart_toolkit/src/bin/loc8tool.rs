@@ -1,8 +1,8 @@
-use std::path::PathBuf;
+use std::{fs::File, path::PathBuf, rc::Rc};
 
 use clap::Parser;
-use dotstar_toolkit_utils::bytes::read_to_vec;
-use ubiart_toolkit::loc8;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use ubiart_toolkit::loc8::Loc8;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -15,9 +15,8 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let source = cli.source;
-    let data = read_to_vec(source).unwrap();
-    let loc8 = loc8::parse(&data).unwrap();
+    let file = Rc::new(File::open(cli.source).unwrap());
+    let loc8 = Loc8::deserialize(&file).unwrap();
 
     if cli.verbose {
         for (locale_id, string) in &loc8.strings {

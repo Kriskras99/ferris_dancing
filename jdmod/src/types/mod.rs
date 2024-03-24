@@ -7,7 +7,7 @@ use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
     alias8::Alias8,
-    utils::{Game, GamePlatform, Platform},
+    utils::{Game, Platform, UniqueGameId},
 };
 
 use self::localisation::LocaleIdMap;
@@ -20,7 +20,7 @@ pub mod song;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Config {
     /// Game platform version
-    pub game_platform: GamePlatform,
+    pub game_platform: UniqueGameId,
     /// Engine version
     pub engine_version: u32,
     /// Unk4 of the IPK archives

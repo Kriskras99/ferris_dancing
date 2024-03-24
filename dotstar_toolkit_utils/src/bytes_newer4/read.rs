@@ -1,6 +1,6 @@
 use std::{
-    backtrace::Backtrace, borrow::Cow, fs::File, marker::PhantomData, rc::Rc, str::Utf8Error,
-    sync::Arc,
+    backtrace::Backtrace, borrow::Cow, fs::File, marker::PhantomData, num::TryFromIntError,
+    ops::Deref, rc::Rc, str::Utf8Error, sync::Arc,
 };
 
 use positioned_io::{RandomAccessFile, ReadAt as PRead};
@@ -56,6 +56,15 @@ pub enum ReadError {
         /// The original test error
         #[from]
         test: TestError,
+        /// Backtrace
+        backtrace: Backtrace,
+    },
+    /// An integer could not be converted to another integer size
+    #[error("an integer could not be converted to another integer size: {tfie:?}")]
+    IntConversion {
+        /// The original test error
+        #[from]
+        tfie: TryFromIntError,
         /// Backtrace
         backtrace: Backtrace,
     },
@@ -469,6 +478,38 @@ pub trait TrivialClone: Clone {}
 
 impl<T> TrivialClone for Arc<T> {}
 impl<T> TrivialClone for Rc<T> {}
+impl<T: ZeroCopyReadAt> ZeroCopyReadAt for Arc<T> {
+    fn read_null_terminated_string_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+    ) -> Result<Cow<'rf, str>, ReadError> {
+        self.deref().read_null_terminated_string_at(position)
+    }
+
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError> {
+        self.deref().read_slice_at(position, len)
+    }
+}
+impl<T: ZeroCopyReadAt> ZeroCopyReadAt for Rc<T> {
+    fn read_null_terminated_string_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+    ) -> Result<Cow<'rf, str>, ReadError> {
+        self.deref().read_null_terminated_string_at(position)
+    }
+
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError> {
+        self.deref().read_slice_at(position, len)
+    }
+}
 
 pub trait ZeroCopyReadAtExt: ZeroCopyReadAt + TrivialClone {
     /// Read a `T` at `position`

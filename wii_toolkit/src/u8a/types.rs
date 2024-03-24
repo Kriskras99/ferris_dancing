@@ -3,11 +3,10 @@
 use std::borrow::Cow;
 use std::collections::{hash_map::Entry, HashMap};
 
-use anyhow::anyhow;
-use dotstar_toolkit_utils::bytes_newer4::primitives::{u24be, u32be};
-use dotstar_toolkit_utils::bytes_newer4::read::ZeroCopyReadAtExt;
+use dotstar_toolkit_utils::bytes::primitives::{u24be, u32be};
+use dotstar_toolkit_utils::bytes::read::ZeroCopyReadAtExt;
 use dotstar_toolkit_utils::{
-    bytes_newer4::{
+    bytes::{
         read::{BinaryDeserialize, ReadError},
         write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
     },
@@ -16,85 +15,28 @@ use dotstar_toolkit_utils::{
 
 use crate::round_to_boundary;
 
-/// The decoded U8 archive
-pub struct U8Archive<'a> {
-    /// The files
-    pub files: Vec<Node<'a>>,
-}
-
-/// The type of a U8 node
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub(crate) enum NodeType {
-    /// File
-    File = 0,
-    /// Directory
-    Directory = 1,
-}
-
-impl TryFrom<u8> for NodeType {
-    type Error = anyhow::Error;
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::File),
-            1 => Ok(Self::Directory),
-            _ => Err(anyhow!("Unknown node type! {value}")),
-        }
-    }
-}
-
-impl From<NodeType> for u8 {
-    #[allow(clippy::as_conversions)]
-    fn from(value: NodeType) -> Self {
-        value as Self
-    }
-}
-
 /// A file in a U8 archive
 pub struct Node<'a> {
-    /// The path components
-    pub path: Vec<&'a str>,
-    /// The filename
-    pub name: &'a str,
-    /// The data
-    pub data: &'a [u8],
-}
-
-/// A file in a U8 archive
-pub struct NewNode<'a> {
     /// The filename
     pub name: Cow<'a, str>,
     /// The data
     pub data: Cow<'a, [u8]>,
 }
 
-/// A yet to be parsed node
-#[derive(Clone, Copy)]
-pub(crate) struct UnparsedNode {
-    /// Typ of this node
-    pub node_type: NodeType,
-    /// Offset to the name of the file/directory
-    pub name_offset: usize,
-    /// Offset to the file data, ignored if a directory
-    pub data_offset: usize,
-    /// The size of the data if a file, the max index if a directory
-    pub size: usize,
-}
-
 /// A unparsed node
-enum NewUnparsedNode {
+enum UnparsedNode {
     /// A unparsed directory node
     Directory(NewUnparsedDirectory),
     /// A unparsed file node
     File(NewUnparsedFile),
 }
 
-impl NewUnparsedNode {
+impl UnparsedNode {
     const MAGIC_FILE: u8 = 0x0;
     const MAGIC_DIRECTORY: u8 = 0x1;
 }
 
-impl<'de> BinaryDeserialize<'de> for NewUnparsedNode {
+impl<'de> BinaryDeserialize<'de> for UnparsedNode {
     fn deserialize_at(
         reader: &'de impl ZeroCopyReadAtExt,
         position: &mut u64,
@@ -107,12 +49,12 @@ impl<'de> BinaryDeserialize<'de> for NewUnparsedNode {
             let size = reader.read_at::<u32be>(position)?.into();
 
             match node_type {
-                Self::MAGIC_FILE => Ok(NewUnparsedNode::File(NewUnparsedFile {
+                Self::MAGIC_FILE => Ok(UnparsedNode::File(NewUnparsedFile {
                     name_offset,
                     data_offset,
                     size,
                 })),
-                Self::MAGIC_DIRECTORY => Ok(NewUnparsedNode::Directory(NewUnparsedDirectory {
+                Self::MAGIC_DIRECTORY => Ok(UnparsedNode::Directory(NewUnparsedDirectory {
                     name_offset,
                     last_included_node_index: size,
                 })),
@@ -140,7 +82,7 @@ impl BinarySerialize for NewUnparsedDirectory {
         writer: &mut (impl ZeroCopyWriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
-        writer.write_at(position, &NewUnparsedNode::MAGIC_DIRECTORY)?;
+        writer.write_at(position, &UnparsedNode::MAGIC_DIRECTORY)?;
         writer.write_at(position, &self.name_offset)?;
         writer.write_at(position, &u32be::from(0))?;
         writer.write_at(position, &self.last_included_node_index)?;
@@ -163,7 +105,7 @@ impl BinarySerialize for NewUnparsedFile {
         writer: &mut (impl ZeroCopyWriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
-        writer.write_at(position, &NewUnparsedNode::MAGIC_FILE)?;
+        writer.write_at(position, &UnparsedNode::MAGIC_FILE)?;
         writer.write_at(position, &self.name_offset)?;
         writer.write_at(position, &self.data_offset)?;
         writer.write_at(position, &self.size)?;
@@ -172,18 +114,19 @@ impl BinarySerialize for NewUnparsedFile {
 }
 
 /// The contents of a U8 archive
-pub struct NewU8Archive<'a> {
+#[derive(Debug)]
+pub struct U8Archive<'a> {
     /// The complete file tree of the archive
     pub file_tree: FileTree<'a>,
 }
 
-impl NewU8Archive<'_> {
+impl U8Archive<'_> {
     const MAGIC: u32be = u32be::new(0x55AA382D);
     const ROOTNODE_OFFSET: u32be = u32be::new(0x20);
     const PADDING: [u8; 16] = [0; 16];
 }
 
-impl<'de> BinaryDeserialize<'de> for NewU8Archive<'de> {
+impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
     fn deserialize_at(
         reader: &'de impl ZeroCopyReadAtExt,
         position: &mut u64,
@@ -209,7 +152,7 @@ impl<'de> BinaryDeserialize<'de> for NewU8Archive<'de> {
             test(&padding, &Self::PADDING)?;
 
             let rootnode = reader.read_at(position)?;
-            let NewUnparsedNode::Directory(rootnode) = rootnode else {
+            let UnparsedNode::Directory(rootnode) = rootnode else {
                 Err(ReadError::custom("Rootnode is not a directory!".into()))?
             };
 
@@ -228,7 +171,7 @@ impl<'de> BinaryDeserialize<'de> for NewU8Archive<'de> {
             for index in 2..=total_nodes {
                 let node = reader.read_at(position)?;
                 match node {
-                    NewUnparsedNode::Directory(node) => {
+                    UnparsedNode::Directory(node) => {
                         let mut string_offset = u64::from(node.name_offset) + string_table_offset;
                         let name = reader.read_null_terminated_string_at(&mut string_offset)?;
                         let tree = FileTree {
@@ -238,7 +181,7 @@ impl<'de> BinaryDeserialize<'de> for NewU8Archive<'de> {
                         trees.push((name, tree));
                         indexes.push(u32::from(node.last_included_node_index));
                     }
-                    NewUnparsedNode::File(node) => {
+                    UnparsedNode::File(node) => {
                         let mut data_offset = u64::from(node.data_offset) + begin_position;
                         let size = usize::try_from(node.size).unwrap();
                         let mut string_offset = u64::from(node.name_offset) + string_table_offset;
@@ -267,7 +210,7 @@ impl<'de> BinaryDeserialize<'de> for NewU8Archive<'de> {
                 }
             }
 
-            NewU8Archive {
+            U8Archive {
                 file_tree: trees.pop().unwrap_or_else(|| unreachable!()).1,
             }
         };
@@ -278,7 +221,7 @@ impl<'de> BinaryDeserialize<'de> for NewU8Archive<'de> {
     }
 }
 
-impl BinarySerialize for NewU8Archive<'_> {
+impl BinarySerialize for U8Archive<'_> {
     fn serialize_at(
         &self,
         writer: &mut (impl ZeroCopyWriteAt + ?Sized),
@@ -371,6 +314,7 @@ impl BinarySerialize for NewU8Archive<'_> {
 }
 
 /// A recursive file tree
+#[derive(Debug)]
 pub struct FileTree<'a> {
     /// The directories at this level
     pub directories: HashMap<Cow<'a, str>, FileTree<'a>>,

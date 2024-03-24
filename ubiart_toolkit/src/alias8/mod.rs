@@ -24,7 +24,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use bitflags::bitflags;
 use dotstar_toolkit_utils::{
-    bytes_newer4::{
+    bytes::{
         primitives::{u16be, u32be},
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteError, ZeroCopyWriteAt},

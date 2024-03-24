@@ -1,19 +1,16 @@
-use std::{
-    fs::File,
-    io::{self, BufWriter, Seek, Write},
-    num::NonZeroU64,
-    path::Path,
-};
+use std::{fs::File, io::BufWriter, num::NonZeroU64, path::Path};
 
-use byteorder::{BigEndian, WriteBytesExt};
-use dotstar_toolkit_utils::testing::test;
-use dotstar_toolkit_utils::vfs2::VirtualFileSystem;
-use flate2::{write::ZlibEncoder, Compression};
+use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileSystem};
+use dotstar_toolkit_utils::{
+    bytes::{
+        primitives::{u32be, u64be},
+        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
+    },
+    testing::test,
+};
 
 use super::{Platform, MAGIC};
-use crate::utils::{
-    self, bytes::WriteBytesExtUbiArt, errors::WriterError, Game, GamePlatform, SplitPath,
-};
+use crate::utils::{self, Game, SplitPath, UniqueGameId};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
@@ -66,17 +63,18 @@ const STATIC_HEADER_SIZE: usize = 0x30;
 /// Create a secure_fat.gf file at the path
 pub fn create<P: AsRef<Path>>(
     path: P,
-    game_platform: GamePlatform,
+    game_platform: UniqueGameId,
     unk4: u32,
     engine_version: u32,
     options: Options,
     vfs: &impl VirtualFileSystem,
     files: &[&str],
-) -> Result<(), WriterError> {
+) -> Result<(), WriteError> {
     let file = File::create(path)?;
-    let writer = BufWriter::new(file);
+    let mut writer = BufWriter::new(file);
     write(
-        writer,
+        &mut writer,
+        &mut 0,
         game_platform,
         unk4,
         engine_version,
@@ -87,15 +85,18 @@ pub fn create<P: AsRef<Path>>(
 }
 
 /// Create an .ipk file with the specified files.
-pub fn write<W: Write + Seek>(
-    mut writer: W,
-    game_platform: GamePlatform,
+pub fn write(
+    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    position: &mut u64,
+    game_platform: UniqueGameId,
     unk4: u32,
     engine_version: u32,
     options: Options,
     vfs: &impl VirtualFileSystem,
     files: &[&str],
-) -> Result<(), WriterError> {
+) -> Result<(), WriteError> {
+    let start = *position;
+
     // Calculate the size of the header, starting with the static size
     let mut base_offset = STATIC_HEADER_SIZE;
 
@@ -114,22 +115,22 @@ pub fn write<W: Write + Seek>(
     }
 
     // Start writing the header
-    writer.write_u32::<BigEndian>(MAGIC)?;
-    writer.write_u32::<BigEndian>(0x5)?; // version
-    writer.write_u32::<BigEndian>(u32::from(Into::<Platform>::into(game_platform.platform)))?;
-    writer.write_u32::<BigEndian>(u32::try_from(base_offset)?)?;
-    writer.write_u32::<BigEndian>(u32::try_from(files.len())?)?;
-    writer.write_u32::<BigEndian>(0x0)?; // unk1
-    writer.write_u32::<BigEndian>(0x0)?; // unk2
-    writer.write_u32::<BigEndian>(0x0)?; // unk3
-    writer.write_u32::<BigEndian>(unk4)?;
-    writer.write_u32::<BigEndian>(u32::from(game_platform))?;
-    writer.write_u32::<BigEndian>(engine_version)?;
-    writer.write_u32::<BigEndian>(u32::try_from(files.len())?)?;
+    writer.write_at(position, &u32be::from(MAGIC))?;
+    writer.write_at(position, &u32be::from(0x5))?; // version
+    writer.write_at(position, &Platform::from(game_platform.platform))?;
+    writer.write_at(position, &u32be::try_from(base_offset)?)?;
+    writer.write_at(position, &u32be::try_from(files.len())?)?;
+    writer.write_at(position, &u32be::from(0x0))?; // unk1
+    writer.write_at(position, &u32be::from(0x0))?; // unk2
+    writer.write_at(position, &u32be::from(0x0))?; // unk3
+    writer.write_at(position, &u32be::from(unk4))?;
+    writer.write_at(position, &game_platform)?;
+    writer.write_at(position, &u32be::from(engine_version))?;
+    writer.write_at(position, &u32be::try_from(files.len())?)?;
 
     // Skip the file metadata for now, as it depends on compression results
     let base_offset = u64::try_from(base_offset)?;
-    writer.seek(io::SeekFrom::Start(base_offset))?;
+    *position = base_offset;
 
     // For keeping track of the relevant metadata that needs to be written to the header
     let mut reduced_metadata = Vec::with_capacity(files.len());
@@ -138,7 +139,7 @@ pub fn write<W: Write + Seek>(
     for path in files {
         // The offset from the start of the file
         // NB: the metadata stores the offset relevant to the end of the header
-        let raw_offset = writer.stream_position()?;
+        let raw_offset = *position - start;
         // This is presumably a timestamp, but the values don't add up. So we use a static value.
         let timestamp = 132_761_939_258_059_932;
 
@@ -155,7 +156,7 @@ pub fn write<W: Write + Seek>(
             || path.ends_with("png")
         {
             // Skip compression for already compressed files and small files
-            writer.write_all(&file)?;
+            writer.write_slice_at(position, &file)?;
             // No compression thus compressed size is 0
             0
         } else {
@@ -163,35 +164,37 @@ pub fn write<W: Write + Seek>(
             match options.compression {
                 CompressionEffort::None => {
                     // Caller has disabled compression, so write uncompressed content
-                    writer.write_all(&file)?;
+                    writer.write_slice_at(position, &file)?;
                     // No compression thus compressed size is 0
                     0
                 }
                 CompressionEffort::Best => {
-                    // Compress with flate2
-                    let mut encoder = ZlibEncoder::new(writer, Compression::best());
-                    encoder.write_all(&file)?;
-                    writer = encoder.finish()?;
-                    // Return compressed size
-                    writer.stream_position()? - raw_offset
+                    todo!()
+                    // // Compress with flate2
+                    // let mut encoder = ZlibEncoder::new(writer, Compression::best());
+                    // encoder.write_all(&file)?;
+                    // writer = encoder.finish()?;
+                    // // Return compressed size
+                    // writer.stream_position()? - raw_offset
                 }
                 #[cfg(feature = "zopfli")]
                 CompressionEffort::Zopfli(provided_options) => {
-                    // TODO: impl From<ZopfliOptions> for zopfli::Options
-                    let options = zopfli::Options {
-                        iteration_count: provided_options.iteration_count,
-                        iterations_without_improvement: provided_options
-                            .iterations_without_improvement,
-                        ..Default::default()
-                    };
-                    // Zopfli encoder consumes the writer
-                    let mut encoder =
-                        zopfli::DeflateEncoder::new(options, zopfli::BlockType::default(), writer);
-                    encoder.write_all(&file)?;
-                    // Writer is returned at finish
-                    writer = encoder.finish()?;
-                    // Return compressed size
-                    writer.stream_position()? - raw_offset
+                    todo!()
+                    // // TODO: impl From<ZopfliOptions> for zopfli::Options
+                    // let options = zopfli::Options {
+                    //     iteration_count: provided_options.iteration_count,
+                    //     iterations_without_improvement: provided_options
+                    //         .iterations_without_improvement,
+                    //     ..Default::default()
+                    // };
+                    // // Zopfli encoder consumes the writer
+                    // let mut encoder =
+                    //     zopfli::DeflateEncoder::new(options, zopfli::BlockType::default(), writer);
+                    // encoder.write_all(&file)?;
+                    // // Writer is returned at finish
+                    // writer = encoder.finish()?;
+                    // // Return compressed size
+                    // writer.stream_position()? - raw_offset
                 }
             }
         };
@@ -208,27 +211,23 @@ pub fn write<W: Write + Seek>(
     }
 
     // Go back to the start of the metadata portion of the header
-    #[allow(
-        clippy::as_conversions,
-        reason = "STATIC_HEADER_SIZE is 0x30 thus this is always safe"
-    )]
-    writer.seek(io::SeekFrom::Start(STATIC_HEADER_SIZE as u64))?;
+    *position = STATIC_HEADER_SIZE as u64;
 
     // Write all the metadata
     for metadata in &reduced_metadata {
         // Convert the path into a `SplitPath`
-        let path = SplitPath::try_from(metadata.path)?;
+        let path = SplitPath::try_from(metadata.path).unwrap();
         // Write the file metadata
-        writer.write_u32::<BigEndian>(0x1)?; // unk1
-        writer.write_u32::<BigEndian>(u32::try_from(metadata.size)?)?;
-        writer.write_u32::<BigEndian>(u32::try_from(metadata.compressed)?)?;
-        writer.write_u64::<BigEndian>(metadata.timestamp)?;
-        writer.write_u64::<BigEndian>(metadata.offset)?;
-        writer.write_path::<BigEndian>(&path)?;
+        writer.write_at(position, &u32be::from(0x1))?; // unk1
+        writer.write_at(position, &u32be::from(u32::try_from(metadata.size)?))?;
+        writer.write_at(position, &u32be::from(u32::try_from(metadata.compressed)?))?;
+        writer.write_at(position, &u64be::from(metadata.timestamp))?;
+        writer.write_at(position, &u64be::from(metadata.offset))?;
+        writer.write_at(position, &path)?;
         if path.path.starts_with("cache/itf_cooked") {
-            writer.write_u32::<BigEndian>(0x2)?;
+            writer.write_at(position, &u32be::from(0x2))?;
         } else {
-            writer.write_u32::<BigEndian>(0)?;
+            writer.write_at(position, &u32be::from(0))?;
         }
     }
 
@@ -237,10 +236,21 @@ pub fn write<W: Write + Seek>(
             || game_platform.game == Game::JustDance2021
             || game_platform.game == Game::JustDance2022)
     {
-        writer.write_u32::<BigEndian>(0x0)?; // unknown seperator between metadata and data
+        writer.write_at(position, &u32be::from(0x0))?; // unknown seperator between metadata and data
     }
 
-    test(&writer.stream_position()?, &base_offset)?;
+    test(position, &base_offset)?;
 
     Ok(())
+}
+
+impl BinarySerialize for Platform {
+    fn serialize_at(
+        &self,
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), WriteError> {
+        writer.write_at(position, &u32be::from(*self as u32))?;
+        Ok(())
+    }
 }

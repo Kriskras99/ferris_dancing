@@ -1,10 +1,17 @@
 //! Contains the new byte writing traits
-use std::backtrace::Backtrace;
+use std::{
+    backtrace::Backtrace,
+    fs::File,
+    io::{BufWriter, Cursor, Seek, SeekFrom, Write},
+    num::TryFromIntError,
+};
 
-use positioned_io::WriteAt as PWrite;
+use positioned_io::WriteAt;
+// use positioned_io::WriteAt as PWrite;
 use thiserror::Error;
 
 use super::Len;
+use crate::testing::TestError;
 
 /// Errors returend when the test* functions fail
 #[derive(Error, Debug)]
@@ -18,11 +25,10 @@ pub enum WriteError {
         context: String,
     },
     /// Encountered an I/O error while trying to write to the destination
-    #[error("IoError occured while trying to write to the destination at {position}: {error}")]
+    #[error("IoError occured while trying to write to the destination: {error}")]
     IoError {
-        /// Position in the destination
-        position: u64,
         /// The error
+        #[from]
         error: std::io::Error,
         /// Backtrace
         backtrace: Backtrace,
@@ -35,14 +41,31 @@ pub enum WriteError {
         /// Backtrace
         backtrace: Backtrace,
     },
+    /// An integer could not be converted to another integer size
+    #[error("an integer could not be converted to another integer size: {tfie:?}")]
+    IntConversion {
+        /// The original test error
+        #[from]
+        tfie: TryFromIntError,
+        /// Backtrace
+        backtrace: Backtrace,
+    },
+    /// Something went wrong
+    #[error("something went wrong: {test:?}")]
+    Test {
+        /// The original test error
+        #[from]
+        test: TestError,
+        /// Backtrace
+        backtrace: Backtrace,
+    },
 }
 
 impl WriteError {
     /// Create the [`ReadError::IoError`] error
     #[must_use]
-    pub fn io_error(position: u64, error: std::io::Error) -> Self {
+    pub fn io_error(_position: u64, error: std::io::Error) -> Self {
         Self::IoError {
-            position,
             error,
             backtrace: Backtrace::capture(),
         }
@@ -208,7 +231,7 @@ pub trait ZeroCopyWriteAt {
     fn write_len_type_at<'de, 'a, L>(
         &mut self,
         position: &mut u64,
-        ty: impl Iterator<Item = &'a (impl BinarySerialize + 'a)> + ExactSizeIterator,
+        ty: impl ExactSizeIterator<Item = &'a (impl BinarySerialize + 'a)>,
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
@@ -239,13 +262,40 @@ pub trait ZeroCopyWriteAt {
     }
 }
 
-impl<T> ZeroCopyWriteAt for T
-where
-    T: PWrite,
-{
+// impl<T> ZeroCopyWriteAt for T
+// where
+//     T: PWrite,
+// {
+//     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
+//         self.write_all_at(*position, ty)
+//             .map_err(|e| WriteError::io_error(*position, e))?;
+//         Ok(())
+//     }
+// }
+
+// How to make this generic??
+impl ZeroCopyWriteAt for Cursor<&mut Vec<u8>> {
     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
-        self.write_all_at(*position, ty)
-            .map_err(|e| WriteError::io_error(*position, e))?;
+        self.seek(SeekFrom::Start(*position))?;
+        self.write_all(ty)?;
+        *position = self.position();
+        Ok(())
+    }
+}
+
+impl ZeroCopyWriteAt for File {
+    fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
+        self.write_all_at(*position, ty)?;
+        *position += u64::try_from(ty.len())?;
+        Ok(())
+    }
+}
+
+impl<T: Write + Seek> ZeroCopyWriteAt for BufWriter<T> {
+    fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
+        self.seek(SeekFrom::Start(*position))?;
+        self.write_all(ty)?;
+        *position += u64::try_from(ty.len())?;
         Ok(())
     }
 }
