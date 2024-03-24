@@ -2,7 +2,10 @@ use std::{fs::File, path::PathBuf, rc::Rc};
 
 use clap::Parser;
 use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
-use ubiart_toolkit::{cooked::act::Actor, utils::plumbing::{Nx2017, Nx2018, Nx2019, Nx2020, Nx2021, Nx2022, NxChina}};
+use ubiart_toolkit::{
+    cooked::act::Actor,
+    utils::plumbing::{Nx2017, Nx2018, Nx2019, Nx2020, Nx2021, Nx2022, NxChina},
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

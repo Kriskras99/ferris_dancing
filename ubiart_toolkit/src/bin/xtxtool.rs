@@ -2,10 +2,11 @@ use std::{
     ffi::OsStr,
     fs::File,
     path::{Path, PathBuf},
+    rc::Rc,
 };
 
 use clap::Parser;
-use dotstar_toolkit_utils::bytes::read_to_vec;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use image::{imageops, ImageBuffer, ImageFormat, Rgba};
 use serde::Serialize;
 use ubiart_toolkit::cooked::{
@@ -30,9 +31,8 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let data = read_to_vec(&cli.source).unwrap();
-    let png = cooked::png::parse(&data).unwrap();
-    drop(data);
+    let rc = Rc::new(File::open(&cli.source).unwrap());
+    let png = Png::deserialize(&rc).unwrap();
     if cli.info {
         println!("Width:            0x{:x}", png.width);
         println!("Height:           0x{:x}", png.height);

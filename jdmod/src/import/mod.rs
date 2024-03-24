@@ -108,14 +108,7 @@ pub fn import(
             Platform::Nx
         };
 
-        import_vfs(
-            &native_vfs,
-            dir_root,
-            game,
-            platform,
-            lax,
-            songs_only,
-        )?;
+        import_vfs(&native_vfs, dir_root, game, platform, lax, songs_only)?;
     } else {
         return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf and raw import are supported!"));
     }
