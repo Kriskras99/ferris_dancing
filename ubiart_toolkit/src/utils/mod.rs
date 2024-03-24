@@ -603,6 +603,8 @@ const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::ubi_crc;
+
     use super::string_id;
 
     #[test]
@@ -611,5 +613,12 @@ mod tests {
             string_id("world/maps/adoreyou/videoscoach/adoreyou.vp9.720.webm"),
             0x45CC_A9CA
         );
+    }
+
+    #[test]
+    fn it_works() {
+        let res = ubi_crc(&[0; 100]);
+        let result = 2 + 2;
+        assert_eq!(result, 4);
     }
 }
