@@ -4,11 +4,15 @@ use std::{
     collections::HashSet,
     fs::{create_dir_all, File},
     io::Write,
-    path::{Path, PathBuf}, rc::Rc,
+    path::{Path, PathBuf},
+    rc::Rc,
 };
 
 use clap::Parser;
-use dotstar_toolkit_utils::{bytes::read::BinaryDeserialize, vfs::{native::NativeFs, VirtualFileSystem}};
+use dotstar_toolkit_utils::{
+    bytes::read::BinaryDeserialize,
+    vfs::{native::NativeFs, VirtualFileSystem},
+};
 use ubiart_toolkit::{
     ipk::{self, Bundle},
     utils::{
@@ -171,6 +175,7 @@ pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> 
         },
         &vfs,
         &files,
-    ).unwrap();
+    )
+    .unwrap();
     Ok(())
 }
