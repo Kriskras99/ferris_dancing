@@ -1,54 +1,53 @@
-use std::path::Path;
+use std::{fs::File, path::Path, rc::Rc};
 
-use byteorder::BigEndian;
-use dotstar_toolkit_utils::{bytes::read_to_vec, bytes_new::read::BinaryDeserialize};
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit::alias8::Alias8;
 
 fn alias8_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
 fn alias8_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
 fn alias8_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
 fn alias8_parse_nx2020(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
 fn alias8_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
 fn alias8_parse_nx2020_japan(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
 fn alias8_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
 fn alias8_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = Alias8::deserialize::<BigEndian>(&data.as_slice())?;
+    let file = Rc::new(File::open(input)?);
+    let _ = Alias8::deserialize(&file)?;
     Ok(())
 }
 
