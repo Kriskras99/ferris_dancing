@@ -1,27 +1,29 @@
 //! A [`VirtualFileSystem`] implementation for [`SecureFat`]
 //!
 //! It will load the secure_fat.gf file and any IPK bundles listed therein plus the patch file.
-use std::{io::ErrorKind, path::Path};
+use std::{collections::HashMap, io::ErrorKind, path::Path};
 
-use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
-use nohash_hasher::{BuildNoHashHasher, IntMap};
+use dotstar_toolkit_utils::{
+    bytes::read::BinaryDeserialize,
+    vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs},
+};
 
 use super::{BundleId, SecureFat};
 use crate::{
     ipk::vfs::IpkFilesystem,
-    utils::{path_id, GamePlatform},
+    utils::{path_id, UniqueGameId},
 };
 
 pub struct SfatFilesystem<'f> {
     sfat: SecureFat,
-    bundles: IntMap<BundleId, IpkFilesystem<'f>>,
+    bundles: HashMap<BundleId, IpkFilesystem<'f>>,
     patch: Option<IpkFilesystem<'f>>,
 }
 
-impl SfatFilesystem<'_> {
+impl<'f> SfatFilesystem<'f> {
     /// Get the `GamePlatform` value for this secure_fat.gf file
     #[must_use]
-    pub const fn game_platform(&self) -> GamePlatform {
+    pub const fn game_platform(&self) -> UniqueGameId {
         self.sfat.game_platform()
     }
 
@@ -50,15 +52,13 @@ impl SfatFilesystem<'_> {
                 .unwrap_or_else(|| unreachable!())
         }
     }
-}
 
-impl<'f> SfatFilesystem<'f> {
     /// Create a new virtual filesystem from a secure_fat.gf at `path`
-    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path, lax: bool) -> std::io::Result<Self> {
+    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path) -> std::io::Result<Self> {
         let sfat_file = fs.open(path).map_err(|error| {
             std::io::Error::other(format!("Failed to open {path:?}: {error:?}"))
         })?;
-        let sfat = super::parse(&sfat_file, lax).map_err(|error| {
+        let sfat = SecureFat::deserialize(&sfat_file).map_err(|error| {
             std::io::Error::other(format!("Failed to parse secure_fat.gf: {error:?}"))
         })?;
         if sfat.bundle_count() == 0 {
@@ -66,22 +66,21 @@ impl<'f> SfatFilesystem<'f> {
                 "secure_fat.gf does not have any IPKs",
             ));
         }
-        let mut bundles =
-            IntMap::with_capacity_and_hasher(sfat.bundle_count(), BuildNoHashHasher::default());
+        let mut bundles = HashMap::with_capacity(sfat.bundle_count());
         let parent = path
             .parent()
             .ok_or_else(|| std::io::Error::from(ErrorKind::InvalidData))?;
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             let filename = super::bundle_name_to_filename(name, sfat.game_platform().platform);
             let path = parent.with_file_name(&filename);
-            let ipk = IpkFilesystem::new(fs, &path, lax).map_err(|error| {
+            let ipk = IpkFilesystem::new(fs, &path).map_err(|error| {
                 std::io::Error::other(format!("Failed to parse {path:?}: {error:?}"))
             })?;
             bundles.insert(*bundle_id, ipk);
         }
         let filename = super::bundle_name_to_filename("patch", sfat.game_platform().platform);
         let path = parent.with_file_name(filename);
-        let patch = IpkFilesystem::new(fs, &path, lax).ok();
+        let patch = IpkFilesystem::new(fs, &path).ok();
         if patch.is_none() {
             println!("Warning! No patch file found!");
         }
@@ -119,7 +118,7 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
         }
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
+    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
         let path_id = path_id(path);
         if let Some(metadata) = self.patch.as_ref().and_then(|p| p.metadata(path).ok()) {
             Ok(metadata)
@@ -143,15 +142,18 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
         }
     }
 
-    fn list_files(&self, path: &Path) -> std::io::Result<Vec<String>> {
-        let mut paths = Vec::with_capacity(self.sfat.path_count());
+    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        let mut paths = Vec::new();
         for bundle in self.bundles.values() {
-            paths.append(&mut bundle.list_files(path)?);
-            paths.sort_unstable();
-            paths.dedup();
+            paths.append(&mut bundle.walk_filesystem(path)?.paths);
         }
-        paths.retain(|p| self.sfat.path_id_to_bundle_ids.contains_key(&path_id(p)));
-        Ok(paths)
+        if let Some(bundle) = self.patch.as_ref() {
+            paths.append(&mut bundle.walk_filesystem(path)?.paths);
+        }
+        paths.sort_unstable();
+        paths.dedup();
+        paths.shrink_to_fit();
+        Ok(WalkFs { paths })
     }
 
     fn exists(&self, path: &Path) -> bool {

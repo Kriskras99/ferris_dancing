@@ -1,67 +1,74 @@
 //! Contains the parser implementation
 
-use byteorder::BigEndian;
 use dotstar_toolkit_utils::{
-    bytes::{read_u16_at, read_u32_at, read_u64_at},
+    bytes::{
+        primitives::{u16be, u32be, u64be},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    },
     testing::{test, test_any},
 };
 
 use super::Png;
-use crate::{cooked::xtx, utils::errors::ParserError};
+use crate::cooked::xtx::Xtx;
 
-/// Parse a .png.ckd file
-pub fn parse(src: &[u8]) -> Result<Png, ParserError> {
-    let mut position = 0;
+impl BinaryDeserialize<'_> for Png {
+    fn deserialize_at(
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let start_position = *position;
 
-    let magic = read_u64_at::<BigEndian>(src, &mut position)?;
-    test(&magic, &0x9_5445_5800)?;
+        let magic = reader.read_at::<u64be>(position)?.into();
+        test(&magic, &0x9_5445_5800u64)?;
 
-    let header_size = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&header_size, &0x2C)?;
+        let header_size = reader.read_at::<u32be>(position)?.into();
+        test(&header_size, &0x2Cu32)?;
 
-    let unk2 = read_u32_at::<BigEndian>(src, &mut position)?;
+        let unk2 = reader.read_at::<u32be>(position)?.into();
 
-    let width = read_u16_at::<BigEndian>(src, &mut position)?;
-    let height = read_u16_at::<BigEndian>(src, &mut position)?;
+        let width = reader.read_at::<u16be>(position)?.into();
+        let height = reader.read_at::<u16be>(position)?.into();
 
-    let unk4 = read_u16_at::<BigEndian>(src, &mut position)?;
-    test(&unk4, &0x0001)?;
+        let unk4 = reader.read_at::<u16be>(position)?.into();
+        test(&unk4, &0x0001)?;
 
-    let unk5 = read_u16_at::<BigEndian>(src, &mut position)?;
-    test_any(&unk5, &[0x1800, 0x1801, 0x2000, 0x2002])?;
+        let unk5 = reader.read_at::<u16be>(position)?.into();
+        test_any(&unk5, &[0x1800, 0x1801, 0x2000, 0x2002])?;
 
-    let unk6 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk2, &unk6)?;
+        let unk6 = reader.read_at::<u32be>(position)?.into();
+        test(&unk2, &unk6)?;
 
-    let unk7 = read_u32_at::<BigEndian>(src, &mut position)?;
-    test(&unk7, &0x0)?;
+        let unk7 = reader.read_at::<u32be>(position)?.into();
+        test(&unk7, &0x0u32)?;
 
-    let unk8 = read_u32_at::<BigEndian>(src, &mut position)?;
-    // largest values are all montage
-    let unk9 = read_u32_at::<BigEndian>(src, &mut position)?;
+        let unk8 = reader.read_at::<u32be>(position)?.into();
+        // largest values are all montage
+        let unk9 = reader.read_at::<u32be>(position)?.into();
 
-    let unk10 = read_u16_at::<BigEndian>(src, &mut position)?;
-    // montage is always 0x0202
-    test_any(&unk10, &[0x0202, 0x0])?;
+        let unk10 = reader.read_at::<u16be>(position)?.into();
+        // montage is always 0x0202
+        test_any(&unk10, &[0x0202, 0x0])?;
 
-    // Always zero for just dance 2022
-    let _unk11 = read_u16_at::<BigEndian>(src, &mut position)?;
+        // Always zero for just dance 2022
+        let _unk11 = reader.read_at::<u16be>(position)?;
 
-    // Start of XTX header (0x2C)
-    let xtx = xtx::parse(&src[0x2C..])?;
+        assert!(start_position + u64::from(header_size) == *position, "Implementation is incorrect!");
 
-    if xtx.images.len() > 1 {
-        println!("Multiple XTX images!");
+        let xtx = reader.read_at::<Xtx>(position)?;
+
+        if xtx.images.len() > 1 {
+            println!("Multiple XTX images!");
+        }
+
+        Ok(Self {
+            width,
+            height,
+            unk2,
+            unk5,
+            unk8,
+            unk9,
+            unk10,
+            xtx,
+        })
     }
-
-    Ok(Png {
-        width,
-        height,
-        unk2,
-        unk5,
-        unk8,
-        unk9,
-        unk10,
-        xtx,
-    })
 }

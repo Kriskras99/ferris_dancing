@@ -1,96 +1,107 @@
-use std::{io::ErrorKind, path::Path};
+use std::{
+    collections::hash_map::Entry,
+    io::ErrorKind,
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex, OnceLock, Weak},
+};
 
-use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
+use dotstar_toolkit_utils::{
+    bytes::read::BinaryDeserialize,
+    vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs},
+};
+use nohash_hasher::IntMap;
 use yoke::Yoke;
 
-use super::IpkFile;
-use crate::utils::path_id;
+use super::Bundle;
+use crate::utils::{path_id, PathId};
 
-pub struct IpkFilesystem<'f> {
-    ipk: Yoke<super::Bundle<'static>, VirtualFile<'f>>,
+pub struct IpkFilesystem<'fs> {
+    bundle: Yoke<Bundle<'static>, VirtualFile<'fs>>,
+    cache: Mutex<IntMap<PathId, Weak<Vec<u8>>>>,
+    list: OnceLock<Vec<PathBuf>>,
 }
 
-impl IpkFilesystem<'_> {
+impl<'fs> IpkFilesystem<'fs> {
     #[must_use]
     pub fn engine_version(&self) -> u32 {
-        self.ipk.get().engine_version
+        self.bundle.get().engine_version
     }
 
     #[must_use]
     pub fn unk4(&self) -> u32 {
-        self.ipk.get().unk4
+        self.bundle.get().unk4
     }
-}
 
-impl<'f> IpkFilesystem<'f> {
     /// Create a new virtual filesystem from the IPK file at `path`.
-    pub fn new(
-        fs: &'f dyn VirtualFileSystem,
-        path: &Path,
-        lax: bool,
-    ) -> Result<IpkFilesystem<'f>, std::io::Error> {
-        let ipk_file = fs.open(path)?;
-        let ipk: Yoke<super::Bundle<'_>, VirtualFile<'_>> =
-            Yoke::try_attach_to_cart(ipk_file, |data: &[u8]| super::parse(data, lax))
-                .map_err(|e| std::io::Error::other(format!("Parsing of IPK failed: {e:?}")))?;
-        Ok(Self { ipk })
-    }
-}
+    pub fn new(fs: &'fs dyn VirtualFileSystem, path: &Path) -> Result<Self, std::io::Error> {
+        let file = fs.open(path)?;
+        let bundle =
+            Yoke::try_attach_to_cart(file, |data: &[u8]| Bundle::deserialize(data)).unwrap();
 
-#[derive(Clone)]
-pub struct IpkMetadata {
-    pub timestamp: u64,
-    pub is_cooked: bool,
-    pub is_compressed: bool,
-    pub size: u64,
-}
-
-impl VirtualFileMetadata for IpkMetadata {
-    fn file_size(&self) -> u64 {
-        self.size
-    }
-
-    fn created(&self) -> std::io::Result<u64> {
-        Ok(self.timestamp)
-    }
-}
-
-impl From<&IpkFile<'_>> for IpkMetadata {
-    fn from(value: &IpkFile<'_>) -> Self {
-        Self {
-            timestamp: value.timestamp,
-            is_cooked: value.is_cooked,
-            is_compressed: matches!(value.data, super::Data::Compressed(_)),
-            size: value.data.len(),
-        }
+        Ok(Self {
+            bundle,
+            cache: Mutex::new(IntMap::default()),
+            list: OnceLock::new(),
+        })
     }
 }
 
 impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
-    fn open<'f>(&'f self, path: &Path) -> std::io::Result<VirtualFile<'f>> {
+    #[allow(clippy::significant_drop_in_scrutinee, reason = "Guard is needed in the entire match")]
+    fn open<'rf>(&'rf self, path: &Path) -> std::io::Result<VirtualFile<'rf>> {
         let path_id = path_id(path);
-        let file = self.ipk.get().files.get(&path_id).ok_or_else(|| {
+        let file = self.bundle.get().files.get(&path_id).ok_or_else(|| {
             std::io::Error::new(
                 ErrorKind::NotFound,
                 format!("Could not open {path:?}, file not found!"),
             )
         })?;
-        match file.data {
-            super::Data::Uncompressed(data) => Ok(VirtualFile::from(data.data)),
+        match &file.data {
+            super::Data::Uncompressed(data) => Ok(VirtualFile::Slice(data.data.as_ref())),
             super::Data::Compressed(data) => {
-                let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
-                let mut decompress = flate2::Decompress::new(true);
-                decompress.decompress_vec(data.data, &mut vec, flate2::FlushDecompress::Finish)?;
-                Ok(VirtualFile::from(vec))
+                let mut cache = self.cache.lock().unwrap();
+                match cache.entry(path_id) {
+                    Entry::Occupied(mut entry) => {
+                        if let Some(arc) = entry.get().upgrade() {
+                            Ok(VirtualFile::Vec(arc))
+                        } else {
+                            let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
+                            let mut decompress = flate2::Decompress::new(true);
+                            decompress.decompress_vec(
+                                data.data.as_ref(),
+                                &mut vec,
+                                flate2::FlushDecompress::Finish,
+                            )?;
+                            let arc = Arc::new(vec);
+                            entry.insert(Arc::downgrade(&arc));
+                            Ok(VirtualFile::Vec(arc))
+                        }
+                    }
+                    Entry::Vacant(entry) => {
+                        let mut vec = Vec::with_capacity(data.uncompressed_size + 1);
+                        let mut decompress = flate2::Decompress::new(true);
+                        decompress.decompress_vec(
+                            data.data.as_ref(),
+                            &mut vec,
+                            flate2::FlushDecompress::Finish,
+                        )?;
+                        let arc = Arc::new(vec);
+                        entry.insert(Arc::downgrade(&arc));
+                        Ok(VirtualFile::Vec(arc))
+                    }
+                }
             }
         }
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
+    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
         let path_id = path_id(path);
-        let file = self.ipk.get().files.get(&path_id);
+        let file = self.bundle.get().files.get(&path_id);
         match file {
-            Some(file) => Ok(Box::new(IpkMetadata::from(file))),
+            Some(file) => Ok(VirtualMetadata {
+                file_size: file.data.len(),
+                created: Ok(file.timestamp),
+            }),
             None => Err(std::io::Error::new(
                 ErrorKind::NotFound,
                 format!("Could not get metadata for {path:?}, file not found!"),
@@ -98,26 +109,31 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
         }
     }
 
-    fn list_files(&self, path: &Path) -> std::io::Result<Vec<String>> {
-        if let Some(path) = path.to_str() {
-            Ok(self
-                .ipk
+    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        let list = self.list.get_or_init(|| {
+            self.bundle
                 .get()
                 .files
                 .values()
                 .map(|f| &f.path)
-                .map(ToString::to_string)
-                .filter_map(|s| {
-                    let ss = s.strip_prefix('/').unwrap_or(s.as_str());
-                    ss.starts_with(path).then(|| ss.to_string())
+                .map(|p| {
+                    let mut pb = PathBuf::with_capacity(p.len());
+                    pb.push(p.path.as_ref());
+                    pb.push(p.filename.as_ref());
+                    pb
                 })
-                .collect())
-        } else {
-            Ok(Vec::new())
-        }
+                .collect()
+        });
+
+        Ok(WalkFs {
+            paths: list
+                .iter()
+                .filter_map(|p| p.strip_prefix(path).ok())
+                .collect(),
+        })
     }
 
     fn exists(&self, path: &Path) -> bool {
-        self.ipk.get().files.contains_key(&path_id(path))
+        self.bundle.get().files.contains_key(&path_id(path))
     }
 }

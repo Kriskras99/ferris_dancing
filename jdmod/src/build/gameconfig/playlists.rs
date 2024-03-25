@@ -49,14 +49,15 @@ pub fn build(
         let cooked_cover = encode_texture(&bs.dirs.playlists().join(cover.as_ref()))?;
         let cooked_cover_vec = cooked::png::create_vec(&cooked_cover)?;
         bf.generated_files.add_file(
-            cook_path(offline_playlist.cover_path.as_ref(), bs.platform)?,
+            cook_path(offline_playlist.cover_path.as_ref(), bs.platform)?.into(),
             cover_actor_vec,
         )?;
         bf.generated_files.add_file(
             cook_path(
                 &format!("world/ui/textures/covers/playlists_offline/{tga}"),
                 bs.platform,
-            )?,
+            )?
+            .into(),
             cooked_cover_vec,
         )?;
 
@@ -71,7 +72,7 @@ pub fn build(
 
     let template_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.config_files_path.playlist, bs.platform)?,
+        cook_path(&gameconfig.config_files_path.playlist, bs.platform)?.into(),
         template_vec,
     )?;
 
@@ -129,7 +130,7 @@ fn build_carousel(
         100_000,
     )?;
     bf.generated_files
-        .add_file(carousel_rules_path, carousel_vec)?;
+        .add_file(carousel_rules_path.into(), carousel_vec)?;
 
     Ok(())
 }
@@ -144,34 +145,31 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
-        components: vec![cooked::act::Component {
-            the_type: cooked::act::ComponentType::MaterialGraphicComponent,
-            data: cooked::act::ComponentData::MaterialGraphicComponent(Box::new(
-                cooked::act::MaterialGraphicComponent {
-                    // TODO: Check values!
-                    files: [
-                        SplitPath {
-                            path: Cow::Borrowed("world/ui/textures/covers/playlists_offline/"),
-                            filename: Cow::Borrowed(tga),
-                        },
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath {
-                            path: Cow::Borrowed("world/_common/matshader/"),
-                            filename: Cow::Borrowed("multitexture_1layer.msh"),
-                        },
-                    ],
-                    ..Default::default()
-                },
-            )),
-        }],
+        components: vec![cooked::act::Component::MaterialGraphicComponent(
+            cooked::act::MaterialGraphicComponent {
+                // TODO: Check values!
+                files: [
+                    SplitPath {
+                        path: Cow::Borrowed("world/ui/textures/covers/playlists_offline/"),
+                        filename: Cow::Borrowed(tga),
+                    },
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath {
+                        path: Cow::Borrowed("world/_common/matshader/"),
+                        filename: Cow::Borrowed("multitexture_1layer.msh"),
+                    },
+                ],
+                ..Default::default()
+            },
+        )],
     };
 
     Ok(cooked::act::create_vec(&actor)?)

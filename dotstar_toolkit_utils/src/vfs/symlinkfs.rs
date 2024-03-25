@@ -1,12 +1,12 @@
 //! # Symlink Filesystem
 //! This filesystem creates a new view of it's backing filesystem
 use std::{
-    collections::HashMap,
+    collections::{hash_map::Entry, HashMap},
     io::{Error, ErrorKind, Result},
     path::{Path, PathBuf},
 };
 
-use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
 
 // TODO: Add type alias for the PathBufs
 /// A filesystem that maps paths to a backing filesystem
@@ -31,7 +31,7 @@ impl SymlinkFs<'_> {
             ));
         }
         match self.mapping.entry(new_path) {
-            std::collections::hash_map::Entry::Occupied(entry) => {
+            Entry::Occupied(entry) => {
                 if entry.get() != &orig_path {
                     return Err(Error::new(
                     ErrorKind::AlreadyExists,
@@ -39,7 +39,7 @@ impl SymlinkFs<'_> {
                 ));
                 }
             }
-            std::collections::hash_map::Entry::Vacant(entry) => {
+            Entry::Vacant(entry) => {
                 entry.insert(orig_path);
             }
         }
@@ -112,7 +112,7 @@ impl VirtualFileSystem for SymlinkFs<'_> {
         self.backing_fs.open(actual_path)
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
+    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
         let actual_path = self
             .mapping
             .get(path)
@@ -120,19 +120,14 @@ impl VirtualFileSystem for SymlinkFs<'_> {
         self.backing_fs.metadata(actual_path)
     }
 
-    fn list_files(&self, path: &Path) -> Result<Vec<String>> {
-        let mut files = Vec::with_capacity(self.mapping.keys().len());
-        for file in self.mapping.keys() {
-            if file.starts_with(path) {
-                files.push(file.to_str().map(str::to_string).ok_or_else(|| {
-                    Error::new(
-                        ErrorKind::InvalidInput,
-                        format!("Path is not valid utf-8: {file:?}"),
-                    )
-                })?);
-            }
-        }
-        Ok(files)
+    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        Ok(WalkFs {
+            paths: self
+                .mapping
+                .keys()
+                .filter_map(|p| p.strip_prefix(path).ok())
+                .collect(),
+        })
     }
 
     fn exists(&self, path: &Path) -> bool {

@@ -1,8 +1,7 @@
-use std::path::PathBuf;
+use std::{fs::File, path::PathBuf};
 
-use byteorder::BigEndian;
 use clap::Parser;
-use dotstar_toolkit_utils::{bytes::read_to_vec, bytes_new::read::BinaryDeserialize};
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit::alias8::Alias8;
 
 #[derive(Parser)]
@@ -14,13 +13,10 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let data = read_to_vec(cli.source).unwrap();
-    let alias8 = Alias8::deserialize::<BigEndian>(&data.as_slice()).unwrap();
+    let file = File::open(cli.source).unwrap();
+    let alias8 = Alias8::deserialize(&file).unwrap();
 
-    for alias in alias8.aliases {
-        println!(
-            "{:04x} {} {} {}",
-            alias.unk3, alias.first_alias, alias.second_alias, alias.path
-        );
+    for alias in alias8.aliases() {
+        println!("{:04b} {} {}", alias.unk3 >> 12, alias.alias, alias.path);
     }
 }

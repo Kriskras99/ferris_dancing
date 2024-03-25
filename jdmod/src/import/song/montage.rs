@@ -1,10 +1,13 @@
 //! # Pictogram Spritesheest
 //! Code for converting pictogram spritesheets into individual pictograms
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::{test, test_ge, test_le};
+use dotstar_toolkit_utils::{
+    bytes::read::BinaryDeserialize,
+    testing::{test, test_ge, test_le},
+};
 use image::{imageops, ImageBuffer, RgbaImage};
 use texpresso::Format;
-use ubiart_toolkit::cooked::{self, xtx};
+use ubiart_toolkit::cooked::{png::Png, xtx};
 
 use super::SongImportState;
 
@@ -21,7 +24,7 @@ pub fn import(
 ) -> Result<(), Error> {
     // Open the montage file
     let montage_file = sis.vfs.open(montage_path.as_ref())?;
-    let montage = cooked::png::parse(&montage_file)?;
+    let montage = Png::deserialize(&montage_file)?;
     let montage_width = u32::from(montage.width);
     let montage_height = u32::from(montage.height);
 

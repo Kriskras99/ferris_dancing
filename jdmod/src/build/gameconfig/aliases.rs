@@ -53,7 +53,7 @@ pub fn build(
 
     let local_aliases_vec = cooked::json::create_vec_with_capacity_hint(&local_aliases, 230_000)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.alias_db_path, bs.platform)?,
+        cook_path(&gameconfig.alias_db_path, bs.platform)?.into(),
         local_aliases_vec,
     )?;
 

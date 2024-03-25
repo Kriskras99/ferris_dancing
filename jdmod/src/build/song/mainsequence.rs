@@ -33,17 +33,17 @@ pub fn build(
     let cine_scene_vec = cooked::isc::create_vec_with_capacity_hint(&cine_scene, 900)?;
 
     bf.generated_files.add_file(
-        format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.act.ckd"),
+        format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.act.ckd").into(),
         mainsequence_actor_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.tpl.ckd"),
+        format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.tpl.ckd").into(),
         mainsequence_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{cinematics_cache_dir}/{lower_map_name}_cine.isc.ckd"),
+        format!("{cinematics_cache_dir}/{lower_map_name}_cine.isc.ckd").into(),
         cine_scene_vec,
     )?;
 
@@ -66,10 +66,7 @@ fn mainsequence_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
-        components: vec![cooked::act::Component {
-            the_type: cooked::act::ComponentType::MasterTape,
-            data: cooked::act::ComponentData::None,
-        }],
+        components: vec![cooked::act::Component::MasterTape],
     };
 
     Ok(cooked::act::create_vec(&actor)?)
@@ -191,7 +188,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
                     let cooked_template_path = cook_path(&template_path, ses.platform)?;
                     let cooked_template_vec = cooked::json::create_vec(&template)?;
                     bf.generated_files
-                        .add_file(cooked_template_path, cooked_template_vec)?;
+                        .add_file(cooked_template_path.into(), cooked_template_vec)?;
                 }
 
                 // Create the new clip with the proper template path
@@ -222,7 +219,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
 
     let mainsequence_tape_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
-        format!("{cache_map_path}/cinematics/{lower_map_name}_mainsequence.tape.ckd"),
+        format!("{cache_map_path}/cinematics/{lower_map_name}_mainsequence.tape.ckd").into(),
         mainsequence_tape_vec,
     )?;
 

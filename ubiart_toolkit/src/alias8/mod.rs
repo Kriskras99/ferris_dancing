@@ -9,24 +9,25 @@
 //! | 0x8 | ...  | `Alias` | `aliases`     | Repeated `num_aliases` times  |
 //!
 //! ## Alias
-//! | Pos | Size         | Type        | Id           | Description                                 |
-//! |-----|--------------|-------------|--------------|---------------------------------------------|
-//! | 0x0 | 4            | `u32be`     | `len_alias1` | The length of the first alias               |
-//! | 0x4 | `len_alias1` | `String`    | `alias1`     | The first alias                             |
-//! | ... | 4            | `u32be`     | `len_alias2` | The lenth of the second alias               |
-//! | ... | `len_alias2` | `String`    | `alias2`     | The second alias                            |
-//! | ... | ...          | `SplitPath` | `path`       | The path the aliases point to               |
-//! | ... | 2            | `u16be`     | `unk2`       | Always 0xFFFF                               |
-//! | ... | 2            | `u16be`     | `unk3`       | Unknown, possible values in [`Alias::UNK3`] |
+//! | Pos | Size         | Type        | Id           | Description                                        |
+//! |-----|--------------|-------------|--------------|----------------------------------------------------|
+//! | 0x0 | 4            | `u32be`     | `len_alias1` | The length of the first alias                      |
+//! | 0x4 | `len_alias1` | `String`    | `alias1`     | The first alias                                    |
+//! | ... | 4            | `u32be`     | `len_alias2` | The lenth of the second alias                      |
+//! | ... | `len_alias2` | `String`    | `alias2`     | The second alias                                   |
+//! | ... | ...          | `SplitPath` | `path`       | The path the aliases point to                      |
+//! | ... | 2            | `u16be`     | `unk2`       | Always 0xFFFF                                      |
+//! | ... | 2            | `u16be`     | `unk3`       | Probably flags, possible values in [`Alias::UNK3`] |
 #![deny(clippy::missing_docs_in_private_items)]
 
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashMap};
 
-use byteorder::ByteOrder;
+use bitflags::bitflags;
 use dotstar_toolkit_utils::{
-    bytes_new::{
-        read::{BinaryDeserialize, NewReadError, ZeroCopyReadAt},
-        write::{BinarySerialize, NewWriteError, ZeroCopyWriteAt},
+    bytes::{
+        primitives::{u16be, u32be},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
     },
     testing::{test, test_any},
 };
@@ -36,14 +37,34 @@ use crate::utils::SplitPath;
 /// Describes a single alias
 #[derive(Debug, Clone)]
 pub struct Alias<'a> {
-    /// The first alias name
-    pub first_alias: Cow<'a, str>,
-    /// The second alias name
-    pub second_alias: Cow<'a, str>,
+    /// The alias name
+    pub alias: Cow<'a, str>,
     /// The (uncooked) path for the alias
     pub path: SplitPath<'a>,
     /// Unknown value
     pub unk3: u16,
+}
+
+bitflags! {
+    pub struct Unk3: u16 {
+        const Win32        = 0b0000_0000_0000_0001;
+        const X360         = 0b0000_0000_0000_0010;
+        const UnkPlatform1 = 0b0000_0000_0000_0100;
+        const PS4          = 0b0000_0000_0000_1000;
+        const UnkPlatform2 = 0b0000_0000_0001_0000;
+        const UnkPlatform3 = 0b0000_0000_0010_0000;
+        const UnkPlatform4 = 0b0000_0000_0100_0000;
+        const UnkPlatform5 = 0b0000_0000_1000_0000;
+        const WiiU         = 0b0000_0001_0000_0000;
+        const UnkPlatform6 = 0b0000_0010_0000_0000;
+        const XOne         = 0b0000_0100_0000_0000;
+        const Switch       = 0b0000_1000_0000_0000;
+        const Unk1         = 0b0001_0000_0000_0000;
+        const Unk2         = 0b0010_0000_0000_0000;
+        const Unk3         = 0b0100_0000_0000_0000;
+        const Unk4         = 0b1000_0000_0000_0000;
+        const Platforms    = 0b0000_1111_1111_1111;
+    }
 }
 
 impl Alias<'_> {
@@ -57,33 +78,26 @@ impl Alias<'_> {
     ];
 }
 
-impl<'a> BinaryDeserialize<'a> for Alias<'a> {
-    fn deserialize_at<B>(
-        reader: &(impl ZeroCopyReadAt<'a> + ?Sized),
+impl<'de> BinaryDeserialize<'de> for Alias<'de> {
+    fn deserialize_at(
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, NewReadError>
-    where
-        B: ByteOrder,
-    {
+    ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
             // Read the strings
-            let first_alias = reader.read_len_string_at::<B, u32>(position)?;
-            let second_alias = reader.read_len_string_at::<B, u32>(position)?;
-            let path = reader.read_at::<B, _>(position)?;
+            let alias = reader.read_len_string_at::<u32be>(position)?;
+            let second_alias = reader.read_len_string_at::<u32be>(position)?;
+            test(&alias, &second_alias).context("1st and 2nd alias are not the same!")?;
+            let path = reader.read_at(position)?;
 
             // Read the unknown values and check them
-            let unk2 = reader.read_at::<B, _>(position)?;
-            let unk3 = reader.read_at::<B, _>(position)?;
+            let unk2 = reader.read_at::<u16be>(position)?.into();
+            let unk3 = reader.read_at::<u16be>(position)?.into();
             test(&unk2, &Self::UNK2)?;
             test_any(&unk3, Self::UNK3)?;
 
-            Self {
-                first_alias,
-                second_alias,
-                path,
-                unk3,
-            }
+            Self { alias, path, unk3 }
         };
         if result.is_err() {
             *position = old_position;
@@ -93,19 +107,16 @@ impl<'a> BinaryDeserialize<'a> for Alias<'a> {
 }
 
 impl BinarySerialize for Alias<'_> {
-    fn serialize_at<B>(
+    fn serialize_at(
         &self,
         writer: &mut (impl ZeroCopyWriteAt + ?Sized),
         position: &mut u64,
-    ) -> Result<(), NewWriteError>
-    where
-        B: ByteOrder,
-    {
-        writer.write_len_string_at::<B, u32>(position, &self.first_alias)?;
-        writer.write_len_string_at::<B, u32>(position, &self.second_alias)?;
-        writer.write_at::<B>(position, &self.path)?;
-        writer.write_at::<B>(position, &Self::UNK2)?;
-        writer.write_at::<B>(position, &self.unk3)?;
+    ) -> Result<(), WriteError> {
+        writer.write_len_string_at::<u32be>(position, &self.alias)?;
+        writer.write_len_string_at::<u32be>(position, &self.alias)?;
+        writer.write_at(position, &self.path)?;
+        writer.write_at(position, &u16be::from(Self::UNK2))?;
+        writer.write_at(position, &u16be::from(self.unk3))?;
         Ok(())
     }
 }
@@ -114,41 +125,43 @@ impl BinarySerialize for Alias<'_> {
 #[derive(Debug, Clone)]
 pub struct Alias8<'a> {
     /// The aliases in this file
-    pub aliases: Vec<Alias<'a>>,
+    aliases: HashMap<Cow<'a, str>, Alias<'a>>,
 }
 
-impl Alias8<'_> {
+impl<'a> Alias8<'a> {
     /// UNK1 is always 0x2
     const UNK1: u32 = 0x2;
 
     /// Find the path for a given alias
     #[must_use]
     pub fn get_path_for_alias(&self, alias: &str) -> Option<String> {
-        for a in &self.aliases {
-            if a.first_alias == alias || a.second_alias == alias {
-                return Some(a.path.to_string());
-            }
-        }
-        None
+        self.aliases.get(alias).map(|a| a.path.to_string())
+    }
+
+    pub fn aliases(&self) -> impl Iterator<Item = &Alias<'a>> {
+        self.aliases.values()
     }
 }
 
-impl<'a> BinaryDeserialize<'a> for Alias8<'a> {
-    fn deserialize_at<B>(
-        reader: &(impl ZeroCopyReadAt<'a> + ?Sized),
+impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
+    fn deserialize_at(
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, NewReadError>
-    where
-        B: ByteOrder,
-    {
+    ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
             // Read the unknown value at the beginning and check it's correct
-            let unk1 = reader.read_at::<B, _>(position)?;
+            let unk1 = reader.read_at::<u32be>(position)?.into();
             test(&unk1, &Self::UNK1)?;
 
             // Read the aliases
-            let aliases = reader.read_len_type_at::<B, u32, _>(position)?;
+            let lazy_aliases = reader.read_len_type_at::<u32be, Alias>(position)?;
+            let mut aliases = HashMap::with_capacity(lazy_aliases.size_hint().0);
+            for alias in lazy_aliases {
+                let alias = alias?;
+                let exists = aliases.insert(alias.alias.clone(), alias).is_some();
+                test(&exists, &false)?;
+            }
             Alias8 { aliases }
         };
         if result.is_err() {
@@ -159,16 +172,13 @@ impl<'a> BinaryDeserialize<'a> for Alias8<'a> {
 }
 
 impl BinarySerialize for Alias8<'_> {
-    fn serialize_at<B>(
+    fn serialize_at(
         &self,
         writer: &mut (impl ZeroCopyWriteAt + ?Sized),
         position: &mut u64,
-    ) -> Result<(), NewWriteError>
-    where
-        B: ByteOrder,
-    {
-        writer.write_at::<B>(position, &Self::UNK1)?;
-        writer.write_len_type_at::<B, u32>(position, &self.aliases)?;
+    ) -> Result<(), WriteError> {
+        writer.write_at(position, &u32be::from(Self::UNK1))?;
+        writer.write_len_type_at::<u32be>(position, &mut self.aliases.values())?;
         Ok(())
     }
 }

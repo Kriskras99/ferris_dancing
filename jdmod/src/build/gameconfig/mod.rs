@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{bytes::BigEndian, bytes_new::read::BinaryDeserialize};
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit::{alias8::Alias8, cooked, json_types};
 
 use super::{BuildFiles, BuildState};
@@ -28,7 +28,7 @@ pub fn build(bs: &BuildState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
     let aliases_file = bs
         .patched_base_vfs
         .open("enginedata/common.alias8".as_ref())?;
-    let aliases = Alias8::deserialize::<BigEndian>(&aliases_file.as_ref())?;
+    let aliases = Alias8::deserialize(&aliases_file)?;
 
     // Load the gameconfig
     let gameconfig_path = cook_path(
@@ -61,7 +61,7 @@ pub fn build(bs: &BuildState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
     let gameconfig_vec =
         cooked::json::create_vec(&json_types::v22::Template22::GameManagerConfig(gameconfig))?;
     bf.generated_files
-        .add_file(gameconfig_path, gameconfig_vec)?;
+        .add_file(gameconfig_path.into(), gameconfig_vec)?;
 
     Ok(())
 }

@@ -4,7 +4,6 @@ mod writer;
 
 use std::num::TryFromIntError;
 
-pub use parser::*;
 pub use types::*;
 pub use writer::*;
 

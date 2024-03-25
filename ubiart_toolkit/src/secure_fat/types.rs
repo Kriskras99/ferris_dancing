@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use nohash_hasher::{BuildNoHashHasher, IntMap, IsEnabled};
 
-use crate::utils::{GamePlatform, PathId, Platform};
+use crate::utils::{PathId, Platform, UniqueGameId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BundleId(u8);
@@ -43,7 +43,7 @@ impl IsEnabled for BundleId {}
 
 /// Representation of secure_fat.gf
 pub struct SecureFat {
-    pub(super) game_platform: GamePlatform,
+    pub(super) game_platform: UniqueGameId,
     pub(super) path_id_to_bundle_ids: IntMap<PathId, Vec<BundleId>>,
     pub(super) bundle_id_to_bundle_name: IntMap<BundleId, String>,
 }
@@ -51,7 +51,7 @@ pub struct SecureFat {
 impl SecureFat {
     /// Create a new (empty) secure fat
     #[must_use]
-    pub fn with_capacity(game_platform: GamePlatform, capacity: usize) -> Self {
+    pub fn with_capacity(game_platform: UniqueGameId, capacity: usize) -> Self {
         Self {
             game_platform,
             path_id_to_bundle_ids: IntMap::with_capacity_and_hasher(
@@ -109,7 +109,7 @@ impl SecureFat {
 
     /// Returns the game platform
     #[must_use]
-    pub const fn game_platform(&self) -> GamePlatform {
+    pub const fn game_platform(&self) -> UniqueGameId {
         self.game_platform
     }
 

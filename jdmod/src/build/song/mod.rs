@@ -111,11 +111,11 @@ pub fn build(
     let main_scene_vec = cooked::isc::create_vec_with_capacity_hint(&main_scene, 35_000)?;
 
     bf.generated_files.add_file(
-        format!("{cache_map_path}/{lower_map_name}_main_scene.sgs.ckd"),
+        format!("{cache_map_path}/{lower_map_name}_main_scene.sgs.ckd").into(),
         scene_settings,
     )?;
     bf.generated_files.add_file(
-        format!("{cache_map_path}/{lower_map_name}_main_scene.isc.ckd"),
+        format!("{cache_map_path}/{lower_map_name}_main_scene.isc.ckd").into(),
         main_scene_vec,
     )?;
 
@@ -171,7 +171,7 @@ fn graph_scene(
     let graph_scene_vec = cooked::isc::create_vec_with_capacity_hint(&root, 791)?;
 
     bf.generated_files.add_file(
-        format!("{cache_map_path}/{lower_map_name}_graph.isc.ckd"),
+        format!("{cache_map_path}/{lower_map_name}_graph.isc.ckd").into(),
         graph_scene_vec,
     )?;
 

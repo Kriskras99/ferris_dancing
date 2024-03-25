@@ -4,11 +4,11 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Error};
 use clap::Args;
-use dotstar_toolkit_utils::bytes::BigEndian;
-use dotstar_toolkit_utils::bytes_new::read::BinaryDeserialize;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use dotstar_toolkit_utils::testing::test;
-use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
+use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem};
 use ubiart_toolkit::alias8::Alias8;
+use ubiart_toolkit::utils::UniqueGameId;
 use ubiart_toolkit::{
     cooked,
     secure_fat::vfs::SfatFilesystem,
@@ -76,12 +76,12 @@ pub fn import(
 
     if game_path.ends_with("secure_fat.gf") {
         // Init the native filesystem and load the securefat as a virtual filesystem
-        let native_vfs = Native::new(
+        let native_vfs = NativeFs::new(
             game_path
                 .parent()
                 .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
         )?;
-        let sfat_vfs = SfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"), lax)?;
+        let sfat_vfs = SfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"))?;
 
         // TODO: Check engine version and warn user they're missing an update
 
@@ -92,7 +92,7 @@ pub fn import(
         // Import songs and other content from the game
         import_vfs(&sfat_vfs, dir_root, game, platform, lax, songs_only)?;
     } else if game_path.is_dir() {
-        let native_vfs = Native::new(game_path)?;
+        let native_vfs = NativeFs::new(game_path)?;
 
         let game = if let Some(game) = game {
             game
@@ -108,14 +108,7 @@ pub fn import(
             Platform::Nx
         };
 
-        import_vfs(
-            &native_vfs,
-            dir_root,
-            game,
-            platform,
-            lax,
-            songs_only,
-        )?;
+        import_vfs(&native_vfs, dir_root, game, platform, lax, songs_only)?;
     } else {
         return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf and raw import are supported!"));
     }
@@ -143,7 +136,7 @@ pub fn import_vfs(
 
     // Load alias8, which contains the locations of important files
     let alias8_file = vfs.open(String::from("enginedata/common.alias8").as_ref())?;
-    let aliases = Alias8::deserialize::<BigEndian>(&alias8_file.as_ref())?;
+    let aliases = Alias8::deserialize(&alias8_file)?;
 
     // Collect common required items in a convenient place
     let is = ImportState {
@@ -151,6 +144,11 @@ pub fn import_vfs(
         dirs,
         game,
         platform,
+        unique_game_id: UniqueGameId {
+            game,
+            platform,
+            id: 0,
+        },
         locale_id_map,
         aliases,
         lax,

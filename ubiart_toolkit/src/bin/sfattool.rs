@@ -1,8 +1,8 @@
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
-use memmap2::Mmap;
-use ubiart_toolkit::secure_fat;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use ubiart_toolkit::secure_fat::SecureFat;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -21,9 +21,7 @@ fn main() {
     let cli = Cli::parse();
 
     let file = File::open(cli.source).unwrap();
-    let mmap = unsafe { Mmap::map(&file).unwrap() };
-
-    let sfat = secure_fat::parse(&mmap, cli.lax).unwrap();
+    let sfat = SecureFat::deserialize(&file).unwrap();
 
     if cli.header {
         println!("GamePlatform: {:?}", sfat.game_platform());
