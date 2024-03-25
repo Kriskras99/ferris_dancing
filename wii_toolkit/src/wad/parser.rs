@@ -26,14 +26,14 @@ fn aes_128_cbc_decrypt_inplace(data: &mut [u8], iv: &[u8], key: &[u8]) {
 
 impl<'de> BinaryDeserialize<'de> for WadArchive<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let size: u32 = reader.read_at::<u32be>(position)?.into();
         let wad_type = reader.read_at::<WadType>(position)?;
         match (size, wad_type) {
             (0x20, WadType::Bootable | WadType::Installable) => parse_installable(reader, position, wad_type),
-            (0x70, WadType::Backup) => Err(ReadError::custom(format!("Backup WAD parsing not yet implemented!"))),
+            (0x70, WadType::Backup) => Err(ReadError::custom("Backup WAD parsing not yet implemented!".to_string())),
             _ => Err(ReadError::custom(format!("Unknown WAD type found or file is not a WAD file! Metadata size: {size}, WAD type: {wad_type:?}"))),
         }
     }
@@ -45,7 +45,7 @@ impl<'de> BinaryDeserialize<'de> for WadArchive<'de> {
 /// Will error if `src` is not large enough
 /// Will error if there is incorrect data
 fn parse_installable<'de>(
-    reader: &'de impl ZeroCopyReadAtExt,
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
     wad_type: WadType,
 ) -> Result<WadArchive<'de>, ReadError> {
@@ -105,7 +105,7 @@ const COMMON_KEY: [u8; 0x10] = [
 /// Will error if `src` is not large enough
 /// Will error if there is incorrect data
 fn parse_ticket(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<TicketMetadata, ReadError> {
     // skip signature, padding, issuer and ECDH data
@@ -143,9 +143,9 @@ fn parse_ticket(
     *position = position.checked_add(0xB2).unwrap();
 
     if format_version > 0 {
-        return Err(ReadError::custom(format!(
-            "Ticket: V1 header not yet supported!"
-        )));
+        return Err(ReadError::custom(
+            "Ticket: V1 header not yet supported!".to_string(),
+        ));
     }
 
     // decrypt title key
@@ -171,7 +171,7 @@ fn parse_ticket(
 /// Will error if the `src` is not large enough
 /// Will error if there is incorrect data
 fn parse_tmd(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<TitleMetadata, ReadError> {
     let signature_type = reader.read_at::<u32be>(position)?.into();
@@ -254,7 +254,7 @@ fn parse_tmd(
 /// # Errors
 /// Will error if the various contents are too large
 fn parse_content<'de>(
-    reader: &'de impl ZeroCopyReadAtExt,
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
     ticket: &TicketMetadata,
     title: &TitleMetadata,

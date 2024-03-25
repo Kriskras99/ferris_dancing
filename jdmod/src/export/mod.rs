@@ -7,7 +7,7 @@ use anyhow::{bail, Error};
 use clap::Args;
 use dotstar_toolkit_utils::vfs::symlinkfs::SymlinkFs;
 use dotstar_toolkit_utils::vfs::vecfs::VecFs;
-use dotstar_toolkit_utils::vfs::{layeredfs::OverlayFs, native::Native};
+use dotstar_toolkit_utils::vfs::{layeredfs::OverlayFs, native::NativeFs};
 use ubiart_toolkit::ipk::vfs::IpkFilesystem;
 use ubiart_toolkit::utils::Game;
 use ubiart_toolkit::utils::Platform;
@@ -67,9 +67,9 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
     }
 
     // Load bundle_nx.ipk and patch_nx.ipk to use as a base
-    let base_native_vfs = Native::new(dir_tree.base())?;
-    let bundle_nx_vfs = IpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref(), false)?;
-    let patch_nx_vfs = IpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref(), false)?;
+    let base_native_vfs = NativeFs::new(dir_tree.base())?;
+    let bundle_nx_vfs = IpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref())?;
+    let patch_nx_vfs = IpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref())?;
     let patched_base_vfs = OverlayFs::new(&patch_nx_vfs, &bundle_nx_vfs);
 
     /*
@@ -95,7 +95,7 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
         engine_version: config.engine_version,
     };
 
-    let native_vfs = Native::new(&std::env::current_dir()?)?;
+    let native_vfs = NativeFs::new(&std::env::current_dir()?)?;
 
     // Get a list of all songs in the directory
     let mut paths: Vec<_> = std::fs::read_dir(build_state.dirs.songs())?

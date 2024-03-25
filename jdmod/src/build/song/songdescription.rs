@@ -80,21 +80,18 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
-        components: vec![cooked::act::Component {
-            the_type: cooked::act::ComponentType::SongDescComponent,
-            data: cooked::act::ComponentData::None,
-        }],
+        components: vec![cooked::act::Component::SongDescComponent],
     };
 
     let song_desc_tpl_vec = cooked::json::create_vec(&song_desc_tpl)?;
     let song_desc_act_vec = cooked::act::create_vec(&song_desc_act)?;
 
     bf.generated_files.add_file(
-        format!("{cache_map_path}/songdesc.tpl.ckd"),
+        format!("{cache_map_path}/songdesc.tpl.ckd").into(),
         song_desc_tpl_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{cache_map_path}/songdesc.act.ckd"),
+        format!("{cache_map_path}/songdesc.act.ckd").into(),
         song_desc_act_vec,
     )?;
 

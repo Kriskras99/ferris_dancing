@@ -1,7 +1,5 @@
 //! Contains the parser implementation
 
-use std::marker::PhantomData;
-
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
@@ -13,269 +11,256 @@ use dotstar_toolkit_utils::{
 use super::{
     Actor, Component, CreditsComponent, MaterialGraphicComponent, PleoComponent, UITextBox,
 };
-use crate::utils::{plumbing::GamePlatform, Game, SplitPath};
+use crate::utils::{Game, SplitPath, UniqueGameId};
 
-impl<'de, Gp: GamePlatform> BinaryDeserialize<'de> for Actor<'de, Gp> {
-    fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
-        position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let unk0 = reader.read_at::<u32be>(position)?.into();
-        test(&unk0, &1u32)?;
-        let unk1 = reader.read_at::<u32be>(position)?.into();
+pub fn parse<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<Actor<'de>, ReadError> {
+    let unk0 = reader.read_at::<u32be>(position)?.into();
+    test(&unk0, &1u32)?;
+    let unk1 = reader.read_at::<u32be>(position)?.into();
+    test_any(
+        &unk1,
+        &[
+            0x0,
+            0x3D23_D70A,
+            0x3DCC_CCCD,
+            0x3F66_6C4C,
+            0x3F80_0000,
+            0x4000_0000,
+        ],
+    )?;
+    let unk2 = reader.read_at::<u32be>(position)?.into();
+    test_any(
+        &unk2,
+        &[
+            0x3F00_0000,
+            0x3F80_0000,
+            0x4240_0000,
+            0x4320_0000,
+            0x4420_0000,
+            0x4422_8000,
+        ],
+    )?;
+    let unk2_5 = reader.read_at::<u32be>(position)?.into();
+    test_any(
+        &unk2_5,
+        &[
+            0x3F00_0000,
+            0x3F80_0000,
+            0x4120_0000,
+            0x4240_0000,
+            0x4320_0000,
+        ],
+    )?;
+    let unk3 = reader.read_at::<u64be>(position)?.into();
+    test(&unk3, &0u64)?;
+    let unk3_5 = reader.read_at::<u32be>(position)?.into();
+    test(&unk3_5, &0u32)?;
+    match gp.game {
+        Game::JustDance2022 | Game::JustDance2021 | Game::JustDance2020 | Game::JustDance2019 => {
+            let unk4 = reader.read_at::<u64be>(position)?.into();
+            test(&unk4, &0x1_0000_0000)?;
+        }
+        _ => {
+            let unk4 = reader.read_at::<u32be>(position)?.into();
+            test_any(&unk4, &[0x1u32, 0x0])?;
+            if unk4 == 0x1 {
+                let unk4_5 = reader.read_at::<u32be>(position)?.into();
+                test(&unk4_5, &0u32)?;
+            }
+        }
+    };
+    let unk5 = reader.read_at::<u32be>(position)?.into();
+    test(&unk5, &0u32)?;
+    let unk6 = reader.read_at::<u64be>(position)?.into();
+    test(&unk6, &0)?;
+    let unk7 = reader.read_at::<u64be>(position)?.into();
+    test(&unk7, &0xFFFF_FFFF)?;
+    let unk8 = reader.read_at::<u32be>(position)?.into();
+    test(&unk8, &0u32)?;
+
+    let tpl = reader.read_at::<SplitPath>(position)?;
+    test(&tpl.is_empty(), &false)?;
+    let unk9 = reader.read_at::<u32be>(position)?.into();
+    test(&unk9, &0u32)?;
+    let actor_amount: usize = reader.read_at::<u32be>(position)?.try_into()?;
+
+    let mut components = Vec::with_capacity(actor_amount);
+    for _ in 0..actor_amount {
+        let component = parse_component(reader, position, gp)?;
+        components.push(component);
+    }
+
+    Ok(Actor {
+        tpl,
+        unk1,
+        unk2,
+        unk2_5,
+        components,
+    })
+}
+
+pub fn parse_component<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<Component<'de>, ReadError> {
+    // String id of the class name of the template without the '_Template' but including 'JD_' if it is in the class name
+    let component_type: u32 = reader.read_at::<u32be>(position)?.into();
+
+    let component = match component_type {
+        // JD_AutoDanceComponent
+        0x67B8_BB77 => Component::AutodanceComponent,
+        // JD_BeatPulseComponent
+        0x7184_37A8 => todo!(),
+        // BoxInterpolatorComponent
+        0xF513_60DA => {
+            parse_box_interpolator_component(reader, position)?;
+            Component::BoxInterpolatorComponent
+        }
+        // CameraGraphicComponent
+        0xC760_4FA1 => todo!(),
+        // ClearColorComponent
+        0xAEBB_218B => todo!(),
+        // ConvertedTmlTape_Component
+        0xCD07_BB76 => {
+            parse_converted_tml_tape(reader, position)?;
+            Component::ConvertedTmlTapeComponent
+        }
+        // JD_CreditsComponent
+        0x342E_A4FC => Component::CreditsComponent(parse_credits_component(reader, position, gp)?),
+        // JD_FixedCameraComponent
+        0x3D5D_EBA2 => {
+            parse_fixed_camera_component(reader, position)?;
+            Component::FixedCameraComponent
+        }
+        // FXControllerComponent
+        0x8D4F_FFB6 => {
+            parse_fx_controller(reader, position)?;
+            Component::FXControllerComponent
+        }
+        // MasterTape
+        0x677B_269B => Component::MasterTape,
+        // MaterialGraphicComponent
+        0x72B6_1FC5 => Component::MaterialGraphicComponent(parse_material_graphic_component(
+            reader, position, gp, false,
+        )?),
+        // JD_Carousel
+        0x27E4_80C0 => todo!(),
+        // JD_PictoComponent
+        0xC316_BF34 => todo!(),
+        // PleoComponent
+        0x1263_DAD9 => Component::PleoComponent(reader.read_at::<PleoComponent>(position)?),
+        // PleoTextureGraphicComponent
+        0x0579_E81B => Component::MaterialGraphicComponent(parse_material_graphic_component(
+            reader, position, gp, true,
+        )?),
+        // PropertyPatcher
+        0xF719_B524 => {
+            parse_property_patcher(reader, position, gp)?;
+            Component::PropertyPatcher
+        }
+        // JD_RegistrationComponent
+        0xE0A2_4B6D => {
+            parse_registration_component(reader, position)?;
+            Component::RegistrationComponent
+        }
+        // SingleInstanceMesh3DComponent
+        0x53E3_2AF7 => todo!(),
+        // JD_SongDatabaseComponent
+        0x4055_79FB => Component::SongDatabaseComponent,
+        // JD_SongDescComponent
+        0xE07F_CC3F => Component::SongDescComponent,
+        // SoundComponent
+        0x7DD8_643C => todo!(),
+        // TapeCase_Component
+        0x231F_27DE => Component::TapeCaseComponent,
+        // TextureGraphicComponent
+        0x7B48_A9AE => todo!(),
+        // UICarousel
+        0x8782_FE60 => todo!(),
+        // UITextBox
+        0xD10C_BEED => Component::UITextBox(parse_ui_text_box(reader, position, gp)?),
+        // JD_UIWidgetGroupHUD_AutodanceRecorder
+        0x9F87_350C => todo!(),
+        // JD_UIWidgetGroupHUD_Lyrics
+        0xF22C_9426 => todo!(),
+        // ViewportUIComponent
+        0x6990_834C => todo!(),
+        // JD_AvatarDescComponent
+        0x1759_E29D => Component::AvatarDescComponent,
+        // JD_SkinDescComponent
+        0x84EA_AE82 => Component::SkinDescComponent,
+        // FxBankComponent
+        0x966B_519D => {
+            parse_fx_bank_component(reader, position)?;
+            Component::FxBankComponent
+        }
+        // BezierTreeComponent
+        0x3236_CF4C => {
+            parse_bezier_tree_component(reader, position)?;
+            Component::BezierTreeComponent
+        }
+        // AFXPostProcessComponent
+        0x2B34_9E69 => {
+            parse_afx_post_process_component(reader, position)?;
+            Component::AFXPostProcessComponent
+        }
+        _ => {
+            return Err(ReadError::custom(format!(
+                "Unknown component type: {component_type:x}!"
+            )))
+        }
+    };
+
+    Ok(component)
+}
+
+pub fn parse_credits_component<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<CreditsComponent<'de>, ReadError> {
+    let unk11 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk11, &[0xDu32, 0x17]).context(*position)?;
+    let i = if gp.game == Game::JustDance2017 {
+        6u32
+    } else {
+        10
+    };
+    for _ in 0..i {
+        let unk12 = reader.read_at::<u32be>(position)?.into();
         test_any(
-            &unk1,
+            &unk12,
             &[
-                0x0,
-                0x3D23_D70A,
+                0x41C8_0000u32,
+                0x41F0_0000,
+                0x4220_0000,
+                0x4248_0000,
+                0x3F00_0000,
                 0x3DCC_CCCD,
-                0x3F66_6C4C,
-                0x3F80_0000,
-                0x4000_0000,
+                0x4170_0000,
+                0x4404_4000,
             ],
-        )?;
-        let unk2 = reader.read_at::<u32be>(position)?.into();
-        test_any(
-            &unk2,
-            &[
-                0x3F00_0000,
-                0x3F80_0000,
-                0x4240_0000,
-                0x4320_0000,
-                0x4420_0000,
-                0x4422_8000,
-            ],
-        )?;
-        let unk2_5 = reader.read_at::<u32be>(position)?.into();
-        test_any(
-            &unk2_5,
-            &[
-                0x3F00_0000,
-                0x3F80_0000,
-                0x4120_0000,
-                0x4240_0000,
-                0x4320_0000,
-            ],
-        )?;
-        let unk3 = reader.read_at::<u64be>(position)?.into();
-        test(&unk3, &0u64)?;
-        let unk3_5 = reader.read_at::<u32be>(position)?.into();
-        test(&unk3_5, &0u32)?;
-        match Gp::version() {
-            Game::JustDance2022
-            | Game::JustDance2021
-            | Game::JustDance2020
-            | Game::JustDance2019 => {
-                let unk4 = reader.read_at::<u64be>(position)?.into();
-                test(&unk4, &0x1_0000_0000)?;
-            }
-            _ => {
-                let unk4 = reader.read_at::<u32be>(position)?.into();
-                test_any(&unk4, &[0x1u32, 0x0])?;
-                if unk4 == 0x1 {
-                    let unk4_5 = reader.read_at::<u32be>(position)?.into();
-                    test(&unk4_5, &0u32)?;
-                }
-            }
-        };
-        let unk5 = reader.read_at::<u32be>(position)?.into();
-        test(&unk5, &0u32)?;
-        let unk6 = reader.read_at::<u64be>(position)?.into();
-        test(&unk6, &0)?;
-        let unk7 = reader.read_at::<u64be>(position)?.into();
-        test(&unk7, &0xFFFF_FFFF)?;
-        let unk8 = reader.read_at::<u32be>(position)?.into();
-        test(&unk8, &0u32)?;
-
-        let tpl = reader.read_at::<SplitPath>(position)?;
-        test(&tpl.is_empty(), &false)?;
-        let unk9 = reader.read_at::<u32be>(position)?.into();
-        test(&unk9, &0u32)?;
-        let actor_amount: usize = reader.read_at::<u32be>(position)?.try_into()?;
-
-        let mut components = Vec::with_capacity(actor_amount);
-        for _ in 0..actor_amount {
-            let component = reader.read_at::<Component<Gp>>(position)?;
-            components.push(component);
-        }
-
-        Ok(Actor {
-            tpl,
-            unk1,
-            unk2,
-            unk2_5,
-            components,
-            phantom: PhantomData,
-        })
+        )
+        .context(*position)?;
     }
-}
-
-impl<'de, Gp: GamePlatform> BinaryDeserialize<'de> for Component<'de, Gp> {
-    fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
-        position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        // String id of the class name of the template without the '_Template' but including 'JD_' if it is in the class name
-        let component_type: u32 = reader.read_at::<u32be>(position)?.into();
-
-        let component =
-            match component_type {
-                // JD_AutoDanceComponent
-                0x67B8_BB77 => Component::AutodanceComponent,
-                // JD_BeatPulseComponent
-                0x7184_37A8 => todo!(),
-                // BoxInterpolatorComponent
-                0xF513_60DA => {
-                    parse_box_interpolator_component(reader, position)?;
-                    Component::BoxInterpolatorComponent
-                }
-                // CameraGraphicComponent
-                0xC760_4FA1 => todo!(),
-                // ClearColorComponent
-                0xAEBB_218B => todo!(),
-                // ConvertedTmlTape_Component
-                0xCD07_BB76 => {
-                    parse_converted_tml_tape(reader, position)?;
-                    Component::ConvertedTmlTapeComponent
-                }
-                // JD_CreditsComponent
-                0x342E_A4FC => {
-                    Component::CreditsComponent(reader.read_at::<CreditsComponent<Gp>>(position)?)
-                }
-                // JD_FixedCameraComponent
-                0x3D5D_EBA2 => {
-                    parse_fixed_camera_component(reader, position)?;
-                    Component::FixedCameraComponent
-                }
-                // FXControllerComponent
-                0x8D4F_FFB6 => {
-                    parse_fx_controller(reader, position)?;
-                    Component::FXControllerComponent
-                }
-                // MasterTape
-                0x677B_269B => Component::MasterTape,
-                // MaterialGraphicComponent
-                0x72B6_1FC5 => Component::MaterialGraphicComponent(
-                    parse_material_graphic_component::<Gp>(reader, position, false)?,
-                ),
-                // JD_Carousel
-                0x27E4_80C0 => todo!(),
-                // JD_PictoComponent
-                0xC316_BF34 => todo!(),
-                // PleoComponent
-                0x1263_DAD9 => Component::PleoComponent(reader.read_at::<PleoComponent>(position)?),
-                // PleoTextureGraphicComponent
-                0x0579_E81B => Component::MaterialGraphicComponent(
-                    parse_material_graphic_component::<Gp>(reader, position, true)?,
-                ),
-                // PropertyPatcher
-                0xF719_B524 => {
-                    parse_property_patcher::<Gp>(reader, position)?;
-                    Component::PropertyPatcher
-                }
-                // JD_RegistrationComponent
-                0xE0A2_4B6D => {
-                    parse_registration_component(reader, position)?;
-                    Component::RegistrationComponent
-                }
-                // SingleInstanceMesh3DComponent
-                0x53E3_2AF7 => todo!(),
-                // JD_SongDatabaseComponent
-                0x4055_79FB => Component::SongDatabaseComponent,
-                // JD_SongDescComponent
-                0xE07F_CC3F => Component::SongDescComponent,
-                // SoundComponent
-                0x7DD8_643C => todo!(),
-                // TapeCase_Component
-                0x231F_27DE => Component::TapeCaseComponent,
-                // TextureGraphicComponent
-                0x7B48_A9AE => todo!(),
-                // UICarousel
-                0x8782_FE60 => todo!(),
-                // UITextBox
-                0xD10C_BEED => Component::UITextBox(parse_ui_text_box::<Gp>(reader, position)?),
-                // JD_UIWidgetGroupHUD_AutodanceRecorder
-                0x9F87_350C => todo!(),
-                // JD_UIWidgetGroupHUD_Lyrics
-                0xF22C_9426 => todo!(),
-                // ViewportUIComponent
-                0x6990_834C => todo!(),
-                // JD_AvatarDescComponent
-                0x1759_E29D => Component::AvatarDescComponent,
-                // JD_SkinDescComponent
-                0x84EA_AE82 => Component::SkinDescComponent,
-                // FxBankComponent
-                0x966B_519D => {
-                    parse_fx_bank_component(reader, position)?;
-                    Component::FxBankComponent
-                }
-                // BezierTreeComponent
-                0x3236_CF4C => {
-                    parse_bezier_tree_component(reader, position)?;
-                    Component::BezierTreeComponent
-                }
-                // AFXPostProcessComponent
-                0x2B34_9E69 => {
-                    parse_afx_post_process_component(reader, position)?;
-                    Component::AFXPostProcessComponent
-                }
-                _ => {
-                    return Err(ReadError::custom(format!(
-                        "Unknown component type: {component_type:x}!"
-                    )))
-                }
-            };
-
-        Ok(component)
+    let number_of_lines = usize::try_from(reader.read_at::<u32be>(position)?)?;
+    let mut lines = Vec::with_capacity(number_of_lines);
+    for _ in 0..number_of_lines {
+        let line = reader.read_len_string_at::<u32be>(position)?;
+        lines.push(line);
     }
-}
 
-impl<'de, Gp: GamePlatform> BinaryDeserialize<'de> for CreditsComponent<'de, Gp> {
-    fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
-        position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let unk11 = reader.read_at::<u32be>(position)?.into();
-        test_any(&unk11, &[0xDu32, 0x17]).context(*position)?;
-        let i = if Gp::version() == Game::JustDance2017 {
-            6u32
-        } else {
-            10
-        };
-        for _ in 0..i {
-            let unk12 = reader.read_at::<u32be>(position)?.into();
-            test_any(
-                &unk12,
-                &[
-                    0x41C8_0000u32,
-                    0x41F0_0000,
-                    0x4220_0000,
-                    0x4248_0000,
-                    0x3F00_0000,
-                    0x3DCC_CCCD,
-                    0x4170_0000,
-                    0x4404_4000,
-                ],
-            )
-            .context(*position)?;
-        }
-        let number_of_lines = usize::try_from(reader.read_at::<u32be>(position)?)?;
-        let mut lines = Vec::with_capacity(number_of_lines);
-        for _ in 0..number_of_lines {
-            let line = reader.read_len_string_at::<u32be>(position)?;
-            lines.push(line);
-        }
-
-        Ok(CreditsComponent {
-            lines,
-            phantom: PhantomData,
-        })
-    }
+    Ok(CreditsComponent { lines })
 }
 
 /// Parse the registration component of an actor
 fn parse_registration_component(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
@@ -287,7 +272,7 @@ fn parse_registration_component(
 
 /// Parse the box interpolator component of an actor
 fn parse_box_interpolator_component(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     for _ in 0..2 {
@@ -311,7 +296,7 @@ fn parse_box_interpolator_component(
 
 /// Parse the AFX post process component of an actor
 fn parse_afx_post_process_component(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk16 = reader.read_at::<u64be>(position)?.into();
@@ -323,7 +308,7 @@ fn parse_afx_post_process_component(
 
 /// Parse the converted tml tape component of an actor
 fn parse_converted_tml_tape(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
@@ -333,7 +318,7 @@ fn parse_converted_tml_tape(
 
 /// Parse the fixed camera component of an actor
 fn parse_fixed_camera_component(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
@@ -349,7 +334,7 @@ fn parse_fixed_camera_component(
 
 /// Parse the fx controller component of an actor
 fn parse_fx_controller(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u64be>(position)?.into();
@@ -359,7 +344,7 @@ fn parse_fx_controller(
 
 /// Parse the fx bank component of an actor
 fn parse_fx_bank_component(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     for _ in 0..4 {
@@ -379,7 +364,7 @@ fn parse_fx_bank_component(
 
 /// Parse the bezier tree component of an actor
 fn parse_bezier_tree_component(
-    reader: &impl ZeroCopyReadAtExt,
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk18 = reader.read_at::<u32be>(position)?.into();
@@ -416,12 +401,13 @@ fn parse_bezier_tree_component(
 }
 
 /// Parse the material graphic component of an actor
-fn parse_material_graphic_component<'de, Gp: GamePlatform>(
-    reader: &'de impl ZeroCopyReadAtExt,
+fn parse_material_graphic_component<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
+    gp: UniqueGameId,
     is_pleo: bool,
 ) -> Result<MaterialGraphicComponent<'de>, ReadError> {
-    let game = Gp::version();
+    let game = gp.game;
     for _ in 0..3 {
         let unk11 = reader.read_at::<u32be>(position)?.into();
         test(&unk11, &0x3F80_0000u32)?;
@@ -612,7 +598,7 @@ fn parse_material_graphic_component<'de, Gp: GamePlatform>(
 
 impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let video = reader.read_at::<SplitPath>(position)?;
@@ -632,15 +618,16 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
 }
 
 /// Parse the property patcher component of an actor
-fn parse_property_patcher<Gp: GamePlatform>(
-    reader: &impl ZeroCopyReadAtExt,
+fn parse_property_patcher(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
+    gp: UniqueGameId,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
     test(&unk11, &1u32)?;
     let unk12 = reader.read_at::<u32be>(position)?.into();
     test(&unk12, &0u32)?;
-    if Gp::version() != Game::JustDance2017 {
+    if gp.game != Game::JustDance2017 {
         let unk13 = reader.read_at::<u32be>(position)?.into();
         test(&unk13, &0u32)?;
     }
@@ -648,11 +635,12 @@ fn parse_property_patcher<Gp: GamePlatform>(
 }
 
 /// Parse the ui textbox component of an actor
-fn parse_ui_text_box<'de, Gp: GamePlatform>(
-    reader: &'de impl ZeroCopyReadAtExt,
+fn parse_ui_text_box<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
     position: &mut u64,
+    gp: UniqueGameId,
 ) -> Result<UITextBox<'de>, ReadError> {
-    let game = Gp::version();
+    let game = gp.game;
     let unk11 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk11, &[0x0u32, 0x2, 0x3])?;
     let unk12 = reader.read_at::<u32be>(position)?.into();

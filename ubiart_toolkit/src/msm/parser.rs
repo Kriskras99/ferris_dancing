@@ -12,7 +12,7 @@ use super::MovementSpaceMove;
 
 impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         // Check the magic

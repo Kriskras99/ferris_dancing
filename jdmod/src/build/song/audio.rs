@@ -59,22 +59,22 @@ pub fn build(
     let audio_scene_vec = cooked::isc::create_vec_with_capacity_hint(&audio_scene, 1200)?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}_musictrack.tpl.ckd"),
+        format!("{audio_cache_dir}/{lower_map_name}_musictrack.tpl.ckd").into(),
         musictrack_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}_sequence.tpl.ckd"),
+        format!("{audio_cache_dir}/{lower_map_name}_sequence.tpl.ckd").into(),
         sequence_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}.stape.ckd"),
+        format!("{audio_cache_dir}/{lower_map_name}.stape.ckd").into(),
         sequence_tape_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}_audio.isc.ckd"),
+        format!("{audio_cache_dir}/{lower_map_name}_audio.isc.ckd").into(),
         audio_scene_vec,
     )?;
 

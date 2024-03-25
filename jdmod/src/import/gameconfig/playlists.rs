@@ -4,7 +4,7 @@ use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Context, Error};
 use dotstar_toolkit_utils::testing::test;
-use ubiart_toolkit::cooked::{self, act::ComponentType};
+use ubiart_toolkit::cooked::{self, act::Component};
 
 use crate::{
     types::{gameconfig::playlists::Playlist, ImportState},
@@ -39,13 +39,13 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
         let act_file = is
             .vfs
             .open(cook_path(&playlist.cover_path, is.platform)?.as_ref())?;
-        let actor = cooked::act::parse(&act_file, is.game)?;
+        let actor = cooked::act::parse(&act_file, &mut 0, is.unique_game_id)?;
         let template = actor
             .components
             .iter()
-            .find(|t| t.the_type == ComponentType::MaterialGraphicComponent)
+            .find(|t| matches!(t, Component::MaterialGraphicComponent(_)))
             .ok_or_else(|| anyhow!("No MaterialGraphicComponent in actor!"))?;
-        let tga_path = template.data.material_graphics_component()?.files[0].to_string();
+        let tga_path = template.material_graphic_component()?.files[0].to_string();
         test(&tga_path.is_empty(), &false)?;
 
         // Open the cover and save it to the mod directory

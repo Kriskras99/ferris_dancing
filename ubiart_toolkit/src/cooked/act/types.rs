@@ -1,21 +1,20 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use std::{borrow::Cow, marker::PhantomData};
+use std::borrow::Cow;
 
-use crate::utils::{plumbing::GamePlatform, SplitPath};
+use crate::utils::{errors::ParserError, SplitPath};
 
 #[derive(Debug, Clone)]
-pub struct Actor<'a, Gp: GamePlatform> {
+pub struct Actor<'a> {
     pub tpl: SplitPath<'a>,
     pub unk1: u32,
     pub unk2: u32,
     pub unk2_5: u32,
-    pub components: Vec<Component<'a, Gp>>,
-    pub phantom: PhantomData<Gp>,
+    pub components: Vec<Component<'a>>,
 }
 
 #[derive(Debug, Clone)]
-pub enum Component<'a, Gp: GamePlatform> {
+pub enum Component<'a> {
     AutodanceComponent,
     BeatPulseComponent,
     BoxInterpolatorComponent,
@@ -23,7 +22,7 @@ pub enum Component<'a, Gp: GamePlatform> {
     Carousel,
     ClearColorComponent,
     ConvertedTmlTapeComponent,
-    CreditsComponent(CreditsComponent<'a, Gp>),
+    CreditsComponent(CreditsComponent<'a>),
     FixedCameraComponent,
     FXControllerComponent,
     MasterTape,
@@ -49,11 +48,11 @@ pub enum Component<'a, Gp: GamePlatform> {
     FxBankComponent,
     BezierTreeComponent,
     AFXPostProcessComponent,
-    Phantom(PhantomData<Gp>),
 }
 
-impl<Gp: GamePlatform> Component<'_, Gp> {
-    pub fn to_id(&self) -> u32 {
+impl Component<'_> {
+    #[must_use]
+    pub const fn to_id(&self) -> u32 {
         match self {
             // JD_AutoDanceComponent
             Component::AutodanceComponent => 0x67B8_BB77,
@@ -121,16 +120,24 @@ impl<Gp: GamePlatform> Component<'_, Gp> {
             Component::BezierTreeComponent => 0x3236_CF4C,
             // AFXPostProcessComponent
             Component::AFXPostProcessComponent => 0x2B34_9E69,
-            Component::Phantom(_) => unreachable!(),
+        }
+    }
+
+    pub fn material_graphic_component(&self) -> Result<&MaterialGraphicComponent, ParserError> {
+        if let Self::MaterialGraphicComponent(mgc) = self {
+            Ok(mgc)
+        } else {
+            Err(ParserError::custom(format!(
+                "MaterialGraphicComponent not found in component data: {self:?}"
+            )))
         }
     }
 }
 
 /// The data for the main video player
 #[derive(Debug, Clone)]
-pub struct CreditsComponent<'a, Gp: GamePlatform> {
+pub struct CreditsComponent<'a> {
     pub lines: Vec<Cow<'a, str>>,
-    pub phantom: PhantomData<Gp>,
 }
 
 /// The data for the main video player

@@ -14,7 +14,7 @@ use crate::utils::{PathId, UniqueGameId};
 
 impl BinaryDeserialize<'_> for SecureFat {
     fn deserialize_at(
-        reader: &impl ZeroCopyReadAtExt,
+        reader: &(impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         // Read the header
@@ -64,7 +64,7 @@ impl BinaryDeserialize<'_> for SecureFat {
             bundle_id_to_bundle_name.insert(bundle_id, name);
         }
 
-        Ok(SecureFat {
+        Ok(Self {
             game_platform,
             path_id_to_bundle_ids,
             bundle_id_to_bundle_name,

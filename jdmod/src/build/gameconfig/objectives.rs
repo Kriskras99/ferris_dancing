@@ -28,7 +28,7 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
 
     let objective_database_vec = cooked::json::create_vec(&objective_database)?;
     bf.generated_files.add_file(
-        cook_path("enginedata/gameconfig/objectives.isg", bs.platform)?,
+        cook_path("enginedata/gameconfig/objectives.isg", bs.platform)?.into(),
         objective_database_vec,
     )?;
 

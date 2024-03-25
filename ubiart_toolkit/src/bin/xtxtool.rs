@@ -2,7 +2,6 @@ use std::{
     ffi::OsStr,
     fs::File,
     path::{Path, PathBuf},
-    rc::Rc,
 };
 
 use clap::Parser;
@@ -31,8 +30,8 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let rc = Rc::new(File::open(&cli.source).unwrap());
-    let png = Png::deserialize(&rc).unwrap();
+    let file = File::open(&cli.source).unwrap();
+    let png = Png::deserialize(&file).unwrap();
     if cli.info {
         println!("Width:            0x{:x}", png.width);
         println!("Height:           0x{:x}", png.height);

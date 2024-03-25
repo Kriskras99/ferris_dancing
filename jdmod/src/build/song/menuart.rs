@@ -50,10 +50,10 @@ pub fn build(
                 let encoded_vec = cooked::png::create_vec(&encoded)?;
 
                 bf.generated_files.add_file(
-                    format!("{actors_cache_dir}/{lower_map_name}_{lower_name}.act.ckd"),
+                    format!("{actors_cache_dir}/{lower_map_name}_{lower_name}.act.ckd").into(),
                     mgc_actor_vec,
                 )?;
-                bf.generated_files.add_file(to, encoded_vec)?;
+                bf.generated_files.add_file(to.into(), encoded_vec)?;
             }
             MenuArt::Phone(phone) => {
                 let from = ses.dirs.menuart().join(phone.filename.as_ref());
@@ -75,7 +75,7 @@ pub fn build(
     let menuart_scene_vec = cooked::isc::create_vec_with_capacity_hint(&menuart_scene, 20_000)?;
 
     bf.generated_files.add_file(
-        format!("{menuart_cache_dir}/{lower_map_name}_menuart.isc.ckd"),
+        format!("{menuart_cache_dir}/{lower_map_name}_menuart.isc.ckd").into(),
         menuart_scene_vec,
     )?;
 
@@ -126,40 +126,35 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
-        components: vec![cooked::act::Component {
-            the_type: cooked::act::ComponentType::MaterialGraphicComponent,
-            data: cooked::act::ComponentData::MaterialGraphicComponent(Box::new(
-                cooked::act::MaterialGraphicComponent {
-                    files: [
-                        SplitPath {
-                            path: Cow::Owned(format!(
-                                "world/maps/{lower_map_name}/menuart/textures"
-                            )),
-                            filename: Cow::Borrowed(tga),
-                        },
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath::default(),
-                        SplitPath {
-                            path: Cow::Borrowed("world/_common/matshader/"),
-                            filename: Cow::Borrowed("multitexture_1layer.msh"),
-                        },
-                    ],
-                    unk14: if tga.ends_with("_albumcoach.tga") || tga.contains("_coach_") {
-                        6
-                    } else {
-                        1
+        components: vec![cooked::act::Component::MaterialGraphicComponent(
+            cooked::act::MaterialGraphicComponent {
+                files: [
+                    SplitPath {
+                        path: Cow::Owned(format!("world/maps/{lower_map_name}/menuart/textures")),
+                        filename: Cow::Borrowed(tga),
                     },
-                    ..Default::default()
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath::default(),
+                    SplitPath {
+                        path: Cow::Borrowed("world/_common/matshader/"),
+                        filename: Cow::Borrowed("multitexture_1layer.msh"),
+                    },
+                ],
+                unk14: if tga.ends_with("_albumcoach.tga") || tga.contains("_coach_") {
+                    6
+                } else {
+                    1
                 },
-            )),
-        }],
+                ..Default::default()
+            },
+        )],
     };
 
     Ok(cooked::act::create_vec(&actor)?)

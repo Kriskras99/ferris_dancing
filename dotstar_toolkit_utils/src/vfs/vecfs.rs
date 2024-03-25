@@ -1,16 +1,18 @@
 //! # Vec-backed Filesystem
 //! This is a completely in-memory filesystem, storing files as [`Vec`]s.
 use std::{
-    collections::HashMap, io::{Error, ErrorKind, Result}, path::Path, sync::Arc
+    collections::HashMap,
+    io::{ErrorKind, Result},
+    path::{Path, PathBuf},
 };
 
-use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
 
 /// A completely in-memory filesystem, storing files as [`Vec`]s.
 #[derive(Debug, Clone, Default)]
 pub struct VecFs {
     /// Maps paths to the files
-    files: HashMap<String, Vec<u8>>,
+    files: HashMap<PathBuf, Vec<u8>>,
 }
 
 impl VecFs {
@@ -34,7 +36,7 @@ impl VecFs {
     ///
     /// # Errors
     /// Will return an error if the file already exists
-    pub fn add_file(&mut self, path: String, mut content: Vec<u8>) -> std::io::Result<()> {
+    pub fn add_file(&mut self, path: PathBuf, mut content: Vec<u8>) -> std::io::Result<()> {
         if self.files.contains_key(&path) {
             return Err(std::io::ErrorKind::AlreadyExists.into());
         }
@@ -62,9 +64,9 @@ impl VecFs {
 }
 
 impl IntoIterator for VecFs {
-    type Item = (String, Vec<u8>);
+    type Item = (PathBuf, Vec<u8>);
 
-    type IntoIter = std::collections::hash_map::IntoIter<String, Vec<u8>>;
+    type IntoIter = std::collections::hash_map::IntoIter<PathBuf, Vec<u8>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.files.into_iter()
@@ -72,57 +74,36 @@ impl IntoIterator for VecFs {
 }
 
 impl VirtualFileSystem for VecFs {
-    fn open<'fs>(&'fs self, path: &Path) -> Result<Arc<VirtualFile<'fs>>> {
-        if let Some(file) = path.to_str().and_then(|s| self.files.get(s)) {
-            Ok(Arc::new(VirtualFile::Slice(file.as_slice())))
+    fn open<'fs>(&'fs self, path: &Path) -> Result<VirtualFile<'fs>> {
+        if let Some(file) = self.files.get(path) {
+            Ok(VirtualFile::Slice(file.as_slice()))
         } else {
             Err(ErrorKind::NotFound.into())
         }
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
-        if let Some(file) = path.to_str().and_then(|s| self.files.get(s)) {
-            Ok(Box::new(VecMetadata {
-                file_size: u64::try_from(file.len()).expect("File is bigger than the universe!"),
-            }))
+    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
+        if let Some(file) = self.files.get(path) {
+            Ok(VirtualMetadata {
+                file_size: u64::try_from(file.len()).expect("Overflow"),
+                created: Err(ErrorKind::Unsupported),
+            })
         } else {
             Err(ErrorKind::NotFound.into())
         }
     }
 
-    fn list_files(&self, path: &Path) -> Result<Vec<String>> {
-        let path = path.to_str().ok_or_else(|| {
-            Error::new(
-                ErrorKind::InvalidInput,
-                format!("Path is not valid utf-8: {path:?}"),
-            )
-        })?;
-        Ok(self
-            .files
-            .keys()
-            .filter(|s| s.starts_with(path))
-            .cloned()
-            .collect())
+    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        Ok(WalkFs {
+            paths: self
+                .files
+                .keys()
+                .filter_map(|p| p.strip_prefix(path).ok())
+                .collect(),
+        })
     }
 
     fn exists(&self, path: &Path) -> bool {
-        path.to_str().and_then(|s| self.files.get(s)).is_some()
-    }
-}
-
-/// Metadata about a file in this filesystem
-#[derive(Clone)]
-pub struct VecMetadata {
-    /// The size of the file
-    file_size: u64,
-}
-
-impl VirtualFileMetadata for VecMetadata {
-    fn file_size(&self) -> u64 {
-        self.file_size
-    }
-
-    fn created(&self) -> Result<u64> {
-        Err(ErrorKind::Unsupported.into())
+        self.files.contains_key(path)
     }
 }

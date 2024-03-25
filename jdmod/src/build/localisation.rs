@@ -1,6 +1,6 @@
 //! # Localisation building
 //! Build the localisations
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{
@@ -112,7 +112,8 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
                 .map(|(i, s)| (*i, *s)),
         )?;
 
-        bf.generated_files.add_file(String::from(*file), loc8_vec)?;
+        bf.generated_files
+            .add_file(PathBuf::from(*file), loc8_vec)?;
     }
 
     Ok(())

@@ -149,7 +149,7 @@ impl ReadError {
 /// Represents a object that can be deserialized from a binary file
 pub trait BinaryDeserialize<'de>: Sized {
     /// Deserialize the object from the reader
-    fn deserialize(reader: &'de impl ZeroCopyReadAtExt) -> Result<Self, ReadError> {
+    fn deserialize(reader: &'de (impl ZeroCopyReadAtExt + ?Sized)) -> Result<Self, ReadError> {
         Self::deserialize_at(reader, &mut 0)
     }
 
@@ -157,14 +157,14 @@ pub trait BinaryDeserialize<'de>: Sized {
     ///
     /// Implementation note: Must restore position to the original value on error!
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError>;
 }
 
 impl<'de> BinaryDeserialize<'de> for u8 {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         reader.read_fixed_slice_at::<1>(position).map(|s| s[0])
@@ -511,7 +511,7 @@ impl<T: ZeroCopyReadAt> ZeroCopyReadAt for Rc<T> {
     }
 }
 
-pub trait ZeroCopyReadAtExt: ZeroCopyReadAt + TrivialClone {
+pub trait ZeroCopyReadAtExt: ZeroCopyReadAt {
     /// Read a `T` at `position`
     ///
     /// This function increments `position` with what `T` reads if successful
@@ -609,9 +609,9 @@ pub trait ZeroCopyReadAtExt: ZeroCopyReadAt + TrivialClone {
     }
 }
 
-impl<T> ZeroCopyReadAtExt for T where T: ZeroCopyReadAt + TrivialClone {}
+impl<T: ?Sized> ZeroCopyReadAtExt for T where T: ZeroCopyReadAt {}
 
-pub struct LenTypeIterator<'rf, T, R: ZeroCopyReadAtExt>
+pub struct LenTypeIterator<'rf, T, R: ZeroCopyReadAtExt + ?Sized>
 where
     T: BinaryDeserialize<'rf>,
 {
@@ -630,7 +630,7 @@ where
     }
 }
 
-impl<'rf, T, R: ZeroCopyReadAtExt> Iterator for LenTypeIterator<'rf, T, R>
+impl<'rf, T, R: ZeroCopyReadAtExt + ?Sized> Iterator for LenTypeIterator<'rf, T, R>
 where
     T: BinaryDeserialize<'rf>,
 {

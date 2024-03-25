@@ -49,23 +49,23 @@ pub fn build(
         .with_context(|| format!("Video file does not exist at {video_path:?}!"))?;
 
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/{lower_map_name}.mpd.ckd"),
+        format!("{videoscoach_cache_dir}/{lower_map_name}.mpd.ckd").into(),
         mpd_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/video_player_main.act.ckd"),
+        format!("{videoscoach_cache_dir}/video_player_main.act.ckd").into(),
         video_player_main_act_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/video_player_map_preview.act.ckd"),
+        format!("{videoscoach_cache_dir}/video_player_map_preview.act.ckd").into(),
         video_player_map_preview_act_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/{lower_map_name}_video.isc.ckd"),
+        format!("{videoscoach_cache_dir}/{lower_map_name}_video.isc.ckd").into(),
         video_scene_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/{lower_map_name}_video_map_preview.isc.ckd"),
+        format!("{videoscoach_cache_dir}/{lower_map_name}_video_map_preview.isc.ckd").into(),
         video_map_preview_scene_vec,
     )?;
 
@@ -93,9 +93,8 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
-        components: vec![cooked::act::Component {
-            the_type: cooked::act::ComponentType::PleoComponent,
-            data: cooked::act::ComponentData::PleoComponent(cooked::act::PleoComponent {
+        components: vec![cooked::act::Component::PleoComponent(
+            cooked::act::PleoComponent {
                 video: SplitPath {
                     path: Cow::Owned(format!("{map_path}/videoscoach/")),
                     filename: Cow::Owned(format!("{lower_map_name}.webm")),
@@ -105,8 +104,8 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
                     filename: Cow::Owned(format!("{lower_map_name}.mpd")),
                 },
                 channel_id: map_preview.then(|| ses.song.map_name.clone()),
-            }),
-        }],
+            },
+        )],
     };
 
     Ok(cooked::act::create_vec(&actor)?)

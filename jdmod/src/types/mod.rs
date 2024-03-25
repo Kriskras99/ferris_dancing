@@ -37,6 +37,7 @@ pub struct ImportState<'a> {
     pub game: Game,
     /// Import platform
     pub platform: Platform,
+    pub unique_game_id: UniqueGameId,
     /// Mapping of game locale id to mod locale id
     pub locale_id_map: LocaleIdMap,
     /// See [`Alias8`]

@@ -2,6 +2,7 @@
 use std::{borrow::Cow, path::Path};
 
 use anyhow::{anyhow, Context, Error};
+use dotstar_toolkit_utils::bytes::read::{BinaryDeserialize, ZeroCopyReadAtExt};
 use image::{imageops, EncodableLayout, ImageBuffer, RgbaImage};
 use regex::Regex;
 use texpresso::Format;
@@ -78,8 +79,8 @@ macro_rules! regex {
 ///
 /// # Panics
 /// Will panic if there is more than one image in the texture
-pub fn decode_texture(src: &[u8]) -> Result<RgbaImage, Error> {
-    let png = cooked::png::parse(src)?;
+pub fn decode_texture(reader: &(impl ZeroCopyReadAtExt + ?Sized)) -> Result<RgbaImage, Error> {
+    let png = Png::deserialize(reader)?;
 
     let png_height = u32::from(png.height);
     let png_width = u32::from(png.width);

@@ -30,10 +30,10 @@ pub struct LocaleId(u32);
 
 impl BinaryDeserialize<'_> for LocaleId {
     fn deserialize_at(
-        reader: &impl ZeroCopyReadAtExt,
+        reader: &(impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
-        Ok(LocaleId(reader.read_at::<u32be>(position)?.into()))
+        Ok(Self(reader.read_at::<u32be>(position)?.into()))
     }
 }
 
@@ -90,7 +90,7 @@ impl SplitPath<'_> {
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
@@ -191,6 +191,15 @@ impl From<&str> for PathId {
         Self(string_id(value))
     }
 }
+
+impl From<&Path> for PathId {
+    fn from(value: &Path) -> Self {
+        Self(string_id(
+            value.to_str().expect("Refactor to use ubicrc directly"),
+        ))
+    }
+}
+
 impl From<u32> for PathId {
     fn from(value: u32) -> Self {
         Self(value)
@@ -212,10 +221,10 @@ impl Deref for PathId {
 
 impl BinaryDeserialize<'_> for PathId {
     fn deserialize_at(
-        reader: &'_ impl ZeroCopyReadAtExt,
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
-        Ok(PathId(reader.read_at::<u32be>(position)?.into()))
+        Ok(Self(reader.read_at::<u32be>(position)?.into()))
     }
 }
 
@@ -305,7 +314,7 @@ impl TryFrom<u32> for UniqueGameId {
 
 impl BinaryDeserialize<'_> for UniqueGameId {
     fn deserialize_at(
-        reader: &'_ impl ZeroCopyReadAtExt,
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value = u32::from(reader.read_at::<u32be>(position)?);
@@ -523,13 +532,16 @@ pub fn string_id_2(one: &str, two: &str) -> u32 {
     ubi_crc(&upper)
 }
 
-#[inline(always)]
+#[inline]
 fn read_u32le(data: &[u8], pos: &mut usize) -> u32 {
-    u32::from_le_bytes([data[*pos], data[*pos + 1], data[*pos + 2], data[*pos + 3]])
+    let value = u32::from_le_bytes([data[*pos], data[*pos + 1], data[*pos + 2], data[*pos + 3]]);
+    *pos += 4;
+    value
 }
 
 #[must_use]
 /// Implementation of the UbiArt CRC function
+#[allow(clippy::as_conversions, clippy::cast_possible_truncation, reason = "Truncating is wanted")]
 pub fn ubi_crc(data: &[u8]) -> u32 {
     let length = data.len();
     let mut a: u32 = 0x9E37_79B9;
@@ -603,8 +615,6 @@ const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::ubi_crc;
-
     use super::string_id;
 
     #[test]
@@ -613,12 +623,5 @@ mod tests {
             string_id("world/maps/adoreyou/videoscoach/adoreyou.vp9.720.webm"),
             0x45CC_A9CA
         );
-    }
-
-    #[test]
-    fn it_works() {
-        let res = ubi_crc(&[0; 100]);
-        let result = 2 + 2;
-        assert_eq!(result, 4);
     }
 }
