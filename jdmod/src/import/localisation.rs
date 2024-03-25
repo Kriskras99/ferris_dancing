@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::vfs::VirtualFileSystem;
-use ubiart_toolkit::loc8;
+use dotstar_toolkit_utils::{bytes::read::BinaryDeserialize, vfs::VirtualFileSystem};
+use ubiart_toolkit::loc8::Loc8;
 
 use crate::types::{
     localisation::{LocaleId, LocaleIdMap, Localisation, Translation},
@@ -21,12 +21,12 @@ pub fn import(vfs: &dyn VirtualFileSystem, dirs: &DirectoryTree) -> Result<Local
     let mut loc8_files = Vec::new();
 
     // Second: load new translations
-    for file in &vfs.list_files("enginedata/localisation".as_ref())? {
+    for file in vfs.walk_filesystem("enginedata/localisation".as_ref())? {
         let loc8_file = vfs.open(file.as_ref())?;
         loc8_files.push(loc8_file);
     }
     for loc8_file in &loc8_files {
-        if let Ok(loc) = loc8::parse(loc8_file) {
+        if let Ok(loc) = Loc8::deserialize(loc8_file) {
             let lang = loc.language;
 
             for (id, translation) in loc.strings {

@@ -8,7 +8,6 @@ repository = "https://github.com/kriskras99/ferris_dancing"
 description = "Utility functions and VFS implementation useful for parsers"
 keywords = ["vfs", "utilities"]
 categories = ["filesystem", "parsing"]
-rust-version = "1.74.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,6 +18,4 @@ positioned-io = { version ="0.3.3", features = [], default-features = false }
 stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false }
 thiserror = { version = "1.0.58", features = [], default-features = false }
 ux = { version = "0.1.5", features = ["std"], default-features = false }
-
-[lints]
-workspace = true
+yoke = { version = "0.7.3", features = ["derive"] }

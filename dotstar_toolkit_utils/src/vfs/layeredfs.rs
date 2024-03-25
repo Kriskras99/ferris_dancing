@@ -1,11 +1,8 @@
 //! # Overlay Filesystem
 //! Implements a filesystem that overlays two filesystems, preferring the upper filesystem for operations.
-use std::{
-    io::{ErrorKind, Result},
-    path::Path,
-};
+use std::{io::ErrorKind, path::Path};
 
-use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
 
 /// A filesystem that overlays two filesystems, preferring the upper filesystem for operations.
 pub struct OverlayFs<'fs> {
@@ -33,7 +30,7 @@ impl VirtualFileSystem for OverlayFs<'_> {
         }
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
+    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
         if let Ok(metadata) = self.upper.metadata(path) {
             Ok(metadata)
         } else if let Ok(metadata) = self.lower.metadata(path) {
@@ -43,12 +40,10 @@ impl VirtualFileSystem for OverlayFs<'_> {
         }
     }
 
-    fn list_files(&self, path: &Path) -> Result<Vec<String>> {
-        let mut paths = self.upper.list_files(path)?;
-        paths.append(&mut self.lower.list_files(path)?);
-        paths.sort_unstable();
-        paths.dedup();
-        Ok(paths)
+    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        let upper = self.upper.walk_filesystem(path)?;
+        let merged = upper.merge(self.lower.walk_filesystem(path)?);
+        Ok(merged)
     }
 
     fn exists(&self, path: &Path) -> bool {

@@ -1,28 +1,26 @@
 //! Contains the parser implementation
 
-use std::borrow::Cow;
-
-use byteorder::BigEndian;
 use dotstar_toolkit_utils::{
-    bytes::{read_string_at, read_u32_at, read_u64_at},
+    bytes::{
+        primitives::{u32be, u64be},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    },
     testing::{test, test_any},
 };
 
 use super::{
-    Actor, Component, ComponentData, ComponentType, CreditsComponent, MaterialGraphicComponent,
-    PleoComponent,
+    Actor, Component, CreditsComponent, MaterialGraphicComponent, PleoComponent, UITextBox,
 };
-use crate::utils::{bytes::read_path_at, errors::ParserError, Game, SplitPath};
+use crate::utils::{Game, SplitPath, UniqueGameId};
 
-/// Parse a bytearray-like source as a actor file
-///
-/// This will parse the source from start to end.
-pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
-    // Keep track of where we are
-    let mut pos = 0;
-    let unk0 = read_u32_at::<BigEndian>(src, &mut pos)?;
-    test(&unk0, &1)?;
-    let unk1 = read_u32_at::<BigEndian>(src, &mut pos)?;
+pub fn parse<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<Actor<'de>, ReadError> {
+    let unk0 = reader.read_at::<u32be>(position)?.into();
+    test(&unk0, &1u32)?;
+    let unk1 = reader.read_at::<u32be>(position)?.into();
     test_any(
         &unk1,
         &[
@@ -34,7 +32,7 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
             0x4000_0000,
         ],
     )?;
-    let unk2 = read_u32_at::<BigEndian>(src, &mut pos)?;
+    let unk2 = reader.read_at::<u32be>(position)?.into();
     test_any(
         &unk2,
         &[
@@ -46,7 +44,7 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
             0x4422_8000,
         ],
     )?;
-    let unk2_5 = read_u32_at::<BigEndian>(src, &mut pos)?;
+    let unk2_5 = reader.read_at::<u32be>(position)?.into();
     test_any(
         &unk2_5,
         &[
@@ -57,107 +55,44 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
             0x4320_0000,
         ],
     )?;
-    let unk3 = read_u64_at::<BigEndian>(src, &mut pos)?;
-    test(&unk3, &0)?;
-    let unk3_5 = read_u32_at::<BigEndian>(src, &mut pos)?;
-    test(&unk3_5, &0)?;
-    match game {
+    let unk3 = reader.read_at::<u64be>(position)?.into();
+    test(&unk3, &0u64)?;
+    let unk3_5 = reader.read_at::<u32be>(position)?.into();
+    test(&unk3_5, &0u32)?;
+    match gp.game {
         Game::JustDance2022 | Game::JustDance2021 | Game::JustDance2020 | Game::JustDance2019 => {
-            let unk4 = read_u64_at::<BigEndian>(src, &mut pos)?;
+            let unk4 = reader.read_at::<u64be>(position)?.into();
             test(&unk4, &0x1_0000_0000)?;
         }
         _ => {
-            let unk4 = read_u32_at::<BigEndian>(src, &mut pos)?;
-            test_any(&unk4, &[0x1, 0x0])?;
+            let unk4 = reader.read_at::<u32be>(position)?.into();
+            test_any(&unk4, &[0x1u32, 0x0])?;
             if unk4 == 0x1 {
-                let unk4_5 = read_u32_at::<BigEndian>(src, &mut pos)?;
-                test(&unk4_5, &0)?;
+                let unk4_5 = reader.read_at::<u32be>(position)?.into();
+                test(&unk4_5, &0u32)?;
             }
         }
     };
-    let unk5 = read_u32_at::<BigEndian>(src, &mut pos)?;
-    test(&unk5, &0)?;
-    let unk6 = read_u64_at::<BigEndian>(src, &mut pos)?;
+    let unk5 = reader.read_at::<u32be>(position)?.into();
+    test(&unk5, &0u32)?;
+    let unk6 = reader.read_at::<u64be>(position)?.into();
     test(&unk6, &0)?;
-    let unk7 = read_u64_at::<BigEndian>(src, &mut pos)?;
+    let unk7 = reader.read_at::<u64be>(position)?.into();
     test(&unk7, &0xFFFF_FFFF)?;
-    let unk8 = read_u32_at::<BigEndian>(src, &mut pos)?;
-    test(&unk8, &0)?;
+    let unk8 = reader.read_at::<u32be>(position)?.into();
+    test(&unk8, &0u32)?;
 
-    let tpl = read_path_at::<BigEndian>(src, &mut pos)?;
+    let tpl = reader.read_at::<SplitPath>(position)?;
     test(&tpl.is_empty(), &false)?;
-    let unk9 = read_u32_at::<BigEndian>(src, &mut pos)?;
-    test(&unk9, &0)?;
-    let actor_amount = read_u32_at::<BigEndian>(src, &mut pos)?;
+    let unk9 = reader.read_at::<u32be>(position)?.into();
+    test(&unk9, &0u32)?;
+    let actor_amount: usize = reader.read_at::<u32be>(position)?.try_into()?;
 
-    let mut components = Vec::with_capacity(actor_amount.try_into()?);
+    let mut components = Vec::with_capacity(actor_amount);
     for _ in 0..actor_amount {
-        // String id of the class name of the template without the '_Template' but including 'JD_' if it is in the class name
-        let component_type_encoded = read_u32_at::<BigEndian>(src, &mut pos)?;
-
-        let component_type = ComponentType::try_from(component_type_encoded)?;
-
-        let component_data = match component_type {
-            ComponentType::AutodanceComponent
-            | ComponentType::MasterTape
-            | ComponentType::SongDatabaseComponent
-            | ComponentType::SongDescComponent
-            | ComponentType::TapeCaseComponent
-            | ComponentType::AvatarDescComponent
-            | ComponentType::SkinDescComponent => ComponentData::None,
-            ComponentType::BoxInterpolatorComponent => {
-                parse_box_interpolator_component(src, game, &mut pos)?
-            }
-            ComponentType::ConvertedTmlTapeComponent => {
-                parse_converted_tml_tape(src, game, &mut pos)?
-            }
-            ComponentType::CreditsComponent => parse_credits_component(src, game, &mut pos)?,
-            ComponentType::FixedCameraComponent => {
-                parse_fixed_camera_component(src, game, &mut pos)?
-            }
-            ComponentType::FXControllerComponent => parse_fx_controller(src, game, &mut pos)?,
-            ComponentType::MaterialGraphicComponent => {
-                parse_material_graphic_component(src, game, &mut pos, false)?
-            }
-            ComponentType::PleoTextureGraphicComponent => {
-                parse_material_graphic_component(src, game, &mut pos, true)?
-            }
-            ComponentType::PleoComponent => parse_pleo_component(src, game, &mut pos)?,
-            ComponentType::PropertyPatcher => parse_property_patcher(src, game, &mut pos)?,
-            ComponentType::RegistrationComponent => {
-                parse_registration_component(src, game, &mut pos)?
-            }
-            ComponentType::UITextBox => parse_ui_text_box(src, game, &mut pos)?,
-            ComponentType::FxBankComponent => parse_fx_bank_component(src, game, &mut pos)?,
-            ComponentType::BezierTreeComponent => parse_bezier_tree_component(src, game, &mut pos)?,
-            ComponentType::AFXPostProcessComponent => {
-                parse_afx_post_process_component(src, game, &mut pos)?
-            }
-            // TemplateType::TapeCase => parse_tape_case(src, game, &mut pos)?,
-            // TemplateType::MusicTrackComponent => parse_music_track_component(src, game, path, &mut pos)?,
-            ComponentType::BeatPulseComponent => todo!(),
-            ComponentType::CameraGraphicComponent => todo!(),
-            ComponentType::ClearColorComponent => todo!(),
-            ComponentType::PictoComponent => todo!(),
-            ComponentType::SingleInstanceMesh3DComponent => todo!(),
-            ComponentType::SoundComponent => todo!(),
-            ComponentType::UICarousel => todo!(),
-            ComponentType::UIWdigetGroupHUDAutodanceRecorder => todo!(),
-            ComponentType::UIWidgetGroupHUDLyrics => todo!(),
-            ComponentType::ViewportUIComponent => todo!(),
-            _ => {
-                return Err(ParserError::custom(format!(
-                    "Unsupported component type: {component_type:?}!"
-                )));
-            }
-        };
-        components.push(Component {
-            the_type: component_type,
-            data: component_data,
-        });
+        let component = parse_component(reader, position, gp)?;
+        components.push(component);
     }
-
-    test(&pos, &src.len())?;
 
     Ok(Actor {
         tpl,
@@ -168,83 +103,140 @@ pub fn parse(src: &[u8], game: Game) -> Result<Actor, ParserError> {
     })
 }
 
-/// Parse the registration component of an actor
-fn parse_registration_component<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk11, &[0xAA55_B6BD, 0xFFFF_FFFF])?;
-    let unk12 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk12, &0x0)?;
-    Ok(ComponentData::None)
+pub fn parse_component<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<Component<'de>, ReadError> {
+    // String id of the class name of the template without the '_Template' but including 'JD_' if it is in the class name
+    let component_type: u32 = reader.read_at::<u32be>(position)?.into();
+
+    let component = match component_type {
+        // JD_AutoDanceComponent
+        0x67B8_BB77 => Component::AutodanceComponent,
+        // JD_BeatPulseComponent
+        0x7184_37A8 => todo!(),
+        // BoxInterpolatorComponent
+        0xF513_60DA => {
+            parse_box_interpolator_component(reader, position)?;
+            Component::BoxInterpolatorComponent
+        }
+        // CameraGraphicComponent
+        0xC760_4FA1 => todo!(),
+        // ClearColorComponent
+        0xAEBB_218B => todo!(),
+        // ConvertedTmlTape_Component
+        0xCD07_BB76 => {
+            parse_converted_tml_tape(reader, position)?;
+            Component::ConvertedTmlTapeComponent
+        }
+        // JD_CreditsComponent
+        0x342E_A4FC => Component::CreditsComponent(parse_credits_component(reader, position, gp)?),
+        // JD_FixedCameraComponent
+        0x3D5D_EBA2 => {
+            parse_fixed_camera_component(reader, position)?;
+            Component::FixedCameraComponent
+        }
+        // FXControllerComponent
+        0x8D4F_FFB6 => {
+            parse_fx_controller(reader, position)?;
+            Component::FXControllerComponent
+        }
+        // MasterTape
+        0x677B_269B => Component::MasterTape,
+        // MaterialGraphicComponent
+        0x72B6_1FC5 => Component::MaterialGraphicComponent(parse_material_graphic_component(
+            reader, position, gp, false,
+        )?),
+        // JD_Carousel
+        0x27E4_80C0 => todo!(),
+        // JD_PictoComponent
+        0xC316_BF34 => todo!(),
+        // PleoComponent
+        0x1263_DAD9 => Component::PleoComponent(reader.read_at::<PleoComponent>(position)?),
+        // PleoTextureGraphicComponent
+        0x0579_E81B => Component::MaterialGraphicComponent(parse_material_graphic_component(
+            reader, position, gp, true,
+        )?),
+        // PropertyPatcher
+        0xF719_B524 => {
+            parse_property_patcher(reader, position, gp)?;
+            Component::PropertyPatcher
+        }
+        // JD_RegistrationComponent
+        0xE0A2_4B6D => {
+            parse_registration_component(reader, position)?;
+            Component::RegistrationComponent
+        }
+        // SingleInstanceMesh3DComponent
+        0x53E3_2AF7 => todo!(),
+        // JD_SongDatabaseComponent
+        0x4055_79FB => Component::SongDatabaseComponent,
+        // JD_SongDescComponent
+        0xE07F_CC3F => Component::SongDescComponent,
+        // SoundComponent
+        0x7DD8_643C => todo!(),
+        // TapeCase_Component
+        0x231F_27DE => Component::TapeCaseComponent,
+        // TextureGraphicComponent
+        0x7B48_A9AE => todo!(),
+        // UICarousel
+        0x8782_FE60 => todo!(),
+        // UITextBox
+        0xD10C_BEED => Component::UITextBox(parse_ui_text_box(reader, position, gp)?),
+        // JD_UIWidgetGroupHUD_AutodanceRecorder
+        0x9F87_350C => todo!(),
+        // JD_UIWidgetGroupHUD_Lyrics
+        0xF22C_9426 => todo!(),
+        // ViewportUIComponent
+        0x6990_834C => todo!(),
+        // JD_AvatarDescComponent
+        0x1759_E29D => Component::AvatarDescComponent,
+        // JD_SkinDescComponent
+        0x84EA_AE82 => Component::SkinDescComponent,
+        // FxBankComponent
+        0x966B_519D => {
+            parse_fx_bank_component(reader, position)?;
+            Component::FxBankComponent
+        }
+        // BezierTreeComponent
+        0x3236_CF4C => {
+            parse_bezier_tree_component(reader, position)?;
+            Component::BezierTreeComponent
+        }
+        // AFXPostProcessComponent
+        0x2B34_9E69 => {
+            parse_afx_post_process_component(reader, position)?;
+            Component::AFXPostProcessComponent
+        }
+        _ => {
+            return Err(ReadError::custom(format!(
+                "Unknown component type: {component_type:x}!"
+            )))
+        }
+    };
+
+    Ok(component)
 }
 
-/// Parse the box interpolator component of an actor
-fn parse_box_interpolator_component<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    for _ in 0..2 {
-        let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk11, &0xBF00_0000)?;
-    }
-    for _ in 0..2 {
-        let unk12 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk12, &0x3F00_0000)?;
-    }
-    for _ in 0..2 {
-        let unk13 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk13, &0xBF80_0000)?;
-    }
-    for _ in 0..2 {
-        let unk14 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk14, &0x3F80_0000)?;
-    }
-    Ok(ComponentData::None)
-}
-
-/// Parse the AFX post process component of an actor
-fn parse_afx_post_process_component<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk16 = read_u64_at::<BigEndian>(src, pos)?;
-    test(&unk16, &8)?;
-    let unk17 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk17, &1)?;
-    Ok(ComponentData::None)
-}
-
-/// Parse the converted tml tape component of an actor
-fn parse_converted_tml_tape<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk11, &0)?;
-    Ok(ComponentData::None)
-}
-
-/// Parse the credits component of an actor
-fn parse_credits_component<'a>(
-    src: &'a [u8],
-    game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk11, &[0xD, 0x17]).context(*pos)?;
-    let i = if game == Game::JustDance2017 { 6 } else { 10 };
+pub fn parse_credits_component<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<CreditsComponent<'de>, ReadError> {
+    let unk11 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk11, &[0xDu32, 0x17]).context(*position)?;
+    let i = if gp.game == Game::JustDance2017 {
+        6u32
+    } else {
+        10
+    };
     for _ in 0..i {
-        let unk12 = read_u32_at::<BigEndian>(src, pos)?;
+        let unk12 = reader.read_at::<u32be>(position)?.into();
         test_any(
             &unk12,
             &[
-                0x41C8_0000,
+                0x41C8_0000u32,
                 0x41F0_0000,
                 0x4220_0000,
                 0x4248_0000,
@@ -254,148 +246,197 @@ fn parse_credits_component<'a>(
                 0x4404_4000,
             ],
         )
-        .context(*pos)?;
+        .context(*position)?;
     }
-    let number_of_lines = read_u32_at::<BigEndian>(src, pos)?;
-    let mut lines = Vec::with_capacity(number_of_lines.try_into()?);
+    let number_of_lines = usize::try_from(reader.read_at::<u32be>(position)?)?;
+    let mut lines = Vec::with_capacity(number_of_lines);
     for _ in 0..number_of_lines {
-        let line = Cow::Borrowed(read_string_at::<BigEndian>(src, pos)?);
+        let line = reader.read_len_string_at::<u32be>(position)?;
         lines.push(line);
     }
 
-    Ok(ComponentData::CreditsComponent(CreditsComponent { lines }))
+    Ok(CreditsComponent { lines })
+}
+
+/// Parse the registration component of an actor
+fn parse_registration_component(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk11 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk11, &[0xAA55_B6BDu32, 0xFFFF_FFFF])?;
+    let unk12 = reader.read_at::<u32be>(position)?.into();
+    test(&unk12, &0x0u32)?;
+    Ok(())
+}
+
+/// Parse the box interpolator component of an actor
+fn parse_box_interpolator_component(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    for _ in 0..2 {
+        let unk11 = reader.read_at::<u32be>(position)?.into();
+        test(&unk11, &0xBF00_0000u32)?;
+    }
+    for _ in 0..2 {
+        let unk12 = reader.read_at::<u32be>(position)?.into();
+        test(&unk12, &0x3F00_0000u32)?;
+    }
+    for _ in 0..2 {
+        let unk13 = reader.read_at::<u32be>(position)?.into();
+        test(&unk13, &0xBF80_0000u32)?;
+    }
+    for _ in 0..2 {
+        let unk14 = reader.read_at::<u32be>(position)?.into();
+        test(&unk14, &0x3F80_0000u32)?;
+    }
+    Ok(())
+}
+
+/// Parse the AFX post process component of an actor
+fn parse_afx_post_process_component(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk16 = reader.read_at::<u64be>(position)?.into();
+    test(&unk16, &8u64)?;
+    let unk17 = reader.read_at::<u32be>(position)?.into();
+    test(&unk17, &1u32)?;
+    Ok(())
+}
+
+/// Parse the converted tml tape component of an actor
+fn parse_converted_tml_tape(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk11 = reader.read_at::<u32be>(position)?.into();
+    test(&unk11, &0u32)?;
+    Ok(())
 }
 
 /// Parse the fixed camera component of an actor
-fn parse_fixed_camera_component<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk11, &[0x0, 0x1])?;
-    let unk12 = read_u64_at::<BigEndian>(src, pos)?;
-    test(&unk12, &0)?;
-    let unk13 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk13, &0x4120_0000)?;
-    let unk14 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk14, &[0x0, 0x1])?;
-    Ok(ComponentData::None)
+fn parse_fixed_camera_component(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk11 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk11, &[0x0u32, 0x1])?;
+    let unk12 = reader.read_at::<u64be>(position)?.into();
+    test(&unk12, &0u64)?;
+    let unk13 = reader.read_at::<u32be>(position)?.into();
+    test(&unk13, &0x4120_0000u32)?;
+    let unk14 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk14, &[0x0u32, 0x1])?;
+    Ok(())
 }
 
 /// Parse the fx controller component of an actor
-fn parse_fx_controller<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk11 = read_u64_at::<BigEndian>(src, pos)?;
-    test(&unk11, &0)?;
-    Ok(ComponentData::None)
+fn parse_fx_controller(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk11 = reader.read_at::<u64be>(position)?.into();
+    test(&unk11, &0u64)?;
+    Ok(())
 }
 
 /// Parse the fx bank component of an actor
-fn parse_fx_bank_component<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
+fn parse_fx_bank_component(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
     for _ in 0..4 {
-        let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk11, &0x3F80_0000)?;
+        let unk11 = reader.read_at::<u32be>(position)?.into();
+        test(&unk11, &0x3F80_0000u32)?;
     }
     for _ in 0..3 {
-        let unk12 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk12, &0)?;
+        let unk12 = reader.read_at::<u32be>(position)?.into();
+        test(&unk12, &0u32)?;
     }
-    let unk13 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk13, &[0x0, 0xFFFF_FFFF])?;
-    let unk14 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk14, &0xFFFF_FFFF)?;
-    Ok(ComponentData::None)
+    let unk13 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk13, &[0x0u32, 0xFFFF_FFFF])?;
+    let unk14 = reader.read_at::<u32be>(position)?.into();
+    test(&unk14, &0xFFFF_FFFFu32)?;
+    Ok(())
 }
 
 /// Parse the bezier tree component of an actor
-fn parse_bezier_tree_component<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk18 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk18, &2)?;
+fn parse_bezier_tree_component(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk18 = reader.read_at::<u32be>(position)?.into();
+    test(&unk18, &2u32)?;
     for _ in 0..4 {
-        let unk19 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk19, &0)?;
+        let unk19 = reader.read_at::<u32be>(position)?.into();
+        test(&unk19, &0u32)?;
     }
     for _ in 0..2 {
-        let unk20 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk20, &0x3F80_0000)?;
+        let unk20 = reader.read_at::<u32be>(position)?.into();
+        test(&unk20, &0x3F80_0000u32)?;
     }
     for _ in 0..2 {
-        let unk21 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk21, &0)?;
+        let unk21 = reader.read_at::<u32be>(position)?.into();
+        test(&unk21, &0u32)?;
     }
-    let unk22 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk22, &0x4040_0000)?;
+    let unk22 = reader.read_at::<u32be>(position)?.into();
+    test(&unk22, &0x4040_0000u32)?;
     for _ in 0..2 {
-        let unk23 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk23, &0)?;
+        let unk23 = reader.read_at::<u32be>(position)?.into();
+        test(&unk23, &0u32)?;
     }
     for _ in 0..2 {
-        let unk24 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk24, &0x3F80_0000)?;
+        let unk24 = reader.read_at::<u32be>(position)?.into();
+        test(&unk24, &0x3F80_0000u32)?;
     }
     for _ in 0..3 {
-        let unk25 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk25, &0)?;
+        let unk25 = reader.read_at::<u32be>(position)?.into();
+        test(&unk25, &0u32)?;
     }
-    let unk26 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk26, &1)?;
-    Ok(ComponentData::None)
+    let unk26 = reader.read_at::<u32be>(position)?.into();
+    test(&unk26, &1u32)?;
+    Ok(())
 }
 
 /// Parse the material graphic component of an actor
-fn parse_material_graphic_component<'a>(
-    src: &'a [u8],
-    game: Game,
-    pos: &mut usize,
+fn parse_material_graphic_component<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
     is_pleo: bool,
-) -> Result<ComponentData<'a>, ParserError> {
+) -> Result<MaterialGraphicComponent<'de>, ReadError> {
+    let game = gp.game;
     for _ in 0..3 {
-        let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk11, &0x3F80_0000).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+        let unk11 = reader.read_at::<u32be>(position)?.into();
+        test(&unk11, &0x3F80_0000u32)?;
     }
-    let unk11_5 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk11_5, &[0x3F80_0000, 0x0])
-        .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let unk11_5 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk11_5, &[0x3F80_0000u32, 0x0])?;
 
     for _ in 0..2 {
-        let unk12 = read_u64_at::<BigEndian>(src, pos)?;
-        test_any(&unk12, &[0x0, 0xFFFF_FFFF])
-            .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+        let _unk12 = reader.read_at::<u64be>(position)?;
     }
 
-    let unk13 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk13, &[0xFFFF_FFFF, 0x1])
-        .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let unk13 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk13, &[0xFFFF_FFFFu32, 0x1])?;
 
     // <ENUM NAME="anchor" SEL="[0-9]" /> ?
-    let unk14 = read_u64_at::<BigEndian>(src, pos)?;
-    test_any(&unk14, &[0x1, 0x2, 0x3, 0x6, 0x9])
-        .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let unk14 = reader.read_at::<u64be>(position)?.into();
+    test_any(&unk14, &[0x1u64, 0x2, 0x3, 0x6, 0x9])?;
 
-    let unk15 = read_u64_at::<BigEndian>(src, pos)?;
+    let unk15 = reader.read_at::<u64be>(position)?.into();
     test_any(
         &unk15,
         &[
-            0x0,
+            0x0u64,
             0x3E2E_147B,
             0xC080_0000,
             0x3E99_999A_BDCC_CCCD,
             0xBDE1_47AE_3E61_47AE,
         ],
-    )
-    .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    )?;
 
     let mut files = [
         // diffuse
@@ -423,106 +464,92 @@ fn parse_material_graphic_component<'a>(
     ];
 
     for item in files.iter_mut().take(9) {
-        let path = read_path_at::<BigEndian>(src, pos)
-            .map_err(|error| error.context(format!("Pos: {pos}, is_pleo: {is_pleo}")))?;
+        let path = reader.read_at::<SplitPath>(position)?;
         *item = path;
     }
 
-    let unk19 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk19, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let _unk19 = reader.read_at::<u32be>(position)?;
 
     for item in files.iter_mut().skip(9) {
-        let path = read_path_at::<BigEndian>(src, pos)
-            .map_err(|error| error.context(format!("Pos: {pos}, is_pleo: {is_pleo}")))?;
+        let path = reader.read_at::<SplitPath>(position)?;
         *item = path;
     }
 
     if game == Game::JustDance2019 || game == Game::JustDance2018 || game == Game::JustDance2017 {
-        let unk20 = read_u64_at::<BigEndian>(src, pos)?;
-        test(&unk20, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+        let _unk20 = reader.read_at::<u64be>(position)?;
     } else {
         for _ in 0..4 {
-            let unk20 = read_u64_at::<BigEndian>(src, pos)?;
-            test(&unk20, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+            let _unk20 = reader.read_at::<u64be>(position)?;
         }
 
-        let unk20_5 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk20_5, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+        let _unk20_5 = reader.read_at::<u32be>(position)?;
 
-        let unk21 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk21, &0x3F80_0000).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+        let _unk21 = reader.read_at::<u32be>(position)?;
     }
 
     if game == Game::JustDance2020 {
         // Just Dance 2020 sometimes has a 0u32 inbetween
-        let unk21_5 = read_u32_at::<BigEndian>(src, pos)?;
+        let unk21_5 = u32::from(reader.read_at::<u32be>(position)?);
         if unk21_5 != 0 {
-            *pos -= 4;
+            *position -= 4;
         }
     }
 
-    let unk22 = read_u64_at::<BigEndian>(src, pos)?;
-    test(&unk22, &0xFFFF_FFFF_FFFF_FFFF)
-        .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let unk22 = reader.read_at::<u64be>(position)?.into();
+    test(&unk22, &0xFFFF_FFFF_FFFF_FFFF)?;
 
     for _ in 0..3 {
-        let unk23 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk23, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+        let _unk23 = reader.read_at::<u32be>(position)?;
     }
 
-    let unk24 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk24, &0x3F80_0000).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let _unk24 = reader.read_at::<u32be>(position)?;
 
-    let unk25 = read_u64_at::<BigEndian>(src, pos)?;
-    test(&unk25, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let _unk25 = reader.read_at::<u64be>(position)?;
 
     // <ENUM NAME="oldAnchor" SEL="[0-9]" /> ?
-    let unk26 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk26, &[0x1, 0x2, 0x3, 0x6, 0x9])
-        .with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+    let unk26 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk26, &[0x1, 0x2, 0x3, 0x6, 0x9])?;
 
     if is_pleo {
-        let unk27 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk27, &0x0).with_context(|| format!("Pos: {pos}, is_pleo: {is_pleo}"))?;
+        let unk27 = reader.read_at::<u32be>(position)?.into();
+        test(&unk27, &0x0u32)?;
     }
 
-    Ok(ComponentData::MaterialGraphicComponent(Box::new(
-        MaterialGraphicComponent {
-            files,
-            unk11_5,
-            unk13,
-            unk14,
-            unk15,
-            unk26,
-        },
-    )))
+    Ok(MaterialGraphicComponent {
+        files,
+        unk11_5,
+        unk13,
+        unk14,
+        unk15,
+        unk26,
+    })
 }
 
 // /// Parse the music track component of an actor
 // fn parse_music_track_component<'a>(src: 'a '[u8], _game: Game, path: &Path, pos: &mut usize) -> Result<TemplateData<'a>, Error> {
-//     let unk11 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk11 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk11 == 0x3,
 //         anyhow!("unk11 is 0x{unk11:08x}"),
 //     )?;
-//     let unk12 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk12 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk12 == 0x40A1_5156 || unk12 == 0xFFFF_FFFF,
 //         anyhow!("unk12 is 0x{unk12:08x}"),
 //     )?;
 //     let unk13 = read_string_at::<BigEndian>(src, pos)?;
-//     let unk14 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk14 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk14 == 0x1,
 //         anyhow!("unk14 is 0x{unk14:08x}"),
 //     )?;
-//     let unk15 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk15 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk15 == 0x4000_0000,
 //         anyhow!("unk15 is 0x{unk15:08x}"),
 //     )?;
 //     for _ in 0..8 {
-//         let unk16 = read_u32_at::<BigEndian>(src, pos)?;
+//         let unk16 = reader.read_at::<u32be>(position)?.into();
 //         test(
 //             unk16 == 0x1,
 //             anyhow!("unk16 is 0x{unk16:08x}"),
@@ -538,28 +565,28 @@ fn parse_material_graphic_component<'a>(
 //         unk18 == 0x0,
 //         anyhow!("unk18 is 0x{unk18:08x}"),
 //     )?;
-//     let unk19 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk19 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk19 == 0x4C55_6308,
 //         anyhow!("unk19 is 0x{unk19:08x}"),
 //     )?;
 //     let unk20 = read_string_at::<BigEndian>(src, pos)?;
-//     let unk21 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk21 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk21 == 0x2 || unk21 == 0x3,
 //         anyhow!("unk21 is 0x{unk21:08x}"),
 //     )?;
-//     let unk22 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk22 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk22 == 0xD6F6_A73E,
 //         anyhow!("unk22 is 0x{unk22:08x}"),
 //     )?;
-//     let unk23 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk23 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk23 == 0x4C55_6308 || unk23 == 0x2810_2F02,
 //         anyhow!("unk23 is 0x{unk23:08x}"),
 //     )?;
-//     let unk24 = read_u32_at::<BigEndian>(src, pos)?;
+//     let unk24 = reader.read_at::<u32be>(position)?.into();
 //     test(
 //         unk24 == 0x0,
 //         anyhow!("unk24 is 0x{unk24:08x}"),
@@ -569,57 +596,58 @@ fn parse_material_graphic_component<'a>(
 //     todo!()
 // }
 
-/// Parse the pleo component of an actor
-fn parse_pleo_component<'a>(
-    src: &'a [u8],
-    _game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let video = read_path_at::<BigEndian>(src, pos)?;
-    let dash_mpd = read_path_at::<BigEndian>(src, pos)?;
-    let channel_id = Cow::Borrowed(read_string_at::<BigEndian>(src, pos)?);
-    let channel_id = if channel_id.is_empty() {
-        None
-    } else {
-        Some(channel_id)
-    };
-    Ok(ComponentData::PleoComponent(PleoComponent {
-        video,
-        dash_mpd,
-        channel_id,
-    }))
+impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
+    fn deserialize_at(
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let video = reader.read_at::<SplitPath>(position)?;
+        let dash_mpd = reader.read_at::<SplitPath>(position)?;
+        let channel_id = reader.read_len_string_at::<u32be>(position)?;
+        let channel_id = if channel_id.is_empty() {
+            None
+        } else {
+            Some(channel_id)
+        };
+        Ok(PleoComponent {
+            video,
+            dash_mpd,
+            channel_id,
+        })
+    }
 }
 
 /// Parse the property patcher component of an actor
-fn parse_property_patcher<'a>(
-    src: &'a [u8],
-    game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk11, &1)?;
-    let unk12 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk12, &0)?;
-    if game != Game::JustDance2017 {
-        let unk13 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk13, &0)?;
+fn parse_property_patcher(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<(), ReadError> {
+    let unk11 = reader.read_at::<u32be>(position)?.into();
+    test(&unk11, &1u32)?;
+    let unk12 = reader.read_at::<u32be>(position)?.into();
+    test(&unk12, &0u32)?;
+    if gp.game != Game::JustDance2017 {
+        let unk13 = reader.read_at::<u32be>(position)?.into();
+        test(&unk13, &0u32)?;
     }
-    Ok(ComponentData::None)
+    Ok(())
 }
 
 /// Parse the ui textbox component of an actor
-fn parse_ui_text_box<'a>(
-    src: &'a [u8],
-    game: Game,
-    pos: &mut usize,
-) -> Result<ComponentData<'a>, ParserError> {
-    let unk11 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk11, &[0x0, 0x2, 0x3])?;
-    let unk12 = read_u32_at::<BigEndian>(src, pos)?;
+fn parse_ui_text_box<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+    gp: UniqueGameId,
+) -> Result<UITextBox<'de>, ReadError> {
+    let game = gp.game;
+    let unk11 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk11, &[0x0u32, 0x2, 0x3])?;
+    let unk12 = reader.read_at::<u32be>(position)?.into();
     test_any(
         &unk12,
         &[
-            0xBF80_0000,
+            0xBF80_0000u32,
             0x41A0_0000,
             0x4200_0000,
             0x428C_0000,
@@ -627,93 +655,85 @@ fn parse_ui_text_box<'a>(
             0x4316_0000,
         ],
     )?;
-    let unk13 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk13, &0xFFFF_FFFF)?;
-    let unk14 = read_u64_at::<BigEndian>(src, pos)?;
-    test(&unk14, &0)?;
+    let unk13 = reader.read_at::<u32be>(position)?.into();
+    test(&unk13, &0xFFFF_FFFFu32)?;
+    let unk14 = reader.read_at::<u64be>(position)?.into();
+    test(&unk14, &0u64)?;
     for _ in 0..3 {
-        let unk15 = read_u32_at::<BigEndian>(src, pos)?;
-        test_any(&unk15, &[0x0, 0x3F80_0000])?;
+        let unk15 = reader.read_at::<u32be>(position)?.into();
+        test_any(&unk15, &[0x0u32, 0x3F80_0000])?;
     }
     for _ in 0..2 {
-        let unk17 = read_u32_at::<BigEndian>(src, pos)?;
-        test_any(&unk17, &[0x4496_0000, 0xBF80_0000])?;
+        let unk17 = reader.read_at::<u32be>(position)?.into();
+        test_any(&unk17, &[0x4496_0000u32, 0xBF80_0000])?;
     }
-    let unk18 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk18, &[0xBF80_0000, 0x443B_8000, 0x458C_A000]).context(*pos)?;
-    let unk19 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk19, &0xBF80_0000).context(*pos)?;
-    let string1 = Cow::Borrowed(
-        read_string_at::<BigEndian>(src, pos)
-            .map_err(ParserError::from)
-            .map_err(|error| error.context(*pos))?,
-    );
+    let unk18 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk18, &[0xBF80_0000u32, 0x443B_8000, 0x458C_A000])?;
+    let unk19 = reader.read_at::<u32be>(position)?.into();
+    test(&unk19, &0xBF80_0000u32)?;
+    let string1 = reader.read_len_string_at::<u32be>(position)?;
     let string1 = if string1.is_empty() {
         None
     } else {
         Some(string1)
     };
-    let unk20 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk20, &0).context(*pos)?;
-    let unk21 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk21, &1).context(*pos)?;
-    let unk22 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk22, &[0xFFFF_FFFF, 0x317A, 0x3B]).context(*pos)?;
-    let unk23_1 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk23_1, &[0x0, 0x4140_0000, 0xC170_0000, 0xC120_0000]).context(*pos)?;
-    let unk23_2 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk23_2, &0).context(*pos)?;
-    let unk23_3 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk23_3, &0).context(*pos)?;
-    let unk23_4 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk23_4, &0).context(*pos)?;
-    let string2 =
-        Cow::Borrowed(read_string_at::<BigEndian>(src, pos).map_err(|e| e.context(*pos))?);
+    let unk20 = reader.read_at::<u32be>(position)?.into();
+    test(&unk20, &0u32)?;
+    let unk21 = reader.read_at::<u32be>(position)?.into();
+    test(&unk21, &1u32)?;
+    let unk22 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk22, &[0xFFFF_FFFFu32, 0x317A, 0x3B])?;
+    let unk23_1 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk23_1, &[0x0u32, 0x4140_0000, 0xC170_0000, 0xC120_0000])?;
+    let unk23_2 = reader.read_at::<u32be>(position)?.into();
+    test(&unk23_2, &0u32)?;
+    let unk23_3 = reader.read_at::<u32be>(position)?.into();
+    test(&unk23_3, &0u32)?;
+    let unk23_4 = reader.read_at::<u32be>(position)?.into();
+    test(&unk23_4, &0u32)?;
+    let string2 = reader.read_len_string_at::<u32be>(position)?;
     let string2 = if string2.is_empty() {
         None
     } else {
         Some(string2)
     };
-    let unk23_6 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk23_6, &0).context(*pos)?;
-    let unk23_7 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk23_7, &0x0).context(*pos)?;
-    let unk23_8 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk23_8, &[0, 0x2, 0xFFFF_FFFF]).context(*pos)?;
-    let unk24 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk24, &[0, 0xFFFF_FFFF]).context(*pos)?;
-    let unk25 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk25, &[0, 0xBF80_0000]).context(*pos)?;
-    let unk26 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk26, &[0, 0xFFFF_FFFF]).context(*pos)?;
-    let unk27 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk27, &[0, 0xBF80_0000]).context(*pos)?;
+    let unk23_6 = reader.read_at::<u32be>(position)?.into();
+    test(&unk23_6, &0u32)?;
+    let unk23_7 = reader.read_at::<u32be>(position)?.into();
+    test(&unk23_7, &0x0u32)?;
+    let unk23_8 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk23_8, &[0u32, 0x2, 0xFFFF_FFFF])?;
+    let unk24 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk24, &[0u32, 0xFFFF_FFFF])?;
+    let unk25 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk25, &[0u32, 0xBF80_0000])?;
+    let unk26 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk26, &[0u32, 0xFFFF_FFFF])?;
+    let unk27 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk27, &[0u32, 0xBF80_0000])?;
     let i = if game == Game::JustDance2018 || game == Game::JustDance2017 {
         6
     } else {
         7
     };
     for _ in 0..i {
-        let unk28 = read_u64_at::<BigEndian>(src, pos)?;
-        test(&unk28, &0).context(*pos)?;
+        let unk28 = reader.read_at::<u64be>(position)?.into();
+        test(&unk28, &0u64)?;
     }
-    let unk29 = read_u32_at::<BigEndian>(src, pos)?;
-    test(&unk29, &0xBF80_0000).context(*pos)?;
+    let unk29 = reader.read_at::<u32be>(position)?.into();
+    test(&unk29, &0xBF80_0000u32)?;
     if game == Game::JustDance2019 || game == Game::JustDance2018 || game == Game::JustDance2017 {
-        let unk30 = read_u32_at::<BigEndian>(src, pos)?;
-        test(&unk30, &0).context(*pos)?;
+        let unk30 = reader.read_at::<u32be>(position)?.into();
+        test(&unk30, &0u32)?;
     } else {
-        let unk30 = read_u64_at::<BigEndian>(src, pos)?;
-        test(&unk30, &0).context(*pos)?;
+        let unk30 = reader.read_at::<u64be>(position)?.into();
+        test(&unk30, &0u64)?;
     }
-    let unk31 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk31, &[0xFFFF_FFFF, 0x1]).context(*pos)?;
-    let unk32 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk32, &[0xFFFF_FFFF, 0x1]).context(*pos)?;
-    let unk33 = read_u32_at::<BigEndian>(src, pos)?;
-    test_any(&unk33, &[1, 4, 0xFFFF_FFFF]).context(*pos)?;
-    Ok(ComponentData::UITextBox(super::UITextBox {
-        string1,
-        string2,
-    }))
+    let unk31 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk31, &[0xFFFF_FFFFu32, 0x1])?;
+    let unk32 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk32, &[0xFFFF_FFFFu32, 0x1])?;
+    let unk33 = reader.read_at::<u32be>(position)?.into();
+    test_any(&unk33, &[1u32, 4, 0xFFFF_FFFF])?;
+    Ok(UITextBox { string1, string2 })
 }

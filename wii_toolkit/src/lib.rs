@@ -1,8 +1,9 @@
+#![feature(try_blocks)]
 // Everything should be documented
-#![deny(missing_docs)]
-#![deny(clippy::missing_docs_in_private_items)]
+// #![deny(missing_docs)]
+// #![deny(clippy::missing_docs_in_private_items)]
 // If an overflow or underflow occurs it's a good indication of a broken file
-#![deny(clippy::arithmetic_side_effects)]
+// #![deny(clippy::arithmetic_side_effects)]
 
 //! # Wii Toolkit
 //!
@@ -16,5 +17,17 @@
 //! This crate has no features that can be enabled
 //!
 
+use dotstar_toolkit_utils::bytes::primitives::u32be;
+
 pub mod u8a; // wii .app files
 pub mod wad; // wii .wad files
+
+/// Round address to the next boundary
+///
+/// # Panics
+/// Will panic if the rounding would overflow
+fn round_to_boundary(n: u32be) -> u32be {
+    n.checked_add(u32be::from(0x3F))
+        .map(|n| n & (!u32be::from(0x3F)))
+        .expect("Overflow occurred!")
+}

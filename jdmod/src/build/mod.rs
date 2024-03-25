@@ -158,14 +158,14 @@ pub fn song_database(
     let skuscene_maps_sgs_vec = sgs::create_sgs_vec(&sgs_skuscene)?;
 
     bf.generated_files
-        .add_file(sgscontainer_path, sgscontainer_vec)?;
+        .add_file(sgscontainer_path.into(), sgscontainer_vec)?;
 
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_nx_all.sgs", bs.platform)?,
+        cook_path("world/skuscenes/skuscene_maps_nx_all.sgs", bs.platform)?.into(),
         skuscene_maps_sgs_vec.clone(),
     )?;
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_pc_all.sgs", bs.platform)?,
+        cook_path("world/skuscenes/skuscene_maps_pc_all.sgs", bs.platform)?.into(),
         skuscene_maps_sgs_vec,
     )?;
 
@@ -198,11 +198,11 @@ pub fn song_database(
     let skuscene_maps_isc_vec = isc::create_vec_with_capacity_hint(&isc_skuscene_nx, 230_000)?;
 
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_nx_all.isc", bs.platform)?,
+        cook_path("world/skuscenes/skuscene_maps_nx_all.isc", bs.platform)?.into(),
         skuscene_maps_isc_vec.clone(),
     )?;
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_pc_all.isc", bs.platform)?,
+        cook_path("world/skuscenes/skuscene_maps_pc_all.isc", bs.platform)?.into(),
         skuscene_maps_isc_vec,
     )?;
 

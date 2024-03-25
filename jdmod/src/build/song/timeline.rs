@@ -54,7 +54,7 @@ pub fn build(
     let tml_scene_vec = cooked::isc::create_vec_with_capacity_hint(&tml_scene, 1300)?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml.isc.ckd"),
+        format!("{timeline_cache_dir}/{lower_map_name}_tml.isc.ckd").into(),
         tml_scene_vec,
     )?;
 
@@ -121,7 +121,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                         let encoded = encode_texture(&from)?;
                         let encoded_vec = cooked::png::create_vec(&encoded)?;
 
-                        bf.generated_files.add_file(to, encoded_vec)?;
+                        bf.generated_files.add_file(to.into(), encoded_vec)?;
                     } else {
                         println!(
                             "Warning! Missing {} for {lower_map_name}!",
@@ -156,17 +156,17 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
     let dance_dtape_vec = cooked::json::create_vec(&template)?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.act.ckd"),
+        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.act.ckd").into(),
         dance_act_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.tpl.ckd"),
+        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.tpl.ckd").into(),
         dance_tpl_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.dtape.ckd"),
+        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.dtape.ckd").into(),
         dance_dtape_vec,
     )?;
 
@@ -213,15 +213,15 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
     let ktape_vec = cooked::json::create_vec(&template)?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.act.ckd"),
+        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.act.ckd").into(),
         tml_actor_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.tpl.ckd"),
+        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.tpl.ckd").into(),
         tml_template_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.ktape.ckd"),
+        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.ktape.ckd").into(),
         ktape_vec,
     )?;
     Ok(())
@@ -301,10 +301,7 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
-        components: vec![cooked::act::Component {
-            the_type: cooked::act::ComponentType::TapeCaseComponent,
-            data: cooked::act::ComponentData::None,
-        }],
+        components: vec![cooked::act::Component::TapeCaseComponent],
     };
 
     Ok(cooked::act::create_vec(&actor)?)

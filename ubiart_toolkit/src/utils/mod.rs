@@ -1,15 +1,16 @@
-pub mod bytes;
 pub mod errors;
 
 use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
 
-use byteorder::{ByteOrder, LittleEndian};
+pub mod bytes;
+pub mod plumbing;
+
 use clap::ValueEnum;
 use dotstar_toolkit_utils::{
-    bytes::read_u32_at,
-    bytes_new::{
-        read::{BinaryDeserialize, NewReadError, ZeroCopyReadAt},
-        write::BinarySerialize,
+    bytes::{
+        primitives::u32be,
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
     },
     testing::test,
 };
@@ -26,6 +27,15 @@ pub type Color = (f32, f32, f32, f32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[repr(transparent)]
 pub struct LocaleId(u32);
+
+impl BinaryDeserialize<'_> for LocaleId {
+    fn deserialize_at(
+        reader: &(impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        Ok(Self(reader.read_at::<u32be>(position)?.into()))
+    }
+}
 
 impl Default for LocaleId {
     fn default() -> Self {
@@ -79,18 +89,15 @@ impl SplitPath<'_> {
 }
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
-    fn deserialize_at<B>(
-        reader: &(impl ZeroCopyReadAt<'de> + ?Sized),
+    fn deserialize_at(
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, NewReadError>
-    where
-        B: ByteOrder,
-    {
+    ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
-            let filename = reader.read_len_string_at::<B, u32>(position)?;
-            let path = reader.read_len_string_at::<B, u32>(position)?;
-            let path_id: u32 = reader.read_at::<B, _>(position)?;
+            let filename = reader.read_len_string_at::<u32be>(position)?;
+            let path = reader.read_len_string_at::<u32be>(position)?;
+            let path_id = reader.read_at::<u32be>(position)?.into();
             let split_path = if path.is_empty() && filename.is_empty() {
                 test(&path_id, &Self::EMPTY_PATH_ID)?;
                 SplitPath::default()
@@ -100,7 +107,7 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
                 test(&path_id, &path_id_calc)?;
                 split_path
             };
-            let padding = reader.read_at::<B, _>(position)?;
+            let padding = reader.read_at::<u32be>(position)?.into();
             test(&padding, &Self::PADDING)?;
             split_path
         };
@@ -112,22 +119,19 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
 }
 
 impl BinarySerialize for SplitPath<'_> {
-    fn serialize_at<B>(
+    fn serialize_at(
         &self,
-        writer: &mut (impl dotstar_toolkit_utils::bytes_new::write::ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
         position: &mut u64,
-    ) -> Result<(), dotstar_toolkit_utils::bytes_new::write::NewWriteError>
-    where
-        B: ByteOrder,
-    {
-        writer.write_len_string_at::<B, u32>(position, &self.filename)?;
-        writer.write_len_string_at::<B, u32>(position, &self.path)?;
+    ) -> Result<(), WriteError> {
+        writer.write_len_string_at::<u32be>(position, &self.filename)?;
+        writer.write_len_string_at::<u32be>(position, &self.path)?;
         if self.path.is_empty() && self.filename.is_empty() {
-            writer.write_at::<B>(position, &Self::EMPTY_PATH_ID)?;
+            writer.write_at(position, &u32be::from(Self::EMPTY_PATH_ID))?;
         } else {
-            writer.write_at::<B>(position, &u32::from(PathId::from(self)))?;
+            writer.write_at(position, &u32be::from(u32::from(PathId::from(self))))?;
         }
-        writer.write_at::<B>(position, &Self::PADDING)?;
+        writer.write_at(position, &u32be::from(Self::PADDING))?;
 
         Ok(())
     }
@@ -187,6 +191,15 @@ impl From<&str> for PathId {
         Self(string_id(value))
     }
 }
+
+impl From<&Path> for PathId {
+    fn from(value: &Path) -> Self {
+        Self(string_id(
+            value.to_str().expect("Refactor to use ubicrc directly"),
+        ))
+    }
+}
+
 impl From<u32> for PathId {
     fn from(value: u32) -> Self {
         Self(value)
@@ -206,30 +219,39 @@ impl Deref for PathId {
     }
 }
 
+impl BinaryDeserialize<'_> for PathId {
+    fn deserialize_at(
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        Ok(Self(reader.read_at::<u32be>(position)?.into()))
+    }
+}
+
 pub fn path_id<P: AsRef<Path>>(path: P) -> PathId {
     PathId::from(os_string_id(path.as_ref().as_os_str()))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct GamePlatform {
+pub struct UniqueGameId {
     pub game: Game,
     pub platform: Platform,
     pub id: u32,
 }
 
-impl Display for GamePlatform {
+impl Display for UniqueGameId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::write!(f, "{} for {}", self.game, self.platform)
     }
 }
 
-impl From<GamePlatform> for u32 {
-    fn from(value: GamePlatform) -> Self {
+impl From<UniqueGameId> for u32 {
+    fn from(value: UniqueGameId) -> Self {
         value.id
     }
 }
 
-impl TryFrom<u32> for GamePlatform {
+impl TryFrom<u32> for UniqueGameId {
     type Error = ParserError;
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
@@ -287,6 +309,81 @@ impl TryFrom<u32> for GamePlatform {
                 "Unknown game platform: {value:x}"
             ))),
         }
+    }
+}
+
+impl BinaryDeserialize<'_> for UniqueGameId {
+    fn deserialize_at(
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let value = u32::from(reader.read_at::<u32be>(position)?);
+        match value {
+            0x1C24_B91A => Ok(Self {
+                game: Game::JustDance2014,
+                platform: Platform::Wii,
+                id: value,
+            }),
+            0xC563_9F58 => Ok(Self {
+                game: Game::JustDance2015,
+                platform: Platform::WiiU,
+                id: value,
+            }),
+            0x415E_6D8C | 0x32F3_512A => Ok(Self {
+                game: Game::JustDance2017,
+                platform: Platform::Nx,
+                id: value,
+            }),
+            0x032E_71C5 => Ok(Self {
+                game: Game::JustDance2018,
+                platform: Platform::Nx,
+                id: value,
+            }),
+            0x1F5E_E42F | 0xC781_A65B | 0x57A7_053C => Ok(Self {
+                game: Game::JustDance2019,
+                platform: Platform::Nx,
+                id: value,
+            }),
+            0x72B4_2FF4 | 0xB292_FD08 | 0x217A_94CE => Ok(Self {
+                game: Game::JustDance2020,
+                platform: Platform::Nx,
+                id: value,
+            }),
+            0xA155_8F87 => Ok(Self {
+                game: Game::JustDanceChina,
+                platform: Platform::Nx,
+                id: value,
+            }),
+            0x4C8E_C5C5 => Ok(Self {
+                game: Game::JustDance2020,
+                platform: Platform::Wii,
+                id: value,
+            }),
+            0xEB5D_504C | 0xA4F0_18EE => Ok(Self {
+                game: Game::JustDance2021,
+                platform: Platform::Nx,
+                id: value,
+            }),
+            0x1DDB_2268 => Ok(Self {
+                game: Game::JustDance2022,
+                platform: Platform::Nx,
+                id: value,
+            }),
+            _ => Err(ReadError::custom(format!(
+                "Unknown game platform: {value:x}"
+            ))),
+        }
+    }
+}
+
+impl BinarySerialize for UniqueGameId {
+    fn serialize_at(
+        &self,
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), WriteError> {
+        writer.write_at(position, &u32be::from(self.id))?;
+        Ok(())
     }
 }
 
@@ -373,9 +470,9 @@ impl Display for Platform {
     }
 }
 
-/// Calculates the Ubisoft string id for a given string.
-///
-/// Implementation based on the Python implementation by github.com/InvoxiPlayGames
+// Calculates the Ubisoft string id for a given string.
+//
+// Implementation based on the Python implementation by github.com/InvoxiPlayGames
 #[must_use]
 pub fn string_id(string: &str) -> u32 {
     let bytes = string.as_bytes();
@@ -435,8 +532,16 @@ pub fn string_id_2(one: &str, two: &str) -> u32 {
     ubi_crc(&upper)
 }
 
+#[inline]
+fn read_u32le(data: &[u8], pos: &mut usize) -> u32 {
+    let value = u32::from_le_bytes([data[*pos], data[*pos + 1], data[*pos + 2], data[*pos + 3]]);
+    *pos += 4;
+    value
+}
+
 #[must_use]
 /// Implementation of the UbiArt CRC function
+#[allow(clippy::as_conversions, clippy::cast_possible_truncation, reason = "Truncating is wanted")]
 pub fn ubi_crc(data: &[u8]) -> u32 {
     let length = data.len();
     let mut a: u32 = 0x9E37_79B9;
@@ -445,19 +550,13 @@ pub fn ubi_crc(data: &[u8]) -> u32 {
 
     let mut pos = 0;
     while pos + 12 <= length {
-        a = a.wrapping_add(
-            read_u32_at::<LittleEndian>(data, &mut pos).unwrap_or_else(|_| unreachable!()),
-        );
-        b = b.wrapping_add(
-            read_u32_at::<LittleEndian>(data, &mut pos).unwrap_or_else(|_| unreachable!()),
-        );
-        c = c.wrapping_add(
-            read_u32_at::<LittleEndian>(data, &mut pos).unwrap_or_else(|_| unreachable!()),
-        );
+        a = a.wrapping_add(read_u32le(data, &mut pos));
+        b = b.wrapping_add(read_u32le(data, &mut pos));
+        c = c.wrapping_add(read_u32le(data, &mut pos));
         (a, b, c) = shifter(a, b, c);
     }
 
-    c = wrapping_add(c, length);
+    c = c.wrapping_add(length as u32);
     let left = length - pos;
 
     if left > 0 {
@@ -498,35 +597,6 @@ pub fn ubi_crc(data: &[u8]) -> u32 {
 
     (_, _, c) = shifter(a, b, c);
     c
-}
-
-#[cfg(target_pointer_width = "64")]
-#[allow(clippy::as_conversions, reason = "truncation is prevented")]
-#[allow(clippy::cast_possible_truncation, reason = "truncation is prevented")]
-#[must_use]
-/// Convenience function for wrapping add
-const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
-    let mod_rhs = (rhs % (u32::MAX as usize)) as u32;
-    lhs.wrapping_add(mod_rhs)
-}
-
-#[cfg(any(
-    target_pointer_width = "32",
-    target_pointer_width = "16",
-    target_pointer_width = "8"
-))]
-#[allow(
-    clippy::as_conversions,
-    reason = "usize is always larger or equal to u32 on 32, 16 and 8-bit systems"
-)]
-#[allow(
-    clippy::cast_possible_truncation,
-    reason = "usize is always larger or equal to u32 on 32, 16 and 8-bit systems"
-)]
-#[must_use]
-/// Convenience function for wrapping add
-const fn wrapping_add(lhs: u32, rhs: usize) -> u32 {
-    lhs.wrapping_add(rhs as u32)
 }
 
 /// Shifting implementation for ubicrc

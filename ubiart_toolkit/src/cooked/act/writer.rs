@@ -1,112 +1,128 @@
-use std::{
-    borrow::Cow,
-    io::{Cursor, Seek, Write},
+use std::{borrow::Cow, io::Cursor};
+
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u32be, u64be},
+    write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
 };
 
-use byteorder::{BigEndian, WriteBytesExt};
+use super::{Actor, Component, MaterialGraphicComponent, PleoComponent};
 
-use super::{Actor, ComponentData, MaterialGraphicComponent, PleoComponent};
-use crate::utils::{bytes::WriteBytesExtUbiArt, errors::WriterError};
-
-/// Write the `Actor` to the writer
-pub fn create<W: Write + Seek>(mut writer: W, actor: &Actor) -> Result<(), WriterError> {
-    writer.write_u32::<BigEndian>(1)?;
-    writer.write_u32::<BigEndian>(actor.unk1)?;
-    writer.write_u32::<BigEndian>(actor.unk2)?;
-    writer.write_u32::<BigEndian>(actor.unk2_5)?;
-    writer.write_u64::<BigEndian>(0)?;
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_u64::<BigEndian>(0x1_0000_0000)?;
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_u64::<BigEndian>(0)?;
-    writer.write_u64::<BigEndian>(0xFFFF_FFFF)?;
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_path::<BigEndian>(&actor.tpl)?;
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_u32::<BigEndian>(u32::try_from(actor.components.len())?)?;
-    for template in &actor.components {
-        writer.write_u32::<BigEndian>(u32::from(template.the_type))?;
-        match &template.data {
-            ComponentData::None => {}
-            ComponentData::MaterialGraphicComponent(mgc) => {
-                write_material_graphic_component(&mut writer, mgc, false)?;
+impl BinarySerialize for Actor<'_> {
+    fn serialize_at(
+        &self,
+        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), WriteError> {
+        writer.write_at(position, &u32be::from(self.unk1))?;
+        writer.write_at(position, &u32be::from(self.unk2))?;
+        writer.write_at(position, &u32be::from(self.unk2_5))?;
+        writer.write_at(position, &u64be::from(0))?;
+        writer.write_at(position, &u32be::from(0))?;
+        writer.write_at(position, &u64be::from(0x1_0000_0000))?;
+        writer.write_at(position, &u32be::from(0))?;
+        writer.write_at(position, &u64be::from(0))?;
+        writer.write_at(position, &u64be::from(0xFFFF_FFFF))?;
+        writer.write_at(position, &u32be::from(0))?;
+        writer.write_at(position, &self.tpl)?;
+        writer.write_at(position, &u32be::from(0))?;
+        writer.write_at(position, &u32be::from(0))?;
+        writer.write_at(position, &u32be::try_from(self.components.len())?)?;
+        for component in &self.components {
+            writer.write_at(position, &u32be::from(component.to_id()))?;
+            match component {
+                Component::AutodanceComponent
+                | Component::MasterTape
+                | Component::PictoComponent
+                | Component::SongDatabaseComponent
+                | Component::SongDescComponent
+                | Component::TapeCaseComponent
+                | Component::AvatarDescComponent
+                | Component::SkinDescComponent => {}
+                Component::MaterialGraphicComponent(mgc) => {
+                    write_material_graphic_component(writer, position, mgc, false)?;
+                }
+                Component::PleoComponent(pc) => write_pleo_component(writer, position, pc)?,
+                Component::PleoTextureGraphicComponent(mgc) => {
+                    write_material_graphic_component(writer, position, mgc, true)?;
+                }
+                component => todo!("{component:?}"),
             }
-            ComponentData::PleoComponent(pc) => {
-                write_pleo_component(&mut writer, pc)?;
-            }
-            _ => todo!("{:?}", template.data),
         }
+        Ok(())
     }
-    Ok(())
 }
 
 /// Create an `Actor` in a newly allocated `Vec`
-pub fn create_vec(actor: &Actor) -> Result<Vec<u8>, WriterError> {
+pub fn create_vec(actor: &Actor<'_>) -> Result<Vec<u8>, WriteError> {
     let mut vec = Vec::with_capacity(700);
-    let cursor = Cursor::new(&mut vec);
-    create(cursor, actor)?;
+    let mut cursor = Cursor::new(&mut vec);
+    actor.serialize(&mut cursor)?;
     vec.shrink_to_fit();
     Ok(vec)
 }
 
 /// Write the `MaterialGraphicComponent` part of the actor to the writer
-fn write_material_graphic_component<W: Write + Seek>(
-    writer: &mut W,
+fn write_material_graphic_component(
+    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    position: &mut u64,
     mgc: &MaterialGraphicComponent,
     is_pleo: bool,
-) -> Result<(), WriterError> {
+) -> Result<(), WriteError> {
     for _ in 0..3 {
-        writer.write_u32::<BigEndian>(0x3F80_0000)?;
+        writer.write_at(position, &u32be::from(0x3F80_0000))?;
     }
-    writer.write_u32::<BigEndian>(mgc.unk11_5)?;
+    writer.write_at(position, &u32be::from(mgc.unk11_5))?;
     for _ in 0..2 {
         if is_pleo {
-            writer.write_u64::<BigEndian>(0xFFFF_FFFF)?;
+            writer.write_at(position, &u64be::from(0xFFFF_FFFF))?;
         } else {
-            writer.write_u64::<BigEndian>(0x0)?;
+            writer.write_at(position, &u64be::from(0x0))?;
         }
     }
-    writer.write_u32::<BigEndian>(mgc.unk13)?;
-    writer.write_u64::<BigEndian>(mgc.unk14)?;
-    writer.write_u64::<BigEndian>(mgc.unk15)?;
+    writer.write_at(position, &u32be::from(mgc.unk13))?;
+    writer.write_at(position, &u64be::from(mgc.unk14))?;
+    writer.write_at(position, &u64be::from(mgc.unk15))?;
     for item in mgc.files.iter().take(9) {
-        writer.write_path::<BigEndian>(item)?;
-        writer.write_u32::<BigEndian>(0)?;
+        writer.write_at(position, item)?;
+        writer.write_at(position, &u32be::from(0))?;
     }
-    writer.write_u32::<BigEndian>(0)?;
+    writer.write_at(position, &u32be::from(0))?;
     for item in mgc.files.iter().skip(9) {
-        writer.write_path::<BigEndian>(item)?;
-        writer.write_u32::<BigEndian>(0)?;
+        writer.write_at(position, item)?;
+        writer.write_at(position, &u32be::from(0))?;
     }
     for _ in 0..4 {
-        writer.write_u64::<BigEndian>(0)?;
+        writer.write_at(position, &u64be::from(0))?;
     }
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_u32::<BigEndian>(0x3F80_0000)?;
-    writer.write_u64::<BigEndian>(0xFFFF_FFFF_FFFF_FFFF)?;
+    writer.write_at(position, &u32be::from(0))?;
+    writer.write_at(position, &u32be::from(0x3F80_0000))?;
+    writer.write_at(position, &u64be::from(0xFFFF_FFFF_FFFF_FFFF))?;
     for _ in 0..3 {
-        writer.write_u32::<BigEndian>(0)?;
+        writer.write_at(position, &u32be::from(0))?;
     }
-    writer.write_u32::<BigEndian>(0x3F80_0000)?;
-    writer.write_u64::<BigEndian>(0)?;
-    writer.write_u32::<BigEndian>(mgc.unk26)?;
+    writer.write_at(position, &u32be::from(0x3F80_0000))?;
+    writer.write_at(position, &u64be::from(0))?;
+    writer.write_at(position, &u32be::from(mgc.unk26))?;
     if is_pleo {
-        writer.write_u32::<BigEndian>(0)?;
+        writer.write_at(position, &u32be::from(0))?;
     }
     Ok(())
 }
 
 /// Write the `PleoComponent` part of the actor to the writer
-fn write_pleo_component<W: Write + Seek>(
-    writer: &mut W,
+fn write_pleo_component(
+    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    position: &mut u64,
     pleo_component: &PleoComponent,
-) -> Result<(), WriterError> {
-    writer.write_path::<BigEndian>(&pleo_component.video)?;
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_path::<BigEndian>(&pleo_component.dash_mpd)?;
-    writer.write_u32::<BigEndian>(0)?;
-    writer.write_string::<BigEndian>(pleo_component.channel_id.as_ref().map_or("", Cow::as_ref))?;
+) -> Result<(), WriteError> {
+    writer.write_at(position, &pleo_component.video)?;
+    writer.write_at(position, &u32be::from(0))?;
+    writer.write_at(position, &pleo_component.dash_mpd)?;
+    writer.write_at(position, &u32be::from(0))?;
+    writer.write_len_string_at::<u32be>(
+        position,
+        pleo_component.channel_id.as_ref().map_or("", Cow::as_ref),
+    )?;
 
     Ok(())
 }

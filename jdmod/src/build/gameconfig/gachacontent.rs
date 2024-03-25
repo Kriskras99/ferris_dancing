@@ -41,7 +41,7 @@ pub fn build(
     let gacha_content_database_vec =
         cooked::json::create_vec_with_capacity_hint(&gacha_content_database, 16_000)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.config_files_path.gachacontent, bs.platform)?,
+        cook_path(&gameconfig.config_files_path.gachacontent, bs.platform)?.into(),
         gacha_content_database_vec,
     )?;
 

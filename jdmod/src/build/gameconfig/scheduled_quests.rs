@@ -57,7 +57,7 @@ pub fn build(
 
     let quest_database_vec = cooked::json::create_vec(&quest_database)?;
     bf.generated_files.add_file(
-        cook_path("enginedata/gameconfig/scheduledquests.isg", bs.platform)?,
+        cook_path("enginedata/gameconfig/scheduledquests.isg", bs.platform)?.into(),
         quest_database_vec,
     )?;
 

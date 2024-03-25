@@ -33,17 +33,17 @@ pub fn build(
     let autodance_scene_vec = cooked::isc::create_vec_with_capacity_hint(&autodance_scene, 900)?;
 
     bf.generated_files.add_file(
-        format!("{autodance_cache_dir}/{lower_map_name}_autodance.act.ckd"),
+        format!("{autodance_cache_dir}/{lower_map_name}_autodance.act.ckd").into(),
         autodance_actor_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{autodance_cache_dir}/{lower_map_name}_autodance.tpl.ckd"),
+        format!("{autodance_cache_dir}/{lower_map_name}_autodance.tpl.ckd").into(),
         autodance_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{autodance_cache_dir}/{lower_map_name}_autodance.isc.ckd"),
+        format!("{autodance_cache_dir}/{lower_map_name}_autodance.isc.ckd").into(),
         autodance_scene_vec,
     )?;
 
@@ -70,10 +70,7 @@ fn autodance_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
-        components: vec![cooked::act::Component {
-            the_type: cooked::act::ComponentType::AutodanceComponent,
-            data: cooked::act::ComponentData::None,
-        }],
+        components: vec![cooked::act::Component::AutodanceComponent],
     };
 
     Ok(cooked::act::create_vec(&actor)?)

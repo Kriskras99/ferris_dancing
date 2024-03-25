@@ -10,7 +10,7 @@ use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::{
     testing::test,
-    vfs::{native::Native, VirtualFileSystem},
+    vfs::{native::NativeFs, VirtualFileSystem},
 };
 use ubiart_toolkit::{ipk, secure_fat};
 
@@ -99,8 +99,8 @@ pub fn extract_secure_fat(
             .ok_or_else(|| anyhow!("Source filename is invalid!"))?,
     );
     // Open the sfat as a vfs using the native filesystem as base
-    let native_vfs = Native::new(source_directory)?;
-    let fat_vfs = secure_fat::vfs::SfatFilesystem::new(&native_vfs, &source_filename, lax)?;
+    let native_vfs = NativeFs::new(source_directory)?;
+    let fat_vfs = secure_fat::vfs::SfatFilesystem::new(&native_vfs, &source_filename)?;
     extract_vfs(&fat_vfs, destination, files, conflicts)
 }
 
@@ -132,8 +132,8 @@ pub fn extract_ipk(
     );
 
     // Open the sfat as a vfs using the native filesystem as base
-    let native_vfs = Native::new(source_directory)?;
-    let ipk_vfs = ipk::vfs::IpkFilesystem::new(&native_vfs, &source_filename, lax)?;
+    let native_vfs = NativeFs::new(source_directory)?;
+    let ipk_vfs = ipk::vfs::IpkFilesystem::new(&native_vfs, &source_filename)?;
     extract_vfs(&ipk_vfs, destination, files, conflicts)?;
     Ok(())
 }
@@ -160,9 +160,9 @@ pub fn extract_vfs(
             }
         }
     } else {
-        for file in vfs.list_files("".as_ref())? {
+        for file in vfs.walk_filesystem("".as_ref())? {
             match vfs.open(file.as_ref()) {
-                Err(e) => println!("Failed to open file {file}: {e:?}"),
+                Err(e) => println!("Failed to open file {file:?}: {e:?}"),
                 Ok(data) => save_file(&data, &destination.join(file), conflicts)?,
             }
         }

@@ -41,7 +41,6 @@ mod types;
 pub mod vfs;
 mod writer;
 
-pub use parser::*;
 pub use types::*;
 pub use writer::*;
 

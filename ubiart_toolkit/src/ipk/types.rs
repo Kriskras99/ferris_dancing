@@ -1,9 +1,11 @@
 //! Contains the types that describe the usefull information in this filetype
 
+use std::borrow::Cow;
+
 use nohash_hasher::IntMap;
 use yoke::Yokeable;
 
-use crate::utils::{self, errors::ParserError, GamePlatform, PathId, SplitPath};
+use crate::utils::{self, errors::ParserError, PathId, SplitPath, UniqueGameId};
 
 // More values!
 // https://github.com/RayCarrot/RayCarrot.RCP.Metro/blob/190c884a7745dedde6a33337a4c9684e5094c90a/src/RayCarrot.RCP.Metro/Archive/Manager/UbiArt_Ipk/UbiArtIPKArchiveConfigViewModel.cs#L85
@@ -46,7 +48,7 @@ impl From<Platform> for u32 {
 
 impl Platform {
     #[must_use]
-    pub fn matches_game_platform(&self, gp: GamePlatform) -> bool {
+    pub fn matches_game_platform(&self, gp: UniqueGameId) -> bool {
         match self {
             Self::X360 => gp.platform == utils::Platform::X360,
             Self::Ps4 => gp.platform == utils::Platform::Ps4,
@@ -63,7 +65,7 @@ pub struct Bundle<'a> {
     pub platform: Platform,
     pub unk4: u32,
     pub engine_version: u32,
-    pub game_platform: GamePlatform,
+    pub game_platform: UniqueGameId,
     pub files: IntMap<PathId, IpkFile<'a>>,
 }
 
@@ -75,7 +77,7 @@ pub struct IpkFile<'a> {
     pub data: Data<'a>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum Data<'a> {
     Uncompressed(Uncompressed<'a>),
     Compressed(Compressed<'a>),
@@ -97,7 +99,7 @@ impl Data<'_> {
 
     /// Check if this file is empty
     #[must_use]
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         match self {
             Data::Uncompressed(data) => data.data.is_empty(),
             Data::Compressed(data) => data.uncompressed_size == 0,
@@ -105,13 +107,13 @@ impl Data<'_> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Uncompressed<'a> {
-    pub data: &'a [u8],
+    pub data: Cow<'a, [u8]>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Compressed<'a> {
     pub uncompressed_size: usize,
-    pub data: &'a [u8],
+    pub data: Cow<'a, [u8]>,
 }

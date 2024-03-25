@@ -1,6 +1,6 @@
 use std::{fmt::Debug, num::TryFromIntError, str::Utf8Error};
 
-use dotstar_toolkit_utils::{bytes::ReadError, bytes_new::read::NewReadError, testing::TestError};
+use dotstar_toolkit_utils::{bytes::read::ReadError, testing::TestError};
 use thiserror::Error;
 
 /// Errors returend when parsers fail
@@ -27,13 +27,6 @@ pub enum ParserError {
         /// The original read error
         #[from]
         read: ReadError,
-    },
-    /// Read failure
-    #[error("Read error: {read:?}")]
-    NewRead {
-        /// The original read error
-        #[from]
-        read: NewReadError,
     },
     /// Test failure
     #[error("Value test failed: {test:?}")]

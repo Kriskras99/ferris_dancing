@@ -1,8 +1,10 @@
 //! Contains the parser implementation
 
-use byteorder::LittleEndian;
 use dotstar_toolkit_utils::{
-    bytes::{read_u32_at, read_u64_at},
+    bytes::{
+        primitives::{u32le, u64le},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    },
     testing::{test, test_any, test_le},
 };
 
@@ -10,152 +12,194 @@ use super::{
     count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Block, BlockData, Format, Image,
     TextureHeader, Xtx,
 };
-use crate::utils::errors::ParserError;
 
 const TEX_HEAD_BLK_TYPE: u32 = 0x2;
 const DATA_BLK_TYPE: u32 = 0x3;
 const UNKNOWN_BLK_TYPE_THREE: u32 = 0x5;
 
-/// Parse an Nvidia Tegra Texture file
-pub fn parse(src: &[u8]) -> Result<Xtx, ParserError> {
-    let mut position = 0;
+impl BinaryDeserialize<'_> for Xtx {
+    fn deserialize_at(
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, dotstar_toolkit_utils::bytes::read::ReadError> {
+        let magic = reader.read_at::<u32le>(position)?.into();
+        test(&magic, &0x4E76_4644u32)?;
 
-    let magic = read_u32_at::<LittleEndian>(src, &mut position)?;
-    test(&magic, &0x4E76_4644)?;
+        let size = reader.read_at::<u32le>(position)?.into();
+        test(&size, &0x10u32)?;
 
-    let size = read_u32_at::<LittleEndian>(src, &mut position)?;
-    test(&size, &0x10)?;
+        let major_version = reader.read_at::<u32le>(position)?.into();
+        test(&major_version, &0x1)?;
 
-    let major_version = read_u32_at::<LittleEndian>(src, &mut position)?;
-    test(&major_version, &0x1)?;
+        let minor_version = reader.read_at::<u32le>(position)?.into();
 
-    let minor_version = read_u32_at::<LittleEndian>(src, &mut position)?;
+        let mut blocks = Vec::new();
 
-    let end = src.len();
-
-    let mut blocks = Vec::new();
-
-    while position < end {
-        blocks.push(parse_block(src, &mut position)?);
-    }
-
-    let mut images = Vec::new();
-
-    let mut index = 0;
-    while index < blocks.len() {
-        let block = blocks.get(index).unwrap_or_else(|| unreachable!());
-        match &block.data {
-            BlockData::TextureHeader(hdr) => {
-                let second_block = blocks.get(index + 1);
-                let data = match second_block {
-                    Some(block) => match &block.data {
-                        BlockData::Data(data) => Ok(data),
-                        _ => Err(ParserError::custom("Found header without data")),
-                    },
-                    None => Err(ParserError::custom("Found header without data")),
-                }?;
-
-                images.push(parse_data_block_to_image(hdr, data)?);
-
-                index += 2;
-
-                Ok(())
+        loop {
+            match reader.read_at::<u32le>(position) {
+                Ok(magic) => {
+                    *position -= 4;
+                    if u32::from(magic) != 0x4E76_4248 {
+                        break;
+                    }
+                }
+                Err(ReadError::IoError {
+                    position: _,
+                    error: _,
+                    backtrace: _,
+                }) => break,
+                Err(error) => return Err(error),
             }
-            BlockData::Data(_) => Err(ParserError::custom("Found data without a header")),
-            BlockData::Three(_) => {
-                index += 1;
-                Ok(())
-            }
-        }?;
-    }
+            let block = reader.read_at::<Block>(position)?;
+            blocks.push(block);
+        }
 
-    Ok(Xtx {
-        major_version,
-        minor_version,
-        images,
-    })
+        let mut images = Vec::new();
+
+        let mut index = 0;
+        while index < blocks.len() {
+            let block = blocks.get(index).unwrap_or_else(|| unreachable!());
+            match &block.data {
+                BlockData::TextureHeader(hdr) => {
+                    let second_block = blocks.get(index + 1);
+                    let data = match second_block {
+                        Some(block) => match &block.data {
+                            BlockData::Data(data) => Ok(data),
+                            _ => Err(ReadError::custom("Found header without data".to_string())),
+                        },
+                        None => Err(ReadError::custom("Found header without data".to_string())),
+                    }?;
+
+                    images.push(parse_data_block_to_image(hdr, data)?);
+
+                    index += 2;
+
+                    Ok(())
+                }
+                BlockData::Data(_) => {
+                    Err(ReadError::custom("Found data without a header".to_string()))
+                }
+                BlockData::Three(_) => {
+                    index += 1;
+                    Ok(())
+                }
+            }?;
+        }
+
+        Ok(Self {
+            major_version,
+            minor_version,
+            images,
+        })
+    }
 }
 
-/// Parse some data at `position` as a [`Block`]
-fn parse_block<'a>(src: &'a [u8], position: &mut usize) -> Result<Block<'a>, ParserError> {
-    let start = *position;
-    let magic = read_u32_at::<LittleEndian>(src, position)?;
-    test(&magic, &0x4E76_4248)?;
-    let size = usize::try_from(read_u32_at::<LittleEndian>(src, position)?)?;
-    test(&size, &0x24)?;
-    let data_size = usize::try_from(read_u64_at::<LittleEndian>(src, position)?)?;
-    let data_offset = usize::try_from(read_u64_at::<LittleEndian>(src, position)?)?;
-    let typed = read_u32_at::<LittleEndian>(src, position)?;
-    let id = read_u32_at::<LittleEndian>(src, position)?;
-    let type_idx = read_u32_at::<LittleEndian>(src, position)?;
-    test(&type_idx, &0x0)?;
+impl<'de> BinaryDeserialize<'de> for Block<'de> {
+    fn deserialize_at(
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        let start = *position;
+        let magic = reader.read_at::<u32le>(position)?.into();
+        test(&magic, &0x4E76_4248u32)?;
+        let size = reader.read_at::<u32le>(position)?.into();
+        test(&size, &0x24)?;
+        let data_size = usize::try_from(reader.read_at::<u64le>(position)?)?;
+        let data_offset = reader.read_at::<u64le>(position)?.into();
+        let typed = reader.read_at::<u32le>(position)?.into();
+        let id = reader.read_at::<u32le>(position)?.into();
+        let type_idx = reader.read_at::<u32le>(position)?.into();
+        test(&type_idx, &0x0u32)?;
 
-    let pos = *position;
-    let block_data = match typed {
-        TEX_HEAD_BLK_TYPE => {
-            test(&data_size, &0x78)?;
-            test(&data_offset, &0x24)?;
-            parse_tex_header_block(src, position)
-        }
-        DATA_BLK_TYPE => {
-            *position = pos + data_offset - size;
-            let begin = *position;
-            let end = *position + data_size;
-            *position = end;
-            Ok(BlockData::Data(&src[begin..end]))
-        }
-        UNKNOWN_BLK_TYPE_THREE => {
-            *position = pos + data_offset - size;
-            let begin = *position;
-            let end = *position + data_size;
-            *position = end;
-            let data = &src[begin..end];
-            test(
-                &data,
-                &[
-                    0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                ]
-                .as_slice(),
-            )?;
-            Ok(BlockData::Three(data))
-        }
-        _ => Err(ParserError::custom(format!(
-            "Unknown block type found: {typed:x}"
-        ))),
-    }?;
+        let pos = *position;
+        let block_data = match typed {
+            TEX_HEAD_BLK_TYPE => {
+                test(&data_size, &0x78)?;
+                test(&data_offset, &0x24)?;
+                parse_tex_header_block(reader, position)
+            }
+            DATA_BLK_TYPE => {
+                *position = pos + data_offset - size;
+                Ok(BlockData::Data(reader.read_slice_at(position, data_size)?))
+            }
+            UNKNOWN_BLK_TYPE_THREE => {
+                *position = pos + data_offset - size;
+                let data = reader.read_slice_at(position, data_size)?;
+                test(
+                    &data.as_ref(),
+                    &[
+                        0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    ]
+                    .as_slice(),
+                )?;
+                Ok(BlockData::Three(data))
+            }
+            _ => Err(ReadError::custom(format!(
+                "Unknown block type found: {typed:x}"
+            ))),
+        }?;
 
-    let new_pos = *position;
-    test(&(new_pos - pos), &(data_size + data_offset - size))?;
+        let data_size = u64::try_from(data_size)?;
 
-    *position = start + data_offset + data_size;
-    Ok(Block {
-        id,
-        data: block_data,
-    })
+        let new_pos = *position;
+        test(&(new_pos - pos), &(data_size + data_offset - size))?;
+
+        *position = start + data_offset + data_size;
+        Ok(Block {
+            id,
+            data: block_data,
+        })
+    }
+}
+
+impl BinaryDeserialize<'_> for Format {
+    fn deserialize_at(
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        position: &mut u64,
+    ) -> Result<Self, ReadError> {
+        match u32::from(reader.read_at::<u32le>(position)?) {
+            0x25 => Ok(Self::NvnFormatRGBA8),
+            0x38 => Ok(Self::NvnFormatRGBA8SRGB),
+            0x3D => Ok(Self::NvnFormatRGB10A2),
+            0x3C => Ok(Self::NvnFormatRGB565),
+            0x3B => Ok(Self::NvnFormatRGB5A1),
+            0x39 => Ok(Self::NvnFormatRGBA4),
+            0x01 => Ok(Self::NvnFormatR8),
+            0x0D => Ok(Self::NvnFormatRG8),
+            0x42 => Ok(Self::DXT1),
+            0x43 => Ok(Self::DXT3),
+            0x44 => Ok(Self::DXT5),
+            0x49 => Ok(Self::BC4U),
+            0x4A => Ok(Self::BC4S),
+            0x4B => Ok(Self::BC5U),
+            0x4C => Ok(Self::BC5S),
+            value => Err(ReadError::custom(format!("Unknown format: {value:x}"))),
+        }
+    }
 }
 
 /// Parse some data at `position` as a [`BlockData::TextureHeader`]
-fn parse_tex_header_block<'a>(
-    src: &'a [u8],
-    position: &mut usize,
-) -> Result<BlockData<'a>, ParserError> {
-    let image_size = read_u64_at::<LittleEndian>(src, position)?;
-    let alignment = read_u32_at::<LittleEndian>(src, position)?;
-    let width = read_u32_at::<LittleEndian>(src, position)?;
-    let height = read_u32_at::<LittleEndian>(src, position)?;
-    let depth = read_u32_at::<LittleEndian>(src, position)?;
-    let target = read_u32_at::<LittleEndian>(src, position)?;
-    let format = Format::try_from(read_u32_at::<LittleEndian>(src, position)?)?;
-    let mipmaps = read_u32_at::<LittleEndian>(src, position)?;
+fn parse_tex_header_block<'de>(
+    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<BlockData<'de>, ReadError> {
+    let image_size = reader.read_at::<u64le>(position)?.into();
+    let alignment = reader.read_at::<u32le>(position)?.into();
+    let width = reader.read_at::<u32le>(position)?.into();
+    let height = reader.read_at::<u32le>(position)?.into();
+    let depth = reader.read_at::<u32le>(position)?.into();
+    let target = reader.read_at::<u32le>(position)?.into();
+    let format = reader.read_at::<Format>(position)?;
+    let mipmaps = reader.read_at::<u32le>(position)?.into();
     test_le(&mipmaps, &17)?;
-    let slice_size = read_u32_at::<LittleEndian>(src, position)?;
+    let slice_size = reader.read_at::<u32le>(position)?.into();
 
     let mut mipmap_offsets = [0; 0x10];
     for i in &mut mipmap_offsets {
-        *i = read_u32_at::<LittleEndian>(src, position)?;
+        *i = reader.read_at::<u32le>(position)?.into();
     }
 
-    let unk1 = read_u64_at::<LittleEndian>(src, position)?;
+    let unk1 = reader.read_at::<u64le>(position)?.into();
     test_any(
         &unk1,
         &[
@@ -167,7 +211,7 @@ fn parse_tex_header_block<'a>(
         ],
     )?;
 
-    let unk2 = read_u64_at::<LittleEndian>(src, position)?;
+    let unk2 = reader.read_at::<u64le>(position)?.into();
     test(&unk2, &0x7)?;
 
     Ok(BlockData::TextureHeader(TextureHeader {
@@ -186,7 +230,7 @@ fn parse_tex_header_block<'a>(
 }
 
 /// Retrieve the data the [`TextureHeader`] points at and create a [`Image`]
-fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, ParserError> {
+fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, ReadError> {
     test(&hdr.depth, &1)?;
     let bpp = hdr.format.get_bpp();
     let is_bcn = hdr.format.is_bcn();
@@ -222,7 +266,7 @@ fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, 
 }
 
 /// Deswizzle the image in `data`
-fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, ParserError> {
+fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, ReadError> {
     let (origin_width, origin_height) = if format.is_bcn() {
         ((width + 3) / 4, (height + 3) / 4)
     } else {
@@ -244,7 +288,7 @@ fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec
         4 => Ok(16),
         8 => Ok(8),
         16 => Ok(4),
-        _ => Err(ParserError::custom(format!(
+        _ => Err(ReadError::custom(format!(
             "BPP is not 1, 2, 4, 8, or 16: {}",
             format.get_bpp()
         ))),
@@ -260,7 +304,7 @@ fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec
         4 => Ok(2),
         8 => Ok(1),
         16 => Ok(0),
-        _ => Err(ParserError::custom(format!(
+        _ => Err(ReadError::custom(format!(
             "BPP is not 1, 2, 4, 8, or 16: {}",
             format.get_bpp()
         ))),
