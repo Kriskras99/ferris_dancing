@@ -6,9 +6,8 @@ use dotstar_toolkit_utils::bytes::{
 };
 
 use super::{Actor, Component, MaterialGraphicComponent, PleoComponent};
-use crate::utils::plumbing::GamePlatform;
 
-impl<Gp: GamePlatform> BinarySerialize for Actor<'_, Gp> {
+impl BinarySerialize for Actor<'_> {
     fn serialize_at(
         &self,
         writer: &mut (impl ZeroCopyWriteAt + ?Sized),
@@ -40,13 +39,12 @@ impl<Gp: GamePlatform> BinarySerialize for Actor<'_, Gp> {
                 | Component::AvatarDescComponent
                 | Component::SkinDescComponent => {}
                 Component::MaterialGraphicComponent(mgc) => {
-                    write_material_graphic_component(writer, position, mgc, false)?
+                    write_material_graphic_component(writer, position, mgc, false)?;
                 }
                 Component::PleoComponent(pc) => write_pleo_component(writer, position, pc)?,
                 Component::PleoTextureGraphicComponent(mgc) => {
-                    write_material_graphic_component(writer, position, mgc, true)?
+                    write_material_graphic_component(writer, position, mgc, true)?;
                 }
-                Component::Phantom(_) => unreachable!(),
                 component => todo!("{component:?}"),
             }
         }
@@ -55,7 +53,7 @@ impl<Gp: GamePlatform> BinarySerialize for Actor<'_, Gp> {
 }
 
 /// Create an `Actor` in a newly allocated `Vec`
-pub fn create_vec<Gp: GamePlatform>(actor: &Actor<'_, Gp>) -> Result<Vec<u8>, WriteError> {
+pub fn create_vec(actor: &Actor<'_>) -> Result<Vec<u8>, WriteError> {
     let mut vec = Vec::with_capacity(700);
     let mut cursor = Cursor::new(&mut vec);
     actor.serialize(&mut cursor)?;

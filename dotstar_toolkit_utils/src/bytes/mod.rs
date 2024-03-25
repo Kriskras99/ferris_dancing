@@ -1,6 +1,6 @@
 pub mod endian;
 pub mod primitives;
-pub mod primitives2;
+// pub mod primitives2;
 pub mod read;
 pub mod write;
 
@@ -40,7 +40,7 @@ pub trait Len<'rf>:
     /// # Errors
     /// This function will return an error when `Len` would be (partially) outside the source or the `Len` does not fit into a u64.
     fn read_len_at(
-        reader: &'rf impl ZeroCopyReadAtExt,
+        reader: &'rf (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<usize, ReadError> {
         let old_position = *position;

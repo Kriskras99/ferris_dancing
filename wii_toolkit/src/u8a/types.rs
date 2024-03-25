@@ -38,23 +38,23 @@ impl UnparsedNode {
 
 impl<'de> BinaryDeserialize<'de> for UnparsedNode {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
             let node_type = reader.read_at::<u8>(position)?;
-            let name_offset = reader.read_at::<u24be>(position)?.into();
-            let data_offset = reader.read_at::<u32be>(position)?.into();
-            let size = reader.read_at::<u32be>(position)?.into();
+            let name_offset = reader.read_at::<u24be>(position)?;
+            let data_offset = reader.read_at::<u32be>(position)?;
+            let size = reader.read_at::<u32be>(position)?;
 
             match node_type {
-                Self::MAGIC_FILE => Ok(UnparsedNode::File(NewUnparsedFile {
+                Self::MAGIC_FILE => Ok(Self::File(NewUnparsedFile {
                     name_offset,
                     data_offset,
                     size,
                 })),
-                Self::MAGIC_DIRECTORY => Ok(UnparsedNode::Directory(NewUnparsedDirectory {
+                Self::MAGIC_DIRECTORY => Ok(Self::Directory(NewUnparsedDirectory {
                     name_offset,
                     last_included_node_index: size,
                 })),
@@ -121,14 +121,14 @@ pub struct U8Archive<'a> {
 }
 
 impl U8Archive<'_> {
-    const MAGIC: u32be = u32be::new(0x55AA382D);
+    const MAGIC: u32be = u32be::new(0x55AA_382D);
     const ROOTNODE_OFFSET: u32be = u32be::new(0x20);
     const PADDING: [u8; 16] = [0; 16];
 }
 
 impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
@@ -204,7 +204,7 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
                                 .1
                                 .directories
                                 .insert(tree.0, tree.1);
-                            assert!(!indexes.pop().is_none());
+                            assert!(indexes.pop().is_some(), "There should be something left to pop!");
                         }
                     }
                 }
@@ -235,68 +235,13 @@ impl BinarySerialize for U8Archive<'_> {
         // Write the rootnode offset
         writer.write_at(position, &Self::ROOTNODE_OFFSET)?;
         // Calculate and write the header size and data offset
-        let header_size = u32be::from(count * 12 + u32::try_from(string_table_size).expect("UGH"));
+        let header_size = u32be::from(count * 12 + string_table_size);
         let data_offset =
             round_to_boundary(Self::ROOTNODE_OFFSET.checked_add(header_size).unwrap());
         writer.write_at(position, &header_size)?;
         writer.write_at(position, &data_offset)?;
         // Write the padding
         writer.write_at(position, &Self::PADDING)?;
-
-        fn write_filetree_rec(
-            writer: &mut (impl ZeroCopyWriteAt + ?Sized),
-            position: &mut u64,
-            data_offset: &mut u32,
-            file_tree: &FileTree,
-            string_table: &HashMap<Cow<'_, str>, u32>,
-            current_idx: &mut u32, // start with one
-            name: &str,
-        ) -> Result<(), WriteError> {
-            // Create and write this directory node
-            let count = file_tree.count();
-            let node = NewUnparsedDirectory {
-                name_offset: u24be::try_from(*string_table.get(name).unwrap()).unwrap(),
-                last_included_node_index: u32be::from(*current_idx + count),
-            };
-            writer.write_at(position, &node)?;
-            *current_idx += 1;
-            // Write all files directly in this directory
-            for (filename, data) in &file_tree.files {
-                let size = u32::try_from(data.len()).unwrap();
-                let node = NewUnparsedFile {
-                    name_offset: u24be::try_from(
-                        *string_table
-                            .get(filename.as_ref())
-                            .unwrap_or_else(|| unreachable!()),
-                    )
-                    .unwrap(),
-                    data_offset: u32be::from(*data_offset),
-                    size: u32be::try_from(data.len()).unwrap(),
-                };
-                // Write the data
-                let mut data_offset_u64 = u64::from(*data_offset);
-                writer.write_slice_at(&mut data_offset_u64, data.as_ref())?;
-                *data_offset += size;
-                // Write the file node
-                writer.write_at(position, &node)?;
-                *current_idx += 1;
-            }
-
-            // Write all subdirectories and files
-            for (name, tree) in &file_tree.directories {
-                write_filetree_rec(
-                    writer,
-                    position,
-                    data_offset,
-                    tree,
-                    string_table,
-                    current_idx,
-                    name.as_ref(),
-                )?;
-            }
-
-            Ok(())
-        }
 
         let mut current_idx = 1;
         write_filetree_rec(
@@ -311,6 +256,61 @@ impl BinarySerialize for U8Archive<'_> {
 
         Ok(())
     }
+}
+
+fn write_filetree_rec(
+    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    position: &mut u64,
+    data_offset: &mut u32,
+    file_tree: &FileTree,
+    string_table: &HashMap<Cow<'_, str>, u32>,
+    current_idx: &mut u32, // start with one
+    name: &str,
+) -> Result<(), WriteError> {
+    // Create and write this directory node
+    let count = file_tree.count();
+    let node = NewUnparsedDirectory {
+        name_offset: u24be::try_from(*string_table.get(name).unwrap()).unwrap(),
+        last_included_node_index: u32be::from(*current_idx + count),
+    };
+    writer.write_at(position, &node)?;
+    *current_idx += 1;
+    // Write all files directly in this directory
+    for (filename, data) in &file_tree.files {
+        let size = u32::try_from(data.len()).unwrap();
+        let node = NewUnparsedFile {
+            name_offset: u24be::try_from(
+                *string_table
+                    .get(filename.as_ref())
+                    .unwrap_or_else(|| unreachable!()),
+            )
+            .unwrap(),
+            data_offset: u32be::from(*data_offset),
+            size: u32be::try_from(data.len()).unwrap(),
+        };
+        // Write the data
+        let mut data_offset_u64 = u64::from(*data_offset);
+        writer.write_slice_at(&mut data_offset_u64, data.as_ref())?;
+        *data_offset += size;
+        // Write the file node
+        writer.write_at(position, &node)?;
+        *current_idx += 1;
+    }
+
+    // Write all subdirectories and files
+    for (name, tree) in &file_tree.directories {
+        write_filetree_rec(
+            writer,
+            position,
+            data_offset,
+            tree,
+            string_table,
+            current_idx,
+            name.as_ref(),
+        )?;
+    }
+
+    Ok(())
 }
 
 /// A recursive file tree
@@ -346,7 +346,7 @@ impl<'a> FileTree<'a> {
             if let Entry::Vacant(entry) = string_map.entry(file.0.clone()) {
                 let length = entry.key().len();
                 entry.insert(*offset);
-                offset
+                *offset = offset
                     .checked_add(length.try_into().unwrap())
                     .unwrap()
                     .checked_add(1)
@@ -357,7 +357,7 @@ impl<'a> FileTree<'a> {
             if let Entry::Vacant(entry) = string_map.entry(directory.0.clone()) {
                 let length = entry.key().len();
                 entry.insert(*offset);
-                offset
+                *offset = offset
                     .checked_add(length.try_into().unwrap())
                     .unwrap()
                     .checked_add(1)

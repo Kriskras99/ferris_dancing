@@ -108,14 +108,14 @@ pub fn build(
         let desc_tpl_vec = cooked::json::create_vec_with_capacity_hint(&tpl, 3000)?;
 
         bf.generated_files.add_file(
-            cook_path(&format!("world/avatars/{id:04}/desc.tpl"), bs.platform)?,
+            cook_path(&format!("world/avatars/{id:04}/desc.tpl"), bs.platform)?.into(),
             desc_tpl_vec,
         )?;
 
-        bf.generated_files.add_file(to, cooked_image_vec)?;
+        bf.generated_files.add_file(to.into(), cooked_image_vec)?;
 
         bf.generated_files
-            .add_file(cook_path(&actor_path, bs.platform)?, actor_vec)?;
+            .add_file(cook_path(&actor_path, bs.platform)?.into(), actor_vec)?;
 
         let scene = desc_scene(id);
         scene_actors.push(scene);
@@ -124,7 +124,7 @@ pub fn build(
     let avatardb_scene_vec =
         cooked::isc::create_vec_with_capacity_hint(&avatardb_scene(bs, scene_actors), 940_000)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.avatardb_scene, bs.platform)?,
+        cook_path(&gameconfig.avatardb_scene, bs.platform)?.into(),
         avatardb_scene_vec,
     )?;
 
@@ -142,41 +142,35 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
         components: vec![
-            cooked::act::Component {
-                the_type: cooked::act::ComponentType::MaterialGraphicComponent,
-                data: cooked::act::ComponentData::MaterialGraphicComponent(Box::new(
-                    cooked::act::MaterialGraphicComponent {
-                        // TODO: Check values!
-                        files: [
-                            SplitPath {
-                                path: Cow::Borrowed(avatar_dir),
-                                filename: Cow::Borrowed("avatar.png"),
-                            },
-                            SplitPath::default(),
-                            SplitPath::default(),
-                            SplitPath::default(),
-                            SplitPath::default(),
-                            SplitPath::default(),
-                            SplitPath::default(),
-                            SplitPath::default(),
-                            SplitPath::default(),
-                            SplitPath {
-                                path: Cow::Borrowed("world/ui/atlas/"),
-                                filename: Cow::Borrowed("avatar.atl"),
-                            },
-                            SplitPath {
-                                path: Cow::Borrowed("world/ui/materials/_common/"),
-                                filename: Cow::Borrowed("alpha.msh"),
-                            },
-                        ],
-                        ..Default::default()
-                    },
-                )),
-            },
-            cooked::act::Component {
-                the_type: cooked::act::ComponentType::AvatarDescComponent,
-                data: cooked::act::ComponentData::None,
-            },
+            cooked::act::Component::MaterialGraphicComponent(
+                cooked::act::MaterialGraphicComponent {
+                    // TODO: Check values!
+                    files: [
+                        SplitPath {
+                            path: Cow::Borrowed(avatar_dir),
+                            filename: Cow::Borrowed("avatar.png"),
+                        },
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath::default(),
+                        SplitPath {
+                            path: Cow::Borrowed("world/ui/atlas/"),
+                            filename: Cow::Borrowed("avatar.atl"),
+                        },
+                        SplitPath {
+                            path: Cow::Borrowed("world/ui/materials/_common/"),
+                            filename: Cow::Borrowed("alpha.msh"),
+                        },
+                    ],
+                    ..Default::default()
+                },
+            ),
+            cooked::act::Component::AvatarDescComponent,
         ],
     };
 

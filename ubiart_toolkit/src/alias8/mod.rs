@@ -47,23 +47,23 @@ pub struct Alias<'a> {
 
 bitflags! {
     pub struct Unk3: u16 {
-        const Win32        = 0b0000000000000001;
-        const X360         = 0b0000000000000010;
-        const UnkPlatform1 = 0b0000000000000100;
-        const PS4          = 0b0000000000001000;
-        const UnkPlatform2 = 0b0000000000010000;
-        const UnkPlatform3 = 0b0000000000100000;
-        const UnkPlatform4 = 0b0000000001000000;
-        const UnkPlatform5 = 0b0000000010000000;
-        const WiiU         = 0b0000000100000000;
-        const UnkPlatform6 = 0b0000001000000000;
-        const XOne         = 0b0000010000000000;
-        const Switch       = 0b0000100000000000;
-        const Unk1         = 0b0001000000000000;
-        const Unk2         = 0b0010000000000000;
-        const Unk3         = 0b0100000000000000;
-        const Unk4         = 0b1000000000000000;
-        const Platforms    = 0b0000111111111111;
+        const Win32        = 0b0000_0000_0000_0001;
+        const X360         = 0b0000_0000_0000_0010;
+        const UnkPlatform1 = 0b0000_0000_0000_0100;
+        const PS4          = 0b0000_0000_0000_1000;
+        const UnkPlatform2 = 0b0000_0000_0001_0000;
+        const UnkPlatform3 = 0b0000_0000_0010_0000;
+        const UnkPlatform4 = 0b0000_0000_0100_0000;
+        const UnkPlatform5 = 0b0000_0000_1000_0000;
+        const WiiU         = 0b0000_0001_0000_0000;
+        const UnkPlatform6 = 0b0000_0010_0000_0000;
+        const XOne         = 0b0000_0100_0000_0000;
+        const Switch       = 0b0000_1000_0000_0000;
+        const Unk1         = 0b0001_0000_0000_0000;
+        const Unk2         = 0b0010_0000_0000_0000;
+        const Unk3         = 0b0100_0000_0000_0000;
+        const Unk4         = 0b1000_0000_0000_0000;
+        const Platforms    = 0b0000_1111_1111_1111;
     }
 }
 
@@ -80,7 +80,7 @@ impl Alias<'_> {
 
 impl<'de> BinaryDeserialize<'de> for Alias<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
@@ -145,7 +145,7 @@ impl<'a> Alias8<'a> {
 
 impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;

@@ -1,9 +1,9 @@
 #![feature(try_blocks)]
 // Everything should be documented
-#![deny(missing_docs)]
-#![deny(clippy::missing_docs_in_private_items)]
+// #![deny(missing_docs)]
+// #![deny(clippy::missing_docs_in_private_items)]
 // If an overflow or underflow occurs it's a good indication of a broken file
-#![deny(clippy::arithmetic_side_effects)]
+// #![deny(clippy::arithmetic_side_effects)]
 
 //! # Wii Toolkit
 //!

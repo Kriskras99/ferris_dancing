@@ -16,7 +16,7 @@ pub fn can_parse(first_bytes: &[u8; 0x8]) -> bool {
 
 impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         // Check the magic

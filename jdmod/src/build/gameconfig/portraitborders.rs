@@ -40,7 +40,7 @@ pub fn build(
         )?;
         let background_texture_vec = cooked::png::create_vec(&background_texture_encoded)?;
         bf.generated_files.add_file(
-            cook_path(&desc.background_texture_path, bs.platform)?,
+            cook_path(&desc.background_texture_path, bs.platform)?.into(),
             background_texture_vec,
         )?;
 
@@ -52,7 +52,7 @@ pub fn build(
             )?;
             let foreground_texture_vec = cooked::png::create_vec(&foreground_texture_encoded)?;
             bf.generated_files.add_file(
-                cook_path(&desc.foreground_texture_path, bs.platform)?,
+                cook_path(&desc.foreground_texture_path, bs.platform)?.into(),
                 foreground_texture_vec,
             )?;
         }
@@ -83,7 +83,7 @@ pub fn build(
 
     let template_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.config_files_path.portraitborders, bs.platform)?,
+        cook_path(&gameconfig.config_files_path.portraitborders, bs.platform)?.into(),
         template_vec,
     )?;
 

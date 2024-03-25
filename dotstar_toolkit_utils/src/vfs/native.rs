@@ -1,22 +1,28 @@
 //! # Native Filesystem
 //! This implements the virtual filesystem for the local filesystem (aka [`std::fs`])
 use std::{
-    collections::{hash_map::Entry, HashMap}, fs::{self, OpenOptions}, io::{self, Error, ErrorKind, Result}, path::{Path, PathBuf}, sync::{Arc, Mutex, Weak}, time::SystemTime
+    collections::{hash_map::Entry, HashMap},
+    fs::{self, File},
+    io::{self, ErrorKind, Result},
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex, OnceLock, Weak},
+    time::SystemTime,
 };
 
 use memmap2::Mmap;
 
-use super::{VirtualFile, VirtualFileMetadata, VirtualFileSystem};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
 
 /// The native filesystem on this device
-pub struct Native {
+pub struct NativeFs {
     /// The root of this filesystem, no operations are allowed outside it
     root: PathBuf,
     /// Cache open files
-    cache: Mutex<HashMap<PathBuf, Weak<VirtualFile<'static>>>>,
+    cache: Mutex<HashMap<PathBuf, Weak<Mmap>>>,
+    list: OnceLock<Vec<PathBuf>>,
 }
 
-impl Native {
+impl NativeFs {
     /// Create a new native filesystem with `root` as the root
     ///
     /// # Errors
@@ -25,6 +31,7 @@ impl Native {
         Ok(Self {
             root: fs::canonicalize(root)?,
             cache: Mutex::new(HashMap::new()),
+            list: OnceLock::new(),
         })
     }
 
@@ -52,80 +59,78 @@ impl Native {
     ///
     /// # Errors
     /// Will error if it cannot read the error or files escape outside the root
-    fn recursive_file_list(&self, path: &Path, list: &mut Vec<String>) -> Result<()> {
+    fn recursive_file_list(path: &Path, list: &mut Vec<PathBuf>) -> Result<()> {
         for entry in path.read_dir()?.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                self.recursive_file_list(&path, list)?;
+                Self::recursive_file_list(&path, list)?;
             } else if path.is_file() {
-                list.push(
-                    path.strip_prefix(&self.root)
-                        .map_err(|_| Error::from(ErrorKind::InvalidInput))?
-                        .to_str()
-                        .ok_or(ErrorKind::InvalidInput)?
-                        .to_string(),
-                );
+                list.push(path);
             }
         }
         Ok(())
     }
 }
 
-impl VirtualFileSystem for Native {
-    fn open(&self, path: &Path) -> std::io::Result<Arc<VirtualFile<'static>>> {
-        let path = Self::canonicalize(self, path)?;
+impl VirtualFileSystem for NativeFs {
+    fn open(&self, path: &Path) -> std::io::Result<VirtualFile<'static>> {
+        let path = self.canonicalize(path)?;
         let mut cache = self.cache.lock().unwrap();
-        let vfile = match cache.entry(path) {
+
+        let data = match cache.entry(path) {
             Entry::Occupied(mut entry) => {
-                match entry.get().upgrade() {
-                    Some(vfile) => vfile,
-                    None => {
-                        let mmap = unsafe { Mmap::map(&OpenOptions::new().read(true).open(entry.key())?)? };
-                        let vfile = Arc::new(VirtualFile::Mmap(mmap));
-                        let weak = Arc::downgrade(&vfile);
-                        entry.insert(weak);
-                        vfile
-                    },
+                if let Some(data) = entry.get().upgrade() {
+                    data
+                } else {
+                    let file = File::open(entry.key())?;
+                    let mmap = unsafe { Mmap::map(&file)? };
+                    let data = Arc::new(mmap);
+                    entry.insert(Arc::downgrade(&data));
+                    data
                 }
-            },
+            }
             Entry::Vacant(entry) => {
-                let mmap = unsafe { Mmap::map(&OpenOptions::new().read(true).open(entry.key())?)? };
-                let vfile = Arc::new(VirtualFile::Mmap(mmap));
-                let weak = Arc::downgrade(&vfile);
-                entry.insert(weak);
-                vfile
-            },
+                let file = File::open(entry.key())?;
+                let mmap = unsafe { Mmap::map(&file)? };
+                let data = Arc::new(mmap);
+                entry.insert(Arc::downgrade(&data));
+                data
+            }
         };
-        Ok(vfile)
+
+        Ok(VirtualFile::Mmap(data))
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<Box<dyn VirtualFileMetadata>> {
-        let path = Self::canonicalize(self, path)?;
-        Ok(Box::new(fs::metadata(path)?))
+    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
+        let metadata = fs::metadata(self.canonicalize(path)?)?;
+        let file_size = metadata.len();
+        let created = metadata
+            .created()
+            .and_then(|st| {
+                st.duration_since(SystemTime::UNIX_EPOCH)
+                    .map_err(|_| ErrorKind::InvalidData.into())
+            })
+            .map(|d| d.as_secs())
+            .map_err(|e| e.kind());
+        Ok(VirtualMetadata { file_size, created })
     }
 
-    fn list_files(&self, path: &Path) -> Result<Vec<String>> {
-        let path = Self::canonicalize(self, path)?;
-        let mut paths = Vec::new();
-        self.recursive_file_list(&path, &mut paths)?;
-        Ok(paths)
+    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        let path = self.canonicalize(path)?;
+        let list = self.list.get_or_try_init::<_, io::Error>(|| {
+            let mut list = Vec::new();
+            Self::recursive_file_list(&self.root, &mut list)?;
+            Ok(list)
+        })?;
+        Ok(WalkFs {
+            paths: list
+                .iter()
+                .filter_map(|p| p.strip_prefix(&path).ok())
+                .collect(),
+        })
     }
 
     fn exists(&self, path: &Path) -> bool {
-        Self::canonicalize(self, path).map_or(false, |p| p.exists())
-    }
-}
-
-impl VirtualFileMetadata for fs::Metadata {
-    fn file_size(&self) -> u64 {
-        self.len()
-    }
-
-    fn created(&self) -> Result<u64> {
-        let time = Self::created(self)?;
-        let duration = time
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .map_err(|_| ErrorKind::InvalidData)?;
-        Ok(duration.as_secs())
+        Self::canonicalize(self, path).is_ok()
     }
 }

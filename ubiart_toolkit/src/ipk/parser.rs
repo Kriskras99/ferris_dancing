@@ -14,7 +14,7 @@ use crate::utils::{self, string_id_2, Game, PathId, SplitPath, UniqueGameId};
 
 impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         // Read the header
@@ -140,7 +140,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
 
 impl BinaryDeserialize<'_> for Platform {
     fn deserialize_at(
-        reader: &'_ impl ZeroCopyReadAtExt,
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         match u32::from(reader.read_at::<u32be>(position)?) {

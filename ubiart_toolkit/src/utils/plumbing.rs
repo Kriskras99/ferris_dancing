@@ -13,7 +13,7 @@ pub trait GamePlatform: Sealed + Clone + Copy + std::fmt::Debug + PartialEq {
 
 macro_rules! create_gameplatform {
     ( $name:ident, $game:expr, $platform:expr, $id:literal ) => {
-        #[derive(Debug, Clone, Copy, PartialEq)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub enum $name {}
 
         impl Sealed for $name {}

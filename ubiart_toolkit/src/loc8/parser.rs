@@ -15,7 +15,7 @@ use crate::{loc8::types::Language, utils::LocaleId};
 
 impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
     fn deserialize_at(
-        reader: &'de impl ZeroCopyReadAtExt,
+        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let unk1 = reader.read_at::<u32be>(position)?.into();
@@ -31,7 +31,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
             let string_count: u32 = reader.read_at::<u32be>(position)?.into();
 
             for _ in 0..string_count {
-                let id = reader.read_at::<LocaleId>(position)?.into();
+                let id = reader.read_at::<LocaleId>(position)?;
                 let string = reader.read_len_string_at::<u32be>(position)?;
 
                 if i == 0 {
@@ -58,7 +58,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
 
 impl BinaryDeserialize<'_> for Language {
     fn deserialize_at(
-        reader: &'_ impl ZeroCopyReadAtExt,
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value: u32 = reader.read_at::<u32be>(position)?.into();

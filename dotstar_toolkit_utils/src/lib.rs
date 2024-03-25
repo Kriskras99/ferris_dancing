@@ -29,21 +29,6 @@
 //! This crate has no features that can be enabled
 //!
 
-// pub mod bytes;
-// pub mod bytes_new;
-// pub mod bytes_newer;
-// pub mod bytes_newer2;
-// pub mod bytes_newer3;
-mod bytes_newer4;
-pub mod bytes {
-    pub use crate::bytes_newer4::*;
-}
-
+pub mod bytes;
 pub mod testing;
-// pub mod vfs;
-
-mod vfs2;
-
-pub mod vfs {
-    pub use crate::vfs2::*;
-}
+pub mod vfs;

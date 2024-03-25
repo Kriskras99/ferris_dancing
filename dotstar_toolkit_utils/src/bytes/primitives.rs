@@ -105,7 +105,7 @@ macro_rules! create_uint {
         impl<'de, E: Endianness> BinaryDeserialize<'de> for $name<E> {
             #[inline(always)]
             fn deserialize_at(
-                reader: &'de impl ZeroCopyReadAtExt,
+                reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
                 position: &mut u64,
             ) -> Result<Self, ReadError> {
                 let mut bytes = reader.read_fixed_slice_at(position)?;

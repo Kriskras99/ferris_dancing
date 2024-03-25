@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufWriter, num::NonZeroU64, path::Path};
 
-use dotstar_toolkit_utils::vfs::{VirtualFile, VirtualFileSystem};
+use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
@@ -245,6 +245,7 @@ pub fn write(
 }
 
 impl BinarySerialize for Platform {
+    #[allow(clippy::as_conversions, reason = "Self is repr(u32)")]
     fn serialize_at(
         &self,
         writer: &mut (impl ZeroCopyWriteAt + ?Sized),

@@ -1,4 +1,4 @@
-use std::{fs::File, path::PathBuf, rc::Rc};
+use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
@@ -19,7 +19,7 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let file = Rc::new(File::open(cli.source).unwrap());
+    let file = File::open(cli.source).unwrap();
     let msm = MovementSpaceMove::deserialize(&file).unwrap();
 
     if !cli.quiet {

@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Error};
 use clap::Args;
-use dotstar_toolkit_utils::vfs::{native::Native, VirtualFileSystem};
+use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem};
 use ubiart_toolkit::{
     ipk,
     secure_fat::{self, SecureFat},
@@ -95,9 +95,10 @@ pub fn bundle(
         std::fs::create_dir(destination)?;
     }
 
-    let vfs = Native::new(source)?;
-    let files = vfs.list_files("".as_ref())?;
-    let files_str: Vec<_> = files.iter().map(String::as_str).collect();
+    let vfs = NativeFs::new(source)?;
+    let files = vfs.walk_filesystem("".as_ref())?;
+    let file_count = files.len();
+    let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
 
     if patch {
         let file_path = destination.join("patch_nx.ipk");
@@ -243,7 +244,7 @@ pub fn bundle(
             println!("Bundle {i}: {} files, {size} bytes", files.len());
         }
 
-        let mut sfat = SecureFat::with_capacity(config.game_platform, files.len());
+        let mut sfat = SecureFat::with_capacity(config.game_platform, file_count);
 
         println!("Creating bundle_nx.ipk");
         ipk::create(

@@ -7,7 +7,8 @@ use crossbeam::channel::Receiver;
 use dotstar_toolkit_utils::{
     testing::test,
     vfs::{
-        layeredfs::OverlayFs, native::Native, symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem,
+        layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
+        VirtualFileSystem,
     },
 };
 use ubiart_toolkit::{
@@ -26,7 +27,7 @@ const MAX_BUNDLE_SIZE_FAT32: u64 = 4_294_967_295;
 pub fn bundle(
     bundle_vfs: &IpkFilesystem<'_>,
     patch_vfs: &IpkFilesystem<'_>,
-    native_vfs: &Native,
+    native_vfs: &NativeFs,
     rx: &Receiver<FilesToAdd>,
     config: Config,
     destination: &Path,
@@ -111,8 +112,8 @@ pub fn bundle(
         let bundle_files_vfs =
             OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
         let vfs = OverlayFs::new(&bundle_files_vfs, patch_vfs);
-        let files = vfs.list_files("".as_ref())?;
-        let files_str: Vec<_> = files.iter().map(String::as_str).collect();
+        let files = vfs.walk_filesystem("".as_ref())?;
+        let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
 
         ipk::create(
             destination.join("patch_nx.ipk"),
@@ -129,17 +130,14 @@ pub fn bundle(
         // Link all the original file paths to the bundle
         sfat.add_path_ids_to_bundle(
             bundle_id,
-            bundle_vfs
-                .list_files("".as_ref())?
-                .iter()
-                .map(String::as_str)
-                .map(PathId::from),
+            bundle_vfs.walk_filesystem("".as_ref())?.map(PathId::from),
         );
     } else {
         // Create empty patch file
-        let patch_file = File::create(destination.join("patch_nx.ipk"))?;
+        let mut patch_file = File::create(destination.join("patch_nx.ipk"))?;
         ipk::write(
-            patch_file,
+            &mut patch_file,
+            &mut 0,
             config.game_platform,
             config.ipk_unk4,
             config.engine_version,
@@ -154,8 +152,8 @@ pub fn bundle(
             OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
         let patched_bundle_vfs = OverlayFs::new(patch_vfs, bundle_vfs);
         let vfs = OverlayFs::new(&bundle_files_vfs, &patched_bundle_vfs);
-        let files = vfs.list_files("".as_ref())?;
-        let files_str: Vec<_> = files.iter().map(String::as_str).collect();
+        let files = vfs.walk_filesystem("".as_ref())?;
+        let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
 
         ipk::create(
             destination.join("bundle_nx.ipk"),
@@ -172,7 +170,7 @@ pub fn bundle(
         // Link all the file paths to the bundle
         sfat.add_path_ids_to_bundle(
             bundle_id,
-            files.iter().map(String::as_str).map(PathId::from),
+            vfs.walk_filesystem("".as_ref())?.map(PathId::from),
         );
     }
 
@@ -195,8 +193,8 @@ fn save_songs_bundle(
     println!("Creating bundle {name}");
 
     let overlay_vfs = OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
-    let files = overlay_vfs.list_files("".as_ref())?;
-    let files_str: Vec<_> = files.iter().map(String::as_str).collect();
+    let files = overlay_vfs.walk_filesystem("".as_ref())?;
+    let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
 
     ipk::create(
         destination.join(format!("{name}_nx.ipk")),
@@ -213,7 +211,7 @@ fn save_songs_bundle(
     // Link all the file paths to the bundle
     sfat.add_path_ids_to_bundle(
         bundle_id,
-        files.iter().map(String::as_str).map(PathId::from),
+        overlay_vfs.walk_filesystem("".as_ref())?.map(PathId::from),
     );
 
     Ok(())

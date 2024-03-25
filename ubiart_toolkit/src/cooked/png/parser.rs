@@ -13,7 +13,7 @@ use crate::cooked::xtx::Xtx;
 
 impl BinaryDeserialize<'_> for Png {
     fn deserialize_at(
-        reader: &'_ impl ZeroCopyReadAtExt,
+        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let start_position = *position;
@@ -52,7 +52,7 @@ impl BinaryDeserialize<'_> for Png {
         // Always zero for just dance 2022
         let _unk11 = reader.read_at::<u16be>(position)?;
 
-        assert!(start_position + u64::from(header_size) == *position);
+        assert!(start_position + u64::from(header_size) == *position, "Implementation is incorrect!");
 
         let xtx = reader.read_at::<Xtx>(position)?;
 
@@ -60,7 +60,7 @@ impl BinaryDeserialize<'_> for Png {
             println!("Multiple XTX images!");
         }
 
-        Ok(Png {
+        Ok(Self {
             width,
             height,
             unk2,

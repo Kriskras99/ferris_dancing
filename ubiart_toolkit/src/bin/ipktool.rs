@@ -5,7 +5,6 @@ use std::{
     fs::{create_dir_all, File},
     io::Write,
     path::{Path, PathBuf},
-    rc::Rc,
 };
 
 use clap::Parser;
@@ -54,7 +53,7 @@ fn main() {
         });
         create_ipk(source, &destination).unwrap();
     } else {
-        let file = Rc::new(File::open(source).unwrap());
+        let file = File::open(source).unwrap();
         let ipk = Bundle::deserialize(&file).unwrap();
 
         if cli.check {
@@ -161,7 +160,7 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
 pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> {
     let vfs = NativeFs::new(source)?;
     let root = PathBuf::from("");
-    let file_list = vfs.list_files(&root)?;
+    let file_list = vfs.walk_filesystem(&root)?;
     let files: Vec<_> = file_list.map(|p| p.to_str().unwrap()).collect();
     let mut file = File::create(destination)?;
     ipk::write(
