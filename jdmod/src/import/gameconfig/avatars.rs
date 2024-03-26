@@ -133,9 +133,9 @@ pub fn import_v20v22(
                         avatar_info.map, avatar_desc.relative_song_name
                     );
                 }
-                Some(avatar_desc.relative_song_name)
+                avatar_desc.relative_song_name
             } else {
-                Some(Cow::Borrowed(avatar_info.map))
+                Cow::Borrowed(avatar_info.map)
             };
 
             let avatar = Avatar {
@@ -152,6 +152,7 @@ pub fn import_v20v22(
                 main_avatar,
                 image_path: avatar_image_path.into(),
                 image_phone_path: avatar_image_phone_path.into(),
+                guessed: false,
             };
 
             save_images(
@@ -232,9 +233,9 @@ pub fn import_v17v19(
                         avatar_info.map, avatar_desc.relative_song_name
                     );
                 }
-                Some(avatar_desc.relative_song_name)
+                avatar_desc.relative_song_name
             } else {
-                Some(Cow::Borrowed(avatar_info.map))
+                Cow::Borrowed(avatar_info.map)
             };
 
             let avatar = Avatar {
@@ -251,6 +252,7 @@ pub fn import_v17v19(
                 main_avatar,
                 image_path: avatar_image_path.into(),
                 image_phone_path: avatar_image_phone_path.into(),
+                guessed: false,
             };
 
             save_images(
@@ -308,7 +310,7 @@ fn import_unreferenced_avatars(
             let main_avatar = avatar_info.main_avatar().map(Cow::Borrowed);
 
             let avatar = Avatar {
-                relative_song_name: Some(Cow::Borrowed(avatar_info.map)),
+                relative_song_name: Cow::Borrowed(avatar_info.map),
                 sound_family: Cow::Borrowed("AVTR_Common_Brand"),
                 status: 1,
                 unlock_type: UnlockType::Unlocked,
@@ -318,6 +320,7 @@ fn import_unreferenced_avatars(
                 main_avatar,
                 image_path: avatar_image_path.into(),
                 image_phone_path: avatar_image_phone_path.into(),
+                guessed: true,
             };
             std::fs::create_dir(&avatar_named_dir_path)?;
 

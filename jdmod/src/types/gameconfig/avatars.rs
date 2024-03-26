@@ -6,12 +6,15 @@ use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::testing::{test, test_any, test_not, TestResult};
 use serde::{Deserialize, Serialize};
 
+fn be_false() -> bool {
+    false
+}
+
 /// Description of an avatar
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Avatar<'a> {
     /// Which map this avatar is based on
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub relative_song_name: Option<Cow<'a, str>>,
+    pub relative_song_name: Cow<'a, str>,
     /// The sound bites it uses
     pub sound_family: Cow<'a, str>,
     /// Unknown
@@ -31,6 +34,10 @@ pub struct Avatar<'a> {
     pub image_path: Cow<'a, str>,
     /// Path to the phone image
     pub image_phone_path: Cow<'a, str>,
+    /// Are the sound effect and image phone path a guess?
+    // if it's missing it's not guessed, don't serialize if false
+    #[serde(default = "be_false", skip_serializing_if = "std::ops::Not::not")]
+    pub guessed: bool,
 }
 
 /// How to unlock a avatar
@@ -39,6 +46,8 @@ pub struct Avatar<'a> {
 pub enum UnlockType<'a> {
     /// Information is missing
     Unknown,
+    /// only in 2017
+    Unknown1,
     /// only in 2020 so maybe anniversary?
     Unknown6,
     /// only in 2017-2018 so maybe Dance Quest?
@@ -59,6 +68,7 @@ impl From<&UnlockType<'_>> for u8 {
     fn from(value: &UnlockType) -> Self {
         match value {
             UnlockType::Unknown => 0,
+            UnlockType::Unknown1 => 1,
             UnlockType::Unknown6 => 6,
             UnlockType::Unknown11 => 11,
             UnlockType::GiftMachine => 18,
@@ -85,6 +95,7 @@ impl<'a> UnlockType<'a> {
                 Some(quest) => Ok(Self::Quest(quest.clone())),
                 None => Ok(Self::Unknown),
             },
+            1 => Ok(Self::Unknown1),
             6 => Ok(Self::Unknown6),
             11 => Ok(Self::Unknown11),
             18 => Ok(Self::GiftMachine),
@@ -108,6 +119,7 @@ impl<'a> UnlockType<'a> {
             | Self::Unlimited
             | Self::Unlocked
             | Self::Unknown
+            | Self::Unknown1
             | Self::Unknown6
             | Self::Unknown11 => Self::Unlocked,
             Self::Quest(s) => Self::Quest(s),
