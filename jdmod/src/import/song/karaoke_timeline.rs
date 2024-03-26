@@ -13,7 +13,7 @@ use crate::{types::song::Timeline, utils::cook_path};
 pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<(), Error> {
     let karaoke_timeline_file = sis
         .vfs
-        .open(cook_path(karaoke_timeline_path, sis.platform)?.as_ref())?;
+        .open(cook_path(karaoke_timeline_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&karaoke_timeline_file, sis.lax)?.actor()?;
     test(&actor.components.len(), &1).context("More than one component in actor!")?;
     let tape_case = actor.components.swap_remove(0).tape_case_component()?;
@@ -28,7 +28,7 @@ pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<
             .ok_or_else(|| anyhow!("Karaoke Timeline Template has no Tape Entries"))?
             .path;
 
-        let karaoke_tml_path = cook_path(karaoke_tml_path, sis.platform)?;
+        let karaoke_tml_path = cook_path(karaoke_tml_path, sis.ugi.platform)?;
 
         let tape_file = sis.vfs.open(karaoke_tml_path.as_ref())?;
         let template = cooked::json::parse_v22(&tape_file, sis.lax)?;

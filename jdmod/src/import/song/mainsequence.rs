@@ -16,7 +16,7 @@ use crate::{
 pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), Error> {
     let mainsequence_file = sis
         .vfs
-        .open(cook_path(mainsequence_path, sis.platform)?.as_ref())?;
+        .open(cook_path(mainsequence_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&mainsequence_file, sis.lax)?.actor()?;
     test(&actor.components.len(), &1).context("More than one component in actor!")?;
     let tape_case = actor.components.swap_remove(0).master_tape()?;
@@ -34,7 +34,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
         }
         (None, false) => return Err(anyhow!("MainSequence Timeline Template is empty!")),
     };
-    let mainsequence_tml_path = cook_path(&mainsequence_tml_path, sis.platform)?;
+    let mainsequence_tml_path = cook_path(&mainsequence_tml_path, sis.ugi.platform)?;
 
     match (sis.vfs.open(mainsequence_tml_path.as_ref()), sis.lax) {
         (Ok(tape_file), _) => {
@@ -69,7 +69,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                     json_types::tape::Clip::TapeReference(reference) => {
                         let ref_file = sis
                             .vfs
-                            .open(cook_path(&reference.path, sis.platform)?.as_ref())?;
+                            .open(cook_path(&reference.path, sis.ugi.platform)?.as_ref())?;
                         let ref_tape = cooked::json::parse_v22(&ref_file, sis.lax)?.tape()?;
 
                         for clip in ref_tape.clips {
@@ -132,7 +132,7 @@ pub fn parse_soundset(
     sis: &SongImportState<'_>,
     soundset: &json_types::tape::SoundSetClip,
 ) -> Result<Clip<'static>, Error> {
-    let sound_set_path = cook_path(&soundset.sound_set_path, sis.platform)?;
+    let sound_set_path = cook_path(&soundset.sound_set_path, sis.ugi.platform)?;
     let template_file = sis.vfs.open(sound_set_path.as_ref())?;
     let template = cooked::json::parse_v22(&template_file, sis.lax)?.actor()?;
     let descriptor = template
@@ -149,7 +149,7 @@ pub fn parse_soundset(
         .ok_or_else(|| anyhow!("No file path in SoundDescriptor!"))?
         .as_ref();
 
-    let cooked_path = cook_path(filename, sis.platform)?;
+    let cooked_path = cook_path(filename, sis.ugi.platform)?;
     let from = sis.vfs.open(cooked_path.as_ref())?;
     let new_filename = format!("{name}.wav.ckd");
     // TODO: Decook wav.ckd!

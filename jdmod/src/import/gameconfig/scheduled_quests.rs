@@ -25,7 +25,7 @@ pub fn import_v20v22(
 ) -> Result<(), Error> {
     println!("Importing scheduled quests...");
 
-    let scheduled_quests_file = is.vfs.open(cook_path(path, is.platform)?.as_ref())?;
+    let scheduled_quests_file = is.vfs.open(cook_path(path, is.ugi.platform)?.as_ref())?;
     let parsed_json = cooked::json::parse_v22(&scheduled_quests_file, is.lax)?;
     let scheduled_quests = parsed_json.scheduled_quests_database()?;
     let quest_descriptions = scheduled_quests.scheduled_quests;

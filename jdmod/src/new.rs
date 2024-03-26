@@ -63,7 +63,7 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
     let sfat_vfs = SfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"))?;
 
     // Check that the sfat is from the right game
-    let game_platform = sfat_vfs.game_platform();
+    let game_platform = sfat_vfs.unique_game_id();
     if game_platform.game != Game::JustDance2022 {
         return Err(anyhow!(
             "The secure_fat.gf is from {} instead of {}!",
@@ -113,11 +113,11 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
     }
 
     // Make game and platform easily accessible
-    let platform = sfat_vfs.game_platform().platform;
-    let game = sfat_vfs.game_platform().game;
+    let platform = sfat_vfs.unique_game_id().platform;
+    let game = sfat_vfs.unique_game_id().game;
 
     // Import songs and other content from the game
-    import::import_vfs(&sfat_vfs, dir_root, game, platform, false, false)?;
+    import::import_vfs(&sfat_vfs, dir_root, sfat_vfs.unique_game_id(), false, false)?;
 
     Ok(())
 }

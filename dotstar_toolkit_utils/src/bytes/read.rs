@@ -1,5 +1,5 @@
 use std::{
-    backtrace::Backtrace, borrow::Cow, fs::File, io::{ErrorKind, Read}, marker::PhantomData,
+    backtrace::Backtrace, borrow::Cow, fs::File, io::ErrorKind, marker::PhantomData,
     num::TryFromIntError, ops::Deref, rc::Rc, str::Utf8Error, sync::Arc,
 };
 
@@ -81,12 +81,14 @@ pub enum ReadError {
     IntUnderOverflow {
         /// Backtrace
         backtrace: Backtrace,
-    }
+    },
 }
 
 impl ReadError {
     pub fn int_under_overflow() -> Self {
-        Self::IntUnderOverflow { backtrace: Backtrace::capture() }
+        Self::IntUnderOverflow {
+            backtrace: Backtrace::capture(),
+        }
     }
 
     /// Create the [`ReadError::InvalidUTF8`] error
@@ -403,7 +405,9 @@ impl ZeroCopyReadAt for [u8] {
         position: &mut u64,
         len: usize,
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
-        let new_position = position.checked_add(len as u64).ok_or_else(|| ReadError::int_under_overflow())?;
+        let new_position = position
+            .checked_add(len as u64)
+            .ok_or_else(|| ReadError::int_under_overflow())?;
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
@@ -445,7 +449,9 @@ impl ZeroCopyReadAt for Vec<u8> {
         position: &mut u64,
         len: usize,
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
-        let new_position = position.checked_add(len as u64).ok_or_else(|| ReadError::int_under_overflow())?;
+        let new_position = position
+            .checked_add(len as u64)
+            .ok_or_else(|| ReadError::int_under_overflow())?;
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
@@ -554,8 +560,12 @@ pub trait ZeroCopyReadAtExt: ZeroCopyReadAt {
         let result: Result<_, _> = try {
             let len = L::read_len_at(self, position)?;
             match self.read_slice_at(position, len)? {
-                Cow::Borrowed(slice) => std::str::from_utf8(slice).map(Cow::Borrowed).map_err(|e| ReadError::invalid_utf8(len, *position, e))?,
-                Cow::Owned(vec) => String::from_utf8(vec).map(Cow::Owned).map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))?,
+                Cow::Borrowed(slice) => std::str::from_utf8(slice)
+                    .map(Cow::Borrowed)
+                    .map_err(|e| ReadError::invalid_utf8(len, *position, e))?,
+                Cow::Owned(vec) => String::from_utf8(vec)
+                    .map(Cow::Owned)
+                    .map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))?,
             }
         };
         if result.is_err() {

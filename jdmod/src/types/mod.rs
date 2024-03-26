@@ -33,11 +33,8 @@ pub struct ImportState<'a> {
     pub vfs: &'a dyn VirtualFileSystem,
     /// Mod directory tree
     pub dirs: DirectoryTree,
-    /// Import game
-    pub game: Game,
-    /// Import platform
-    pub platform: Platform,
-    pub unique_game_id: UniqueGameId,
+    /// Game and platform
+    pub ugi: UniqueGameId,
     /// Mapping of game locale id to mod locale id
     pub locale_id_map: LocaleIdMap,
     /// See [`Alias8`]

@@ -13,7 +13,7 @@ use crate::{types::song::MusicTrack, utils::cook_path};
 pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String, Error> {
     let mainsequence_file = sis
         .vfs
-        .open(cook_path(musictrack_path, sis.platform)?.as_ref())?;
+        .open(cook_path(musictrack_path, sis.ugi.platform)?.as_ref())?;
     let template = cooked::json::parse_v22(&mainsequence_file, sis.lax)?;
     let mut actor = template.actor()?;
     test(&actor.components.len(), &1).context("More than one component in muisctrack")?;
@@ -36,7 +36,7 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         to.write_all(&from)?;
         audio_filename
     } else {
-        let cooked_path = cook_path(path, sis.platform)?;
+        let cooked_path = cook_path(path, sis.ugi.platform)?;
         let audio_filename = cooked_path
             .rsplit_once('/')
             .map(|p| p.1.to_string())
