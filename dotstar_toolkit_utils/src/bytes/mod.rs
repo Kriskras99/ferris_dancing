@@ -4,15 +4,12 @@ pub mod primitives;
 pub mod read;
 pub mod write;
 
-use std::fs::File;
-use std::path::Path;
+use std::{fs::File, path::Path};
 
-use self::read::BinaryDeserialize;
-use self::read::ReadError;
-use self::read::ZeroCopyReadAtExt;
-use self::write::BinarySerialize;
-use self::write::WriteAt;
-use self::write::WriteError;
+use self::{
+    read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    write::{BinarySerialize, WriteAt, WriteError},
+};
 
 /// Read the file at path into a `Vec`
 ///

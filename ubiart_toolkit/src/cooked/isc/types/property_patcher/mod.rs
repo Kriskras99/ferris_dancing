@@ -2,8 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use self::action::Action;
-use self::value::Value;
+use self::{action::Action, value::Value};
 
 pub mod action;
 pub mod value;

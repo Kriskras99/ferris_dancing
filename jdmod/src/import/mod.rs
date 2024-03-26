@@ -4,15 +4,16 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Error};
 use clap::Args;
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
-use dotstar_toolkit_utils::testing::test;
-use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem};
-use ubiart_toolkit::alias8::Alias8;
-use ubiart_toolkit::utils::UniqueGameId;
+use dotstar_toolkit_utils::{
+    bytes::read::BinaryDeserialize,
+    testing::test,
+    vfs::{native::NativeFs, VirtualFileSystem},
+};
 use ubiart_toolkit::{
+    alias8::Alias8,
     cooked,
     secure_fat::vfs::SfatFilesystem,
-    utils::{Game, Platform},
+    utils::{Game, Platform, UniqueGameId},
 };
 
 use crate::{

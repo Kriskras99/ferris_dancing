@@ -1,11 +1,12 @@
-use dotstar_toolkit_utils::testing::test;
-use dotstar_toolkit_utils::testing::{TestError, TestResult};
+use dotstar_toolkit_utils::testing::{test, TestError, TestResult};
 
-use crate::json_types::{
-    v17::Template17, v18::Template18, v19::Template19, v20::Template20, v20c::Template20C,
-    v21::Template21, v22::Template22,
+use crate::{
+    json_types::{
+        v17::Template17, v18::Template18, v19::Template19, v20::Template20, v20c::Template20C,
+        v21::Template21, v22::Template22,
+    },
+    utils::errors::ParserError,
 };
-use crate::utils::errors::ParserError;
 
 /// Remove the '\0' from the end of the `buffer`
 fn clean_buffer_tpl(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {

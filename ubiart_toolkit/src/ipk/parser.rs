@@ -1,9 +1,12 @@
 //! Contains the parser implementation for IPK bundles
 
-use dotstar_toolkit_utils::bytes::primitives::{u32be, u64be};
-use dotstar_toolkit_utils::bytes::read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt};
-use dotstar_toolkit_utils::testing::TestResult;
-use dotstar_toolkit_utils::testing::{test, test_any};
+use dotstar_toolkit_utils::{
+    bytes::{
+        primitives::{u32be, u64be},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    },
+    testing::{test, test_any, TestResult},
+};
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use super::{
