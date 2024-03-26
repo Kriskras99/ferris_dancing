@@ -264,6 +264,28 @@ pub enum Template19<'a> {
 }
 
 impl<'a> Template19<'a> {
+    /// Convert this template to a `Actor22`.
+    pub fn actor(self) -> Result<Actor19<'a>, ParserError> {
+        if let Template19::Actor(actor) = self {
+            Ok(actor)
+        } else {
+            Err(ParserError::custom(format!(
+                "Actor not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `AvatarDescription22`.
+    pub fn avatar_description(self) -> Result<AvatarDescription<'a>, ParserError> {
+        if let Template19::AvatarDescription(avatar_description) = self {
+            Ok(avatar_description)
+        } else {
+            Err(ParserError::custom(format!(
+                "AvatarDescription not found in template: {self:?}"
+            )))
+        }
+    }
+
     /// Convert this template to a `GameManagerConfig19`.
     pub fn game_manager_config(self) -> Result<GameManagerConfig19<'a>, ParserError> {
         if let Template19::GameManagerConfig(gmc) = self {

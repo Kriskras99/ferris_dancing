@@ -98,7 +98,8 @@ impl VirtualFileSystem for VecFs {
             paths: self
                 .files
                 .keys()
-                .filter_map(|p| p.strip_prefix(path).ok())
+                .filter(|p| p.starts_with(path))
+                .map(PathBuf::as_path)
                 .collect(),
         })
     }

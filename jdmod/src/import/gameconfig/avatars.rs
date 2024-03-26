@@ -3,7 +3,9 @@
 //!
 //! Current implementation is a bit wonky. A better option would be too manually match all avatar ids
 //! to names per game. Then Just Dance 2017 avatars can also be imported.
-use std::{borrow::Cow, collections::HashMap, fs::File, io::Write, sync::OnceLock};
+use std::{
+    borrow::Cow, collections::HashMap, ffi::OsStr, fs::File, io::Write, path::Path, sync::OnceLock,
+};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::testing::test;
@@ -17,8 +19,62 @@ use crate::{
     utils::{cook_path, decode_texture},
 };
 
-/// Import all the avatars (Just Dance 2018-2022)
-pub fn import_v18v22(
+/// Load existing avatars in the mod
+fn load_avatar_config(is: &ImportState<'_>) -> Result<HashMap<String, Avatar<'static>>, Error> {
+    let avatars_config_path = is.dirs.avatars().join("avatars.json");
+    if avatars_config_path.exists() {
+        let file = File::open(&avatars_config_path)?;
+        Ok(serde_json::from_reader(file)?)
+    } else {
+        Ok(HashMap::new())
+    }
+}
+
+fn save_avatar_config(is: &ImportState<'_>, avatars: HashMap<String, Avatar>) -> Result<(), Error> {
+    let avatars_config_path = is.dirs.avatars().join("avatars.json");
+    let file = File::create(avatars_config_path)?;
+    serde_json::to_writer_pretty(file, &avatars)?;
+    Ok(())
+}
+
+fn save_images(
+    is: &ImportState<'_>,
+    name: &str,
+    avatar: &Avatar,
+    actor_path: &str,
+    phone_image: &str,
+) -> Result<(), Error> {
+    let avatar_named_dir_path = is.dirs.avatars().join(name);
+    std::fs::create_dir(&avatar_named_dir_path)?;
+    let alt_actor_file = is
+        .vfs
+        .open(cook_path(actor_path.as_ref(), is.platform)?.as_ref())?;
+    let alt_actor = cooked::act::parse(&alt_actor_file, &mut 0, is.unique_game_id)?;
+
+    let image_actor = alt_actor
+        .components
+        .first()
+        .ok_or_else(|| anyhow!("No templates in {}", actor_path))?;
+    let mtg = image_actor.material_graphic_component()?;
+
+    // Save decooked image
+    let image_path = mtg.files[0].to_string();
+    test(&image_path.is_empty(), &false)?;
+    let cooked_image_path = cook_path(&image_path, is.platform)?;
+    let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?)?;
+    let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
+    decooked_image.save(&avatar_image_path)?;
+
+    // Save phone image
+    let avatar_image_phone_path = is.dirs.avatars().join(avatar.image_phone_path.as_ref());
+    let mut avatar_image_phone_file = File::create(&avatar_image_phone_path)?;
+    avatar_image_phone_file.write_all(&is.vfs.open(phone_image.as_ref())?)?;
+
+    Ok(())
+}
+
+/// Import all the avatars (Just Dance 2020-2022)
+pub fn import_v20v22(
     is: &ImportState<'_>,
     avatardb_scene: &str,
     avatarsobjectives: Option<&AvatarsObjectives>,
@@ -26,14 +82,7 @@ pub fn import_v18v22(
     let empty_objectives = HashMap::new();
     println!("Importing avatars...");
 
-    // Load existing avatars in the mod
-    let avatars_config_path = is.dirs.avatars().join("avatars.json");
-    let mut avatars: HashMap<String, Avatar> = if avatars_config_path.exists() {
-        let file = File::open(&avatars_config_path)?;
-        serde_json::from_reader(file)?
-    } else {
-        HashMap::new()
-    };
+    let mut avatars = load_avatar_config(is)?;
 
     // Open the avatardb and avatarsobjectives (which might be empty)
     let avatardb_file = is
@@ -55,113 +104,286 @@ pub fn import_v18v22(
             .vfs
             .open(cook_path(actor.lua.as_ref(), is.platform)?.as_ref())?;
         let template = cooked::json::parse_v22(&file, is.lax)?;
-        let actor_template = template.actor()?;
+        let mut actor_template = template.actor()?;
         test(&actor_template.components.len(), &2)
             .context("Not exactly two components in actor")?;
-        let avatar_desc = actor_template.components[1].avatar_description()?;
+        let avatar_desc = actor_template.components.remove(1).avatar_description()?;
 
-        // Create a (hopefully) unique name for the avatar
-        // TODO: Maybe just use a static mapping for each game?
-        let name = format!(
-            "{}_{}{}{}",
-            avatar_desc.used_as_coach_map_name.as_ref(),
-            avatar_desc.used_as_coach_coach_id,
-            if avatar_desc.special_effect == 1 {
-                "_Gold"
-            } else {
-                ""
-            },
-            if avatar_desc.unlock_type == 22 {
-                "_Unlimited"
-            } else {
-                ""
+        let name = match get_name(is.game, avatar_desc.avatar_id) {
+            Ok(name) => name,
+            Err(error) => {
+                println!("{error}");
+                continue;
             }
-        );
-        println!("Mapping {} to {}", avatar_desc.avatar_id, name);
+        };
+
         // Add the name to the id map, so we can look it up later
-        id_map.insert(avatar_desc.avatar_id, name.clone());
+        id_map.insert(avatar_desc.avatar_id, name);
 
         // Collect the avatar descriptions so we don't have the parse isc and tpls again
-        avatar_descriptions.push(avatar_desc.to_owned());
+        avatar_descriptions.push(avatar_desc.into_owned());
     }
 
     for avatar_desc in avatar_descriptions {
-        let name = &id_map[&avatar_desc.avatar_id];
+        let name = id_map[&avatar_desc.avatar_id];
         let main_avatar = if avatar_desc.main_avatar_id == u16::MAX {
             None
         } else {
             let main = id_map
                 .get(&avatar_desc.main_avatar_id)
-                .map(String::as_str)
-                .map(Cow::Borrowed);
+                .map(|s| Cow::Borrowed(*s));
             if main.is_none() {
                 println!(
                     "Warning! Avatar id {} does not exist!",
                     avatar_desc.main_avatar_id
                 );
                 println!("Failed to add main avatar for {name}");
-            } else {
-                println!("Adding main avatar {main:?} for {name}");
             }
             main
         };
         // Only add new avatars
         if !avatars.contains_key(name) {
-            let avatar_named_dir_path = is.dirs.avatars().join(name);
             let avatar_image_path = format!("{name}/avatar.png");
             let avatar_image_phone_path = format!("{name}/avatar_phone.png");
             let avatar = Avatar {
                 relative_song_name: if avatar_desc.relative_song_name.is_empty() {
                     None
                 } else {
-                    Some(Cow::Owned(avatar_desc.relative_song_name))
+                    Some(avatar_desc.relative_song_name)
                 },
-                sound_family: Cow::Owned(avatar_desc.sound_family),
+                sound_family: avatar_desc.sound_family,
                 status: avatar_desc.status,
                 unlock_type: UnlockType::from_unlock_type(
                     avatar_desc.unlock_type,
                     avatarsobjectives.get(&avatar_desc.avatar_id),
                 )?,
-                used_as_coach_map_name: Cow::Owned(avatar_desc.used_as_coach_map_name),
+                used_as_coach_map_name: avatar_desc.used_as_coach_map_name,
                 used_as_coach_coach_id: avatar_desc.used_as_coach_coach_id,
                 special_effect: avatar_desc.special_effect == 1,
                 main_avatar,
-                image_path: Cow::Owned(avatar_image_path),
-                image_phone_path: Cow::Owned(avatar_image_phone_path),
+                image_path: avatar_image_path.into(),
+                image_phone_path: avatar_image_phone_path.into(),
+            };
+
+            save_images(
+                is,
+                name,
+                &avatar,
+                &avatar_desc.actor_path,
+                &avatar_desc.phone_image,
+            )?;
+
+            avatars.insert(name.to_string(), avatar);
+        }
+    }
+
+    import_unreferenced_avatars(is, &mut avatars)?;
+
+    save_avatar_config(is, avatars)?;
+
+    Ok(())
+}
+
+/// Import all the avatars (Just Dance 2017-2019)
+pub fn import_v17v19(
+    is: &ImportState<'_>,
+    avatardb_scene: &str,
+    avatarsobjectives: Option<&AvatarsObjectives>,
+) -> Result<(), Error> {
+    let empty_objectives = HashMap::new();
+    println!("Importing avatars...");
+
+    let mut avatars = load_avatar_config(is)?;
+
+    // Open the avatardb and avatarsobjectives (which might be empty)
+    let avatardb_file = is
+        .vfs
+        .open(cook_path(avatardb_scene, is.platform)?.as_ref())?;
+    let avatardb = cooked::isc::parse(&avatardb_file)?;
+    let avatarsobjectives = avatarsobjectives.unwrap_or(&empty_objectives);
+
+    // maps the id of an avatar to an avatar name, so related avatars can be linked by name
+    let mut id_map = HashMap::with_capacity(avatardb.scene.actors.len());
+    // stores the avatar descriptions so we don't have to iter through the avatardb again
+    let mut avatar_descriptions = Vec::with_capacity(avatardb.scene.actors.len());
+
+    for actor in avatardb.scene.actors {
+        let actor = actor.actor()?;
+
+        // Extract avatar description from template
+        let file = is
+            .vfs
+            .open(cook_path(actor.lua.as_ref(), is.platform)?.as_ref())?;
+        let template = cooked::json::parse_v19(&file, is.lax)?;
+        let mut actor_template = template.actor()?;
+        test(&actor_template.components.len(), &2)
+            .context("Not exactly two components in actor")?;
+        let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+
+        let name = match get_name(is.game, avatar_desc.avatar_id) {
+            Ok(name) => name,
+            Err(error) => {
+                println!("{error}");
+                continue;
+            }
+        };
+
+        // Add the name to the id map, so we can look it up later
+        id_map.insert(avatar_desc.avatar_id, name);
+
+        // Collect the avatar descriptions so we don't have the parse isc and tpls again
+        avatar_descriptions.push(avatar_desc.into_owned());
+    }
+
+    for avatar_desc in avatar_descriptions {
+        let name = id_map[&avatar_desc.avatar_id];
+        let mut split = name.split('_');
+        let map_name = Cow::Borrowed(split.next().unwrap());
+        let coach_id = Cow::Borrowed(split.next().unwrap());
+        let gold = split.next() == Some("Gold");
+
+        let main_avatar = avatar_desc
+            .main_avatar_id
+            .and_then(|main_avatar_id| {
+                if main_avatar_id == u16::MAX {
+                    None
+                } else {
+                    let main = id_map.get(&main_avatar_id).map(|s| Cow::Borrowed(*s));
+                    if main.is_none() {
+                        println!("Warning! Avatar id {} does not exist!", main_avatar_id);
+                        println!("Failed to add main avatar for {name}");
+                    }
+                    main
+                }
+            })
+            .or_else(|| {
+                if gold {
+                    Some(Cow::Owned(format!("{map_name}_{coach_id}")))
+                } else {
+                    None
+                }
+            });
+
+        // Only add new avatars
+        if !avatars.contains_key(name) {
+            let avatar_image_path = format!("{name}/avatar.png");
+            let avatar_image_phone_path = format!("{name}/avatar_phone.png");
+            let avatar = Avatar {
+                relative_song_name: if avatar_desc.relative_song_name.is_empty() {
+                    None
+                } else {
+                    Some(avatar_desc.relative_song_name)
+                },
+                sound_family: avatar_desc.sound_family,
+                status: avatar_desc.status,
+                unlock_type: UnlockType::from_unlock_type(
+                    avatar_desc.unlock_type,
+                    avatarsobjectives.get(&avatar_desc.avatar_id),
+                )?,
+                used_as_coach_map_name: avatar_desc.used_as_coach_map_name.unwrap_or(map_name),
+                used_as_coach_coach_id: avatar_desc
+                    .used_as_coach_coach_id
+                    .unwrap_or(coach_id.parse::<u8>()?),
+                special_effect: avatar_desc.special_effect.map(|s| s == 1).unwrap_or(gold),
+                main_avatar,
+                image_path: avatar_image_path.into(),
+                image_phone_path: avatar_image_phone_path.into(),
+            };
+
+            save_images(
+                is,
+                name,
+                &avatar,
+                &avatar_desc.actor_path,
+                &avatar_desc.phone_image,
+            )?;
+
+            avatars.insert(name.to_string(), avatar);
+        }
+    }
+
+    import_unreferenced_avatars(is, &mut avatars)?;
+
+    save_avatar_config(is, avatars)?;
+
+    Ok(())
+}
+
+fn import_unreferenced_avatars(
+    is: &ImportState<'_>,
+    avatars: &mut HashMap<String, Avatar>,
+) -> Result<(), Error> {
+    let import_path = cook_path("world/avatars/", is.platform)?;
+    for avatar_id in is
+        .vfs
+        .walk_filesystem(import_path.as_ref())?
+        .filter(|p| p.ends_with("avatar.png.ckd"))
+        .map(Path::parent)
+        .flatten()
+        .map(Path::file_name)
+        .flatten()
+        .map(OsStr::to_str)
+        .flatten()
+        .map(str::parse::<u16>)
+        .flatten()
+    {
+        let name = match get_name(is.game, avatar_id) {
+            Ok(name) => name,
+            Err(error) => {
+                println!("{error}");
+                continue;
+            }
+        };
+        if !avatars.contains_key(name) {
+            let avatar_named_dir_path = is.dirs.avatars().join(name);
+            let avatar_image_path = format!("{name}/avatar.png");
+            let avatar_image_phone_path = format!("{name}/avatar_phone.png");
+            let mut split = name.split('_');
+            let map_name = Cow::Borrowed(split.next().unwrap());
+            let coach_id = Cow::Borrowed(split.next().unwrap_or("0"));
+            let gold = split.next() == Some("Gold");
+            let avatar = Avatar {
+                relative_song_name: None,
+                sound_family: Cow::Borrowed("AVTR_Common_Brand"),
+                status: 1,
+                unlock_type: UnlockType::Unlocked,
+                used_as_coach_map_name: map_name.clone(),
+                used_as_coach_coach_id: coach_id.as_ref().parse()?,
+                special_effect: gold,
+                main_avatar: if gold {
+                    Some(Cow::Owned(format!("{map_name}_{coach_id}")))
+                } else {
+                    None
+                },
+                image_path: avatar_image_path.into(),
+                image_phone_path: avatar_image_phone_path.into(),
             };
             std::fs::create_dir(&avatar_named_dir_path)?;
-            let alt_actor_file = is
-                .vfs
-                .open(cook_path(avatar_desc.actor_path.as_ref(), is.platform)?.as_ref())?;
-            let alt_actor = cooked::act::parse(&alt_actor_file, &mut 0, is.unique_game_id)?;
-
-            let image_actor = alt_actor
-                .components
-                .first()
-                .ok_or_else(|| anyhow!("No templates in {}", avatar_desc.actor_path))?;
-            let mtg = image_actor.material_graphic_component()?;
 
             // Save decooked image
-            let image_path = mtg.files[0].to_string();
-            test(&image_path.is_empty(), &false)?;
-            let cooked_image_path = cook_path(&image_path, is.platform)?;
+            let cooked_image_path = cook_path(
+                &format!("world/avatars/{avatar_id:0>4}/avatar.png"),
+                is.platform,
+            )?;
             let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?)?;
             let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
             decooked_image.save(&avatar_image_path)?;
 
-            // Save phone image
+            // Save the phone image if it exists, otherwise save the decooked image as the phone image
             let avatar_image_phone_path = is.dirs.avatars().join(avatar.image_phone_path.as_ref());
-            let mut avatar_image_phone_file = File::create(&avatar_image_phone_path)?;
-            avatar_image_phone_file.write_all(&is.vfs.open(avatar_desc.phone_image.as_ref())?)?;
+            if let Ok(file) = is
+                .vfs
+                .open(format!("word/avatars/{avatar_id:0>4}/avatar_phone.png").as_ref())
+            {
+                let mut avatar_image_phone_file = File::create(&avatar_image_phone_path)?;
+                avatar_image_phone_file.write_all(&file)?;
+            } else {
+                decooked_image.save(&avatar_image_phone_path)?;
+            }
 
-            avatars.insert(name.clone(), avatar);
+            avatars.insert(name.to_string(), avatar);
         }
     }
-
-    // TODO: Detect unreferenced avatars and try to import them?
-
-    let file = File::create(avatars_config_path)?;
-    serde_json::to_writer_pretty(file, &avatars)?;
 
     Ok(())
 }
@@ -171,13 +393,13 @@ static GAME_AVATAR_ID_NAME_MAP: OnceLock<HashMap<Game, HashMap<u16, &'static str
     OnceLock::new();
 
 /// Get the name for the `avatar_id` for `game`
-fn get_name(game: Game, avatar_id: u16) -> Result<&'static str, Error> {
+fn get_name(game: Game, avatar_id: u16) -> Result<&'static str, String> {
     get_map()
         .get(&game)
-        .ok_or_else(|| anyhow!("Unsupported game: {game}"))?
+        .ok_or_else(|| format!("Unsupported game: {game}"))?
         .get(&avatar_id)
         .copied()
-        .ok_or_else(|| anyhow!("Unknown ID: {avatar_id}"))
+        .ok_or_else(|| format!("Unknown ID: {avatar_id}"))
 }
 
 /// Get the static map which maps avatar ids to their proper names for each game
@@ -191,7 +413,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (2, "DogsOut_0"),
                     (3, "EyeOfTheTiger_0"),
                     (4, "GetAround_0"),
-                    (5, "HotNCold"),
+                    (5, "HotNCold_0"),
                     (6, "ILikeToMoveIt_0"),
                     (7, "JinGoLoBa_0"),
                     (8, "RingMyBell_0"),
@@ -366,7 +588,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (2, "DogsOut_0"),
                     (3, "EyeOfTheTiger_0"),
                     (4, "GetAround_0"),
-                    (5, "HotNCold"),
+                    (5, "HotNCold_0"),
                     (6, "ILikeToMoveIt_0"),
                     (7, "JinGoLoBa_0"),
                     (8, "RingMyBell_0"),
@@ -568,7 +790,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (2, "DogsOut_0"),
                     (3, "EyeOfTheTiger_0"),
                     (4, "GetAround_0"),
-                    (5, "HotNCold"),
+                    (5, "HotNCold_0"),
                     (6, "ILikeToMoveIt_0"),
                     (7, "JinGoLoBa_0"),
                     (8, "RingMyBell_0"),
@@ -872,7 +1094,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (2, "DogsOut_0"),
                     (3, "EyeOfTheTiger_0"),
                     (4, "GetAround_0"),
-                    (5, "HotNCold"),
+                    (5, "HotNCold_0"),
                     (6, "ILikeToMoveIt_0"),
                     (7, "JinGoLoBa_0"),
                     (8, "RingMyBell_0"),
@@ -1031,23 +1253,23 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (956, "BumBumTamTam_1"),
                     (959, "SweetLittle_0"),
                     (961, "NewRulesALT_0"),
-                    (962, "UbiSoft_RainbowSixSiege_Ela"),
-                    (963, "UbiSoft_RainbowSixSiege_Tachanka"),
-                    (964, "UbiSoft_RainbowSixSiege_Ash"),
-                    (965, "UbiSoft_RainbowSixSiege_Dokkaebi"),
-                    (966, "UbiSoft_ACOdyssey_Alexios"),
-                    (967, "UbiSoft_ACOdyssey_Kassandra"),
-                    (968, "UbiSoft_WatchDogs2_Sitara"),
-                    (969, "UbiSoft_WatchDogs2_Wrench"),
+                    (962, "UbiSoftRainbowSixSiegeEla"),
+                    (963, "UbiSoftRainbowSixSiegeTachanka"),
+                    (964, "UbiSoftRainbowSixSiegeAsh"),
+                    (965, "UbiSoftRainbowSixSiegeDokkaebi"),
+                    (966, "UbiSoftACOdysseyAlexios"),
+                    (967, "UbiSoftACOdysseyKassandra"),
+                    (968, "UbiSoftWatchDogs2Sitara"),
+                    (969, "UbiSoftWatchDogs2Wrench"),
                     (982, "PocoLoco_0"),
                     (983, "PacMan_0"),
                     (984, "PacMan_1"),
                     (985, "PacMan_2"),
                     (986, "PacMan_3"),
-                    (987, "UbiSoft_TheCrew2"),
+                    (987, "UbiSoftTheCrew2"),
                     (988, "MadLoveALT_0"),
                     (989, "Familiar_0"),
-                    (990, "UbiSoft_JD2019_Unknown"),
+                    (990, "UbiSoftJD2019Unknown"),
                     (991, "TOY_0"),
                     (992, "SangriaWine_0"),
                     (993, "Bang2019ALT_0"),
@@ -1096,7 +1318,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (2, "DogsOut_0"),
                     (3, "EyeOfTheTiger_0"),
                     (4, "GetAround_0"),
-                    (5, "HotNCold"),
+                    (5, "HotNCold_0"),
                     (6, "ILikeToMoveIt_0"),
                     (7, "JinGoLoBa_0"),
                     (8, "RingMyBell_0"),
@@ -1162,9 +1384,9 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (782, "Cottonmouth"),
                     (785, "DharmaALT"),
                     (786, "WDF_Glitchy"),
-                    (803, "UbiSoft_Rabbids_Apache"),
-                    (804, "UbiSoft_Rabbids_Cotton"),
-                    (805, "UbiSoft_Rabbids_SexyAndIKnowItDLC"),
+                    (803, "UbiSoftRabbidsApache"),
+                    (804, "UbiSoftRabbidsCotton"),
+                    (805, "UbiSoftRabbidsSexyAndIKnowItDLC"),
                     (808, "ShapeOfYou"),
                     (809, "AnotherOne_2"),
                     (810, "BadLiar"),
@@ -1203,7 +1425,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (2, "DogsOut_0"),
                     (3, "EyeOfTheTiger_0"),
                     (4, "GetAround_0"),
-                    (5, "HotNCold"),
+                    (5, "HotNCold_0"),
                     (6, "ILikeToMoveIt_0"),
                     (7, "JinGoLoBa_0"),
                     (8, "RingMyBell_0"),
@@ -1234,17 +1456,17 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (118, "Aquarius_1"),
                     (127, "Gigolo_1"),
                     (131, "Limbo_1"),
-                    (175, "UbiSoft_FarCry"),
-                    (179, "UbiSoft_ZombiU"),
-                    (180, "UbiSoft_Rayman"),
+                    (175, "UbiSoftFarCry"),
+                    (179, "UbiSoftZombiU"),
+                    (180, "UbiSoftRayman"),
                     (239, "BollywoodXmas_0"),
                     (252, "Animals_0"),
                     (253, "LetsGroove_0"),
                     (254, "WilliamTell_0"),
                     (260, "Nintendo_Mario"),
                     (274, "Chiwawa_0"),
-                    (309, "UbiSoft_ACUnity_Arno"),
-                    (314, "UbiSoft_ChildOfLight_Aurora"),
+                    (309, "UbiSoftACUnityArno"),
+                    (314, "UbiSoftChildOfLightAurora"),
                     (345, "GangnamStyleDLC_1_C2"),    // C2
                     (346, "GangnamStyleDLC_1_C1_V2"), // C1
                     (347, "GangnamStyleDLC_0"),
@@ -1300,12 +1522,12 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, &'static str>> {
                     (545, "CantFeelMyFace_0"),
                     (546, "DragosteaDinTei_1"),
                     (547, "Groove_1"),
-                    (550, "UbiSoft_ACCChine_ShaoJun"),
-                    (551, "UbiSoft_ACCRussia_Nikolai"),
-                    (552, "UbiSoft_ACCIndia_Arbaaz"),
-                    (554, "UbiSoft_Rabbids_Disturbia"),
-                    (555, "UbiSoft_Rainbow6Siege_IQ"),
-                    (557, "UbiSoft_WatchDogs2_Marcus"),
+                    (550, "UbiSoftACCChineShaoJun"),
+                    (551, "UbiSoftACCRussiaNikolai"),
+                    (552, "UbiSoftACCIndiaArbaaz"),
+                    (554, "UbiSoftRabbidsDisturbia"),
+                    (555, "UbiSoftRainbow6SiegeIQ"),
+                    (557, "UbiSoftWatchDogs2Marcus"),
                     (559, "ColaSong_0"),
                     (560, "DQ_Mask"),
                     (561, "DQ_CoolKids"),

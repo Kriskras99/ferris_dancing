@@ -55,7 +55,6 @@ pub fn main(extract: Extract) -> Result<(), Error> {
         Some(files.as_slice())
     };
     let conflicts = extract.conflicts;
-    let lax = extract.lax;
 
     let extension = source
         .extension()
@@ -64,8 +63,8 @@ pub fn main(extract: Extract) -> Result<(), Error> {
         .ok_or_else(|| anyhow!("Source extension is invalid!"))?;
 
     match extension {
-        "ipk" => extract_ipk(&source, &destination, files, conflicts, lax),
-        "gf" => extract_secure_fat(&source, &destination, files, conflicts, lax),
+        "ipk" => extract_ipk(&source, &destination, files, conflicts),
+        "gf" => extract_secure_fat(&source, &destination, files, conflicts),
         _ => Err(anyhow!(
             "Unknown file extension '{extension}', expected 'ipk' or 'gf'!"
         )),
@@ -85,7 +84,6 @@ pub fn extract_secure_fat(
     destination: &Path,
     files: Option<&[&str]>,
     conflicts: FileConflictStrategy,
-    lax: bool,
 ) -> Result<(), Error> {
     // Split source in directory and filename
     let source_directory = source
@@ -117,7 +115,6 @@ pub fn extract_ipk(
     destination: &Path,
     files: Option<&[&str]>,
     conflicts: FileConflictStrategy,
-    lax: bool,
 ) -> Result<(), Error> {
     // Split source in directory and filename
     let source_directory = source

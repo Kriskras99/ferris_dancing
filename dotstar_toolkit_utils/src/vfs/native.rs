@@ -125,7 +125,8 @@ impl VirtualFileSystem for NativeFs {
         Ok(WalkFs {
             paths: list
                 .iter()
-                .filter_map(|p| p.strip_prefix(&path).ok())
+                .filter(|p| p.starts_with(&path))
+                .filter_map(|p| p.strip_prefix(&self.root).ok())
                 .collect(),
         })
     }

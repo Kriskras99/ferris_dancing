@@ -579,6 +579,39 @@ pub struct AvatarDescription<'a> {
     pub main_avatar_id: Option<u16>,
 }
 
+impl AvatarDescription<'_> {
+    #[must_use]
+    pub fn into_owned(self) -> AvatarDescription<'static> {
+        AvatarDescription {
+            class: None,
+            jd_version: self.jd_version,
+            relative_song_name: Cow::Owned(self.relative_song_name.into_owned()),
+            relative_quest_id: Cow::Owned(self.relative_quest_id.into_owned()),
+            relative_wdf_boss_name: Cow::Owned(self.relative_wdf_boss_name.into_owned()),
+            relative_wdf_tournament_name: Cow::Owned(
+                self.relative_wdf_tournament_name.into_owned(),
+            ),
+            relative_jd_rank: Cow::Owned(self.relative_jd_rank.into_owned()),
+            relative_game_mode_name: Cow::Owned(self.relative_game_mode_name.into_owned()),
+            sound_family: Cow::Owned(self.sound_family.into_owned()),
+            status: self.status,
+            unlock_type: self.unlock_type,
+            mojo_price: self.mojo_price,
+            wdf_level: self.wdf_level,
+            count_in_progression: self.count_in_progression,
+            actor_path: Cow::Owned(self.actor_path.into_owned()),
+            phone_image: Cow::Owned(self.phone_image.into_owned()),
+            avatar_id: self.avatar_id,
+            used_as_coach_map_name: self
+                .used_as_coach_map_name
+                .map(|c| Cow::Owned(c.into_owned())),
+            used_as_coach_coach_id: self.used_as_coach_coach_id,
+            special_effect: self.special_effect,
+            main_avatar_id: self.main_avatar_id,
+        }
+    }
+}
+
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

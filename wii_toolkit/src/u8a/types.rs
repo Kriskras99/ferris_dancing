@@ -204,7 +204,10 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
                                 .1
                                 .directories
                                 .insert(tree.0, tree.1);
-                            assert!(indexes.pop().is_some(), "There should be something left to pop!");
+                            assert!(
+                                indexes.pop().is_some(),
+                                "There should be something left to pop!"
+                            );
                         }
                     }
                 }

@@ -39,6 +39,8 @@ pub struct Avatar<'a> {
 pub enum UnlockType<'a> {
     /// Information is missing
     Unknown,
+    /// Information is missing
+    Unknown6,
     /// Gacha machine
     GiftMachine,
     /// Have a save file from a previous Just Dance
@@ -55,6 +57,7 @@ impl From<&UnlockType<'_>> for u8 {
     fn from(value: &UnlockType) -> Self {
         match value {
             UnlockType::Unknown => 0,
+            UnlockType::Unknown6 => 6,
             UnlockType::GiftMachine => 18,
             UnlockType::PlayPreviousJD => 19,
             UnlockType::Unlocked => 20,
@@ -79,6 +82,7 @@ impl<'a> UnlockType<'a> {
                 Some(quest) => Ok(Self::Quest(quest.clone())),
                 None => Ok(Self::Unknown),
             },
+            6 => Ok(Self::Unknown6),
             18 => Ok(Self::GiftMachine),
             19 => Ok(Self::PlayPreviousJD),
             20 => Ok(Self::Unlocked),
@@ -96,9 +100,11 @@ impl<'a> UnlockType<'a> {
     pub fn normalize(self) -> Self {
         match self {
             Self::GiftMachine => Self::GiftMachine,
-            Self::PlayPreviousJD | Self::Unlimited | Self::Unlocked | Self::Unknown => {
-                Self::Unlocked
-            }
+            Self::PlayPreviousJD
+            | Self::Unlimited
+            | Self::Unlocked
+            | Self::Unknown
+            | Self::Unknown6 => Self::Unlocked,
             Self::Quest(s) => Self::Quest(s),
         }
     }
