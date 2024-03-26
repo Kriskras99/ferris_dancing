@@ -2,12 +2,11 @@
 use std::{
     backtrace::Backtrace,
     fs::File,
-    io::{BufWriter, Cursor, Seek, SeekFrom, Write},
+    io::{BufWriter, Cursor, ErrorKind, Seek, SeekFrom, Write},
     num::TryFromIntError,
 };
 
-use positioned_io::WriteAt;
-// use positioned_io::WriteAt as PWrite;
+use positioned_io::WriteAt as PWriteAt;
 use thiserror::Error;
 
 use super::Len;
@@ -59,14 +58,19 @@ pub enum WriteError {
         /// Backtrace
         backtrace: Backtrace,
     },
+    /// Integer over/underflow
+    #[error("an integer over/underflow occured")]
+    IntUnderOverflow {
+        /// Backtrace
+        backtrace: Backtrace,
+    },
 }
 
 impl WriteError {
-    /// Create the [`ReadError::IoError`] error
+    /// Create the [`WriteError::IntUnderOverflow`] error
     #[must_use]
-    pub fn io_error(_position: u64, error: std::io::Error) -> Self {
-        Self::IoError {
-            error,
+    pub fn int_under_overflow() -> Self {
+        Self::IntUnderOverflow {
             backtrace: Backtrace::capture(),
         }
     }
@@ -89,7 +93,7 @@ impl WriteError {
         }
     }
 
-    /// Add context for this error
+    /// Create a custom [`WriteError`]
     #[must_use]
     pub fn custom(string: String) -> Self {
         Self::Custom {
@@ -98,7 +102,7 @@ impl WriteError {
         }
     }
 
-    /// Add context for this error
+    /// Create a custom [`WriteError`]
     #[must_use]
     pub fn with_custom<F: FnOnce() -> String>(f: F) -> Self {
         Self::Custom {
@@ -116,7 +120,7 @@ pub trait BinarySerialize: Sized {
     ///
     /// # Errors
     /// This function will return an error when deserializing fails.
-    fn serialize(&self, writer: &mut (impl ZeroCopyWriteAt + ?Sized)) -> Result<(), WriteError> {
+    fn serialize(&self, writer: &mut (impl WriteAt + ?Sized)) -> Result<(), WriteError> {
         self.serialize_at(writer, &mut 0)
     }
 
@@ -128,7 +132,7 @@ pub trait BinarySerialize: Sized {
     /// This function will return an error when deserializing fails.
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError>;
 }
@@ -136,7 +140,7 @@ pub trait BinarySerialize: Sized {
 impl BinarySerialize for u8 {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_slice_at(position, &[*self])
@@ -146,7 +150,7 @@ impl BinarySerialize for u8 {
 impl<const N: usize> BinarySerialize for [u8; N] {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_slice_at(position, self.as_slice())
@@ -154,7 +158,7 @@ impl<const N: usize> BinarySerialize for [u8; N] {
 }
 
 /// Represents a byte source which uses Cow's to stay zerocopy
-pub trait ZeroCopyWriteAt {
+pub trait WriteAt {
     /// Read a `T` at `position`
     ///
     /// This function increments `position` with what `T` reads if successful
@@ -175,7 +179,7 @@ pub trait ZeroCopyWriteAt {
     ///
     /// # Errors
     /// This function will return an error when the data would be (partially) outside the source.
-    fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError>;
+    fn write_slice_at(&mut self, position: &mut u64, buf: &[u8]) -> Result<(), WriteError>;
 
     /// Read a string at `position`
     ///
@@ -188,12 +192,12 @@ pub trait ZeroCopyWriteAt {
     fn write_len_string_at<'de, L>(
         &mut self,
         position: &mut u64,
-        ty: &str,
+        string: &str,
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
     {
-        let slice = ty.as_bytes();
+        let slice = string.as_bytes();
         self.write_len_slice_at::<L>(position, slice)
     }
 
@@ -208,13 +212,13 @@ pub trait ZeroCopyWriteAt {
     fn write_len_slice_at<'de, L>(
         &mut self,
         position: &mut u64,
-        ty: &[u8],
+        buf: &[u8],
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
     {
-        L::write_len_at(self, position, ty.len())?;
-        self.write_slice_at(position, ty)?;
+        L::write_len_at(self, position, buf.len())?;
+        self.write_slice_at(position, buf)?;
         Ok(())
     }
 
@@ -253,9 +257,9 @@ pub trait ZeroCopyWriteAt {
     fn write_null_terminated_string_at(
         &mut self,
         position: &mut u64,
-        ty: &str,
+        string: &str,
     ) -> Result<(), WriteError> {
-        let slice = ty.as_bytes();
+        let slice = string.as_bytes();
         self.write_slice_at(position, slice)?;
         self.write_at(position, &0u8)?;
         Ok(())
@@ -274,7 +278,7 @@ pub trait ZeroCopyWriteAt {
 // }
 
 // How to make this generic??
-impl ZeroCopyWriteAt for Cursor<&mut Vec<u8>> {
+impl WriteAt for Cursor<&mut Vec<u8>> {
     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
         self.seek(SeekFrom::Start(*position))?;
         self.write_all(ty)?;
@@ -283,7 +287,7 @@ impl ZeroCopyWriteAt for Cursor<&mut Vec<u8>> {
     }
 }
 
-impl ZeroCopyWriteAt for File {
+impl WriteAt for File {
     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
         self.write_all_at(*position, ty)?;
         *position += u64::try_from(ty.len())?;
@@ -291,11 +295,35 @@ impl ZeroCopyWriteAt for File {
     }
 }
 
-impl<T: Write + Seek> ZeroCopyWriteAt for BufWriter<T> {
+impl<T: Write + Seek> WriteAt for BufWriter<T> {
     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
         self.seek(SeekFrom::Start(*position))?;
         self.write_all(ty)?;
         *position += u64::try_from(ty.len())?;
+        Ok(())
+    }
+}
+
+pub struct CursorAt<'a, W: WriteAt + ?Sized> {
+    writer: &'a mut W,
+    position: &'a mut u64,
+}
+
+impl<'a, W: WriteAt + ?Sized> CursorAt<'a, W> {
+    pub fn new(writer: &'a mut W, position: &'a mut u64) -> Self {
+        Self { writer, position }
+    }
+}
+
+impl<'a, W: WriteAt + ?Sized> Write for CursorAt<'a, W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.writer
+            .write_slice_at(self.position, buf)
+            .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
         Ok(())
     }
 }

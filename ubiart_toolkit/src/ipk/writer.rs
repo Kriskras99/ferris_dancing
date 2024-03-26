@@ -1,13 +1,17 @@
-use std::{fs::File, io::BufWriter, num::NonZeroU64, path::Path};
+use std::io::Write;
+use std::{fs::File, io::BufWriter, path::Path};
 
+use dotstar_toolkit_utils::bytes::write::CursorAt;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
-        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
+        write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::test,
 };
+use flate2::write::ZlibEncoder;
+use flate2::Compression;
 
 use super::{Platform, MAGIC};
 use crate::utils::{self, Game, SplitPath, UniqueGameId};
@@ -34,17 +38,30 @@ pub enum CompressionEffort {
     Zopfli(ZopfliOptions),
 }
 
+#[cfg(feature = "zopfli")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ZopfliOptions {
     pub iteration_count: NonZeroU64,
     pub iterations_without_improvement: NonZeroU64,
 }
 
+#[cfg(feature = "zopfli")]
 impl Default for ZopfliOptions {
     fn default() -> Self {
         Self {
             iteration_count: NonZeroU64::new(15).unwrap(),
             iterations_without_improvement: NonZeroU64::MIN,
+        }
+    }
+}
+
+#[cfg(feature = "zopfli")]
+impl From<ZopfliOptions> for zopfli::Options {
+    fn from(value: ZopfliOptions) -> Self {
+        Self {
+            iteration_count: value.iteration_count,
+            iterations_without_improvement: value.iterations_without_improvement,
+            ..Default::default()
         }
     }
 }
@@ -86,7 +103,7 @@ pub fn create<P: AsRef<Path>>(
 
 /// Create an .ipk file with the specified files.
 pub fn write(
-    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
     game_platform: UniqueGameId,
     unk4: u32,
@@ -95,8 +112,8 @@ pub fn write(
     vfs: &impl VirtualFileSystem,
     files: &[&str],
 ) -> Result<(), WriteError> {
-    let start = *position;
-
+    // TODO: Make this code position independent
+    // let static_header_size = *position + u64::try_from(STATIC_HEADER_SIZE)?;
     // Calculate the size of the header, starting with the static size
     let mut base_offset = STATIC_HEADER_SIZE;
 
@@ -108,6 +125,8 @@ pub fn write(
     {
         base_offset += 0x4;
     }
+
+    println!("Files: {}", files.len());
 
     // Add the static metadata size for every file plus the length of the path
     for path in files {
@@ -139,7 +158,7 @@ pub fn write(
     for path in files {
         // The offset from the start of the file
         // NB: the metadata stores the offset relevant to the end of the header
-        let raw_offset = *position - start;
+        let raw_offset = *position;
         // This is presumably a timestamp, but the values don't add up. So we use a static value.
         let timestamp = 132_761_939_258_059_932;
 
@@ -169,32 +188,28 @@ pub fn write(
                     0
                 }
                 CompressionEffort::Best => {
-                    todo!()
-                    // // Compress with flate2
-                    // let mut encoder = ZlibEncoder::new(writer, Compression::best());
-                    // encoder.write_all(&file)?;
-                    // writer = encoder.finish()?;
-                    // // Return compressed size
-                    // writer.stream_position()? - raw_offset
+                    // Compress with flate2
+                    let cursor = CursorAt::new(writer, position);
+                    let mut encoder = ZlibEncoder::new(cursor, Compression::best());
+                    encoder.write_all(&file)?;
+                    encoder.finish()?;
+                    // Return compressed size
+                    *position - raw_offset
                 }
                 #[cfg(feature = "zopfli")]
                 CompressionEffort::Zopfli(provided_options) => {
-                    todo!()
-                    // // TODO: impl From<ZopfliOptions> for zopfli::Options
-                    // let options = zopfli::Options {
-                    //     iteration_count: provided_options.iteration_count,
-                    //     iterations_without_improvement: provided_options
-                    //         .iterations_without_improvement,
-                    //     ..Default::default()
-                    // };
-                    // // Zopfli encoder consumes the writer
-                    // let mut encoder =
-                    //     zopfli::DeflateEncoder::new(options, zopfli::BlockType::default(), writer);
-                    // encoder.write_all(&file)?;
-                    // // Writer is returned at finish
-                    // writer = encoder.finish()?;
-                    // // Return compressed size
-                    // writer.stream_position()? - raw_offset
+                    let cursor = CursorAt::new(writer, position);
+                    // Zopfli encoder consumes the writer
+                    let mut encoder = zopfli::DeflateEncoder::new(
+                        provided_options.into(),
+                        zopfli::BlockType::default(),
+                        cursor,
+                    );
+                    encoder.write_all(&file)?;
+                    // Writer is returned at finish
+                    encoder.finish()?;
+                    // Return compressed size
+                    *position - raw_offset
                 }
             }
         };
@@ -216,7 +231,8 @@ pub fn write(
     // Write all the metadata
     for metadata in &reduced_metadata {
         // Convert the path into a `SplitPath`
-        let path = SplitPath::try_from(metadata.path).unwrap();
+        let path =
+            SplitPath::try_from(metadata.path).map_err(|e| WriteError::custom(format!("{e:?}")))?;
         // Write the file metadata
         writer.write_at(position, &u32be::from(0x1))?; // unk1
         writer.write_at(position, &u32be::from(u32::try_from(metadata.size)?))?;
@@ -224,6 +240,8 @@ pub fn write(
         writer.write_at(position, &u64be::from(metadata.timestamp))?;
         writer.write_at(position, &u64be::from(metadata.offset))?;
         writer.write_at(position, &path)?;
+        // The SplitPath padding byte is reused as a cooked indicator
+        *position -= 4;
         if path.path.starts_with("cache/itf_cooked") {
             writer.write_at(position, &u32be::from(0x2))?;
         } else {
@@ -248,7 +266,7 @@ impl BinarySerialize for Platform {
     #[allow(clippy::as_conversions, reason = "Self is repr(u32)")]
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_at(position, &u32be::from(*self as u32))?;

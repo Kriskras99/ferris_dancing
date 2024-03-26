@@ -35,8 +35,8 @@ impl<'fs> IpkFilesystem<'fs> {
     /// Create a new virtual filesystem from the IPK file at `path`.
     pub fn new(fs: &'fs dyn VirtualFileSystem, path: &Path) -> Result<Self, std::io::Error> {
         let file = fs.open(path)?;
-        let bundle =
-            Yoke::try_attach_to_cart(file, |data: &[u8]| Bundle::deserialize(data)).unwrap();
+        let bundle = Yoke::try_attach_to_cart(file, |data: &[u8]| Bundle::deserialize(data))
+            .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
 
         Ok(Self {
             bundle,

@@ -66,7 +66,7 @@ fn parse_installable<'de>(
     // TODO: implement verification of cert chain
     *position = position
         .checked_add(u64::from(round_to_boundary(cert_chain_size)))
-        .unwrap();
+        .ok_or_else(ReadError::int_under_overflow)?;
 
     // parse ticket data
     let ticket_start = *position;
@@ -110,7 +110,9 @@ fn parse_ticket(
 ) -> Result<TicketMetadata, ReadError> {
     // skip signature, padding, issuer and ECDH data
     // TODO: Verify signature
-    *position = position.checked_add(0x1BC).unwrap();
+    *position = position
+        .checked_add(0x1BC)
+        .ok_or_else(ReadError::int_under_overflow)?;
     // Read the metadata
     let format_version = reader.read_at::<u8>(position)?;
     let unk1 = reader.read_at::<u16be>(position)?.into();
@@ -140,7 +142,9 @@ fn parse_ticket(
     test(&common_key_index, &0x0)?;
     // Skip remainder of the header
     // TODO: Parse this?
-    *position = position.checked_add(0xB2).unwrap();
+    *position = position
+        .checked_add(0xB2)
+        .ok_or_else(ReadError::int_under_overflow)?;
 
     if format_version > 0 {
         return Err(ReadError::custom(
@@ -178,7 +182,9 @@ fn parse_tmd(
     test(&signature_type, &0x10001u32)?;
     // skip signature, padding and issuer
     // TODO: Verify signature
-    *position = position.checked_add(0x17C).unwrap();
+    *position = position
+        .checked_add(0x17C)
+        .ok_or_else(ReadError::int_under_overflow)?;
     let version = reader.read_at::<u8>(position)?;
     test(&version, &0)?;
     let ca_crl_version = reader.read_at::<u8>(position)?;

@@ -2,7 +2,7 @@ use std::{borrow::Cow, io::Cursor};
 
 use dotstar_toolkit_utils::bytes::{
     primitives::{u32be, u64be},
-    write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
+    write::{BinarySerialize, WriteAt, WriteError},
 };
 
 use super::{Actor, Component, MaterialGraphicComponent, PleoComponent};
@@ -10,7 +10,7 @@ use super::{Actor, Component, MaterialGraphicComponent, PleoComponent};
 impl BinarySerialize for Actor<'_> {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_at(position, &u32be::from(self.unk1))?;
@@ -63,7 +63,7 @@ pub fn create_vec(actor: &Actor<'_>) -> Result<Vec<u8>, WriteError> {
 
 /// Write the `MaterialGraphicComponent` part of the actor to the writer
 fn write_material_graphic_component(
-    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
     mgc: &MaterialGraphicComponent,
     is_pleo: bool,
@@ -111,7 +111,7 @@ fn write_material_graphic_component(
 
 /// Write the `PleoComponent` part of the actor to the writer
 fn write_pleo_component(
-    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
     pleo_component: &PleoComponent,
 ) -> Result<(), WriteError> {

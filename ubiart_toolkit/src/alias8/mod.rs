@@ -27,7 +27,7 @@ use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u16be, u32be},
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
-        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
+        write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::{test, test_any},
 };
@@ -109,7 +109,7 @@ impl<'de> BinaryDeserialize<'de> for Alias<'de> {
 impl BinarySerialize for Alias<'_> {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_len_string_at::<u32be>(position, &self.alias)?;
@@ -174,7 +174,7 @@ impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
 impl BinarySerialize for Alias8<'_> {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_at(position, &u32be::from(Self::UNK1))?;

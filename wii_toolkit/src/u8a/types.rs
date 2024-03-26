@@ -8,7 +8,7 @@ use dotstar_toolkit_utils::bytes::read::ZeroCopyReadAtExt;
 use dotstar_toolkit_utils::{
     bytes::{
         read::{BinaryDeserialize, ReadError},
-        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
+        write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::test,
 };
@@ -79,7 +79,7 @@ pub struct NewUnparsedDirectory {
 impl BinarySerialize for NewUnparsedDirectory {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_at(position, &UnparsedNode::MAGIC_DIRECTORY)?;
@@ -102,7 +102,7 @@ pub struct NewUnparsedFile {
 impl BinarySerialize for NewUnparsedFile {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_at(position, &UnparsedNode::MAGIC_FILE)?;
@@ -227,11 +227,11 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
 impl BinarySerialize for U8Archive<'_> {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         let count = self.file_tree.count();
-        let (string_table_size, string_table) = self.file_tree.string_table();
+        let (string_table_size, string_table) = self.file_tree.string_table()?;
 
         // Write the magic value
         writer.write_at(position, &Self::MAGIC)?;
@@ -239,8 +239,11 @@ impl BinarySerialize for U8Archive<'_> {
         writer.write_at(position, &Self::ROOTNODE_OFFSET)?;
         // Calculate and write the header size and data offset
         let header_size = u32be::from(count * 12 + string_table_size);
-        let data_offset =
-            round_to_boundary(Self::ROOTNODE_OFFSET.checked_add(header_size).unwrap());
+        let data_offset = round_to_boundary(
+            Self::ROOTNODE_OFFSET
+                .checked_add(header_size)
+                .ok_or_else(WriteError::int_under_overflow)?,
+        );
         writer.write_at(position, &header_size)?;
         writer.write_at(position, &data_offset)?;
         // Write the padding
@@ -262,7 +265,7 @@ impl BinarySerialize for U8Archive<'_> {
 }
 
 fn write_filetree_rec(
-    writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+    writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
     data_offset: &mut u32,
     file_tree: &FileTree,
@@ -273,23 +276,22 @@ fn write_filetree_rec(
     // Create and write this directory node
     let count = file_tree.count();
     let node = NewUnparsedDirectory {
-        name_offset: u24be::try_from(*string_table.get(name).unwrap()).unwrap(),
+        name_offset: u24be::try_from(*string_table.get(name).unwrap_or_else(|| unreachable!()))?,
         last_included_node_index: u32be::from(*current_idx + count),
     };
     writer.write_at(position, &node)?;
     *current_idx += 1;
     // Write all files directly in this directory
     for (filename, data) in &file_tree.files {
-        let size = u32::try_from(data.len()).unwrap();
+        let size = u32::try_from(data.len())?;
         let node = NewUnparsedFile {
             name_offset: u24be::try_from(
                 *string_table
                     .get(filename.as_ref())
                     .unwrap_or_else(|| unreachable!()),
-            )
-            .unwrap(),
+            )?,
             data_offset: u32be::from(*data_offset),
-            size: u32be::try_from(data.len()).unwrap(),
+            size: u32be::try_from(data.len())?,
         };
         // Write the data
         let mut data_offset_u64 = u64::from(*data_offset);
@@ -337,23 +339,26 @@ impl FileTree<'_> {
 }
 
 impl<'a> FileTree<'a> {
-    fn string_table(&self) -> (u32, HashMap<Cow<'a, str>, u32>) {
+    fn string_table(&self) -> Result<(u32, HashMap<Cow<'a, str>, u32>), WriteError> {
         let mut string_map = HashMap::new();
         let mut offset = 1;
-        self.string_table_rec(&mut string_map, &mut offset);
-        (offset, string_map)
+        self.string_table_rec(&mut string_map, &mut offset)?;
+        Ok((offset, string_map))
     }
 
-    fn string_table_rec(&self, string_map: &mut HashMap<Cow<'a, str>, u32>, offset: &mut u32) {
+    fn string_table_rec(
+        &self,
+        string_map: &mut HashMap<Cow<'a, str>, u32>,
+        offset: &mut u32,
+    ) -> Result<(), WriteError> {
         for file in &self.files {
             if let Entry::Vacant(entry) = string_map.entry(file.0.clone()) {
                 let length = entry.key().len();
                 entry.insert(*offset);
                 *offset = offset
-                    .checked_add(length.try_into().unwrap())
-                    .unwrap()
-                    .checked_add(1)
-                    .unwrap();
+                    .checked_add(length.try_into()?)
+                    .and_then(|i| i.checked_add(1))
+                    .ok_or_else(WriteError::int_under_overflow)?;
             }
         }
         for directory in &self.directories {
@@ -361,11 +366,12 @@ impl<'a> FileTree<'a> {
                 let length = entry.key().len();
                 entry.insert(*offset);
                 *offset = offset
-                    .checked_add(length.try_into().unwrap())
-                    .unwrap()
-                    .checked_add(1)
-                    .unwrap();
+                    .checked_add(length.try_into()?)
+                    .and_then(|i| i.checked_add(1))
+                    .ok_or_else(WriteError::int_under_overflow)?;
             }
+            directory.1.string_table_rec(string_map, offset)?;
         }
+        Ok(())
     }
 }
