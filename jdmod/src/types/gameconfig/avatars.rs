@@ -48,8 +48,12 @@ pub enum UnlockType<'a> {
     Unknown,
     /// only in 2017
     Unknown1,
+    /// only in 2017
+    Unknown3,
     /// only in 2020 so maybe anniversary?
     Unknown6,
+    /// only in 2017
+    Unknown9,
     /// only in 2017-2018 so maybe Dance Quest?
     Unknown11,
     /// Gacha machine
@@ -69,7 +73,9 @@ impl From<&UnlockType<'_>> for u8 {
         match value {
             UnlockType::Unknown => 0,
             UnlockType::Unknown1 => 1,
+            UnlockType::Unknown3 => 3,
             UnlockType::Unknown6 => 6,
+            UnlockType::Unknown9 => 9,
             UnlockType::Unknown11 => 11,
             UnlockType::GiftMachine => 18,
             UnlockType::PlayPreviousJD => 19,
@@ -96,7 +102,9 @@ impl<'a> UnlockType<'a> {
                 None => Ok(Self::Unknown),
             },
             1 => Ok(Self::Unknown1),
+            3 => Ok(Self::Unknown3),
             6 => Ok(Self::Unknown6),
+            9 => Ok(Self::Unknown9),
             11 => Ok(Self::Unknown11),
             18 => Ok(Self::GiftMachine),
             19 => Ok(Self::PlayPreviousJD),
@@ -120,7 +128,9 @@ impl<'a> UnlockType<'a> {
             | Self::Unlocked
             | Self::Unknown
             | Self::Unknown1
+            | Self::Unknown3
             | Self::Unknown6
+            | Self::Unknown9
             | Self::Unknown11 => Self::Unlocked,
             Self::Quest(s) => Self::Quest(s),
         }
