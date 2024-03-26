@@ -1,5 +1,5 @@
 use std::{
-    backtrace::Backtrace, borrow::Cow, fs::File, io::ErrorKind, marker::PhantomData,
+    backtrace::Backtrace, borrow::Cow, fs::File, io::{ErrorKind, Read}, marker::PhantomData,
     num::TryFromIntError, ops::Deref, rc::Rc, str::Utf8Error, sync::Arc,
 };
 
@@ -76,9 +76,19 @@ pub enum ReadError {
         /// Backtrace
         backtrace: Backtrace,
     },
+    /// Integer over/underflow
+    #[error("an integer over/underflow occured")]
+    IntUnderOverflow {
+        /// Backtrace
+        backtrace: Backtrace,
+    }
 }
 
 impl ReadError {
+    pub fn int_under_overflow() -> Self {
+        Self::IntUnderOverflow { backtrace: Backtrace::capture() }
+    }
+
     /// Create the [`ReadError::InvalidUTF8`] error
     #[must_use]
     pub fn invalid_utf8(n: usize, position: u64, error: Utf8Error) -> Self {
@@ -241,7 +251,7 @@ impl ZeroCopyReadAt for File {
         position: &mut u64,
         len: usize,
     ) -> Result<Cow<'static, [u8]>, ReadError> {
-        let len_u64 = u64::try_from(len).unwrap();
+        let len_u64 = u64::try_from(len)?;
         let new_position = position.checked_add(len_u64).ok_or_else(|| {
             ReadError::custom(format!(
                 "Tried to add {len_u64} to {position} and overflowed"
@@ -317,7 +327,7 @@ impl ZeroCopyReadAt for RandomAccessFile {
         position: &mut u64,
         len: usize,
     ) -> Result<Cow<'static, [u8]>, ReadError> {
-        let len_u64 = u64::try_from(len).unwrap();
+        let len_u64 = u64::try_from(len)?;
         let new_position = position.checked_add(len_u64).ok_or_else(|| {
             ReadError::custom(format!(
                 "Tried to add {len_u64} to {position} and overflowed"
@@ -393,9 +403,9 @@ impl ZeroCopyReadAt for [u8] {
         position: &mut u64,
         len: usize,
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
-        let new_position = position.checked_add(len as u64).unwrap();
-        let new_position_usize = usize::try_from(new_position).unwrap();
-        let position_usize = usize::try_from(*position).unwrap();
+        let new_position = position.checked_add(len as u64).ok_or_else(|| ReadError::int_under_overflow())?;
+        let new_position_usize = usize::try_from(new_position)?;
+        let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
             todo!()
         } else {
@@ -409,11 +419,11 @@ impl ZeroCopyReadAt for [u8] {
         &'rf self,
         position: &mut u64,
     ) -> Result<Cow<'rf, str>, ReadError> {
-        let position_usize = usize::try_from(*position).unwrap();
+        let position_usize = usize::try_from(*position)?;
         // Find the null byte, starting at `position_usize`
         let null_pos = self.iter().skip(position_usize).position(|b| b == &0);
         if let Some(null_pos) = null_pos {
-            let null_pos_u64 = u64::try_from(null_pos).unwrap();
+            let null_pos_u64 = u64::try_from(null_pos)?;
             match std::str::from_utf8(&self[position_usize..null_pos]) {
                 Ok(str) => {
                     *position = null_pos_u64
@@ -435,9 +445,9 @@ impl ZeroCopyReadAt for Vec<u8> {
         position: &mut u64,
         len: usize,
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
-        let new_position = position.checked_add(len as u64).unwrap();
-        let new_position_usize = usize::try_from(new_position).unwrap();
-        let position_usize = usize::try_from(*position).unwrap();
+        let new_position = position.checked_add(len as u64).ok_or_else(|| ReadError::int_under_overflow())?;
+        let new_position_usize = usize::try_from(new_position)?;
+        let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
             Err(ReadError::io_error(
                 *position,
@@ -453,11 +463,11 @@ impl ZeroCopyReadAt for Vec<u8> {
         &'rf self,
         position: &mut u64,
     ) -> Result<Cow<'rf, str>, ReadError> {
-        let position_usize = usize::try_from(*position).unwrap();
+        let position_usize = usize::try_from(*position)?;
         // Find the null byte, starting at `position_usize`
         let null_pos = self.iter().skip(position_usize).position(|b| b == &0);
         if let Some(null_pos) = null_pos {
-            let null_pos_u64 = u64::try_from(null_pos).unwrap();
+            let null_pos_u64 = u64::try_from(null_pos)?;
             match std::str::from_utf8(&self[position_usize..null_pos]) {
                 Ok(str) => {
                     *position = null_pos_u64
@@ -544,8 +554,8 @@ pub trait ZeroCopyReadAtExt: ZeroCopyReadAt {
         let result: Result<_, _> = try {
             let len = L::read_len_at(self, position)?;
             match self.read_slice_at(position, len)? {
-                Cow::Borrowed(slice) => std::str::from_utf8(slice).map(Cow::Borrowed).unwrap(),
-                Cow::Owned(vec) => String::from_utf8(vec).map(Cow::Owned).unwrap(),
+                Cow::Borrowed(slice) => std::str::from_utf8(slice).map(Cow::Borrowed).map_err(|e| ReadError::invalid_utf8(len, *position, e))?,
+                Cow::Owned(vec) => String::from_utf8(vec).map(Cow::Owned).map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))?,
             }
         };
         if result.is_err() {
