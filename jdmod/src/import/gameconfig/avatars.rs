@@ -356,10 +356,10 @@ static GAME_AVATAR_ID_NAME_MAP: OnceLock<HashMap<Game, HashMap<u16, AvatarInfo>>
 fn get_name(game: Game, avatar_id: u16) -> Result<AvatarInfo, String> {
     get_map()
         .get(&game)
-        .ok_or_else(|| format!("Unsupported game: {game}"))?
+        .ok_or_else(|| format!("Unsupported game for avatar parsing: {game}"))?
         .get(&avatar_id)
         .copied()
-        .ok_or_else(|| format!("Unknown ID: {avatar_id}"))
+        .ok_or_else(|| format!("Unknown Avatar ID: {avatar_id}"))
 }
 
 /// Get the static map which maps avatar ids to their proper names for each game
@@ -460,11 +460,11 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     ),
                     (
                         1619,
-                        AvatarInfo::new("FreedfromDesire_0", "FreedfromDesire", 0, false),
+                        AvatarInfo::new("FreedFromDesire_0", "FreedFromDesire", 0, false),
                     ),
                     (
                         1620,
-                        AvatarInfo::new("FreedfromDesire_0_Gold", "FreedfromDesire", 0, true),
+                        AvatarInfo::new("FreedFromDesire_0_Gold", "FreedFromDesire", 0, true),
                     ),
                     (1633, AvatarInfo::new("China_0", "China", 0, false)),
                     (1634, AvatarInfo::new("China_1", "China", 1, false)),
@@ -547,11 +547,11 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     (1683, AvatarInfo::new("Mood_1_Gold", "Mood", 1, true)),
                     (
                         1684,
-                        AvatarInfo::new("JoppingAlt_0", "JoppingAlt", 0, false),
+                        AvatarInfo::new("JoppingALT_0", "JoppingALT", 0, false),
                     ),
                     (
                         1685,
-                        AvatarInfo::new("JoppingAlt_0_Gold", "JoppingAlt", 0, true),
+                        AvatarInfo::new("JoppingALT_0_Gold", "JoppingALT", 0, true),
                     ),
                     (1686, AvatarInfo::new("BlackMam_0", "BlackMam", 0, false)),
                     (1687, AvatarInfo::new("BlackMam_1", "BlackMam", 1, false)),

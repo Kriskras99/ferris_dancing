@@ -112,10 +112,6 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
         }
     }
 
-    // Make game and platform easily accessible
-    let platform = sfat_vfs.unique_game_id().platform;
-    let game = sfat_vfs.unique_game_id().game;
-
     // Import songs and other content from the game
     import::import_vfs(&sfat_vfs, dir_root, sfat_vfs.unique_game_id(), false, false)?;
 

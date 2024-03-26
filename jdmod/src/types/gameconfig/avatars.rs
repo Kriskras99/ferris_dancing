@@ -39,8 +39,10 @@ pub struct Avatar<'a> {
 pub enum UnlockType<'a> {
     /// Information is missing
     Unknown,
-    /// Information is missing
+    /// only in 2020 so maybe anniversary?
     Unknown6,
+    /// only in 2017-2018 so maybe Dance Quest?
+    Unknown11,
     /// Gacha machine
     GiftMachine,
     /// Have a save file from a previous Just Dance
@@ -58,6 +60,7 @@ impl From<&UnlockType<'_>> for u8 {
         match value {
             UnlockType::Unknown => 0,
             UnlockType::Unknown6 => 6,
+            UnlockType::Unknown11 => 11,
             UnlockType::GiftMachine => 18,
             UnlockType::PlayPreviousJD => 19,
             UnlockType::Unlocked => 20,
@@ -83,6 +86,7 @@ impl<'a> UnlockType<'a> {
                 None => Ok(Self::Unknown),
             },
             6 => Ok(Self::Unknown6),
+            11 => Ok(Self::Unknown11),
             18 => Ok(Self::GiftMachine),
             19 => Ok(Self::PlayPreviousJD),
             20 => Ok(Self::Unlocked),
@@ -104,7 +108,8 @@ impl<'a> UnlockType<'a> {
             | Self::Unlimited
             | Self::Unlocked
             | Self::Unknown
-            | Self::Unknown6 => Self::Unlocked,
+            | Self::Unknown6
+            | Self::Unknown11 => Self::Unlocked,
             Self::Quest(s) => Self::Quest(s),
         }
     }

@@ -5,10 +5,7 @@ use std::path::{Path, PathBuf};
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::{
-    alias8::Alias8,
-    utils::{Game, Platform, UniqueGameId},
-};
+use ubiart_toolkit::{alias8::Alias8, utils::UniqueGameId};
 
 use self::localisation::LocaleIdMap;
 
