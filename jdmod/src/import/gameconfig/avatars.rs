@@ -126,15 +126,20 @@ pub fn import_v20v22(
             let avatar_image_phone_path = format!("{name}/avatar_phone.png");
 
             let main_avatar = avatar_info.main_avatar().map(Cow::Borrowed);
-            if !avatar_desc.relative_song_name.is_empty() {
-                assert!(
-                    avatar_desc.relative_song_name == avatar_info.map,
-                    "Map does not equal relative song!"
-                )
-            }
+            let relative_song_name = if !avatar_desc.relative_song_name.is_empty() {
+                if avatar_desc.relative_song_name != avatar_info.map {
+                    println!(
+                        "Map ({}) does not equal relative song ({})!",
+                        avatar_info.map, avatar_desc.relative_song_name
+                    );
+                }
+                Some(avatar_desc.relative_song_name)
+            } else {
+                Some(Cow::Borrowed(avatar_info.map))
+            };
 
             let avatar = Avatar {
-                relative_song_name: Some(Cow::Borrowed(avatar_info.map)),
+                relative_song_name,
                 sound_family: avatar_desc.sound_family,
                 status: avatar_desc.status,
                 unlock_type: UnlockType::from_unlock_type(
@@ -220,15 +225,20 @@ pub fn import_v17v19(
             let avatar_image_phone_path = format!("{name}/avatar_phone.png");
 
             let main_avatar = avatar_info.main_avatar().map(Cow::Borrowed);
-            if !avatar_desc.relative_song_name.is_empty() {
-                assert!(
-                    avatar_desc.relative_song_name == avatar_info.map,
-                    "Map does not equal relative song!"
-                )
-            }
+            let relative_song_name = if !avatar_desc.relative_song_name.is_empty() {
+                if avatar_desc.relative_song_name != avatar_info.map {
+                    println!(
+                        "Map ({}) does not equal relative song ({})!",
+                        avatar_info.map, avatar_desc.relative_song_name
+                    );
+                }
+                Some(avatar_desc.relative_song_name)
+            } else {
+                Some(Cow::Borrowed(avatar_info.map))
+            };
 
             let avatar = Avatar {
-                relative_song_name: Some(Cow::Borrowed(avatar_info.map)),
+                relative_song_name,
                 sound_family: avatar_desc.sound_family,
                 status: avatar_desc.status,
                 unlock_type: UnlockType::from_unlock_type(
