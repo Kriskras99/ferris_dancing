@@ -2961,10 +2961,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         254,
                         AvatarInfo::new("WilliamTell_0", "WilliamTell", 0, false),
                     ),
-                    (
-                        260,
-                        AvatarInfo::new("NintendoMario", "NintendoMario", 0, false),
-                    ),
+                    (260, AvatarInfo::new("MarioNx", "MarioNx", 0, false)),
                     (274, AvatarInfo::new("Chiwawa_0", "Chiwawa", 0, false)),
                     (
                         309,
