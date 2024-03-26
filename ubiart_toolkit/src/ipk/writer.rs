@@ -1,17 +1,18 @@
-use std::io::Write;
-use std::{fs::File, io::BufWriter, path::Path};
+use std::{
+    fs::File,
+    io::{BufWriter, Write},
+    path::Path,
+};
 
-use dotstar_toolkit_utils::bytes::write::CursorAt;
-use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
-        write::{BinarySerialize, WriteAt, WriteError},
+        write::{BinarySerialize, CursorAt, WriteAt, WriteError},
     },
     testing::test,
+    vfs::VirtualFileSystem,
 };
-use flate2::write::ZlibEncoder;
-use flate2::Compression;
+use flate2::{write::ZlibEncoder, Compression};
 
 use super::{Platform, MAGIC};
 use crate::utils::{self, Game, SplitPath, UniqueGameId};

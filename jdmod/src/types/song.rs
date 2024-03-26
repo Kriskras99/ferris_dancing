@@ -1,21 +1,25 @@
 //! # Song types
 //! Types used to describe songs
 
-use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
-use std::path::{Path, PathBuf};
-use std::{borrow::Cow, hash::Hash};
+use std::{
+    borrow::Cow,
+    cmp::Ordering,
+    collections::{BinaryHeap, HashMap},
+    hash::Hash,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{anyhow, Error};
 use hash32::{Hasher, Murmur3Hasher};
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::json_types::tape::BezierCurveFloatValue;
-use ubiart_toolkit::utils::Platform;
-use ubiart_toolkit::{json_types, utils::LocaleId};
+use ubiart_toolkit::{
+    json_types,
+    json_types::tape::BezierCurveFloatValue,
+    utils::{LocaleId, Platform},
+};
 
-use crate::regex;
-use crate::utils::cow_regex_single_capture;
+use crate::{regex, utils::cow_regex_single_capture};
 
 /// Directory structure of a song
 pub struct SongDirectoryTree {

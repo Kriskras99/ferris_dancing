@@ -1,21 +1,22 @@
 //! # Export
 //! Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
-use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{bail, Error};
 use clap::Args;
-use dotstar_toolkit_utils::vfs::symlinkfs::SymlinkFs;
-use dotstar_toolkit_utils::vfs::vecfs::VecFs;
-use dotstar_toolkit_utils::vfs::{layeredfs::OverlayFs, native::NativeFs};
-use ubiart_toolkit::ipk::vfs::IpkFilesystem;
-use ubiart_toolkit::utils::Platform;
+use dotstar_toolkit_utils::vfs::{
+    layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
+};
+use ubiart_toolkit::{ipk::vfs::IpkFilesystem, utils::Platform};
 
-use crate::build::BuildFiles;
-use crate::build::BuildState;
-use crate::types::song::SongDirectoryTree;
-use crate::types::Config;
-use crate::{build, types::DirectoryTree};
+use crate::{
+    build,
+    build::{BuildFiles, BuildState},
+    types::{song::SongDirectoryTree, Config, DirectoryTree},
+};
 
 mod bundle;
 

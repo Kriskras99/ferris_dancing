@@ -1,13 +1,14 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use std::borrow::Cow;
-use std::collections::{hash_map::Entry, HashMap};
+use std::{
+    borrow::Cow,
+    collections::{hash_map::Entry, HashMap},
+};
 
-use dotstar_toolkit_utils::bytes::primitives::{u24be, u32be};
-use dotstar_toolkit_utils::bytes::read::ZeroCopyReadAtExt;
 use dotstar_toolkit_utils::{
     bytes::{
-        read::{BinaryDeserialize, ReadError},
+        primitives::{u24be, u32be},
+        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::test,
