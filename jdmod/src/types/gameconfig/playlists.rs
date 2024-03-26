@@ -37,7 +37,7 @@ impl<'a> Playlist<'a> {
         let cover = if file_stem.starts_with("jd") {
             Cow::Owned(format!("{file_stem}.png"))
         } else {
-            match is.game {
+            match is.ugi.game {
                 ubiart_toolkit::utils::Game::JustDance2014 => {
                     Cow::Owned(format!("jd14_{file_stem}.png"))
                 }

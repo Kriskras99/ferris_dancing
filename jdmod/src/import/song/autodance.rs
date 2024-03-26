@@ -13,7 +13,7 @@ use crate::{types::song::Autodance, utils::cook_path};
 pub fn import(sis: &SongImportState<'_>, autodance_path: &str) -> Result<(), Error> {
     let autodance_file = sis
         .vfs
-        .open(cook_path(autodance_path, sis.platform)?.as_ref())?;
+        .open(cook_path(autodance_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&autodance_file, sis.lax)?.actor()?;
     test(&actor.components.len(), &1).context("More than one component in actor!")?;
     let autodance = actor.components.swap_remove(0).autodance_component()?;

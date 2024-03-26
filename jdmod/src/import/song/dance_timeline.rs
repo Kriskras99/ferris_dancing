@@ -16,7 +16,7 @@ use crate::{
 pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<(), Error> {
     let dance_timeline_file = sis
         .vfs
-        .open(cook_path(dance_timeline_path, sis.platform)?.as_ref())?;
+        .open(cook_path(dance_timeline_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&dance_timeline_file, sis.lax)?.actor()?;
     test(&actor.components.len(), &1).context("More than one component in actor!")?;
     let tape_case = actor.components.swap_remove(0).tape_case_component()?;
@@ -27,7 +27,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
         .ok_or_else(|| anyhow!("Incomplete tapes rack!"))?
         .path
         .as_ref();
-    let dance_tml_path = cook_path(tape_case_path, sis.platform)?;
+    let dance_tml_path = cook_path(tape_case_path, sis.ugi.platform)?;
 
     let tape_file = sis.vfs.open(dance_tml_path.as_ref())?;
     let template = cooked::json::parse_v22(&tape_file, sis.lax)?;
@@ -42,7 +42,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
             "world/maps/{}/timeline/pictos/montage.png",
             sis.lower_map_name
         ),
-        sis.platform,
+        sis.ugi.platform,
     )?;
 
     let mut montage_vec = sis.vfs.exists(montage_path.as_ref()).then(Vec::new);
@@ -56,7 +56,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
 
                 // Classifier path does not include platform specifier
                 let classifier_path =
-                    MotionClip::fix_classifier_path(&classifier_path, sis.platform)?;
+                    MotionClip::fix_classifier_path(&classifier_path, sis.ugi.platform)?;
 
                 // Save the classifier
                 if let Ok(from) = sis.vfs.open(classifier_path.as_ref()) {
@@ -79,7 +79,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                         vec.push(new_picto.picto_filename.clone());
                     }
                 } else {
-                    let cooked_path = cook_path(&picto_path, sis.platform)?;
+                    let cooked_path = cook_path(&picto_path, sis.ugi.platform)?;
                     match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
                         (Ok(from), _) => {
                             let decooked_picto = decode_texture(&from)?;

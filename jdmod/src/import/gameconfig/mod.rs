@@ -25,10 +25,10 @@ pub fn import(is: &ImportState<'_>) -> Result<(), Error> {
         &is.aliases
             .get_path_for_alias("gameconfig")
             .ok_or_else(|| anyhow!("common.alias8 does not contain gameconfig path!"))?,
-        is.platform,
+        is.ugi.platform,
     )?;
 
-    match is.game {
+    match is.ugi.game {
         Game::JustDance2017 => import_v17(is, &gameconfig_path)?,
         Game::JustDance2018 => import_v18(is, &gameconfig_path)?,
         Game::JustDance2019 => import_v19(is, &gameconfig_path)?,

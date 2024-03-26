@@ -85,12 +85,10 @@ pub fn import(
 
         // TODO: Check engine version and warn user they're missing an update
 
-        // Make game and platform easily accessible
-        let platform = platform.unwrap_or_else(|| sfat_vfs.game_platform().platform);
-        let game = game.unwrap_or_else(|| sfat_vfs.game_platform().game);
+        let unique_game_id = sfat_vfs.unique_game_id();
 
         // Import songs and other content from the game
-        import_vfs(&sfat_vfs, dir_root, game, platform, lax, songs_only)?;
+        import_vfs(&sfat_vfs, dir_root, unique_game_id, lax, songs_only)?;
     } else if game_path.is_dir() {
         let native_vfs = NativeFs::new(game_path)?;
 
@@ -108,7 +106,13 @@ pub fn import(
             Platform::Nx
         };
 
-        import_vfs(&native_vfs, dir_root, game, platform, lax, songs_only)?;
+        let unique_game_id = UniqueGameId {
+            game,
+            platform,
+            id: 0,
+        };
+
+        import_vfs(&native_vfs, dir_root, unique_game_id, lax, songs_only)?;
     } else {
         return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf and raw import are supported!"));
     }
@@ -120,12 +124,18 @@ pub fn import(
 pub fn import_vfs(
     vfs: &dyn VirtualFileSystem,
     dir_root: &Path,
-    game: Game,
-    platform: Platform,
+    ugi: UniqueGameId,
     lax: bool,
     songs_only: bool,
 ) -> Result<(), Error> {
-    println!("Importing {game} for {platform}");
+    if ugi.id == 0 {
+        println!("Importing {} for {}", ugi.game, ugi.platform);
+    } else {
+        println!(
+            "Importing {} for {} (UGI: {:x})",
+            ugi.game, ugi.platform, ugi.id
+        );
+    }
 
     // Make sure the directory tree is intact
     let dirs = DirectoryTree::new(dir_root);
@@ -142,13 +152,7 @@ pub fn import_vfs(
     let is = ImportState {
         vfs,
         dirs,
-        game,
-        platform,
-        unique_game_id: UniqueGameId {
-            game,
-            platform,
-            id: 0,
-        },
+        ugi,
         locale_id_map,
         aliases,
         lax,
@@ -160,11 +164,11 @@ pub fn import_vfs(
             &is.aliases
                 .get_path_for_alias("gameconfig")
                 .ok_or_else(|| anyhow!("common.alias8 does not contain gameconfig path!"))?,
-            is.platform,
+            is.ugi.platform,
         )?;
         let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
 
-        let songdb_scene = match game {
+        let songdb_scene = match ugi.game {
             Game::JustDance2017 => {
                 let parsed_json =
                     cooked::json::parse_v17(&gameconfig_file, true)?.game_manager_config()?;

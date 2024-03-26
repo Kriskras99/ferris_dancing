@@ -49,7 +49,7 @@ pub fn import(
                     .texture_set
                     .gfx_material_texture_path_set
                     .diffuse,
-                sis.platform,
+                sis.ugi.platform,
             )?;
 
             let from = match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {

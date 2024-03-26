@@ -48,8 +48,8 @@ fn save_images(
     std::fs::create_dir(&avatar_named_dir_path)?;
     let alt_actor_file = is
         .vfs
-        .open(cook_path(actor_path.as_ref(), is.platform)?.as_ref())?;
-    let alt_actor = cooked::act::parse(&alt_actor_file, &mut 0, is.unique_game_id)?;
+        .open(cook_path(actor_path.as_ref(), is.ugi.platform)?.as_ref())?;
+    let alt_actor = cooked::act::parse(&alt_actor_file, &mut 0, is.ugi)?;
 
     let image_actor = alt_actor
         .components
@@ -60,7 +60,7 @@ fn save_images(
     // Save decooked image
     let image_path = mtg.files[0].to_string();
     test(&image_path.is_empty(), &false)?;
-    let cooked_image_path = cook_path(&image_path, is.platform)?;
+    let cooked_image_path = cook_path(&image_path, is.ugi.platform)?;
     let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?)?;
     let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
     decooked_image.save(&avatar_image_path)?;
@@ -87,7 +87,7 @@ pub fn import_v20v22(
     // Open the avatardb and avatarsobjectives (which might be empty)
     let avatardb_file = is
         .vfs
-        .open(cook_path(avatardb_scene, is.platform)?.as_ref())?;
+        .open(cook_path(avatardb_scene, is.ugi.platform)?.as_ref())?;
     let avatardb = cooked::isc::parse(&avatardb_file)?;
     let avatarsobjectives = avatarsobjectives.unwrap_or(&empty_objectives);
 
@@ -102,14 +102,14 @@ pub fn import_v20v22(
         // Extract avatar description from template
         let file = is
             .vfs
-            .open(cook_path(actor.lua.as_ref(), is.platform)?.as_ref())?;
+            .open(cook_path(actor.lua.as_ref(), is.ugi.platform)?.as_ref())?;
         let template = cooked::json::parse_v22(&file, is.lax)?;
         let mut actor_template = template.actor()?;
         test(&actor_template.components.len(), &2)
             .context("Not exactly two components in actor")?;
         let avatar_desc = actor_template.components.remove(1).avatar_description()?;
 
-        let name = match get_name(is.game, avatar_desc.avatar_id) {
+        let name = match get_name(is.ugi.game, avatar_desc.avatar_id) {
             Ok(name) => name,
             Err(error) => {
                 println!("{error}");
@@ -198,7 +198,7 @@ pub fn import_v17v19(
     // Open the avatardb and avatarsobjectives (which might be empty)
     let avatardb_file = is
         .vfs
-        .open(cook_path(avatardb_scene, is.platform)?.as_ref())?;
+        .open(cook_path(avatardb_scene, is.ugi.platform)?.as_ref())?;
     let avatardb = cooked::isc::parse(&avatardb_file)?;
     let avatarsobjectives = avatarsobjectives.unwrap_or(&empty_objectives);
 
@@ -213,14 +213,14 @@ pub fn import_v17v19(
         // Extract avatar description from template
         let file = is
             .vfs
-            .open(cook_path(actor.lua.as_ref(), is.platform)?.as_ref())?;
+            .open(cook_path(actor.lua.as_ref(), is.ugi.platform)?.as_ref())?;
         let template = cooked::json::parse_v19(&file, is.lax)?;
         let mut actor_template = template.actor()?;
         test(&actor_template.components.len(), &2)
             .context("Not exactly two components in actor")?;
         let avatar_desc = actor_template.components.remove(1).avatar_description()?;
 
-        let name = match get_name(is.game, avatar_desc.avatar_id) {
+        let name = match get_name(is.ugi.game, avatar_desc.avatar_id) {
             Ok(name) => name,
             Err(error) => {
                 println!("{error}");
@@ -238,6 +238,7 @@ pub fn import_v17v19(
     for avatar_desc in avatar_descriptions {
         let name = id_map[&avatar_desc.avatar_id];
         let mut split = name.split('_');
+        println!("{name}");
         let map_name = Cow::Borrowed(split.next().unwrap());
         let coach_id = Cow::Borrowed(split.next().unwrap());
         let gold = split.next() == Some("Gold");
@@ -313,7 +314,7 @@ fn import_unreferenced_avatars(
     is: &ImportState<'_>,
     avatars: &mut HashMap<String, Avatar>,
 ) -> Result<(), Error> {
-    let import_path = cook_path("world/avatars/", is.platform)?;
+    let import_path = cook_path("world/avatars/", is.ugi.platform)?;
     for avatar_id in is
         .vfs
         .walk_filesystem(import_path.as_ref())?
@@ -327,7 +328,7 @@ fn import_unreferenced_avatars(
         .map(str::parse::<u16>)
         .flatten()
     {
-        let name = match get_name(is.game, avatar_id) {
+        let name = match get_name(is.ugi.game, avatar_id) {
             Ok(name) => name,
             Err(error) => {
                 println!("{error}");
@@ -363,7 +364,7 @@ fn import_unreferenced_avatars(
             // Save decooked image
             let cooked_image_path = cook_path(
                 &format!("world/avatars/{avatar_id:0>4}/avatar.png"),
-                is.platform,
+                is.ugi.platform,
             )?;
             let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?)?;
             let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());

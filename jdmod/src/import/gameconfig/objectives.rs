@@ -22,7 +22,7 @@ pub fn import_v20v22(is: &ImportState<'_>, objectives_path: &str) -> Result<(), 
 
     let objectives_file = is
         .vfs
-        .open(cook_path(objectives_path, is.platform)?.as_ref())?;
+        .open(cook_path(objectives_path, is.ugi.platform)?.as_ref())?;
     let parsed_json = cooked::json::parse_v22(&objectives_file, is.lax)?;
     let objective_database = parsed_json.objectives_database()?;
     for (name, descriptor) in &objective_database.objective_descs {

@@ -6,7 +6,7 @@ use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
-    utils::{Game, Platform},
+    utils::{Game, Platform, UniqueGameId},
 };
 
 mod autodance;
@@ -37,10 +37,8 @@ pub struct SongImportState<'a> {
     pub lower_map_name: &'a str,
     /// The directory structure for this song
     pub dirs: SongDirectoryTree,
-    /// The game it's being imported from
-    pub game: Game,
-    /// The platform it's being imported from
-    pub platform: Platform,
+    /// Game and platform
+    pub ugi: UniqueGameId,
     /// The map from game locale id to mod locale id
     pub locale_id_map: &'a LocaleIdMap,
     /// Should we be lax with parsing
@@ -51,7 +49,7 @@ pub struct SongImportState<'a> {
 pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let songdesc_file = is
         .vfs
-        .open(cook_path(songdesc_path, is.platform)?.as_ref())?;
+        .open(cook_path(songdesc_path, is.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&songdesc_file, is.lax)?.actor()?;
     let songdesc = actor.components.swap_remove(0).song_description()?;
 
@@ -85,8 +83,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         map_name,
         lower_map_name: &lower_map_name,
         dirs,
-        game: is.game,
-        platform: is.platform,
+        ugi: is.ugi,
         locale_id_map: &is.locale_id_map,
         lax: is.lax,
     };
@@ -94,7 +91,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     println!("Parsing {map_name}");
     let main_scene_path = cook_path(
         &format!("world/maps/{lower_map_name}/{lower_map_name}_main_scene.isc"),
-        is.platform,
+        is.ugi.platform,
     )?;
     let main_scene_file = is.vfs.open(main_scene_path.as_ref())?;
     let main_scene = cooked::isc::parse(&main_scene_file)?.scene;
@@ -169,7 +166,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
                     "world/maps/{}/menuart/{}_menuart.isc",
                     sis.lower_map_name, sis.lower_map_name
                 ),
-                sis.platform,
+                sis.ugi.platform,
             )?;
             let scene_file = sis.vfs.open(cooked_path.as_ref())?;
             let scene = cooked::isc::parse(&scene_file)?.scene;

@@ -19,7 +19,7 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
 
     let new_portraitborders = is
         .vfs
-        .open(cook_path(portraitborders_path, is.platform)?.as_ref())?;
+        .open(cook_path(portraitborders_path, is.ugi.platform)?.as_ref())?;
     let template = cooked::json::parse_v22(&new_portraitborders, is.lax)?;
     let portrait_borders_database = template.portrait_borders_database()?;
 
@@ -42,7 +42,7 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
             // Save the background and foreground textures and phone images (if they exist)
             let background_texture = is
                 .vfs
-                .open(cook_path(&desc.background_texture_path, is.platform)?.as_ref())?;
+                .open(cook_path(&desc.background_texture_path, is.ugi.platform)?.as_ref())?;
             let background_texture_decoded = decode_texture(&background_texture)?;
             background_texture_decoded.save(
                 is.dirs
@@ -53,7 +53,7 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
             if let Some(foreground_texture_path) = &pb.foreground_texture_path {
                 let foreground_texture = is
                     .vfs
-                    .open(cook_path(&desc.foreground_texture_path, is.platform)?.as_ref())?;
+                    .open(cook_path(&desc.foreground_texture_path, is.ugi.platform)?.as_ref())?;
                 let foreground_texture_decoded = decode_texture(&foreground_texture)?;
                 foreground_texture_decoded.save(
                     is.dirs

@@ -27,7 +27,7 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
 
     let playlists_file = is
         .vfs
-        .open(cook_path(playlist_path, is.platform)?.as_ref())?;
+        .open(cook_path(playlist_path, is.ugi.platform)?.as_ref())?;
     let parsed_json = cooked::json::parse_v22(&playlists_file, is.lax)?;
     let playlist_database = parsed_json.playlists_database()?;
 
@@ -38,8 +38,8 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
         // Find the playlist cover location
         let act_file = is
             .vfs
-            .open(cook_path(&playlist.cover_path, is.platform)?.as_ref())?;
-        let actor = cooked::act::parse(&act_file, &mut 0, is.unique_game_id)?;
+            .open(cook_path(&playlist.cover_path, is.ugi.platform)?.as_ref())?;
+        let actor = cooked::act::parse(&act_file, &mut 0, is.ugi)?;
         let template = actor
             .components
             .iter()
@@ -49,7 +49,7 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
         test(&tga_path.is_empty(), &false)?;
 
         // Open the cover and save it to the mod directory
-        let cooked_tga_path = cook_path(&tga_path, is.platform)?;
+        let cooked_tga_path = cook_path(&tga_path, is.ugi.platform)?;
         let decooked_image = decode_texture(&is.vfs.open(cooked_tga_path.as_ref())?)
             .with_context(|| format!("Failure decoding texture {cooked_tga_path}!"))?;
         let new_cover_path = dir_playlists.join(new_playlist.cover.as_ref());

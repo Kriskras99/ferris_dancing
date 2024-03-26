@@ -23,7 +23,7 @@ pub struct SfatFilesystem<'f> {
 impl<'f> SfatFilesystem<'f> {
     /// Get the `GamePlatform` value for this secure_fat.gf file
     #[must_use]
-    pub const fn game_platform(&self) -> UniqueGameId {
+    pub const fn unique_game_id(&self) -> UniqueGameId {
         self.sfat.game_platform()
     }
 
