@@ -17,7 +17,6 @@ mod video;
 
 use crate::{
     types::{
-        localisation::LocaleIdMap,
         song::{Song, SongDirectoryTree, Tag},
         ImportState,
     },
@@ -28,16 +27,12 @@ use crate::{
 pub struct SongImportState<'a> {
     /// The filesystem of the game that is being pared
     pub vfs: &'a dyn VirtualFileSystem,
-    /// The map codename
-    pub map_name: &'a str,
     /// The map codename in lowercase
     pub lower_map_name: &'a str,
     /// The directory structure for this song
     pub dirs: SongDirectoryTree,
     /// Game and platform
     pub ugi: UniqueGameId,
-    /// The map from game locale id to mod locale id
-    pub locale_id_map: &'a LocaleIdMap,
     /// Should we be lax with parsing
     pub lax: bool,
 }
@@ -77,11 +72,9 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
 
     let sis = SongImportState {
         vfs: is.vfs,
-        map_name,
         lower_map_name: &lower_map_name,
         dirs,
         ugi: is.ugi,
-        locale_id_map: &is.locale_id_map,
         lax: is.lax,
     };
 

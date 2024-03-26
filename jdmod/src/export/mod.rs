@@ -9,7 +9,6 @@ use dotstar_toolkit_utils::vfs::symlinkfs::SymlinkFs;
 use dotstar_toolkit_utils::vfs::vecfs::VecFs;
 use dotstar_toolkit_utils::vfs::{layeredfs::OverlayFs, native::NativeFs};
 use ubiart_toolkit::ipk::vfs::IpkFilesystem;
-use ubiart_toolkit::utils::Game;
 use ubiart_toolkit::utils::Platform;
 
 use crate::build::BuildFiles;
@@ -86,12 +85,10 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
     let config: Config =
         serde_json::from_reader(File::open(dir_tree.dot_mod().join("config.json"))?)?;
     let platform = Platform::Nx;
-    let game = Game::JustDance2022;
     let build_state = BuildState {
         patched_base_vfs: &patched_base_vfs,
         dirs: &dir_tree,
         platform,
-        game,
         engine_version: config.engine_version,
     };
 

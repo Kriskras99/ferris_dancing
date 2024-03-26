@@ -3,7 +3,6 @@
 use std::{borrow::Cow, fs::File};
 
 use anyhow::{Context, Error};
-use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{cooked, utils::Platform};
 
 use super::{BuildFiles, BuildState};
@@ -19,8 +18,6 @@ mod videoscoach;
 
 /// State used a lot during song building
 pub struct SongExportState<'a> {
-    /// Filesystem containing the files in bundle_nx.ipk and patch_nx.ipk
-    pub patched_base_vfs: &'a dyn VirtualFileSystem,
     /// Lowercase version of the map codename
     pub lower_map_name: &'a str,
     /// The map path in the game
@@ -53,7 +50,6 @@ pub fn build(
     println!("Building song '{map_name}'...");
 
     let ses = SongExportState {
-        patched_base_vfs: bs.patched_base_vfs,
         lower_map_name: &lower_map_name,
         dirs,
         platform: bs.platform,

@@ -6,7 +6,7 @@ use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem};
 use ubiart_toolkit::{
     cooked::{self, isc, sgs},
-    utils::{Game, Platform},
+    utils::Platform,
 };
 
 use crate::{types::DirectoryTree, utils::cook_path};
@@ -23,8 +23,6 @@ pub struct BuildState<'a> {
     pub dirs: &'a DirectoryTree,
     /// Export platform
     pub platform: Platform,
-    /// Export game
-    pub game: Game,
     /// Export Engine version
     pub engine_version: u32,
 }
