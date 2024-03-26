@@ -85,6 +85,7 @@ pub enum ReadError {
 }
 
 impl ReadError {
+    #[must_use]
     pub fn int_under_overflow() -> Self {
         Self::IntUnderOverflow {
             backtrace: Backtrace::capture(),
@@ -648,6 +649,7 @@ impl<'rf, T, R: ZeroCopyReadAtExt> LenTypeIterator<'rf, T, R>
 where
     T: BinaryDeserialize<'rf>,
 {
+    #[must_use]
     pub fn current_position(&self) -> u64 {
         self.position
     }

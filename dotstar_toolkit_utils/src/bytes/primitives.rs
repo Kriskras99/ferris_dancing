@@ -27,6 +27,7 @@ macro_rules! create_uint {
         pub type $lename = $name<LittleEndian>;
 
         impl<E: Endianness> $name<E> {
+            #[must_use]
             pub fn checked_add(self, rhs: Self) -> Option<Self> {
                 $native::from(self).checked_add($native::from(rhs)).and_then(|n| Self::try_from(n).ok())
             }
@@ -205,6 +206,7 @@ macro_rules! impl_non_pow2_uint {
         }
 
         impl<E: Endianness> $name<E> {
+            #[must_use]
             pub const fn new(value: $native) -> Self {
                 if value > $max {
                     panic!(concat!("value is larger than", stringify!("$max")))

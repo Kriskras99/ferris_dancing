@@ -4,10 +4,7 @@ use std::{borrow::Cow, fs::File};
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
-use ubiart_toolkit::{
-    cooked,
-    utils::{Game, Platform, UniqueGameId},
-};
+use ubiart_toolkit::{cooked, utils::UniqueGameId};
 
 mod autodance;
 mod dance_timeline;
@@ -58,7 +55,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let song_path = is.dirs.songs().join(map_name.as_ref());
     let dirs = SongDirectoryTree::new(&song_path);
     if dirs.exists() {
-        println!("Skipping {map_name}, directory already exists!");
+        println!("Skipping {map_name}, song already imported!");
         return Ok(());
     } else if songdesc.jdm_attributes.is_some()
         || songdesc.tags.contains(&Cow::Borrowed("dancemachine"))
