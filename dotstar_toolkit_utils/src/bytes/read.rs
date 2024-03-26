@@ -407,7 +407,7 @@ impl ZeroCopyReadAt for [u8] {
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
         let new_position = position
             .checked_add(len as u64)
-            .ok_or_else(|| ReadError::int_under_overflow())?;
+            .ok_or_else(ReadError::int_under_overflow)?;
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
@@ -451,7 +451,7 @@ impl ZeroCopyReadAt for Vec<u8> {
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
         let new_position = position
             .checked_add(len as u64)
-            .ok_or_else(|| ReadError::int_under_overflow())?;
+            .ok_or_else(ReadError::int_under_overflow)?;
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
