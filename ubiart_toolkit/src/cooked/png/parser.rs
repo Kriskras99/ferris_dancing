@@ -52,7 +52,10 @@ impl BinaryDeserialize<'_> for Png {
         // Always zero for just dance 2022
         let _unk11 = reader.read_at::<u16be>(position)?;
 
-        assert!(start_position + u64::from(header_size) == *position, "Implementation is incorrect!");
+        assert!(
+            start_position + u64::from(header_size) == *position,
+            "Implementation is incorrect!"
+        );
 
         let xtx = reader.read_at::<Xtx>(position)?;
 

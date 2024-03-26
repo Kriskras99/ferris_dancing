@@ -125,7 +125,8 @@ impl VirtualFileSystem for SymlinkFs<'_> {
             paths: self
                 .mapping
                 .keys()
-                .filter_map(|p| p.strip_prefix(path).ok())
+                .filter(|p| p.starts_with(path))
+                .map(PathBuf::as_path)
                 .collect(),
         })
     }

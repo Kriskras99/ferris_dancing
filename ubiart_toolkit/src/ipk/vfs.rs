@@ -47,7 +47,10 @@ impl<'fs> IpkFilesystem<'fs> {
 }
 
 impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
-    #[allow(clippy::significant_drop_in_scrutinee, reason = "Guard is needed in the entire match")]
+    #[allow(
+        clippy::significant_drop_in_scrutinee,
+        reason = "Guard is needed in the entire match"
+    )]
     fn open<'rf>(&'rf self, path: &Path) -> std::io::Result<VirtualFile<'rf>> {
         let path_id = path_id(path);
         let file = self.bundle.get().files.get(&path_id).ok_or_else(|| {
@@ -128,7 +131,8 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
         Ok(WalkFs {
             paths: list
                 .iter()
-                .filter_map(|p| p.strip_prefix(path).ok())
+                .filter(|p| p.starts_with(path))
+                .map(PathBuf::as_path)
                 .collect(),
         })
     }

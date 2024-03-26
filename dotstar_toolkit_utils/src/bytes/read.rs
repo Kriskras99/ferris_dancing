@@ -1,6 +1,6 @@
 use std::{
-    backtrace::Backtrace, borrow::Cow, fs::File, marker::PhantomData, num::TryFromIntError,
-    ops::Deref, rc::Rc, str::Utf8Error, sync::Arc,
+    backtrace::Backtrace, borrow::Cow, fs::File, io::ErrorKind, marker::PhantomData,
+    num::TryFromIntError, ops::Deref, rc::Rc, str::Utf8Error, sync::Arc,
 };
 
 use positioned_io::{RandomAccessFile, ReadAt as PRead};
@@ -439,7 +439,10 @@ impl ZeroCopyReadAt for Vec<u8> {
         let new_position_usize = usize::try_from(new_position).unwrap();
         let position_usize = usize::try_from(*position).unwrap();
         if self.len() < (new_position_usize) {
-            todo!()
+            Err(ReadError::io_error(
+                *position,
+                ErrorKind::UnexpectedEof.into(),
+            ))
         } else {
             *position = new_position;
             Ok(Cow::Borrowed(&self[position_usize..new_position_usize]))

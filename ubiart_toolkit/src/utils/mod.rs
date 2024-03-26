@@ -541,7 +541,11 @@ fn read_u32le(data: &[u8], pos: &mut usize) -> u32 {
 
 #[must_use]
 /// Implementation of the UbiArt CRC function
-#[allow(clippy::as_conversions, clippy::cast_possible_truncation, reason = "Truncating is wanted")]
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_possible_truncation,
+    reason = "Truncating is wanted"
+)]
 pub fn ubi_crc(data: &[u8]) -> u32 {
     let length = data.len();
     let mut a: u32 = 0x9E37_79B9;

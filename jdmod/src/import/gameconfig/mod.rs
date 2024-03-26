@@ -79,7 +79,7 @@ fn import_v22(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
     aliases::import_v20v22(is, &gameconfig.alias_db_path, &gameconfig.aliasesobjectives)?;
 
     // Parse the avatars
-    avatars::import_v18v22(
+    avatars::import_v20v22(
         is,
         &gameconfig.avatardb_scene,
         Some(&gameconfig.avatarsobjectives),
@@ -132,7 +132,7 @@ fn import_v21(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
     aliases::import_v20v22(is, &gameconfig.alias_db_path, &gameconfig.aliasesobjectives)?;
 
     // Parse the avatars
-    avatars::import_v18v22(
+    avatars::import_v20v22(
         is,
         &gameconfig.avatardb_scene,
         Some(&gameconfig.avatarsobjectives),
@@ -185,7 +185,7 @@ fn import_v20(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
     aliases::import_v20v22(is, &gameconfig.alias_db_path, &gameconfig.aliasesobjectives)?;
 
     // Parse the avatars
-    avatars::import_v18v22(
+    avatars::import_v20v22(
         is,
         &gameconfig.avatardb_scene,
         Some(&gameconfig.avatarsobjectives),
@@ -238,7 +238,7 @@ fn import_v20c(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error>
     aliases::import_v20v22(is, &gameconfig.alias_db_path, &gameconfig.aliasesobjectives)?;
 
     // Parse the avatars
-    avatars::import_v18v22(
+    avatars::import_v20v22(
         is,
         &gameconfig.avatardb_scene,
         Some(&gameconfig.avatarsobjectives),
@@ -275,7 +275,7 @@ fn import_v19(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
     aliases::import_v19(is, &gameconfig.alias_db_path)?;
 
     // Parse the avatars
-    avatars::import_v18v22(is, &gameconfig.avatardb_scene, None)?;
+    avatars::import_v17v19(is, &gameconfig.avatardb_scene, None)?;
 
     // Parse the gachacontent
     gachacontent::import_v18v22(is, &gameconfig.gachaconfig)?;
@@ -296,7 +296,7 @@ fn import_v18(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
     scheduled_quests::import_v18v19(is, gameconfig.scheduled_quests)?;
 
     // Parse the avatars
-    avatars::import_v18v22(is, &gameconfig.avatardb_scene, None)?;
+    avatars::import_v17v19(is, &gameconfig.avatardb_scene, None)?;
 
     // Parse the gachacontent
     gachacontent::import_v18v22(is, &gameconfig.gachaconfig)?;
@@ -312,6 +312,9 @@ fn import_v17(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v17(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.game_manager_config()?;
+
+    // Parse the avatars
+    avatars::import_v17v19(is, &gameconfig.avatardb_scene, None)?;
 
     // Parse the songdb
     songdb::import(is, &gameconfig.songdb_scene)?;

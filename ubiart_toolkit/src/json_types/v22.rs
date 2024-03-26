@@ -408,7 +408,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `AvatarDescription22`.
-    pub fn avatar_description(&'a self) -> Result<&'a AvatarDescription2022<'a>, ParserError> {
+    pub fn avatar_description(self) -> Result<AvatarDescription2022<'a>, ParserError> {
         if let Template22::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {
@@ -736,61 +736,31 @@ impl Default for AvatarDescription2022<'static> {
 
 impl AvatarDescription2022<'_> {
     #[must_use]
-    pub fn to_owned(&self) -> AvatarDescription2022Owned {
-        AvatarDescription2022Owned {
+    pub fn into_owned(self) -> AvatarDescription2022<'static> {
+        AvatarDescription2022 {
+            class: None,
             jd_version: self.jd_version,
-            relative_song_name: self.relative_song_name.to_string(),
-            relative_quest_id: self.relative_quest_id.to_string(),
-            relative_wdf_boss_name: self.relative_wdf_boss_name.to_string(),
-            relative_wdf_tournament_name: self.relative_wdf_tournament_name.to_string(),
-            relative_jd_rank: self.relative_jd_rank.to_string(),
-            relative_game_mode_name: self.relative_game_mode_name.to_string(),
-            sound_family: self.sound_family.to_string(),
+            relative_song_name: Cow::Owned(self.relative_song_name.into_owned()),
+            relative_quest_id: Cow::Owned(self.relative_quest_id.into_owned()),
+            relative_wdf_boss_name: Cow::Owned(self.relative_wdf_boss_name.into_owned()),
+            relative_wdf_tournament_name: Cow::Owned(
+                self.relative_wdf_tournament_name.into_owned(),
+            ),
+            relative_jd_rank: Cow::Owned(self.relative_jd_rank.into_owned()),
+            relative_game_mode_name: Cow::Owned(self.relative_game_mode_name.into_owned()),
+            sound_family: Cow::Owned(self.sound_family.into_owned()),
             status: self.status,
             unlock_type: self.unlock_type,
             mojo_price: self.mojo_price,
             wdf_level: self.wdf_level,
             count_in_progression: self.count_in_progression,
-            actor_path: self.actor_path.to_string(),
-            phone_image: self.phone_image.to_string(),
+            actor_path: Cow::Owned(self.actor_path.into_owned()),
+            phone_image: Cow::Owned(self.phone_image.into_owned()),
             avatar_id: self.avatar_id,
-            used_as_coach_map_name: self.used_as_coach_map_name.to_string(),
+            used_as_coach_map_name: Cow::Owned(self.used_as_coach_map_name.into_owned()),
             used_as_coach_coach_id: self.used_as_coach_coach_id,
             special_effect: self.special_effect,
             main_avatar_id: self.main_avatar_id,
         }
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-pub struct AvatarDescription2022Owned {
-    pub jd_version: u16,
-    pub relative_song_name: String,
-    #[serde(rename = "RelativeQuestID")]
-    pub relative_quest_id: String,
-    #[serde(rename = "RelativeWDFBossName")]
-    pub relative_wdf_boss_name: String,
-    #[serde(rename = "RelativeWDFTournamentName")]
-    pub relative_wdf_tournament_name: String,
-    #[serde(rename = "RelativeJDRank")]
-    pub relative_jd_rank: String,
-    pub relative_game_mode_name: String,
-    pub sound_family: String,
-    pub status: u8,
-    pub unlock_type: u8,
-    pub mojo_price: u16,
-    pub wdf_level: u8,
-    pub count_in_progression: u8,
-    pub actor_path: String,
-    pub phone_image: String,
-    pub avatar_id: u16,
-    #[serde(rename = "UsedAsCoach_MapName")]
-    pub used_as_coach_map_name: String,
-    #[serde(rename = "UsedAsCoach_CoachId")]
-    pub used_as_coach_coach_id: u8,
-    #[serde(rename = "specialEffect")]
-    pub special_effect: u8,
-    #[serde(rename = "mainAvatarId")]
-    pub main_avatar_id: u16,
 }
