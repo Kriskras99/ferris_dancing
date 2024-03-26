@@ -3,7 +3,7 @@ use std::{marker::PhantomData, num::TryFromIntError};
 use super::{
     endian::{BigEndian, Endianness, LittleEndian},
     read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
-    write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
+    write::{BinarySerialize, WriteAt, WriteError},
     Len,
 };
 
@@ -122,7 +122,7 @@ macro_rules! create_uint {
             #[inline(always)]
             fn serialize_at(
                 &self,
-                writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+                writer: &mut (impl WriteAt + ?Sized),
                 position: &mut u64,
             ) -> Result<(), WriteError> {
                 let mut bytes = self.bytes.clone();

@@ -1,6 +1,6 @@
 use std::{
     backtrace::Backtrace, borrow::Cow, fs::File, io::ErrorKind, marker::PhantomData,
-    num::TryFromIntError, ops::Deref, rc::Rc, str::Utf8Error, sync::Arc,
+    num::TryFromIntError, ops::Deref, rc::Rc, str::Utf8Error, string::FromUtf8Error, sync::Arc,
 };
 
 use positioned_io::{RandomAccessFile, ReadAt as PRead};
@@ -21,18 +21,15 @@ pub enum ReadError {
         context: String,
     },
     /// Encountered invalid UTF-8 when trying to read a string from source
-    #[error("invalid UTF-8 encountered, attempted to read a string of length {n} at {position}")]
+    #[error("invalid UTF-8 encountered: {error}")]
     InvalidUTF8 {
-        /// Position in the source
-        position: u64,
-        /// Amount of bytes that were needed
-        n: usize,
         /// Original UTF-8 error
+        #[from]
         error: Utf8Error,
         /// Backtrace
         backtrace: Backtrace,
     },
-    #[error("no null-byte for null terminated string, attempted to read a string at {position}")]
+    #[error("no null-byte for null terminated string, while reading a string at {position}")]
     /// Encountered no null byte when trying to read a null-terminated string
     NoNullByte {
         /// Position in the source
@@ -41,17 +38,16 @@ pub enum ReadError {
         backtrace: Backtrace,
     },
     /// Encountered an I/O error while trying to read from the source
-    #[error("IoError occured while trying to read from the source at {position}: {error}")]
+    #[error("io error occured while trying to read from the source: {error}")]
     IoError {
-        /// Position in the source
-        position: u64,
         /// The error
+        #[from]
         error: std::io::Error,
         /// Backtrace
         backtrace: Backtrace,
     },
     /// A read value did not match the expected value
-    #[error("read a unexpected value: {test:?}")]
+    #[error("test failed: {test:?}")]
     Test {
         /// The original test error
         #[from]
@@ -68,7 +64,7 @@ pub enum ReadError {
         /// Backtrace
         backtrace: Backtrace,
     },
-    /// A custom error
+    /// Create a custom [`ReadError`]
     #[error("{string}")]
     Custom {
         /// The error description
@@ -84,21 +80,24 @@ pub enum ReadError {
     },
 }
 
+impl From<FromUtf8Error> for ReadError {
+    fn from(value: FromUtf8Error) -> Self {
+        value.utf8_error().into()
+    }
+}
+
 impl ReadError {
     #[must_use]
-    pub fn int_under_overflow() -> Self {
-        Self::IntUnderOverflow {
+    pub fn unexpected_eof() -> Self {
+        Self::IoError {
+            error: ErrorKind::UnexpectedEof.into(),
             backtrace: Backtrace::capture(),
         }
     }
 
-    /// Create the [`ReadError::InvalidUTF8`] error
     #[must_use]
-    pub fn invalid_utf8(n: usize, position: u64, error: Utf8Error) -> Self {
-        Self::InvalidUTF8 {
-            n,
-            position,
-            error,
+    pub fn int_under_overflow() -> Self {
+        Self::IntUnderOverflow {
             backtrace: Backtrace::capture(),
         }
     }
@@ -108,16 +107,6 @@ impl ReadError {
     pub fn no_null_byte(position: u64) -> Self {
         Self::NoNullByte {
             position,
-            backtrace: Backtrace::capture(),
-        }
-    }
-
-    /// Create the [`ReadError::IoError`] error
-    #[must_use]
-    pub fn io_error(position: u64, error: std::io::Error) -> Self {
-        Self::IoError {
-            position,
-            error,
             backtrace: Backtrace::capture(),
         }
     }
@@ -216,10 +205,10 @@ pub trait ZeroCopyReadAt {
             match self.read_slice_at(position, len)? {
                 Cow::Borrowed(slice) => std::str::from_utf8(slice)
                     .map(Cow::Borrowed)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e))?,
+                    .map_err(ReadError::from)?,
                 Cow::Owned(vec) => String::from_utf8(vec)
                     .map(Cow::Owned)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))?,
+                    .map_err(ReadError::from)?,
             }
         };
         if result.is_err() {
@@ -255,14 +244,11 @@ impl ZeroCopyReadAt for File {
         len: usize,
     ) -> Result<Cow<'static, [u8]>, ReadError> {
         let len_u64 = u64::try_from(len)?;
-        let new_position = position.checked_add(len_u64).ok_or_else(|| {
-            ReadError::custom(format!(
-                "Tried to add {len_u64} to {position} and overflowed"
-            ))
-        })?;
+        let new_position = position
+            .checked_add(len_u64)
+            .ok_or_else(ReadError::int_under_overflow)?;
         let mut buf = vec![0; len];
-        PRead::read_exact_at(self, *position, &mut buf)
-            .map_err(|e| ReadError::io_error(*position, e))?;
+        PRead::read_exact_at(self, *position, &mut buf).map_err(ReadError::from)?;
         *position = new_position;
         Ok(Cow::Owned(buf))
     }
@@ -279,9 +265,9 @@ impl ZeroCopyReadAt for File {
         // Keep track of search position here, so that the original position is not affected
         let mut new_position = *position;
         loop {
-            let bytes_read = PRead::read_at(self, new_position, &mut read_buf)
-                .map_err(|e| ReadError::io_error(*position, e))?;
-            let bytes_read = u64::try_from(bytes_read).unwrap_or_else(|_| unreachable!());
+            let bytes_read =
+                PRead::read_at(self, new_position, &mut read_buf).map_err(ReadError::from)?;
+            let bytes_read = u64::try_from(bytes_read)?;
             if bytes_read == 0 {
                 // End of file reached, give up
                 return Err(ReadError::no_null_byte(*position));
@@ -289,36 +275,23 @@ impl ZeroCopyReadAt for File {
             if let Some(found) = read_buf.iter().position(|b| *b == 0x0) {
                 // Found null byte, add everything upto the null byte in `result_buf`
                 result_buf.extend_from_slice(&read_buf[0..found]);
-                let found = u64::try_from(found).unwrap_or_else(|_| unreachable!());
-                let end_position = new_position.checked_add(found).ok_or_else(|| {
-                    ReadError::custom(format!("Tried to add {found} to {position} and overflowed"))
-                })?;
-                let string = String::from_utf8(result_buf).map_err(|error| {
-                    ReadError::invalid_utf8(
-                        usize::try_from(
-                            end_position
-                                .checked_sub(*position)
-                                .unwrap_or_else(|| unreachable!()),
-                        )
-                        .unwrap_or_else(|_| unreachable!()),
-                        *position,
-                        error.utf8_error(),
-                    )
-                })?;
+                let found = u64::try_from(found)?;
+                let end_position = new_position
+                    .checked_add(found)
+                    .ok_or_else(ReadError::int_under_overflow)?;
+                let string = String::from_utf8(result_buf).map_err(ReadError::from)?;
                 // Set position past the null byte
-                *position = end_position.checked_add(1).ok_or_else(|| {
-                    ReadError::custom(format!("Tried to add 1 to {end_position} and overflowed"))
-                })?;
+                *position = end_position
+                    .checked_add(1)
+                    .ok_or_else(ReadError::int_under_overflow)?;
                 return Ok(Cow::Owned(string));
             }
 
             // No null byte found, add everything to `result_buf` and search further
             result_buf.extend_from_slice(&read_buf);
-            new_position = new_position.checked_add(bytes_read).ok_or_else(|| {
-                ReadError::custom(format!(
-                    "Tried to add {bytes_read} to {new_position} and overflowed"
-                ))
-            })?;
+            new_position = new_position
+                .checked_add(bytes_read)
+                .ok_or_else(ReadError::int_under_overflow)?;
         }
     }
 }
@@ -331,14 +304,11 @@ impl ZeroCopyReadAt for RandomAccessFile {
         len: usize,
     ) -> Result<Cow<'static, [u8]>, ReadError> {
         let len_u64 = u64::try_from(len)?;
-        let new_position = position.checked_add(len_u64).ok_or_else(|| {
-            ReadError::custom(format!(
-                "Tried to add {len_u64} to {position} and overflowed"
-            ))
-        })?;
+        let new_position = position
+            .checked_add(len_u64)
+            .ok_or_else(ReadError::int_under_overflow)?;
         let mut buf = vec![0; len];
-        PRead::read_exact_at(self, *position, &mut buf)
-            .map_err(|e| ReadError::io_error(*position, e))?;
+        PRead::read_exact_at(self, *position, &mut buf).map_err(ReadError::from)?;
         *position = new_position;
         Ok(Cow::Owned(buf))
     }
@@ -355,9 +325,9 @@ impl ZeroCopyReadAt for RandomAccessFile {
         // Keep track of search position here, so that the original position is not affected
         let mut new_position = *position;
         loop {
-            let bytes_read = PRead::read_at(self, new_position, &mut read_buf)
-                .map_err(|e| ReadError::io_error(*position, e))?;
-            let bytes_read = u64::try_from(bytes_read).unwrap_or_else(|_| unreachable!());
+            let bytes_read =
+                PRead::read_at(self, new_position, &mut read_buf).map_err(ReadError::from)?;
+            let bytes_read = u64::try_from(bytes_read)?;
             if bytes_read == 0 {
                 // End of file reached, give up
                 return Err(ReadError::no_null_byte(*position));
@@ -365,36 +335,23 @@ impl ZeroCopyReadAt for RandomAccessFile {
             if let Some(found) = read_buf.iter().position(|b| *b == 0x0) {
                 // Found null byte, add everything upto the null byte in `result_buf`
                 result_buf.extend_from_slice(&read_buf[0..found]);
-                let found = u64::try_from(found).unwrap_or_else(|_| unreachable!());
-                let end_position = new_position.checked_add(found).ok_or_else(|| {
-                    ReadError::custom(format!("Tried to add {found} to {position} and overflowed"))
-                })?;
-                let string = String::from_utf8(result_buf).map_err(|error| {
-                    ReadError::invalid_utf8(
-                        usize::try_from(
-                            end_position
-                                .checked_sub(*position)
-                                .unwrap_or_else(|| unreachable!()),
-                        )
-                        .unwrap_or_else(|_| unreachable!()),
-                        *position,
-                        error.utf8_error(),
-                    )
-                })?;
+                let found = u64::try_from(found)?;
+                let end_position = new_position
+                    .checked_add(found)
+                    .ok_or_else(ReadError::int_under_overflow)?;
+                let string = String::from_utf8(result_buf).map_err(ReadError::from)?;
                 // Set position past the null byte
-                *position = end_position.checked_add(1).ok_or_else(|| {
-                    ReadError::custom(format!("Tried to add 1 to {end_position} and overflowed"))
-                })?;
+                *position = end_position
+                    .checked_add(1)
+                    .ok_or_else(ReadError::int_under_overflow)?;
                 return Ok(Cow::Owned(string));
             }
 
             // No null byte found, add everything to `result_buf` and search further
             result_buf.extend_from_slice(&read_buf);
-            new_position = new_position.checked_add(bytes_read).ok_or_else(|| {
-                ReadError::custom(format!(
-                    "Tried to add {bytes_read} to {new_position} and overflowed"
-                ))
-            })?;
+            new_position = new_position
+                .checked_add(bytes_read)
+                .ok_or_else(ReadError::int_under_overflow)?;
         }
     }
 }
@@ -429,15 +386,11 @@ impl ZeroCopyReadAt for [u8] {
         let null_pos = self.iter().skip(position_usize).position(|b| b == &0);
         if let Some(null_pos) = null_pos {
             let null_pos_u64 = u64::try_from(null_pos)?;
-            match std::str::from_utf8(&self[position_usize..null_pos]) {
-                Ok(str) => {
-                    *position = null_pos_u64
-                        .checked_add(1)
-                        .unwrap_or_else(|| unreachable!());
-                    Ok(Cow::Borrowed(str))
-                }
-                Err(_error) => todo!(),
-            }
+            let string = Cow::Borrowed(std::str::from_utf8(&self[position_usize..null_pos])?);
+            *position = null_pos_u64
+                .checked_add(1)
+                .ok_or_else(ReadError::int_under_overflow)?;
+            Ok(string)
         } else {
             Err(ReadError::no_null_byte(*position))
         }
@@ -456,10 +409,7 @@ impl ZeroCopyReadAt for Vec<u8> {
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
-            Err(ReadError::io_error(
-                *position,
-                ErrorKind::UnexpectedEof.into(),
-            ))
+            Err(ReadError::unexpected_eof())
         } else {
             *position = new_position;
             Ok(Cow::Borrowed(&self[position_usize..new_position_usize]))
@@ -475,15 +425,11 @@ impl ZeroCopyReadAt for Vec<u8> {
         let null_pos = self.iter().skip(position_usize).position(|b| b == &0);
         if let Some(null_pos) = null_pos {
             let null_pos_u64 = u64::try_from(null_pos)?;
-            match std::str::from_utf8(&self[position_usize..null_pos]) {
-                Ok(str) => {
-                    *position = null_pos_u64
-                        .checked_add(1)
-                        .unwrap_or_else(|| unreachable!());
-                    Ok(Cow::Borrowed(str))
-                }
-                Err(_error) => todo!(),
-            }
+            let string = Cow::Borrowed(std::str::from_utf8(&self[position_usize..null_pos])?);
+            *position = null_pos_u64
+                .checked_add(1)
+                .ok_or_else(ReadError::int_under_overflow)?;
+            Ok(string)
         } else {
             Err(ReadError::no_null_byte(*position))
         }
@@ -563,10 +509,10 @@ pub trait ZeroCopyReadAtExt: ZeroCopyReadAt {
             match self.read_slice_at(position, len)? {
                 Cow::Borrowed(slice) => std::str::from_utf8(slice)
                     .map(Cow::Borrowed)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e))?,
+                    .map_err(ReadError::from)?,
                 Cow::Owned(vec) => String::from_utf8(vec)
                     .map(Cow::Owned)
-                    .map_err(|e| ReadError::invalid_utf8(len, *position, e.utf8_error()))?,
+                    .map_err(ReadError::from)?,
             }
         };
         if result.is_err() {

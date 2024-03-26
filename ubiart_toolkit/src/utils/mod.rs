@@ -10,7 +10,7 @@ use dotstar_toolkit_utils::{
     bytes::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
-        write::{BinarySerialize, WriteError, ZeroCopyWriteAt},
+        write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::test,
 };
@@ -121,15 +121,15 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
 impl BinarySerialize for SplitPath<'_> {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_len_string_at::<u32be>(position, &self.filename)?;
         writer.write_len_string_at::<u32be>(position, &self.path)?;
         if self.path.is_empty() && self.filename.is_empty() {
-            writer.write_at(position, &u32be::from(Self::EMPTY_PATH_ID))?;
+            writer.write_at(position, &PathId::EMPTY)?;
         } else {
-            writer.write_at(position, &u32be::from(u32::from(PathId::from(self))))?;
+            writer.write_at(position, &PathId::from(self))?;
         }
         writer.write_at(position, &u32be::from(Self::PADDING))?;
 
@@ -186,6 +186,11 @@ impl<'a> TryFrom<&'a str> for SplitPath<'a> {
 /// The UbiArt CRC of a path converted to all caps
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PathId(u32);
+
+impl PathId {
+    pub const EMPTY: Self = Self(u32::MAX);
+}
+
 impl From<&str> for PathId {
     fn from(value: &str) -> Self {
         Self(string_id(value))
@@ -225,6 +230,16 @@ impl BinaryDeserialize<'_> for PathId {
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         Ok(Self(reader.read_at::<u32be>(position)?.into()))
+    }
+}
+
+impl BinarySerialize for PathId {
+    fn serialize_at(
+        &self,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+    ) -> Result<(), WriteError> {
+        writer.write_at(position, &u32be::from(self.0))
     }
 }
 
@@ -379,7 +394,7 @@ impl BinaryDeserialize<'_> for UniqueGameId {
 impl BinarySerialize for UniqueGameId {
     fn serialize_at(
         &self,
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
         writer.write_at(position, &u32be::from(self.id))?;

@@ -11,8 +11,8 @@ use self::read::BinaryDeserialize;
 use self::read::ReadError;
 use self::read::ZeroCopyReadAtExt;
 use self::write::BinarySerialize;
+use self::write::WriteAt;
 use self::write::WriteError;
-use self::write::ZeroCopyWriteAt;
 
 /// Read the file at path into a `Vec`
 ///
@@ -62,7 +62,7 @@ pub trait Len<'rf>:
     /// # Errors
     /// This function will return an error when `Len` would be (partially) outside the source or the `Len` does not fit into a u64.
     fn write_len_at(
-        writer: &mut (impl ZeroCopyWriteAt + ?Sized),
+        writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
         len: usize,
     ) -> Result<(), WriteError> {

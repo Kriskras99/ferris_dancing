@@ -44,7 +44,6 @@ impl BinaryDeserialize<'_> for Xtx {
                     }
                 }
                 Err(ReadError::IoError {
-                    position: _,
                     error: _,
                     backtrace: _,
                 }) => break,
