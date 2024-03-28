@@ -1335,6 +1335,724 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                 ]),
             ),
             (
+                Game::JustDanceChina,
+                HashMap::from([
+                    (1, AvatarInfo::new("Dare_0", "Dare", 0, false)),
+                    (2, AvatarInfo::new("DogsOut_0", "DogsOut", 0, false)),
+                    (
+                        3,
+                        AvatarInfo::new("EyeOfTheTiger_0", "EyeOfTheTiger", 0, false),
+                    ),
+                    (4, AvatarInfo::new("GetAround_0", "GetAround", 0, false)),
+                    (5, AvatarInfo::new("HotNCold_0", "HotNCold", 0, false)),
+                    (
+                        6,
+                        AvatarInfo::new("ILikeToMoveIt_0", "ILikeToMoveIt", 0, false),
+                    ),
+                    (7, AvatarInfo::new("JinGoLoBa_0", "JinGoLoBa", 0, false)),
+                    (8, AvatarInfo::new("RingMyBell_0", "RingMyBell", 0, false)),
+                    (
+                        9,
+                        AvatarInfo::new("NineAfternoon_0", "NineAfternoon", 0, false),
+                    ),
+                    (10, AvatarInfo::new("BabyGirl_0", "BabyGirl", 0, false)),
+                    (11, AvatarInfo::new("CallMe_0", "CallMe", 0, false)),
+                    (
+                        12,
+                        AvatarInfo::new("ChickenPayback_0", "ChickenPayback", 0, false),
+                    ),
+                    (13, AvatarInfo::new("ComeOn_1", "ComeOn", 1, false)),
+                    (14, AvatarInfo::new("CosmicGirl_0", "CosmicGirl", 0, false)),
+                    (
+                        15,
+                        AvatarInfo::new("ElectroTribalDLC_0", "ElectroTribalDLC", 0, false),
+                    ),
+                    (16, AvatarInfo::new("Firework_0", "Firework", 0, false)),
+                    (
+                        76,
+                        AvatarInfo::new("EverybodyNeeds_0", "EverybodyNeeds", 0, false),
+                    ),
+                    (
+                        347,
+                        AvatarInfo::new("GangnamStyleDLC_0", "GangnamStyleDLC", 0, false),
+                    ),
+                    // (922, "?"),
+                    // (933, "?"),
+                    (953, AvatarInfo::new("OMG_2", "OMG", 2, false)),
+                    (
+                        1058,
+                        AvatarInfo::new("FreezeKids_0", "FreezeKids", 0, false),
+                    ),
+                    (
+                        1059,
+                        AvatarInfo::new("FreezeKids_1", "FreezeKids", 1, false),
+                    ),
+                    (
+                        1060,
+                        AvatarInfo::new("SchoolyardKids_0", "SchoolyardKids", 0, false),
+                    ),
+                    (
+                        1061,
+                        AvatarInfo::new("SchoolyardKids_1", "SchoolyardKids", 1, false),
+                    ),
+                    (
+                        1062,
+                        AvatarInfo::new("MedievalKids_0", "MedievalKids", 0, false),
+                    ),
+                    (
+                        1063,
+                        AvatarInfo::new("MedievalKids_1", "MedievalKids", 1, false),
+                    ),
+                    (1064, AvatarInfo::new("ChefKids_0", "ChefKids", 0, false)),
+                    (
+                        1065,
+                        AvatarInfo::new("AdventurerKids_0", "AdventurerKids", 0, false),
+                    ),
+                    (
+                        1066,
+                        AvatarInfo::new("WizardKids_0", "WizardKids", 0, false),
+                    ),
+                    (
+                        1067,
+                        AvatarInfo::new("BandmasterKids_0", "BandmasterKids", 0, false),
+                    ),
+                    (
+                        1068,
+                        AvatarInfo::new("BirthdayKids_0", "BirthdayKids", 0, false),
+                    ),
+                    (1083, AvatarInfo::new("BalMasque_0", "BalMasque", 0, false)),
+                    (1084, AvatarInfo::new("BalMasque_1", "BalMasque", 1, false)),
+                    (1085, AvatarInfo::new("BalMasque_2", "BalMasque", 2, false)),
+                    (1086, AvatarInfo::new("BalMasque_3", "BalMasque", 3, false)),
+                    (
+                        1087,
+                        AvatarInfo::new("FitButYouKnow_0", "FitButYouKnow", 0, false),
+                    ),
+                    (
+                        1092,
+                        AvatarInfo::new("IAmTheBest_1", "IAmTheBest", 1, false),
+                    ),
+                    (
+                        1093,
+                        AvatarInfo::new("IAmTheBest_0", "IAmTheBest", 0, false),
+                    ),
+                    (1095, AvatarInfo::new("Vodovorot_0", "Vodovorot", 0, false)),
+                    (1096, AvatarInfo::new("TheTime_0", "TheTime", 0, false)),
+                    (1097, AvatarInfo::new("TheTime_1", "TheTime", 1, false)),
+                    (1098, AvatarInfo::new("TheTime_2", "TheTime", 2, false)),
+                    (1099, AvatarInfo::new("TheTime_3", "TheTime", 3, false)),
+                    (
+                        1101,
+                        AvatarInfo::new("AlwaysLookOn_0", "AlwaysLookOn", 0, false),
+                    ),
+                    (
+                        1102,
+                        AvatarInfo::new("AlwaysLookOn_1", "AlwaysLookOn", 1, false),
+                    ),
+                    (
+                        1103,
+                        AvatarInfo::new("AlwaysLookOn_2", "AlwaysLookOn", 2, false),
+                    ),
+                    (
+                        1104,
+                        AvatarInfo::new("AlwaysLookOn_3", "AlwaysLookOn", 3, false),
+                    ),
+                    (1105, AvatarInfo::new("Policeman_0", "Policeman", 0, false)),
+                    (1106, AvatarInfo::new("Policeman_1", "Policeman", 1, false)),
+                    (1107, AvatarInfo::new("Policeman_2", "Policeman", 2, false)),
+                    (
+                        1108,
+                        AvatarInfo::new("RainOverMe_0", "RainOverMe", 0, false),
+                    ),
+                    (
+                        1109,
+                        AvatarInfo::new("BalMasque_1_Gold", "BalMasque", 1, true),
+                    ),
+                    (
+                        1110,
+                        AvatarInfo::new("FitButYouKnow_0_Gold", "FitButYouKnow", 0, true),
+                    ),
+                    (
+                        1111,
+                        AvatarInfo::new("IAmTheBest_1_Gold", "IAmTheBest", 1, true),
+                    ),
+                    (
+                        1112,
+                        AvatarInfo::new("Vodovorot_0_Gold", "Vodovorot", 0, true),
+                    ),
+                    (1113, AvatarInfo::new("TheTime_0_Gold", "TheTime", 0, true)),
+                    (
+                        1114,
+                        AvatarInfo::new("AlwaysLookOn_1_Gold", "AlwaysLookOn", 1, true),
+                    ),
+                    (
+                        1115,
+                        AvatarInfo::new("Policeman_0_Gold", "Policeman", 0, true),
+                    ),
+                    (
+                        1116,
+                        AvatarInfo::new("RainOverMe_0_Gold", "RainOverMe", 0, true),
+                    ),
+                    (
+                        1117,
+                        AvatarInfo::new("KeepInTouch_0", "KeepInTouch", 0, false),
+                    ),
+                    (1118, AvatarInfo::new("BadBoy_0", "BadBoy", 0, false)),
+                    (1119, AvatarInfo::new("BadBoy_1", "BadBoy", 1, false)),
+                    (1120, AvatarInfo::new("BadBoy_0_Gold", "BadBoy", 0, true)),
+                    (
+                        1121,
+                        AvatarInfo::new("KeepInTouch_0_Gold", "KeepInTouch", 0, true),
+                    ),
+                    (1122, AvatarInfo::new("BabyShark_0", "BabyShark", 0, false)),
+                    (1123, AvatarInfo::new("BabyShark_1", "BabyShark", 1, false)),
+                    (
+                        1124,
+                        AvatarInfo::new("GodIsAWoman_0", "GodIsAWoman", 0, false),
+                    ),
+                    (
+                        1125,
+                        AvatarInfo::new("BabyShark_1_Gold", "BabyShark", 1, true),
+                    ),
+                    (
+                        1126,
+                        AvatarInfo::new("GodIsAWoman_0_Gold", "GodIsAWoman", 0, true),
+                    ),
+                    (1127, AvatarInfo::new("GetAround_0", "GetAround", 0, false)),
+                    (1128, AvatarInfo::new("Firework_0", "Firework", 0, false)),
+                    (1129, AvatarInfo::new("HeyYa_0", "HeyYa", 0, false)),
+                    (
+                        1130,
+                        AvatarInfo::new("KattiKalandal_1", "KattiKalandal", 1, false),
+                    ),
+                    (
+                        1131,
+                        AvatarInfo::new("MonsterMash_0", "MonsterMash", 0, false),
+                    ),
+                    (
+                        1132,
+                        AvatarInfo::new("CaliforniaGurls_0", "CaliforniaGurls", 0, false),
+                    ),
+                    (
+                        1133,
+                        AvatarInfo::new("GotMeDancing_0", "GotMeDancing", 0, false),
+                    ),
+                    (1134, AvatarInfo::new("HeyBoy_0", "HeyBoy", 0, false)),
+                    (
+                        1135,
+                        AvatarInfo::new("WhatYouWait_0", "WhatYouWait", 0, false),
+                    ),
+                    (1136, AvatarInfo::new("Disturbia_0", "Disturbia", 0, false)),
+                    (
+                        1137,
+                        AvatarInfo::new("IstanbulQUAT_2", "IstanbulQUAT", 2, false),
+                    ),
+                    (1138, AvatarInfo::new("RockNRoll_0", "RockNRoll", 0, false)),
+                    (
+                        1139,
+                        AvatarInfo::new("YouMakeMeFeelDLC_0", "YouMakeMeFeelDLC", 0, false),
+                    ),
+                    (
+                        1140,
+                        AvatarInfo::new("YouReTheFirst_0", "YouReTheFirst", 0, false),
+                    ),
+                    (1141, AvatarInfo::new("RobotRock_0", "RobotRock", 0, false)),
+                    (1142, AvatarInfo::new("SheWolf_0", "SheWolf", 0, false)),
+                    (
+                        1143,
+                        AvatarInfo::new("WhereHaveYou_0", "WhereHaveYou", 0, false),
+                    ),
+                    (1144, AvatarInfo::new("Starships_0", "Starships", 0, false)),
+                    (1145, AvatarInfo::new("CmonDLC_1", "CmonDLC", 1, false)),
+                    (1146, AvatarInfo::new("ThatPower_1", "ThatPower", 1, false)),
+                    (
+                        1147,
+                        AvatarInfo::new("TurnUpTheLove_0", "TurnUpTheLove", 0, false),
+                    ),
+                    (1148, AvatarInfo::new("GetLucky_1", "GetLucky", 1, false)),
+                    (1149, AvatarInfo::new("LimaGolf1_0", "LimaGolf1", 0, false)),
+                    (
+                        1150,
+                        AvatarInfo::new("Luftballons_0", "Luftballons", 0, false),
+                    ),
+                    (1151, AvatarInfo::new("TheFox_1", "TheFox", 1, false)),
+                    (
+                        1152,
+                        AvatarInfo::new("BuiltForThis_0", "BuiltForThis", 0, false),
+                    ),
+                    (1153, AvatarInfo::new("Happy_0", "Happy", 0, false)),
+                    (1154, AvatarInfo::new("Summer_0", "Summer", 0, false)),
+                    (
+                        1155,
+                        AvatarInfo::new("WalkThisWay_1", "WalkThisWay", 1, false),
+                    ),
+                    (1156, AvatarInfo::new("Tetris_3", "Tetris", 3, false)),
+                    (1157, AvatarInfo::new("Macarena_3", "Macarena", 3, false)),
+                    (1158, AvatarInfo::new("Birthday_0", "Birthday", 0, false)),
+                    (
+                        1159,
+                        AvatarInfo::new("HoldingOut_0", "HoldingOut", 0, false),
+                    ),
+                    (
+                        1160,
+                        AvatarInfo::new("PoundTheAlarm_0", "PoundTheAlarm", 0, false),
+                    ),
+                    (1161, AvatarInfo::new("Blame_0", "Blame", 0, false)),
+                    (1162, AvatarInfo::new("Animals_0", "Animals", 0, false)),
+                    // (1163, "?"),
+                    (
+                        1164,
+                        AvatarInfo::new("BornThisWay_1", "BornThisWay", 1, false),
+                    ),
+                    (1165, AvatarInfo::new("Circus_2", "Circus", 2, false)),
+                    (
+                        1166,
+                        AvatarInfo::new("UptownFunk_0", "UptownFunk", 0, false),
+                    ), // C3
+                    (1167, AvatarInfo::new("Chiwawa_0", "Chiwawa", 0, false)),
+                    (
+                        1168,
+                        AvatarInfo::new("ElectroMambo_0", "ElectroMambo", 0, false),
+                    ),
+                    (1169, AvatarInfo::new("HeyMama_1", "HeyMama", 1, false)),
+                    (1170, AvatarInfo::new("KaboomPow_0", "KaboomPow", 0, false)),
+                    (1171, AvatarInfo::new("ThisIsHow_0", "ThisIsHow", 0, false)),
+                    (
+                        1172,
+                        AvatarInfo::new("DieYoungDLC_0", "DieYoungDLC", 0, false),
+                    ),
+                    (1173, AvatarInfo::new("BoomDLC_0", "BoomDLC", 0, false)),
+                    (1174, AvatarInfo::new("Cotton_0", "Cotton", 0, false)),
+                    (1175, AvatarInfo::new("Fame_0", "Fame", 0, false)),
+                    (
+                        1176,
+                        AvatarInfo::new("TribalDance_0", "TribalDance", 0, false),
+                    ),
+                    (
+                        1177,
+                        AvatarInfo::new("GoodFeeling_0", "GoodFeeling", 0, false),
+                    ),
+                    (1178, AvatarInfo::new("JaiHo_0", "JaiHo", 0, false)),
+                    (
+                        1179,
+                        AvatarInfo::new("KetchupSong_0", "KetchupSong", 0, false),
+                    ),
+                    (1180, AvatarInfo::new("Kurio_1", "Kurio", 1, false)),
+                    (1181, AvatarInfo::new("Lollipop_0", "Lollipop", 0, false)),
+                    (
+                        1182,
+                        AvatarInfo::new("ThatsTheWay_0", "ThatsTheWay", 0, false),
+                    ),
+                    (
+                        1183,
+                        AvatarInfo::new("TheFinalCountdown_0", "TheFinalCountdown", 0, false),
+                    ),
+                    (1184, AvatarInfo::new("ET_0", "ET", 0, false)),
+                    (
+                        1185,
+                        AvatarInfo::new("CrazyLittle_1", "CrazyLittle", 1, false),
+                    ),
+                    (
+                        1186,
+                        AvatarInfo::new("CryingBlood_0", "CryingBlood", 0, false),
+                    ),
+                    (
+                        1187,
+                        AvatarInfo::new("GirlsJustWant_0", "GirlsJustWant", 0, false),
+                    ),
+                    (
+                        1188,
+                        AvatarInfo::new("ScreamNShoutALT_0", "ScreamNShoutALT", 0, false),
+                    ),
+                    (
+                        1189,
+                        AvatarInfo::new("WhatIsLove_0", "WhatIsLove", 0, false),
+                    ),
+                    (
+                        1190,
+                        AvatarInfo::new("DontStopMe_0", "DontStopMe", 0, false),
+                    ),
+                    (1191, AvatarInfo::new("PoPiPo_2", "PoPiPo", 2, false)),
+                    (1192, AvatarInfo::new("September_1", "September", 1, false)),
+                    (1193, AvatarInfo::new("WorthIt_0", "WorthIt", 0, false)),
+                    (1194, AvatarInfo::new("Titanium_0", "Titanium", 0, false)),
+                    (
+                        1195,
+                        AvatarInfo::new("DragosteaDinTei_1", "DragosteaDinTei", 1, false),
+                    ),
+                    (1196, AvatarInfo::new("Bailar_0", "Bailar", 0, false)),
+                    (
+                        1197,
+                        AvatarInfo::new("HappyFarmKids_0", "HappyFarmKids", 0, false),
+                    ),
+                    (1198, AvatarInfo::new("TumBum_1", "TumBum", 1, false)),
+                    (1199, AvatarInfo::new("Footloose_0", "Footloose", 0, false)),
+                    (1200, AvatarInfo::new("24K_0", "24K", 0, false)),
+                    (1201, AvatarInfo::new("Automaton_0", "Automaton", 0, false)),
+                    (
+                        1202,
+                        AvatarInfo::new("BubblePopALT_1", "BubblePopALT", 1, false),
+                    ),
+                    (1203, AvatarInfo::new("LoveWard_0", "LoveWard", 0, false)),
+                    (
+                        1204,
+                        AvatarInfo::new("AllYouGotta_0", "AllYouGotta", 0, false),
+                    ),
+                    (
+                        1205,
+                        AvatarInfo::new("AnotherOne_3", "AnotherOne", 3, false),
+                    ),
+                    (1206, AvatarInfo::new("BubblePop_1", "BubblePop", 1, false)),
+                    (1207, AvatarInfo::new("Despacito_3", "Despacito", 3, false)),
+                    (
+                        1208,
+                        AvatarInfo::new("SwishSwish_2", "SwishSwish", 2, false),
+                    ),
+                    (
+                        1209,
+                        AvatarInfo::new("SwishSwish_3", "SwishSwish", 3, false),
+                    ),
+                    (1210, AvatarInfo::new("MamaMia_0", "MamaMia", 0, false)),
+                    (
+                        1211,
+                        AvatarInfo::new("WorkWorkALT_0", "WorkWorkALT", 0, false),
+                    ),
+                    (1212, AvatarInfo::new("Adeyyo_0", "Adeyyo", 0, false)),
+                    (
+                        1213,
+                        AvatarInfo::new("MerryChristmasKids_1", "MerryChristmasKids", 1, false),
+                    ),
+                    (1214, AvatarInfo::new("MiMiMi_1", "MiMiMi", 1, false)),
+                    (
+                        1215,
+                        AvatarInfo::new("MonstersAcademyKids_0", "MonstersAcademyKids", 0, false),
+                    ),
+                    (1216, AvatarInfo::new("Finesse_1", "Finesse", 1, false)),
+                    (
+                        1217,
+                        AvatarInfo::new("IFeelItComing_0", "IFeelItComing", 0, false),
+                    ),
+                    (1218, AvatarInfo::new("MiloscW_0", "MiloscW", 0, false)),
+                    (1219, AvatarInfo::new("MadLove_1", "MadLove", 1, false)),
+                    (1220, AvatarInfo::new("OMG_2", "OMG", 2, false)),
+                    (
+                        1221,
+                        AvatarInfo::new("NoTearsLeft_0", "NoTearsLeft", 0, false),
+                    ), // C1
+                    (1222, AvatarInfo::new("OneKiss_0", "OneKiss", 0, false)),
+                    (
+                        1223,
+                        AvatarInfo::new("SweetSensation_3", "SweetSensation", 3, false),
+                    ),
+                    (1224, AvatarInfo::new("DDUDU_3", "DDUDU", 3, false)),
+                    (1225, AvatarInfo::new("Sugar_0", "Sugar", 0, false)),
+                    (1226, AvatarInfo::new("Sugar_1", "Sugar", 1, false)),
+                    (1227, AvatarInfo::new("ConCalma_0", "ConCalma", 0, false)),
+                    (1228, AvatarInfo::new("ConCalma_1", "ConCalma", 1, false)),
+                    (
+                        1229,
+                        AvatarInfo::new("ConCalma_1_Gold", "ConCalma", 1, true),
+                    ),
+                    (1231, AvatarInfo::new("Sushii_0", "Sushii", 0, false)),
+                    (1232, AvatarInfo::new("Sushii_0_Gold", "Sushii", 0, true)),
+                    (1236, AvatarInfo::new("SoyYoALT_0", "SoyYoALT", 0, false)),
+                    (1237, AvatarInfo::new("SoyYoALT_1", "SoyYoALT", 1, false)),
+                    (
+                        1238,
+                        AvatarInfo::new("SoyYoALT_0_Gold", "SoyYoALT", 0, true),
+                    ),
+                    (1243, AvatarInfo::new("Bangarang_0", "Bangarang", 0, false)),
+                    (
+                        1244,
+                        AvatarInfo::new("Bangarang_0_Gold", "Bangarang", 0, true),
+                    ),
+                    (1245, AvatarInfo::new("365_0", "365", 0, false)),
+                    (1246, AvatarInfo::new("365_0_Gold", "365", 0, true)),
+                    (
+                        1247,
+                        AvatarInfo::new("TheTimeALT_0", "TheTimeALT", 0, false),
+                    ),
+                    (
+                        1248,
+                        AvatarInfo::new("TheTimeALT_0_Gold", "TheTimeALT", 0, true),
+                    ),
+                    (
+                        1249,
+                        AvatarInfo::new("IAmTheBestALT_0", "IAmTheBestALT", 0, false),
+                    ),
+                    (
+                        1250,
+                        AvatarInfo::new("IAmTheBestALT_0_Gold", "IAmTheBestALT", 0, true),
+                    ),
+                    (
+                        1251,
+                        AvatarInfo::new("RainOverMeALT_0", "RainOverMeALT", 0, false),
+                    ),
+                    (
+                        1252,
+                        AvatarInfo::new("RainOverMeALT_0_Gold", "RainOverMeALT", 0, true),
+                    ),
+                    // (1253, "?"), // Ubisoft
+                    // (1254, "?"), // Ubisoft
+                    // (1255, "?"), // Ubisoft
+                    // (1256, "?"), // Ubisoft
+                    // (1257, "?"), // Ubisoft
+                    (1258, AvatarInfo::new("ILikeIt_0", "ILikeIt", 0, false)),
+                    (1259, AvatarInfo::new("ILikeIt_1", "ILikeIt", 1, false)),
+                    (1260, AvatarInfo::new("ILikeIt_2", "ILikeIt", 2, false)),
+                    (1261, AvatarInfo::new("ILikeIt_1_Gold", "ILikeIt", 1, true)),
+                    // (1262, "?"), // Ubisoft
+                    (
+                        1263,
+                        AvatarInfo::new("GodIsAWomanALT_0", "GodIsAWomanALT", 0, false),
+                    ),
+                    (
+                        1264,
+                        AvatarInfo::new("GodIsAWomanALT_0_Gold", "GodIsAWomanALT", 0, true),
+                    ),
+                    (1265, AvatarInfo::new("SoyYo_0", "SoyYo", 0, false)),
+                    (1266, AvatarInfo::new("SoyYo_0_Gold", "SoyYo", 0, true)),
+                    (1267, AvatarInfo::new("TelAviv_0", "TelAviv", 0, false)),
+                    (1268, AvatarInfo::new("TelAviv_1", "TelAviv", 1, false)),
+                    (1269, AvatarInfo::new("TelAviv_2", "TelAviv", 2, false)),
+                    (1270, AvatarInfo::new("TelAviv_2_Gold", "TelAviv", 2, true)),
+                    (1271, AvatarInfo::new("Skibidi_0", "Skibidi", 0, false)),
+                    (1272, AvatarInfo::new("Skibidi_1", "Skibidi", 1, false)),
+                    (1273, AvatarInfo::new("Skibidi_0_Gold", "Skibidi", 0, true)),
+                    (1274, AvatarInfo::new("TakiTaki_0", "TakiTaki", 0, false)),
+                    (
+                        1275,
+                        AvatarInfo::new("TakiTaki_0_Gold", "TakiTaki", 0, true),
+                    ),
+                    // (1279, "?"), // Ubisoft
+                    // (1280, "?"), // Ubisoft
+                    (1281, AvatarInfo::new("Swag_0", "Swag", 0, false)),
+                    (1282, AvatarInfo::new("Swag_0_Gold", "Swag", 0, true)),
+                    (1283, AvatarInfo::new("SushiiALT_0", "SushiiALT", 0, false)),
+                    (
+                        1284,
+                        AvatarInfo::new("SushiiALT_0_Gold", "SushiiALT", 0, true),
+                    ),
+                    (
+                        1285,
+                        AvatarInfo::new("BangarangALT_0", "BangarangALT", 0, false),
+                    ),
+                    (
+                        1286,
+                        AvatarInfo::new("BangarangALT_0_Gold", "BangarangALT", 0, true),
+                    ),
+                    (
+                        1287,
+                        AvatarInfo::new("TakiTakiALT_0", "TakiTakiALT", 0, false),
+                    ),
+                    (
+                        1288,
+                        AvatarInfo::new("TakiTakiALT_1", "TakiTakiALT", 1, false),
+                    ),
+                    (
+                        1289,
+                        AvatarInfo::new("TakiTakiALT_1_Gold", "TakiTakiALT", 1, true),
+                    ),
+                    (1290, AvatarInfo::new("GetBusy_0", "GetBusy", 0, false)),
+                    (1291, AvatarInfo::new("GetBusy_1", "GetBusy", 1, false)),
+                    (1292, AvatarInfo::new("GetBusy_1_Gold", "GetBusy", 1, true)),
+                    (1293, AvatarInfo::new("HighHopes_0", "HighHopes", 0, false)),
+                    (1294, AvatarInfo::new("HighHopes_1", "HighHopes", 1, false)),
+                    (1295, AvatarInfo::new("HighHopes_2", "HighHopes", 2, false)),
+                    (1296, AvatarInfo::new("HighHopes_3", "HighHopes", 3, false)),
+                    (
+                        1297,
+                        AvatarInfo::new("HighHopes_0_Gold", "HighHopes", 0, true),
+                    ),
+                    (
+                        1298,
+                        AvatarInfo::new("KillThisLove_0", "KillThisLove", 0, false),
+                    ),
+                    (
+                        1299,
+                        AvatarInfo::new("KillThisLove_1", "KillThisLove", 1, false),
+                    ),
+                    (
+                        1300,
+                        AvatarInfo::new("KillThisLove_2", "KillThisLove", 2, false),
+                    ),
+                    (
+                        1301,
+                        AvatarInfo::new("KillThisLove_3", "KillThisLove", 3, false),
+                    ),
+                    (
+                        1302,
+                        AvatarInfo::new("KillThisLove_2_Gold", "KillThisLove", 2, true),
+                    ),
+                    (1303, AvatarInfo::new("Talk_0", "Talk", 0, false)),
+                    (1304, AvatarInfo::new("Talk_0_Gold", "Talk", 0, true)),
+                    (1306, AvatarInfo::new("MaItu_0", "MaItu", 0, false)),
+                    (1307, AvatarInfo::new("MaItu_0_Gold", "MaItu", 0, true)),
+                    (1308, AvatarInfo::new("Everybody_0", "Everybody", 0, false)),
+                    (1309, AvatarInfo::new("Everybody_1", "Everybody", 1, false)),
+                    (1310, AvatarInfo::new("Everybody_2", "Everybody", 2, false)),
+                    (1311, AvatarInfo::new("Everybody_3", "Everybody", 3, false)),
+                    (
+                        1312,
+                        AvatarInfo::new("Everybody_2_Gold", "Everybody", 2, true),
+                    ),
+                    (1316, AvatarInfo::new("TalkALT_0", "TalkALT", 0, false)),
+                    (1317, AvatarInfo::new("TalkALT_0_Gold", "TalkALT", 0, true)),
+                    (
+                        1318,
+                        AvatarInfo::new("OldTownRoad_0", "OldTownRoad", 0, false),
+                    ),
+                    (
+                        1319,
+                        AvatarInfo::new("OldTownRoad_0_Gold", "OldTownRoad", 0, true),
+                    ),
+                    (
+                        1320,
+                        AvatarInfo::new("NotYourOrdinary_3_Gold", "NotYourOrdinary", 3, true),
+                    ),
+                    (1321, AvatarInfo::new("ILikeIt_0_Gold", "ILikeIt", 0, true)),
+                    (1322, AvatarInfo::new("7Rings_0", "7Rings", 0, false)),
+                    (1323, AvatarInfo::new("7Rings_1", "7Rings", 1, false)),
+                    (1324, AvatarInfo::new("7Rings_2", "7Rings", 2, false)),
+                    (1325, AvatarInfo::new("7Rings_1_Gold", "7Rings", 1, true)),
+                    (1326, AvatarInfo::new("BadGuy_0", "BadGuy", 0, false)),
+                    (1327, AvatarInfo::new("BadGuy_0_Gold", "BadGuy", 0, true)),
+                    (1328, AvatarInfo::new("Footwork_0", "Footwork", 0, false)),
+                    (
+                        1329,
+                        AvatarInfo::new("Footwork_0_Gold", "Footwork", 0, true),
+                    ),
+                    (
+                        1330,
+                        AvatarInfo::new("OldTownRoadALT_0", "OldTownRoadALT", 0, false),
+                    ),
+                    (
+                        1331,
+                        AvatarInfo::new("OldTownRoadALT_1", "OldTownRoadALT", 1, false),
+                    ),
+                    (
+                        1332,
+                        AvatarInfo::new("OldTownRoadALT_2", "OldTownRoadALT", 2, false),
+                    ),
+                    (
+                        1333,
+                        AvatarInfo::new("OldTownRoadALT_2_Gold", "OldTownRoadALT", 2, true),
+                    ),
+                    (
+                        1334,
+                        AvatarInfo::new("JustAnIllusion_0", "JustAnIllusion", 0, false),
+                    ),
+                    (
+                        1335,
+                        AvatarInfo::new("JustAnIllusion_1", "JustAnIllusion", 1, false),
+                    ),
+                    (
+                        1336,
+                        AvatarInfo::new("JustAnIllusion_1_Gold", "JustAnIllusion", 1, true),
+                    ),
+                    (1337, AvatarInfo::new("StopMovin_0", "StopMovin", 0, false)),
+                    (1338, AvatarInfo::new("StopMovin_1", "StopMovin", 1, false)),
+                    (1339, AvatarInfo::new("StopMovin_2", "StopMovin", 2, false)),
+                    (
+                        1340,
+                        AvatarInfo::new("StopMovin_1_Gold", "StopMovin", 1, true),
+                    ),
+                    (1342, AvatarInfo::new("7RingsALT_0", "7RingsALT", 0, false)),
+                    (
+                        1343,
+                        AvatarInfo::new("7RingsALT_0_Gold", "7RingsALT", 0, true),
+                    ),
+                    (
+                        1344,
+                        AvatarInfo::new("KillThisLoveALT_0", "KillThisLoveALT", 0, false),
+                    ),
+                    (
+                        1345,
+                        AvatarInfo::new("KillThisLoveALT_0_Gold", "KillThisLoveALT", 0, true),
+                    ),
+                    (
+                        1346,
+                        AvatarInfo::new("BassaSababa_0", "BassaSababa", 0, false),
+                    ),
+                    (
+                        1347,
+                        AvatarInfo::new("BassaSababa_0_Gold", "BassaSababa", 0, true),
+                    ),
+                    (
+                        1348,
+                        AvatarInfo::new("FancyTwice_0", "FancyTwice", 0, false),
+                    ),
+                    (
+                        1349,
+                        AvatarInfo::new("FancyTwice_1", "FancyTwice", 1, false),
+                    ),
+                    (
+                        1350,
+                        AvatarInfo::new("FancyTwice_2", "FancyTwice", 2, false),
+                    ),
+                    (
+                        1351,
+                        AvatarInfo::new("UglyBeauty_0", "UglyBeauty", 0, false),
+                    ),
+                    (
+                        1352,
+                        AvatarInfo::new("UglyBeauty_1", "UglyBeauty", 1, false),
+                    ),
+                    (
+                        1353,
+                        AvatarInfo::new("UglyBeauty_2", "UglyBeauty", 2, false),
+                    ),
+                    (
+                        1354,
+                        AvatarInfo::new("DoCarnaval_0", "DoCarnaval", 0, false),
+                    ),
+                    (
+                        1355,
+                        AvatarInfo::new("DoCarnaval_0_Gold", "DoCarnaval", 0, true),
+                    ),
+                    (1356, AvatarInfo::new("ConAltura_0", "ConAltura", 0, false)),
+                    (
+                        1357,
+                        AvatarInfo::new("ConAltura_0_Gold", "ConAltura", 0, true),
+                    ),
+                    (1358, AvatarInfo::new("IDontCare_0", "IDontCare", 0, false)),
+                    (
+                        1359,
+                        AvatarInfo::new("IDontCare_0_Gold", "IDontCare", 0, true),
+                    ),
+                    (
+                        1360,
+                        AvatarInfo::new("UglyBeauty_0_Gold", "UglyBeauty", 0, true),
+                    ),
+                    (
+                        1361,
+                        AvatarInfo::new("FancyTwice_2_Gold", "FancyTwice", 2, true),
+                    ),
+                    (1362, AvatarInfo::new("CanCan_0", "CanCan", 0, false)),
+                    (1363, AvatarInfo::new("CanCan_1", "CanCan", 1, false)),
+                    (1364, AvatarInfo::new("CanCan_2", "CanCan", 2, false)),
+                    (1365, AvatarInfo::new("CanCan_3", "CanCan", 3, false)),
+                    (1366, AvatarInfo::new("CanCan_4", "CanCan", 4, false)),
+                    (1367, AvatarInfo::new("CanCan_1_Gold", "CanCan", 1, true)),
+                    (
+                        1368,
+                        AvatarInfo::new("BoyWithLuv_0", "BoyWithLuv", 0, false),
+                    ),
+                    (
+                        1369,
+                        AvatarInfo::new("BoyWithLuv_1", "BoyWithLuv", 1, false),
+                    ),
+                    (
+                        1370,
+                        AvatarInfo::new("BoyWithLuv_2", "BoyWithLuv", 2, false),
+                    ),
+                    (
+                        1371,
+                        AvatarInfo::new("BoyWithLuv_2_Gold", "BoyWithLuv", 2, true),
+                    ),
+                ]),
+            ),
+            (
                 Game::JustDance2020,
                 HashMap::from([
                     (1, AvatarInfo::new("Dare_0", "Dare", 0, false)),
