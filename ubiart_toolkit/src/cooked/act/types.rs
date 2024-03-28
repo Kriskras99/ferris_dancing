@@ -5,7 +5,6 @@ use std::borrow::Cow;
 use crate::utils::{errors::ParserError, SplitPath};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Actor<'a> {
     pub tpl: SplitPath<'a>,
     pub unk1: u32,
@@ -14,8 +13,40 @@ pub struct Actor<'a> {
     pub components: Vec<Component<'a>>,
 }
 
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for Actor<'a> {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Ok(Actor {
+            tpl: u.arbitrary()?,
+            unk1: *u.choose(&[
+                0x0,
+                0x3D23_D70A,
+                0x3DCC_CCCD,
+                0x3F66_6C4C,
+                0x3F80_0000,
+                0x4000_0000,
+            ])?,
+            unk2: *u.choose(&[
+                0x3F00_0000,
+                0x3F80_0000,
+                0x4240_0000,
+                0x4320_0000,
+                0x4420_0000,
+                0x4422_8000,
+            ])?,
+            unk2_5: *u.choose(&[
+                0x3F00_0000,
+                0x3F80_0000,
+                0x4120_0000,
+                0x4240_0000,
+                0x4320_0000,
+            ])?,
+            components: u.arbitrary()?,
+        })
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum Component<'a> {
     AutodanceComponent,
     BeatPulseComponent,
@@ -136,6 +167,40 @@ impl Component<'_> {
     }
 }
 
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for Component<'a> {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let id = *u.choose(&[
+            0x67B8_BB77u32,
+            0x677B_269B,
+            0xC316_BF34,
+            0x4055_79FB,
+            0xE07F_CC3F,
+            0x231F_27DE,
+            0x1759_E29D,
+            0x84EA_AE82,
+            0x72B6_1FC5,
+            0x1263_DAD9,
+            0x0579_E81B,
+        ])?;
+        let component = match id {
+            0x67B8_BB77 => Component::AutodanceComponent,
+            0x677B_269B => Component::MasterTape,
+            0xC316_BF34 => Component::PictoComponent,
+            0x4055_79FB => Component::SongDatabaseComponent,
+            0xE07F_CC3F => Component::SongDescComponent,
+            0x231F_27DE => Component::TapeCaseComponent,
+            0x1759_E29D => Component::AvatarDescComponent,
+            0x84EA_AE82 => Component::SkinDescComponent,
+            0x72B6_1FC5 => Component::MaterialGraphicComponent(u.arbitrary()?),
+            0x1263_DAD9 => Component::PleoComponent(u.arbitrary()?),
+            0x0579_E81B => Component::PleoTextureGraphicComponent(u.arbitrary()?),
+            _ => unreachable!(),
+        };
+        Ok(component)
+    }
+}
+
 /// The data for the main video player
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
@@ -156,7 +221,6 @@ pub struct PleoComponent<'a> {
 
 /// Data for textures
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct MaterialGraphicComponent<'a> {
     pub files: [SplitPath<'a>; 11],
     pub unk11_5: u32,
@@ -165,6 +229,26 @@ pub struct MaterialGraphicComponent<'a> {
     pub unk14: u64,
     pub unk15: u64,
     pub unk26: u32,
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for MaterialGraphicComponent<'a> {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Ok(Self {
+            files: u.arbitrary()?,
+            unk11_5: *u.choose(&[0x3F80_0000u32, 0x0])?,
+            unk13: *u.choose(&[0xFFFF_FFFFu32, 0x1])?,
+            unk14: *u.choose(&[0x1u64, 0x2, 0x3, 0x6, 0x9])?,
+            unk15: *u.choose(&[
+                0x0u64,
+                0x3E2E_147B,
+                0xC080_0000,
+                0x3E99_999A_BDCC_CCCD,
+                0xBDE1_47AE_3E61_47AE,
+            ])?,
+            unk26: *u.choose(&[0x1, 0x2, 0x3, 0x6, 0x9])?,
+        })
+    }
 }
 
 impl Default for MaterialGraphicComponent<'static> {
