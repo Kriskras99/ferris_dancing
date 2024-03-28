@@ -1,0 +1,25 @@
+[package]
+name = "ferris-dancing-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+ubiart_toolkit = { path = "../ubiart_toolkit", features = ["fuzz"] }
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "act_write_and_parse"
+path = "fuzz_targets/act_write_and_parse.rs"
+test = false
+doc = false

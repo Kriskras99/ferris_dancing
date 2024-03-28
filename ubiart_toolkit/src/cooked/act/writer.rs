@@ -1,4 +1,4 @@
-use std::{borrow::Cow, io::Cursor};
+use std::borrow::Cow;
 
 use dotstar_toolkit_utils::bytes::{
     primitives::{u32be, u64be},
@@ -45,7 +45,7 @@ impl BinarySerialize for Actor<'_> {
                 Component::PleoTextureGraphicComponent(mgc) => {
                     write_material_graphic_component(writer, position, mgc, true)?;
                 }
-                component => todo!("{component:?}"),
+                component => return Err(WriteError::custom(format!("TODO: {component:?}"))),
             }
         }
         Ok(())
@@ -55,8 +55,7 @@ impl BinarySerialize for Actor<'_> {
 /// Create an `Actor` in a newly allocated `Vec`
 pub fn create_vec(actor: &Actor<'_>) -> Result<Vec<u8>, WriteError> {
     let mut vec = Vec::with_capacity(700);
-    let mut cursor = Cursor::new(&mut vec);
-    actor.serialize(&mut cursor)?;
+    actor.serialize(&mut vec)?;
     vec.shrink_to_fit();
     Ok(vec)
 }

@@ -12,7 +12,7 @@ use dotstar_toolkit_utils::{
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteAt, WriteError},
     },
-    testing::{test, test_any},
+    testing::test,
 };
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
@@ -77,7 +77,8 @@ impl From<LocaleId> for u32 {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct SplitPath<'a> {
     pub path: Cow<'a, str>,
     pub filename: Cow<'a, str>,
