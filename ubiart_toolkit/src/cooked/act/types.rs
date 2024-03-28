@@ -210,13 +210,29 @@ pub struct CreditsComponent<'a> {
 
 /// The data for the main video player
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct PleoComponent<'a> {
     /// The filename of the video to play
     pub video: SplitPath<'a>,
     /// Manifest filename of the video
     pub dash_mpd: SplitPath<'a>,
     pub channel_id: Option<Cow<'a, str>>,
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for PleoComponent<'a> {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let channel_id = u.arbitrary::<Cow<str>>()?;
+        let channel_id = if channel_id.is_empty() {
+            None
+        } else {
+            Some(channel_id)
+        };
+        Ok(Self {
+            video: u.arbitrary()?,
+            dash_mpd: u.arbitrary()?,
+            channel_id,
+        })
+    }
 }
 
 /// Data for textures
