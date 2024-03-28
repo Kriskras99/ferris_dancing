@@ -127,8 +127,6 @@ pub fn write(
         base_offset += 0x4;
     }
 
-    println!("Files: {}", files.len());
-
     // Add the static metadata size for every file plus the length of the path
     for path in files {
         base_offset += 0x2C + path.len(); // metadata size + path length

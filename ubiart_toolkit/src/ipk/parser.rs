@@ -57,6 +57,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             let compressed_size = usize::try_from(reader.read_at::<u32be>(position)?)?;
             let timestamp = reader.read_at::<u64be>(position)?.into();
             let offset = reader.read_at::<u64be>(position)?.into();
+            // Can't use read_at::<SplitPath> as the filename and path are swapped on JD2014 for the Wii
             let mut filename = reader.read_len_string_at::<u32be>(position)?;
             let mut path = reader.read_len_string_at::<u32be>(position)?;
             let path_id = reader.read_at::<PathId>(position)?;
