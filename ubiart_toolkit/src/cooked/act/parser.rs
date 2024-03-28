@@ -83,7 +83,10 @@ pub fn parse<'de>(
     test(&unk8, &0u32)?;
 
     let tpl = reader.read_at::<SplitPath>(position)?;
-    test(&tpl.is_empty(), &false)?;
+    #[cfg(not(feature = "fuzz"))]
+    {
+        test(&tpl.is_empty(), &false)?;
+    }
     let unk9 = reader.read_at::<u32be>(position)?.into();
     test(&unk9, &0u32)?;
     let actor_amount: usize = reader.read_at::<u32be>(position)?.try_into()?;
@@ -151,11 +154,11 @@ pub fn parse_component<'de>(
         // JD_Carousel
         0x27E4_80C0 => todo!(),
         // JD_PictoComponent
-        0xC316_BF34 => todo!(),
+        0xC316_BF34 => Component::PictoComponent,
         // PleoComponent
         0x1263_DAD9 => Component::PleoComponent(reader.read_at::<PleoComponent>(position)?),
         // PleoTextureGraphicComponent
-        0x0579_E81B => Component::MaterialGraphicComponent(parse_material_graphic_component(
+        0x0579_E81B => Component::PleoTextureGraphicComponent(parse_material_graphic_component(
             reader, position, gp, true,
         )?),
         // PropertyPatcher

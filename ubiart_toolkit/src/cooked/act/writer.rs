@@ -83,12 +83,10 @@ fn write_material_graphic_component(
     writer.write_at(position, &u64be::from(mgc.unk15))?;
     for item in mgc.files.iter().take(9) {
         writer.write_at(position, item)?;
-        writer.write_at(position, &u32be::from(0))?;
     }
     writer.write_at(position, &u32be::from(0))?;
     for item in mgc.files.iter().skip(9) {
         writer.write_at(position, item)?;
-        writer.write_at(position, &u32be::from(0))?;
     }
     for _ in 0..4 {
         writer.write_at(position, &u64be::from(0))?;
@@ -115,9 +113,7 @@ fn write_pleo_component(
     pleo_component: &PleoComponent,
 ) -> Result<(), WriteError> {
     writer.write_at(position, &pleo_component.video)?;
-    writer.write_at(position, &u32be::from(0))?;
     writer.write_at(position, &pleo_component.dash_mpd)?;
-    writer.write_at(position, &u32be::from(0))?;
     writer.write_len_string_at::<u32be>(
         position,
         pleo_component.channel_id.as_ref().map_or("", Cow::as_ref),
