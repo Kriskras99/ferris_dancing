@@ -12,7 +12,7 @@ use dotstar_toolkit_utils::{
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteAt, WriteError},
     },
-    testing::test,
+    testing::{test, test_any},
 };
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
@@ -280,6 +280,12 @@ impl TryFrom<u32> for UniqueGameId {
                 platform: Platform::WiiU,
                 id: value,
             }),
+            // Base       Update 1      Update 2
+            0xDA14_5C61 | 0x8C9D_65E4 | 0xF9D9B22B => Ok(Self {
+                game: Game::JustDance2016,
+                platform: Platform::WiiU,
+                id: value,
+            }),
             0x415E_6D8C | 0x32F3_512A => Ok(Self {
                 game: Game::JustDance2017,
                 platform: Platform::Nx,
@@ -333,61 +339,8 @@ impl BinaryDeserialize<'_> for UniqueGameId {
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value = u32::from(reader.read_at::<u32be>(position)?);
-        match value {
-            0x1C24_B91A => Ok(Self {
-                game: Game::JustDance2014,
-                platform: Platform::Wii,
-                id: value,
-            }),
-            0xC563_9F58 => Ok(Self {
-                game: Game::JustDance2015,
-                platform: Platform::WiiU,
-                id: value,
-            }),
-            0x415E_6D8C | 0x32F3_512A => Ok(Self {
-                game: Game::JustDance2017,
-                platform: Platform::Nx,
-                id: value,
-            }),
-            0x032E_71C5 => Ok(Self {
-                game: Game::JustDance2018,
-                platform: Platform::Nx,
-                id: value,
-            }),
-            0x1F5E_E42F | 0xC781_A65B | 0x57A7_053C => Ok(Self {
-                game: Game::JustDance2019,
-                platform: Platform::Nx,
-                id: value,
-            }),
-            0x72B4_2FF4 | 0xB292_FD08 | 0x217A_94CE => Ok(Self {
-                game: Game::JustDance2020,
-                platform: Platform::Nx,
-                id: value,
-            }),
-            0xA155_8F87 => Ok(Self {
-                game: Game::JustDanceChina,
-                platform: Platform::Nx,
-                id: value,
-            }),
-            0x4C8E_C5C5 => Ok(Self {
-                game: Game::JustDance2020,
-                platform: Platform::Wii,
-                id: value,
-            }),
-            0xEB5D_504C | 0xA4F0_18EE => Ok(Self {
-                game: Game::JustDance2021,
-                platform: Platform::Nx,
-                id: value,
-            }),
-            0x1DDB_2268 => Ok(Self {
-                game: Game::JustDance2022,
-                platform: Platform::Nx,
-                id: value,
-            }),
-            _ => Err(ReadError::custom(format!(
-                "Unknown game platform: {value:x}"
-            ))),
-        }
+        Self::try_from(value)
+            .map_err(|_| ReadError::custom(format!("Unknown game platform: {value:x}")))
     }
 }
 
