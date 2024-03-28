@@ -369,7 +369,7 @@ impl ZeroCopyReadAt for [u8] {
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
         if self.len() < (new_position_usize) {
-            todo!()
+            Err(ReadError::unexpected_eof())
         } else {
             *position = new_position;
             Ok(Cow::Borrowed(&self[position_usize..new_position_usize]))
