@@ -277,6 +277,19 @@ pub trait WriteAt {
 //     }
 // }
 
+impl WriteAt for Vec<u8> {
+    fn write_slice_at(&mut self, position: &mut u64, buf: &[u8]) -> Result<(), WriteError> {
+        let position_usize = usize::try_from(*position)?;
+        let end = position_usize + buf.len();
+        if end >= self.len() {
+            self.resize(end, 0);
+        }
+        self[position_usize..end].copy_from_slice(buf);
+        *position = u64::try_from(end)?;
+        Ok(())
+    }
+}
+
 // How to make this generic??
 impl WriteAt for Cursor<&mut Vec<u8>> {
     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {

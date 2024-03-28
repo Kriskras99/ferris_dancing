@@ -42,16 +42,16 @@ pub enum CompressionEffort {
 #[cfg(feature = "zopfli")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ZopfliOptions {
-    pub iteration_count: NonZeroU64,
-    pub iterations_without_improvement: NonZeroU64,
+    pub iteration_count: std::num::NonZeroU64,
+    pub iterations_without_improvement: std::num::NonZeroU64,
 }
 
 #[cfg(feature = "zopfli")]
 impl Default for ZopfliOptions {
     fn default() -> Self {
         Self {
-            iteration_count: NonZeroU64::new(15).unwrap(),
-            iterations_without_improvement: NonZeroU64::MIN,
+            iteration_count: std::num::NonZeroU64::new(15).unwrap(),
+            iterations_without_improvement: std::num::NonZeroU64::MIN,
         }
     }
 }

@@ -4,7 +4,8 @@ use std::borrow::Cow;
 
 use crate::utils::{errors::ParserError, SplitPath};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Actor<'a> {
     pub tpl: SplitPath<'a>,
     pub unk1: u32,
@@ -13,7 +14,8 @@ pub struct Actor<'a> {
     pub components: Vec<Component<'a>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum Component<'a> {
     AutodanceComponent,
     BeatPulseComponent,
@@ -135,13 +137,15 @@ impl Component<'_> {
 }
 
 /// The data for the main video player
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct CreditsComponent<'a> {
     pub lines: Vec<Cow<'a, str>>,
 }
 
 /// The data for the main video player
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct PleoComponent<'a> {
     /// The filename of the video to play
     pub video: SplitPath<'a>,
@@ -151,7 +155,8 @@ pub struct PleoComponent<'a> {
 }
 
 /// Data for textures
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct MaterialGraphicComponent<'a> {
     pub files: [SplitPath<'a>; 11],
     pub unk11_5: u32,
@@ -176,7 +181,8 @@ impl Default for MaterialGraphicComponent<'static> {
 }
 
 /// The data for the main video player
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct UITextBox<'a> {
     pub string1: Option<Cow<'a, str>>,
     pub string2: Option<Cow<'a, str>>,
