@@ -282,7 +282,7 @@ impl TryFrom<u32> for UniqueGameId {
                 id: value,
             }),
             // Base       Update 1      Update 2
-            0xDA14_5C61 | 0x8C9D_65E4 | 0xF9D9B22B => Ok(Self {
+            0xDA14_5C61 | 0x8C9D_65E4 | 0xF9D_9B22B => Ok(Self {
                 game: Game::JustDance2016,
                 platform: Platform::WiiU,
                 id: value,

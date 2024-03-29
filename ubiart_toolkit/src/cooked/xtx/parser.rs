@@ -101,8 +101,8 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
         let start = *position;
         let magic = reader.read_at::<u32le>(position)?.into();
         test(&magic, &0x4E76_4248u32)?;
-        let size = reader.read_at::<u32le>(position)?.into();
-        test(&size, &0x24)?;
+        let header_size = reader.read_at::<u32le>(position)?.into();
+        test(&header_size, &0x24)?;
         let data_size = usize::try_from(reader.read_at::<u64le>(position)?)?;
         let data_offset = reader.read_at::<u64le>(position)?.into();
         let typed = reader.read_at::<u32le>(position)?.into();
@@ -118,11 +118,11 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
                 parse_tex_header_block(reader, position)
             }
             DATA_BLK_TYPE => {
-                *position = pos + data_offset - size;
+                *position = pos + data_offset - header_size;
                 Ok(BlockData::Data(reader.read_slice_at(position, data_size)?))
             }
             UNKNOWN_BLK_TYPE_THREE => {
-                *position = pos + data_offset - size;
+                *position = pos + data_offset - header_size;
                 let data = reader.read_slice_at(position, data_size)?;
                 test(
                     &data.as_ref(),
@@ -141,7 +141,7 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
         let data_size = u64::try_from(data_size)?;
 
         let new_pos = *position;
-        test(&(new_pos - pos), &(data_size + data_offset - size))?;
+        test(&(new_pos - pos), &(data_size + data_offset - header_size))?;
 
         *position = start + data_offset + data_size;
         Ok(Block {
@@ -241,6 +241,14 @@ fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, 
 
         deswizzled_data.push(data);
     }
+
+    test(
+        &usize::try_from(hdr.image_size).ok(),
+        &deswizzled_data
+            .iter()
+            .map(Vec::len)
+            .reduce(|acc, e| acc + e),
+    )?;
 
     Ok(Image {
         header: *hdr,

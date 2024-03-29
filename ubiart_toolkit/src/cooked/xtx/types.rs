@@ -42,17 +42,23 @@ impl Default for TextureHeader {
 #[cfg(feature = "arbitrary")]
 impl arbitrary::Arbitrary<'_> for TextureHeader {
     fn arbitrary(u: &mut arbitrary::Unstructured) -> arbitrary::Result<Self> {
-        let width = u.int_in_range(16..=1024u16)? & !0b11;
-        let height = u.int_in_range(16..=1024u16)? & !0b11;
-        
+        let width = u.int_in_range(16..=1024u16)?;
+        let height = u.int_in_range(16..=1024u16)?;
+        let format = *u.choose(&[Format::DXT1, Format::DXT3, Format::DXT5])?;
+        let image_size = if format.is_bcn() {
+            u64::from((width + 3) >> 2) * u64::from((height + 3) >> 2) * u64::from(format.get_bpp())
+        } else {
+            u64::from(width) * u64::from(height) * u64::from(format.get_bpp())
+        };
+
         Ok(Self {
-            image_size: u64::from(width) * u64::from(height),
+            image_size,
             alignment: 0x200,
             width: u32::from(width),
             height: u32::from(height),
             depth: 0x1,
             target: u.arbitrary()?,
-            format: *u.choose(&[Format::DXT1, Format::DXT3, Format::DXT5])?,
+            format,
             mipmaps: 1,
             slice_size: u32::from(width) * u32::from(height),
             mipmap_offsets: Default::default(),
@@ -163,10 +169,27 @@ pub struct Block<'a> {
     pub data: BlockData<'a>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub struct Image {
     pub header: TextureHeader,
     pub data: Vec<Vec<u8>>,
+}
+
+impl std::fmt::Debug for Image {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // []
+        let mut string = String::new();
+        string.push('[');
+        for vec in &self.data {
+            string.push_str(&format!("{}, ", vec.len()));
+        }
+        string.push(']');
+
+        f.debug_struct("Image")
+            .field("header", &self.header)
+            .field("data", &string)
+            .finish()
+    }
 }
 
 #[cfg(feature = "arbitrary")]
@@ -175,7 +198,7 @@ impl arbitrary::Arbitrary<'_> for Image {
         let header: TextureHeader = u.arbitrary()?;
         Ok(Self {
             header,
-            data: vec![vec![0; usize::try_from(header.width * header.height * header.format.get_bpp()).unwrap()]],
+            data: vec![vec![0; usize::try_from(header.image_size).unwrap()]],
         })
     }
 }

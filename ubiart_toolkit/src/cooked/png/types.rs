@@ -30,12 +30,11 @@ impl Default for Png {
     }
 }
 
-
 #[cfg(feature = "arbitrary")]
 impl arbitrary::Arbitrary<'_> for Png {
     fn arbitrary(u: &mut arbitrary::Unstructured) -> arbitrary::Result<Self> {
         let xtx: Xtx = u.arbitrary()?;
-        
+
         Ok(Self {
             width: xtx.images[0].header.width as u16,
             height: xtx.images[0].header.height as u16,

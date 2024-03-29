@@ -9,18 +9,12 @@ use crate::{cooked::xtx, utils::errors::WriterError};
 pub fn create<W: Write>(mut src: W, png: &Png) -> Result<(), WriterError> {
     src.write_u64::<BigEndian>(0x9_5445_5800)?;
     src.write_u32::<BigEndian>(0x2C)?;
-    let unk2 = match png.xtx.images.first() {
-        Some(image) => image.header.image_size + 0x80,
-        None => {
-            return Err(WriterError::custom("No image in png!"));
-        }
-    };
-    src.write_u32::<BigEndian>(u32::try_from(unk2)?)?;
+    src.write_u32::<BigEndian>(png.unk2)?;
     src.write_u16::<BigEndian>(png.width)?;
     src.write_u16::<BigEndian>(png.height)?;
     src.write_u16::<BigEndian>(0x1)?;
     src.write_u16::<BigEndian>(png.unk5)?;
-    src.write_u32::<BigEndian>(u32::try_from(unk2)?)?;
+    src.write_u32::<BigEndian>(png.unk2)?;
     src.write_u32::<BigEndian>(0x0)?;
     src.write_u32::<BigEndian>(png.unk8)?;
     src.write_u32::<BigEndian>(png.unk9)?;

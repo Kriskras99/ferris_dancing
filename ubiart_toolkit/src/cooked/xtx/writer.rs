@@ -65,7 +65,7 @@ pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriterError> {
         }
         id += 1;
     }
-    // Write texture header
+    // Write unknown third header
     src.write_u32::<LittleEndian>(0x4E76_4248)?;
     src.write_u32::<LittleEndian>(0x24)?;
     src.write_u64::<LittleEndian>(24)?;
