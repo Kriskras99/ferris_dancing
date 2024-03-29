@@ -156,24 +156,8 @@ impl BinaryDeserialize<'_> for Format {
         reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
-        match u32::from(reader.read_at::<u32le>(position)?) {
-            0x25 => Ok(Self::NvnFormatRGBA8),
-            0x38 => Ok(Self::NvnFormatRGBA8SRGB),
-            0x3D => Ok(Self::NvnFormatRGB10A2),
-            0x3C => Ok(Self::NvnFormatRGB565),
-            0x3B => Ok(Self::NvnFormatRGB5A1),
-            0x39 => Ok(Self::NvnFormatRGBA4),
-            0x01 => Ok(Self::NvnFormatR8),
-            0x0D => Ok(Self::NvnFormatRG8),
-            0x42 => Ok(Self::DXT1),
-            0x43 => Ok(Self::DXT3),
-            0x44 => Ok(Self::DXT5),
-            0x49 => Ok(Self::BC4U),
-            0x4A => Ok(Self::BC4S),
-            0x4B => Ok(Self::BC5U),
-            0x4C => Ok(Self::BC5S),
-            value => Err(ReadError::custom(format!("Unknown format: {value:x}"))),
-        }
+        let value = u32::from(reader.read_at::<u32le>(position)?);
+        Self::try_from(value).map_err(|_| ReadError::custom(format!("Unknown format: {value:x}")))
     }
 }
 

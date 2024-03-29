@@ -41,6 +41,7 @@ pub fn main(extract: Extract) -> Result<(), Error> {
     let source = extract.source;
     test(&source.try_exists()?, &true).context("Source does not exist!")?;
     test(&source.is_file(), &true).context("Source is not a file!")?;
+    let source = source.canonicalize()?;
     let destination = extract.destination.unwrap_or(fs::canonicalize(".")?);
     // Create the export directory
     if destination.exists() && destination.read_dir()?.next().is_some() {

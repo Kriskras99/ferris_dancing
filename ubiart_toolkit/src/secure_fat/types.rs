@@ -167,10 +167,15 @@ pub fn bundle_name_to_filename(name: &str, platform: Platform) -> String {
             result.push_str(name);
             if let Some(index) = result.find("bundle") {
                 result.replace_range(index..index + 6, "Bundle");
-            } else if let Some(index) = result.find("logic") {
-                result.replace_range(index..index + 5, "Logic");
-            } else if let Some(index) = result.find("blockflows") {
+            }
+            if let Some(index) = result.find("blockflows") {
                 result.replace_range(index..index + 10, "BlockFlows");
+            }
+            if let Some(index) = result.find("logic") {
+                result.replace_range(index..index + 5, "Logic");
+            }
+            if let Some(index) = result.find("boot") {
+                result.replace_range(index..index + 4, "Boot");
             }
             result.push_str("_WII.ipk");
             result
@@ -180,10 +185,15 @@ pub fn bundle_name_to_filename(name: &str, platform: Platform) -> String {
             result.push_str(name);
             if let Some(index) = result.find("bundle") {
                 result.replace_range(index..index + 6, "Bundle");
-            } else if let Some(index) = result.find("logic") {
-                result.replace_range(index..index + 5, "Logic");
-            } else if let Some(index) = result.find("blockflows") {
+            }
+            if let Some(index) = result.find("blockflows") {
                 result.replace_range(index..index + 10, "BlockFlows");
+            }
+            if let Some(index) = result.find("logic") {
+                result.replace_range(index..index + 5, "Logic");
+            }
+            if let Some(index) = result.find("boot") {
+                result.replace_range(index..index + 4, "Boot");
             }
             result.push_str("_WIIU.ipk");
             result

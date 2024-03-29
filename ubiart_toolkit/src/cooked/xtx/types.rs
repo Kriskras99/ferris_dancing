@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use crate::utils::errors::ParserError;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TextureHeader {
     pub image_size: u64,
     pub alignment: u32,
@@ -36,6 +36,34 @@ impl Default for TextureHeader {
             mipmap_offsets: Default::default(),
             unk1: 0x4_0000_0000,
         }
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl arbitrary::Arbitrary<'_> for TextureHeader {
+    fn arbitrary(u: &mut arbitrary::Unstructured) -> arbitrary::Result<Self> {
+        let width = u.int_in_range(16..=1024u16)? & !0b11;
+        let height = u.int_in_range(16..=1024u16)? & !0b11;
+        
+        Ok(Self {
+            image_size: u64::from(width) * u64::from(height),
+            alignment: 0x200,
+            width: u32::from(width),
+            height: u32::from(height),
+            depth: 0x1,
+            target: u.arbitrary()?,
+            format: *u.choose(&[Format::DXT1, Format::DXT3, Format::DXT5])?,
+            mipmaps: 1,
+            slice_size: u32::from(width) * u32::from(height),
+            mipmap_offsets: Default::default(),
+            unk1: *u.choose(&[
+                0x4_0000_0000,
+                0x3_0000_0000,
+                0x2_0000_0000,
+                0x1_0000_0000,
+                0x0,
+            ])?,
+        })
     }
 }
 
@@ -135,10 +163,24 @@ pub struct Block<'a> {
     pub data: BlockData<'a>,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct Image {
     pub header: TextureHeader,
     pub data: Vec<Vec<u8>>,
 }
+
+#[cfg(feature = "arbitrary")]
+impl arbitrary::Arbitrary<'_> for Image {
+    fn arbitrary(u: &mut arbitrary::Unstructured) -> arbitrary::Result<Self> {
+        let header: TextureHeader = u.arbitrary()?;
+        Ok(Self {
+            header,
+            data: vec![vec![0; usize::try_from(header.width * header.height * header.format.get_bpp()).unwrap()]],
+        })
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct Xtx {
     pub major_version: u32,
     pub minor_version: u32,
@@ -152,5 +194,16 @@ impl Default for Xtx {
             minor_version: 0x1,
             images: Vec::new(),
         }
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl arbitrary::Arbitrary<'_> for Xtx {
+    fn arbitrary(u: &mut arbitrary::Unstructured) -> arbitrary::Result<Self> {
+        Ok(Self {
+            major_version: 0x1,
+            minor_version: u.arbitrary()?,
+            images: vec![u.arbitrary()?],
+        })
     }
 }
