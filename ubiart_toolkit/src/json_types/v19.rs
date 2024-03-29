@@ -35,10 +35,10 @@ use super::{
         TutorialContent, TutorialDesc, UnlimitedUpsellSongList, UplayReward, VideoLoopSetup,
         WDFBossEntry,
     },
-    just_dance::{AutodanceComponent, AvatarDescription, SongDatabase},
+    just_dance::{AutodanceComponent, SongDatabase},
     tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
-    v1819::{ObjectiveDesc1819, ScheduledQuestDesc1819},
+    v1819::{AvatarDescription1819, ObjectiveDesc1819, ScheduledQuestDesc1819},
     DifficultyColors,
 };
 use crate::utils::{errors::ParserError, LocaleId};
@@ -69,7 +69,7 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
     AutodanceComponent(AutodanceComponent<'a>),
     #[serde(borrow, rename = "JD_AvatarDescTemplate")]
-    AvatarDescription(AvatarDescription<'a>),
+    AvatarDescription(AvatarDescription1819<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_CreditsComponent_Template")]
     CreditsComponent(Empty<'a>),
@@ -264,7 +264,7 @@ pub enum Template19<'a> {
 }
 
 impl<'a> Template19<'a> {
-    /// Convert this template to a `Actor22`.
+    /// Convert this template to a `Actor19`.
     pub fn actor(self) -> Result<Actor19<'a>, ParserError> {
         if let Template19::Actor(actor) = self {
             Ok(actor)
@@ -276,7 +276,7 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `AvatarDescription22`.
-    pub fn avatar_description(self) -> Result<AvatarDescription<'a>, ParserError> {
+    pub fn avatar_description(self) -> Result<AvatarDescription1819<'a>, ParserError> {
         if let Template19::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {

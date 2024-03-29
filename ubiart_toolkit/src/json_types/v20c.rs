@@ -36,9 +36,10 @@ use super::{
         ScoringParams, ShortcutDesc1719, SongsSearchTags, StickerEntry, TutorialContent,
         TutorialDesc, UnlimitedUpsellSongList, UplayReward, WDFBossEntry,
     },
-    just_dance::{AutodanceComponent, AvatarDescription, SongDatabase},
+    just_dance::{AutodanceComponent, SongDatabase},
     tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
+    v22::AvatarDescription2022,
     AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
 };
 use crate::utils::errors::ParserError;
@@ -75,7 +76,7 @@ pub enum Template20C<'a> {
     #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
     AutodanceComponent(AutodanceComponent<'a>),
     #[serde(borrow, rename = "JD_AvatarDescTemplate")]
-    AvatarDescription(AvatarDescription<'a>),
+    AvatarDescription(AvatarDescription2022<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_Carousel_Template")]
     Carousel(Empty<'a>),

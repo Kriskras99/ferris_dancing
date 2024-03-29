@@ -7,9 +7,16 @@ use std::{
     borrow::Cow, collections::HashMap, ffi::OsStr, fs::File, io::Write, path::Path, sync::OnceLock,
 };
 
-use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test;
-use ubiart_toolkit::{cooked, json_types::AvatarsObjectives, utils::Game};
+use anyhow::{anyhow, Context, Error};
+use dotstar_toolkit_utils::{testing::test, vfs::VirtualFile};
+use ubiart_toolkit::{
+    cooked,
+    json_types::{
+        v17::AvatarDescription17, v1819::AvatarDescription1819, v22::AvatarDescription2022,
+        AvatarsObjectives,
+    },
+    utils::Game,
+};
 
 use crate::{
     types::{
@@ -45,7 +52,9 @@ fn save_images(
     phone_image: &str,
 ) -> Result<(), Error> {
     let avatar_named_dir_path = is.dirs.avatars().join(name);
-    std::fs::create_dir(&avatar_named_dir_path)?;
+    std::fs::create_dir(&avatar_named_dir_path).with_context(|| {
+        format!("Tried to create {avatar_named_dir_path:?}, but it already exists!")
+    })?;
     let alt_actor_file = is
         .vfs
         .open(cook_path(actor_path.as_ref(), is.ugi.platform)?.as_ref())?;
@@ -73,110 +82,89 @@ fn save_images(
     Ok(())
 }
 
-/// Import all the avatars (Just Dance 2020-2022)
-pub fn import_v20v22(
-    is: &ImportState<'_>,
-    avatardb_scene: &str,
-    avatarsobjectives: Option<&AvatarsObjectives>,
-) -> Result<(), Error> {
-    let empty_objectives = HashMap::new();
-    println!("Importing avatars...");
-
-    let mut avatars = load_avatar_config(is)?;
-
-    // Open the avatardb and avatarsobjectives (which might be empty)
-    let avatardb_file = is
-        .vfs
-        .open(cook_path(avatardb_scene, is.ugi.platform)?.as_ref())?;
-    let avatardb = cooked::isc::parse(&avatardb_file)?;
-    let avatarsobjectives = avatarsobjectives.unwrap_or(&empty_objectives);
-
-    let mut avatar_description_files = Vec::with_capacity(avatardb.scene.actors.len());
-
-    for actor in avatardb.scene.actors {
-        let actor = actor.actor()?;
-
-        // Extract avatar description from template
-        let file = is
-            .vfs
-            .open(cook_path(actor.lua.as_ref(), is.ugi.platform)?.as_ref())?;
-        avatar_description_files.push(file);
-    }
-
-    for file in &avatar_description_files {
-        let template = cooked::json::parse_v22(&file, is.lax)?;
-        let mut actor_template = template.actor()?;
-        test(&actor_template.components.len(), &2)
-            .context("Not exactly two components in actor")?;
-        let avatar_desc = actor_template.components.remove(1).avatar_description()?;
-
-        let avatar_info = match get_name(is.ugi.game, avatar_desc.avatar_id) {
-            Ok(name) => name,
-            Err(error) => {
-                println!("{error}");
-                continue;
-            }
-        };
-
-        let name = avatar_info.name;
-
-        // Only add new avatars
-        if !avatars.contains_key(name) {
-            let avatar_image_path = format!("{name}/avatar.png");
-            let avatar_image_phone_path = format!("{name}/avatar_phone.png");
-
-            let main_avatar = avatar_info.main_avatar().map(Cow::Borrowed);
-            let relative_song_name = if !avatar_desc.relative_song_name.is_empty() {
-                if avatar_desc.relative_song_name != avatar_info.map {
-                    println!(
-                        "Map ({}) does not equal relative song ({})!",
-                        avatar_info.map, avatar_desc.relative_song_name
-                    );
-                }
-                avatar_desc.relative_song_name
-            } else {
-                Cow::Borrowed(avatar_info.map)
-            };
-
-            let avatar = Avatar {
-                relative_song_name,
-                sound_family: avatar_desc.sound_family,
-                status: avatar_desc.status,
-                unlock_type: UnlockType::from_unlock_type(
-                    avatar_desc.unlock_type,
-                    avatarsobjectives.get(&avatar_desc.avatar_id),
-                )?,
-                used_as_coach_map_name: Cow::Borrowed(avatar_info.map),
-                used_as_coach_coach_id: avatar_info.coach,
-                special_effect: avatar_info.special_effect,
-                main_avatar,
-                image_path: avatar_image_path.into(),
-                image_phone_path: avatar_image_phone_path.into(),
-                guessed: false,
-            };
-
-            save_images(
-                is,
-                name,
-                &avatar,
-                &avatar_desc.actor_path,
-                &avatar_desc.phone_image,
-            )?;
-
-            avatars.insert(name.to_string(), avatar);
-        }
-    }
-
-    import_unreferenced_avatars(is, &mut avatars)?;
-
-    save_avatar_config(is, avatars)?;
-
-    Ok(())
+struct MinAvatarDesc<'a> {
+    pub avatar_id: u16,
+    pub sound_family: Cow<'a, str>,
+    pub status: u8,
+    pub unlock_type: u8,
+    pub actor_path: Cow<'a, str>,
+    pub phone_image: Cow<'a, str>,
 }
 
-/// Import all the avatars (Just Dance 2017-2019)
-pub fn import_v17v19(
-    is: &ImportState<'_>,
+impl<'a> From<AvatarDescription2022<'a>> for MinAvatarDesc<'a> {
+    fn from(value: AvatarDescription2022<'a>) -> Self {
+        Self {
+            avatar_id: value.avatar_id,
+            sound_family: value.sound_family,
+            status: value.status,
+            unlock_type: value.unlock_type,
+            actor_path: value.actor_path,
+            phone_image: value.phone_image,
+        }
+    }
+}
+
+impl<'a> From<AvatarDescription1819<'a>> for MinAvatarDesc<'a> {
+    fn from(value: AvatarDescription1819<'a>) -> Self {
+        Self {
+            avatar_id: value.avatar_id,
+            sound_family: value.sound_family,
+            status: value.status,
+            unlock_type: value.unlock_type,
+            actor_path: value.actor_path,
+            phone_image: value.phone_image,
+        }
+    }
+}
+
+impl<'a> From<AvatarDescription17<'a>> for MinAvatarDesc<'a> {
+    fn from(value: AvatarDescription17<'a>) -> Self {
+        Self {
+            avatar_id: value.avatar_id,
+            sound_family: value.sound_family,
+            status: value.status,
+            unlock_type: value.unlock_type,
+            actor_path: value.actor_path,
+            phone_image: value.phone_image,
+        }
+    }
+}
+
+fn parse_actor_v20v22<'a>(
+    is: &ImportState,
+    file: &'a VirtualFile,
+) -> Result<MinAvatarDesc<'a>, Error> {
+    let template = cooked::json::parse_v22(&file, is.lax)?;
+    let mut actor_template = template.actor()?;
+    test(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+    Ok(avatar_desc.into())
+}
+
+fn parse_actor_v18v19<'a>(
+    is: &ImportState,
+    file: &'a VirtualFile,
+) -> Result<MinAvatarDesc<'a>, Error> {
+    let template = cooked::json::parse_v19(&file, is.lax)?;
+    let mut actor_template = template.actor()?;
+    test(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+    Ok(avatar_desc.into())
+}
+
+fn parse_actor_v17<'a>(
+    is: &ImportState,
+    file: &'a VirtualFile,
+) -> Result<MinAvatarDesc<'a>, Error> {
+    let template = cooked::json::parse_v17(&file, is.lax)?;
+    let mut actor_template = template.actor()?;
+    test(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+    Ok(avatar_desc.into())
+}
+
+pub fn import(
+    is: &ImportState,
     avatardb_scene: &str,
     avatarsobjectives: Option<&AvatarsObjectives>,
 ) -> Result<(), Error> {
@@ -204,11 +192,15 @@ pub fn import_v17v19(
     }
 
     for file in &avatar_description_files {
-        let template = cooked::json::parse_v19(&file, is.lax)?;
-        let mut actor_template = template.actor()?;
-        test(&actor_template.components.len(), &2)
-            .context("Not exactly two components in actor")?;
-        let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+        let avatar_desc = match is.ugi.game {
+            Game::JustDance2022
+            | Game::JustDance2021
+            | Game::JustDance2020
+            | Game::JustDanceChina => parse_actor_v20v22(is, file)?,
+            Game::JustDance2019 | Game::JustDance2018 => parse_actor_v18v19(is, file)?,
+            Game::JustDance2017 => parse_actor_v17(is, file)?,
+            _ => todo!(),
+        };
 
         let avatar_info = match get_name(is.ugi.game, avatar_desc.avatar_id) {
             Ok(name) => name,
@@ -226,20 +218,9 @@ pub fn import_v17v19(
             let avatar_image_phone_path = format!("{name}/avatar_phone.png");
 
             let main_avatar = avatar_info.main_avatar().map(Cow::Borrowed);
-            let relative_song_name = if !avatar_desc.relative_song_name.is_empty() {
-                if avatar_desc.relative_song_name != avatar_info.map {
-                    println!(
-                        "Map ({}) does not equal relative song ({})!",
-                        avatar_info.map, avatar_desc.relative_song_name
-                    );
-                }
-                avatar_desc.relative_song_name
-            } else {
-                Cow::Borrowed(avatar_info.map)
-            };
 
             let avatar = Avatar {
-                relative_song_name,
+                relative_song_name: Cow::Borrowed(avatar_info.map),
                 sound_family: avatar_desc.sound_family,
                 status: avatar_desc.status,
                 unlock_type: UnlockType::from_unlock_type(
@@ -304,6 +285,10 @@ fn import_unreferenced_avatars(
 
         if !avatars.contains_key(name) {
             let avatar_named_dir_path = is.dirs.avatars().join(name);
+            std::fs::create_dir(&avatar_named_dir_path).with_context(|| {
+                format!("Tried to create {avatar_named_dir_path:?}, but it already exists!")
+            })?;
+
             let avatar_image_path = format!("{name}/avatar.png");
             let avatar_image_phone_path = format!("{name}/avatar_phone.png");
 
@@ -322,7 +307,6 @@ fn import_unreferenced_avatars(
                 image_phone_path: avatar_image_phone_path.into(),
                 guessed: true,
             };
-            std::fs::create_dir(&avatar_named_dir_path)?;
 
             // Save decooked image
             let cooked_image_path = cook_path(
@@ -2516,7 +2500,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     ),
                     (988, AvatarInfo::new("MadLoveALT_0", "MadLoveALT", 0, false)),
                     (989, AvatarInfo::new("Familiar_0", "Familiar", 0, false)),
-                    // (990, "UbiSoftJD2019Unknown_", "UbiSoftJD2019Unknown", , false),
+                    // (990, "UbiSoftJD2019Unknown", "UbiSoftJD2019Unknown", 0, false),
                     (991, AvatarInfo::new("TOY_0", "TOY", 0, false)),
                     (
                         992,
@@ -2695,7 +2679,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         718,
                         AvatarInfo::new("BubblePopALT_3", "BubblePopALT", 3, false),
                     ),
-                    (720, AvatarInfo::new("Footloose_", "Footloose", 0, false)),
+                    (720, AvatarInfo::new("Footloose_0", "Footloose", 0, false)),
                     (721, AvatarInfo::new("24K_0", "24K", 0, false)),
                     (722, AvatarInfo::new("24KALT_0", "24KALT", 0, false)),
                     (723, AvatarInfo::new("Diggy_0", "Diggy", 0, false)),
@@ -2774,7 +2758,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     (
                         805,
                         AvatarInfo::new(
-                            "UbiSoftRabbidsSexyAndIKnowItDLC_",
+                            "UbiSoftRabbidsSexyAndIKnowItDLC",
                             "UbiSoftRabbids",
                             2,
                             false,
@@ -2789,7 +2773,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     ),
                     (
                         812,
-                        AvatarInfo::new("MissAmazingKids_0", "MissAmazingKids", 0, false),
+                        AvatarInfo::new("MissAmazingKIDS_0", "MissAmazingKIDS", 0, false),
                     ),
                     (813, AvatarInfo::new("NewFace_1", "NewFace", 1, false)),
                     (
