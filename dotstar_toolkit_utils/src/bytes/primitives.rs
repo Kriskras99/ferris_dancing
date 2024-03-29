@@ -13,7 +13,7 @@ macro_rules! create_uint {
         #[doc = r""]
         #[doc = r" The alignment of this type is 1 byte."]
         #[doc = concat!(r" Two convenience aliases exist [`", stringify!($lename), r"`] and [`", stringify!($bename), r"`].")]
-        #[derive(Debug, Clone, Copy, PartialEq)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub struct $name<E: Endianness> {
             bytes: [u8; $n_bytes],
             byteorder: PhantomData<E>,

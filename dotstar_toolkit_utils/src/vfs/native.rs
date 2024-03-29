@@ -75,9 +75,8 @@ impl NativeFs {
 impl VirtualFileSystem for NativeFs {
     fn open(&self, path: &Path) -> std::io::Result<VirtualFile<'static>> {
         let path = self.canonicalize(path)?;
-        let mut cache = self.cache.lock().unwrap();
 
-        let data = match cache.entry(path) {
+        let data = match self.cache.lock().unwrap().entry(path) {
             Entry::Occupied(mut entry) => {
                 if let Some(data) = entry.get().upgrade() {
                     data

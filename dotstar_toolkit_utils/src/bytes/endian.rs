@@ -17,7 +17,7 @@ pub trait Endianness: Sealed + Clone + Copy + std::fmt::Debug + PartialEq {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LittleEndian {}
 
 impl Sealed for LittleEndian {}
@@ -33,7 +33,7 @@ impl Endianness for LittleEndian {
     fn to_native(_bytes: &mut [u8]) {}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BigEndian {}
 pub type NetworkEndian = BigEndian;
 

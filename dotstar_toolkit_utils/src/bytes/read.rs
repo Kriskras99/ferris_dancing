@@ -596,7 +596,7 @@ where
     T: BinaryDeserialize<'rf>,
 {
     #[must_use]
-    pub fn current_position(&self) -> u64 {
+    pub const fn current_position(&self) -> u64 {
         self.position
     }
 }

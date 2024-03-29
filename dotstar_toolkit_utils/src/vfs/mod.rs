@@ -43,9 +43,9 @@ pub struct WalkFs<'a> {
 
 impl ExactSizeIterator for WalkFs<'_> {}
 
-impl<'a: 'b, 'b> WalkFs<'a> {
+impl<'a> WalkFs<'a> {
     #[must_use]
-    pub fn merge(mut self, mut other: WalkFs<'a>) -> WalkFs<'b> {
+    pub fn merge(mut self, mut other: Self) -> Self {
         let mut paths = Vec::with_capacity(self.paths.capacity() + other.paths.capacity());
         paths.append(&mut self.paths);
         paths.append(&mut other.paths);
@@ -78,7 +78,7 @@ impl VirtualMetadata {
     /// This is the after the file is retrieved from the virtual filesystem.
     /// Therefore, if the filesystem compresses files it might be different from the size on the filesystem.
     #[must_use]
-    pub fn file_size(&self) -> u64 {
+    pub const fn file_size(&self) -> u64 {
         self.file_size
     }
 

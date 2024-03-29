@@ -118,10 +118,10 @@ impl DirectoryTree {
             && self.dir_root_portraitborders.exists()
     }
 
-    // /// The root of the mod directory.
-    // pub fn root(&self) -> &Path {
-    //     &self.dir_root
-    // }
+    /// The root of the mod directory.
+    pub fn root(&self) -> &Path {
+        &self.dir_root
+    }
 
     /// .mod directory, used for storing data the user is not expected to change.
     pub fn dot_mod(&self) -> &Path {

@@ -93,7 +93,7 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
         engine_version: config.engine_version,
     };
 
-    let native_vfs = NativeFs::new(&std::env::current_dir()?)?;
+    let native_vfs = NativeFs::new(&dir_tree.root())?;
 
     // Get a list of all songs in the directory
     let mut paths: Vec<_> = std::fs::read_dir(build_state.dirs.songs())?
