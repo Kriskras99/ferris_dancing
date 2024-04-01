@@ -9,6 +9,7 @@ use std::{
 use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::vfs::native::NativeFs;
+use tracing::instrument;
 use ubiart_toolkit::{
     secure_fat::vfs::SfatFilesystem,
     utils::{Game, Platform},
@@ -40,6 +41,7 @@ pub fn main(cli: &New) -> Result<(), Error> {
 /// - When `game_path` is not a secure_fat.gf
 /// - Invalid secure_fat.gf or .ipks or missing .ipks
 /// - The secure_fat.gf is not for the Nintendo Switch
+#[instrument]
 pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
     // Check that the target directory either doesn't exist yet or is empty
     // We do not want to potentially override existing files and/or directories
@@ -54,6 +56,7 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
         ));
     }
 
+    tracing::trace!("Importing {game_path:?} into {dir_root:?}");
     // Init the native filesystem and load the securefat as a virtual filesystem
     let native_vfs = NativeFs::new(
         game_path

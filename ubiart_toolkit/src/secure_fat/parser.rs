@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
     },
-    testing::{test, test_le, test_not},
+    testing::{test_eq, test_le, test_not},
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
@@ -19,10 +19,10 @@ impl BinaryDeserialize<'_> for SecureFat {
     ) -> Result<Self, ReadError> {
         // Read the header
         let magic = reader.read_at::<u32be>(position)?.into();
-        test(&magic, &MAGIC)?;
+        test_eq(&magic, &MAGIC)?;
         let game_platform = reader.read_at::<UniqueGameId>(position)?;
         let unk1 = reader.read_at::<u32be>(position)?.into();
-        test(&unk1, &UNK1)?;
+        test_eq(&unk1, &UNK1)?;
 
         // Read how many path IDs there are and prepare a map
         let path_id_count = usize::try_from(reader.read_at::<u32be>(position)?)?;

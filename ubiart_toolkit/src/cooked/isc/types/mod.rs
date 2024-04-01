@@ -5,7 +5,7 @@
 
 use std::borrow::Cow;
 
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::test_eq;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::utils::Color;
@@ -2477,7 +2477,7 @@ where
             .map_err(|_| D::Error::custom(format!("Could not parse '{fourth}' as a float!")))?;
         max_i = i;
     }
-    test(&max_i, &3)
+    test_eq(&max_i, &3)
         .result()
         .map_err(|e| D::Error::custom(e.to_string()))?;
     Ok(result)

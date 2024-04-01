@@ -1,15 +1,11 @@
 //! # Pictogram Spritesheest
 //! Code for converting pictogram spritesheets into individual pictograms
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{
-    bytes::read::BinaryDeserialize,
-    testing::{test, test_ge, test_le},
-};
-use image::{imageops, ImageBuffer, RgbaImage};
-use texpresso::Format;
-use ubiart_toolkit::cooked::{png::Png, xtx};
+use dotstar_toolkit_utils::testing::{test_eq, test_ge, test_le};
+use image::imageops;
 
 use super::SongImportState;
+use crate::utils::decode_texture;
 
 /// The height of every picto
 const PICTO_HEIGHT: u32 = 0x200;
@@ -22,25 +18,25 @@ pub fn import(
     montage_path: &str,
     picto_filenames: &[&str],
 ) -> Result<(), Error> {
-    // Open the montage file
+    // Open and decode the montage file
     let montage_file = sis.vfs.open(montage_path.as_ref())?;
-    let montage = Png::deserialize(&montage_file)?;
-    let montage_width = u32::from(montage.width);
-    let montage_height = u32::from(montage.height);
+    let buffer = decode_texture(&montage_file, sis.ugi)?;
+    let montage_width = buffer.width();
+    let montage_height = buffer.height();
 
     // "Calculate" the width of the individual pictos
-    let picto_width = match montage.width {
+    let picto_width = match montage_width {
         0xB90 => 0x2E4,
         0x800 | 0x1000 => 0x200,
-        _ => return Err(anyhow!("Unknown width! {:x}", montage.width)),
+        _ => return Err(anyhow!("Unknown width! {:x}", montage_width)),
     };
 
     // Calculate the amount of pictos in the montage
     let pictos_horizontal = montage_width / picto_width;
     let pictos_vertical = montage_height / PICTO_HEIGHT;
-    test(&(montage_width % picto_width), &0)
+    test_eq(&(montage_width % picto_width), &0)
         .context("Montage is not divisble by expected pictogram width!")?;
-    test(&(montage_height % PICTO_HEIGHT), &0)
+    test_eq(&(montage_height % PICTO_HEIGHT), &0)
         .context("Montage is not divisible by pictogram height!")?;
     test_ge(
         &picto_filenames.len(),
@@ -52,38 +48,6 @@ pub fn import(
         &usize::try_from(pictos_horizontal * pictos_vertical)?,
     )
     .context("Too many filenames for montage size!")?;
-
-    // Never encountered this, so better quit early
-    test(&montage.xtx.images.len(), &1).context("More than one image in montage!")?;
-
-    let big_image = &montage.xtx.images[0];
-    let header = &big_image.header;
-    test(&header.format, &xtx::Format::DXT5)
-        .with_context(|| format!("Codec is not DXT5! {:?}", header.format))?;
-
-    // Decode the image
-    let data_compressed = &big_image.data[0];
-    // TODO: Replace with Vec::with_capacity
-    let mut data_decompressed = vec![0xFF; usize::try_from(header.width * header.height * 4)?];
-    Format::Bc3.decompress(
-        data_compressed,
-        usize::try_from(header.width)?,
-        usize::try_from(header.height)?,
-        &mut data_decompressed,
-    );
-    let mut buffer: RgbaImage =
-        ImageBuffer::from_vec(header.width, header.height, data_decompressed)
-            .ok_or_else(|| anyhow!("Not a RGBA image!?!"))?;
-
-    // Resize to size specified in the png header, if required
-    if montage_width != header.width || montage_height != header.height {
-        buffer = imageops::resize(
-            &buffer,
-            montage_width,
-            montage_height,
-            imageops::FilterType::Lanczos3,
-        );
-    }
 
     let mut pictos = Vec::with_capacity(usize::try_from(pictos_horizontal * pictos_vertical)?);
 

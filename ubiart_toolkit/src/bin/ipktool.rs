@@ -16,7 +16,7 @@ use ubiart_toolkit::{
     ipk::{self, Bundle},
     utils::{
         errors::{ParserError, WriterError},
-        PathId, UniqueGameId,
+        UniqueGameId,
     },
 };
 
@@ -80,17 +80,14 @@ pub fn list_ipk(ipk: &Bundle) {
     let mut dirs = HashSet::new();
     let mut n: usize = 0;
     for fil in ipk.files.values() {
-        let mut path = String::with_capacity(fil.path.path.len() + fil.path.filename.len());
-        path.push_str(&fil.path.path);
-        path.push_str(&fil.path.filename);
+        let path = &fil.path;
         println!(
-            "{} [0x{:x}] ({} | {})",
-            path,
-            u32::from(PathId::from(path.as_str())),
+            "{path} [0x{:x}] ({} | {})",
+            u32::from(path.id()),
             if fil.is_cooked { 'C' } else { 'U' },
             fil.timestamp
         );
-        dirs.insert(fil.path.path.as_ref());
+        dirs.insert(fil.path.parent());
         n += 1;
     }
     println!("{} directories, {n} files", dirs.len());
@@ -105,9 +102,9 @@ pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(
     create_dir_all(destination)?;
 
     for fil in ipk.files.values() {
-        let path = &destination.join(fil.path.path.as_ref());
+        let path = &destination.join(fil.path.parent());
         create_dir_all(path)?;
-        let filepath = &path.join(fil.path.filename.as_ref());
+        let filepath = &path.join(fil.path.filename());
         if overwrite || !filepath.exists() {
             let mut file = File::create(filepath)?;
             match &fil.data {
@@ -142,12 +139,12 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
     }
 
     for packed_file in ipk.files.values() {
-        if packed_file.is_cooked && !packed_file.path.path.contains("itf_cooked") {
+        if packed_file.is_cooked && !packed_file.path.contains("itf_cooked") {
             println!(
                 "  Metadata says cooked but PackedFile does not have 'itf_cooked' in path!: {} {}",
                 packed_file.is_cooked, packed_file.path
             );
-        } else if !packed_file.is_cooked && packed_file.path.path.contains("itf_cooked") {
+        } else if !packed_file.is_cooked && packed_file.path.contains("itf_cooked") {
             println!(
                 "  Metadata says not cooked but PackedFile does have 'itf_cooked' in path!: {} {}",
                 packed_file.is_cooked, packed_file.path
@@ -161,7 +158,7 @@ pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> 
     let vfs = NativeFs::new(source)?;
     let root = PathBuf::from("");
     let file_list = vfs.walk_filesystem(&root)?;
-    let files: Vec<_> = file_list.map(|p| p.to_str().unwrap()).collect();
+    let files: Vec<_> = file_list.collect();
     let mut file = File::create(destination)?;
     ipk::write(
         &mut file,

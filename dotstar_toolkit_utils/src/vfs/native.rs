@@ -10,6 +10,7 @@ use std::{
 };
 
 use memmap2::Mmap;
+use path_clean::PathClean;
 
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
 
@@ -29,7 +30,7 @@ impl NativeFs {
     /// Will error if `root` does not exist
     pub fn new(root: &Path) -> Result<Self> {
         Ok(Self {
-            root: fs::canonicalize(root)?,
+            root: root.clean(),
             cache: Mutex::new(HashMap::new()),
             list: OnceLock::new(),
         })
@@ -41,9 +42,9 @@ impl NativeFs {
     /// Will error if the path is outside the root or if the path does not exist
     fn canonicalize(&self, path: &Path) -> Result<PathBuf> {
         let path = if path.starts_with(&self.root) {
-            fs::canonicalize(path)?
+            path.clean()
         } else {
-            fs::canonicalize(self.root.join(path))?
+            self.root.join(path.clean())
         };
         if path.starts_with(&self.root) {
             Ok(path)
@@ -131,6 +132,8 @@ impl VirtualFileSystem for NativeFs {
     }
 
     fn exists(&self, path: &Path) -> bool {
-        Self::canonicalize(self, path).is_ok()
+        Self::canonicalize(self, path)
+            .map(|p| p.exists())
+            .unwrap_or_default()
     }
 }

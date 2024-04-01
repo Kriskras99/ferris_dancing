@@ -23,6 +23,8 @@
 //! Currently supported are Just Dance 2017-2022 for the Switch.
 //! It can import and export songs, playlists, quests/objectives, avatars, aliases, portraitborders, gacha machine, and search labels.
 
+use std::process::ExitCode;
+
 use bundle::Bundle;
 // use check::Check;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -30,6 +32,7 @@ use export::Build;
 use extract::Extract;
 use import::Import;
 use new::New;
+use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
 mod build;
 mod bundle;
@@ -63,7 +66,7 @@ enum Commands {
     Export(Build),
     // /// Check the completeness of the mod
     // Check(Check),
-    /// Check the completeness of the mod
+    /// Bundle files into a .ipk
     Bundle(Bundle),
 }
 
@@ -78,16 +81,37 @@ enum FileConflictStrategy {
     Error,
 }
 
-fn main() -> Result<(), anyhow::Error> {
+fn main() -> ExitCode {
     let cli = Cli::parse();
 
-    match cli.commands {
-        Commands::New(data) => new::main(&data)?,
-        Commands::Import(data) => import::main(&data)?,
-        Commands::Extract(data) => extract::main(data)?,
-        Commands::Export(data) => export::main(&data)?,
-        // Commands::Check(data) => check::main(&data)?,
-        Commands::Bundle(data) => bundle::main(&data)?,
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        // Display source code file paths
+        .with_file(true)
+        // Display source code line numbers
+        .with_line_number(true)
+        // Display the thread ID an event was recorded on
+        .with_thread_ids(false)
+        // Don't display the event's target (module path)
+        .with_target(true);
+    tracing_subscriber::registry()
+        .with(fmt_layer)
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
+    let result = match cli.commands {
+        Commands::New(data) => new::main(&data),
+        Commands::Import(data) => import::main(&data),
+        Commands::Extract(data) => extract::main(data),
+        Commands::Export(data) => export::main(&data),
+        // Commands::Check(data) => check::main(&data),
+        Commands::Bundle(data) => bundle::main(&data),
+    };
+
+    match result {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("Error: {err:#?}");
+            ExitCode::FAILURE
+        }
     }
-    Ok(())
 }

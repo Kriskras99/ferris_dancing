@@ -43,7 +43,7 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
             let background_texture = is
                 .vfs
                 .open(cook_path(&desc.background_texture_path, is.ugi.platform)?.as_ref())?;
-            let background_texture_decoded = decode_texture(&background_texture)?;
+            let background_texture_decoded = decode_texture(&background_texture, is.ugi)?;
             background_texture_decoded.save(
                 is.dirs
                     .portraitborders()
@@ -54,7 +54,7 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
                 let foreground_texture = is
                     .vfs
                     .open(cook_path(&desc.foreground_texture_path, is.ugi.platform)?.as_ref())?;
-                let foreground_texture_decoded = decode_texture(&foreground_texture)?;
+                let foreground_texture_decoded = decode_texture(&foreground_texture, is.ugi)?;
                 foreground_texture_decoded.save(
                     is.dirs
                         .portraitborders()

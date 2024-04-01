@@ -98,7 +98,7 @@ pub fn bundle(
     let vfs = NativeFs::new(source)?;
     let files = vfs.walk_filesystem("".as_ref())?;
     let file_count = files.len();
-    let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
+    let filenames: Vec<_> = files.collect::<Vec<_>>();
 
     if patch {
         let file_path = destination.join("patch_nx.ipk");
@@ -109,7 +109,7 @@ pub fn bundle(
             config.engine_version,
             ipk::Options::default(),
             &vfs,
-            &files_str,
+            &filenames,
         )?;
         if file_path.metadata()?.len() >= MAX_BUNDLE_SIZE_FAT32 {
             println!("Warning! patch_nx.ipk file is bigger than 4 GB and therefore not compatible with the FAT32 filesystem.");
@@ -122,13 +122,13 @@ pub fn bundle(
         // Track the total size of the mod
         let mut total_size = 0u64;
         // Collects all the files that belong to a song along with the total size of the song
-        let mut song_bundles: HashMap<String, (u64, Vec<&str>)> = HashMap::new();
+        let mut song_bundles: HashMap<String, (u64, Vec<&Path>)> = HashMap::new();
 
         // Extract common string
         let path_cache_maps = "cache/itf_cooked/nx/world/maps/";
         let path_maps = "world/maps/";
 
-        for path in files_str {
+        for path in filenames {
             let file_size = vfs.metadata(path.as_ref())?.file_size();
             total_size += file_size;
             /*
@@ -151,18 +151,21 @@ pub fn bundle(
                 main_bundle_size += file_size;
                 main_bundle_entries.push(path);
             } else {
+                let path_str = path
+                    .to_str()
+                    .ok_or_else(|| anyhow!("Path is not a valid str! {path:?}"))?;
                 // Extract the map name from the path
-                let mut map_name = if path.starts_with(path_cache_maps) {
-                    path.replace(path_cache_maps, "")
-                } else if path.starts_with(path_maps) {
-                    path.replace(path_maps, "")
+                let mut map_name = if path_str.starts_with(path_cache_maps) {
+                    path_str.replace(path_cache_maps, "")
+                } else if path_str.starts_with(path_maps) {
+                    path_str.replace(path_maps, "")
                 } else {
                     bail!("File doesn't belong anywhere!");
                 };
                 map_name.truncate(
                     map_name
                         .find('/')
-                        .ok_or_else(|| anyhow!("Invalid path! {path}"))?,
+                        .ok_or_else(|| anyhow!("Invalid path! {path_str}"))?,
                 );
                 // If the song already exists add the information
                 match song_bundles.entry(map_name) {

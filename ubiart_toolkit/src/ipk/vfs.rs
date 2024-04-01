@@ -10,6 +10,7 @@ use dotstar_toolkit_utils::{
     vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs},
 };
 use nohash_hasher::IntMap;
+use path_clean::PathClean;
 use yoke::Yoke;
 
 use super::Bundle;
@@ -52,7 +53,8 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
         reason = "Guard is needed in the entire match"
     )]
     fn open<'rf>(&'rf self, path: &Path) -> std::io::Result<VirtualFile<'rf>> {
-        let path_id = path_id(path);
+        let path = path.clean();
+        let path_id = path_id(&path);
         let file = self.bundle.get().files.get(&path_id).ok_or_else(|| {
             std::io::Error::new(
                 ErrorKind::NotFound,
@@ -98,7 +100,8 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
     }
 
     fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
-        let path_id = path_id(path);
+        let path = path.clean();
+        let path_id = path_id(&path);
         let file = self.bundle.get().files.get(&path_id);
         match file {
             Some(file) => Ok(VirtualMetadata {
@@ -113,31 +116,28 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
     }
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        let path = path.clean();
         let list = self.list.get_or_init(|| {
             self.bundle
                 .get()
                 .files
                 .values()
                 .map(|f| &f.path)
-                .map(|p| {
-                    let mut pb = PathBuf::with_capacity(p.len());
-                    pb.push(p.path.as_ref());
-                    pb.push(p.filename.as_ref());
-                    pb
-                })
+                .map(PathBuf::from)
                 .collect()
         });
 
         Ok(WalkFs {
             paths: list
                 .iter()
-                .filter(|p| p.starts_with(path))
+                .filter(|p| p.starts_with(&path))
                 .map(PathBuf::as_path)
                 .collect(),
         })
     }
 
     fn exists(&self, path: &Path) -> bool {
-        self.bundle.get().files.contains_key(&path_id(path))
+        let path = path.clean();
+        self.bundle.get().files.contains_key(&path_id(&path))
     }
 }

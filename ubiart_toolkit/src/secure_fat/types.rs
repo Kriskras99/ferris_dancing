@@ -90,10 +90,10 @@ impl SecureFat {
     }
 
     /// Add path ids to a bundle
-    pub fn add_path_ids_to_bundle<T: IntoIterator<Item = PathId>>(
+    pub fn add_path_ids_to_bundle(
         &mut self,
         bundle_id: BundleId,
-        path_ids: T,
+        path_ids: impl IntoIterator<Item = PathId>,
     ) {
         for path_id in path_ids {
             match self.path_id_to_bundle_ids.entry(path_id) {

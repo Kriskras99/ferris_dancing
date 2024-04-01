@@ -294,10 +294,10 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
     let lower_map_name = ses.lower_map_name;
     let k_or_d = k_or_d.to_str();
     let actor = cooked::act::Actor {
-        tpl: SplitPath {
-            path: Cow::Owned(format!("{map_path}/timeline/")),
-            filename: Cow::Owned(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
-        },
+        tpl: SplitPath::new(
+            Cow::Owned(format!("{map_path}/timeline/")),
+            Cow::Owned(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
+        )?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,

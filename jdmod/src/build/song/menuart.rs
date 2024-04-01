@@ -119,20 +119,20 @@ fn menuart_scene<'a>(
 fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Result<Vec<u8>, Error> {
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
-        tpl: SplitPath {
-            path: Cow::Borrowed("enginedata/actortemplates/"),
-            filename: Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
-        },
+        tpl: SplitPath::new(
+            Cow::Borrowed("enginedata/actortemplates/"),
+            Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
+        )?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component::MaterialGraphicComponent(
             cooked::act::MaterialGraphicComponent {
                 files: [
-                    SplitPath {
-                        path: Cow::Owned(format!("world/maps/{lower_map_name}/menuart/textures")),
-                        filename: Cow::Borrowed(tga),
-                    },
+                    SplitPath::new(
+                        Cow::Owned(format!("world/maps/{lower_map_name}/menuart/textures/")),
+                        Cow::Borrowed(tga),
+                    )?,
                     SplitPath::default(),
                     SplitPath::default(),
                     SplitPath::default(),
@@ -142,10 +142,10 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
                     SplitPath::default(),
                     SplitPath::default(),
                     SplitPath::default(),
-                    SplitPath {
-                        path: Cow::Borrowed("world/_common/matshader/"),
-                        filename: Cow::Borrowed("multitexture_1layer.msh"),
-                    },
+                    SplitPath::new(
+                        Cow::Borrowed("world/_common/matshader/"),
+                        Cow::Borrowed("multitexture_1layer.msh"),
+                    )?,
                 ],
                 unk14: if tga.ends_with("_albumcoach.tga") || tga.contains("_coach_") {
                     6

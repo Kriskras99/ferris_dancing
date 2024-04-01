@@ -3,7 +3,7 @@
 use std::fs::File;
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::test_eq;
 use ubiart_toolkit::cooked;
 
 use super::SongImportState;
@@ -15,7 +15,7 @@ pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<
         .vfs
         .open(cook_path(karaoke_timeline_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&karaoke_timeline_file, sis.lax)?.actor()?;
-    test(&actor.components.len(), &1).context("More than one component in actor!")?;
+    test_eq(&actor.components.len(), &1).context("More than one component in actor!")?;
     let tape_case = actor.components.swap_remove(0).tape_case_component()?;
 
     let tape_group = &tape_case.tapes_rack.first();

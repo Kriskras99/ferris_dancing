@@ -10,7 +10,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::{test, TestResult};
+use dotstar_toolkit_utils::testing::{test_eq, TestResult};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types;
 
@@ -1598,20 +1598,20 @@ impl<'a> Component<'a> {
                     acceptable_categories.push(cat.try_into()?);
                 }
                 if data.all_map_moves_count {
-                    test(&data.exact_moves_count, &u32::MAX)?;
-                    test(&data.min_moves_count, &u32::MAX)?;
-                    test(&data.max_moves_count, &u32::MAX)?;
-                    test(&data.only_map_last_move, &false)?;
-                    test(&data.moves_in_a_row, &false)?;
+                    test_eq(&data.exact_moves_count, &u32::MAX)?;
+                    test_eq(&data.min_moves_count, &u32::MAX)?;
+                    test_eq(&data.max_moves_count, &u32::MAX)?;
+                    test_eq(&data.only_map_last_move, &false)?;
+                    test_eq(&data.moves_in_a_row, &false)?;
                     ComponentType::MapRequireAllMoves(MapRequireAllMoves {
                         acceptable_categories,
                     })
                 } else if data.only_map_last_move {
                     TestResult::or(
-                        test(&data.exact_moves_count, &1)
-                            .and(test(&data.min_moves_count, &u32::MAX)),
-                        test(&data.exact_moves_count, &u32::MAX)
-                            .and(test(&data.min_moves_count, &1)),
+                        test_eq(&data.exact_moves_count, &1)
+                            .and(test_eq(&data.min_moves_count, &u32::MAX)),
+                        test_eq(&data.exact_moves_count, &u32::MAX)
+                            .and(test_eq(&data.min_moves_count, &1)),
                     )
                     .with_context(|| {
                         format!(
@@ -1619,17 +1619,17 @@ impl<'a> Component<'a> {
                             data.exact_moves_count, data.min_moves_count
                         )
                     })?;
-                    test(&data.max_moves_count, &u32::MAX)?;
-                    test(&data.all_map_moves_count, &false)?;
-                    test(&data.moves_in_a_row, &false)?;
+                    test_eq(&data.max_moves_count, &u32::MAX)?;
+                    test_eq(&data.all_map_moves_count, &false)?;
+                    test_eq(&data.moves_in_a_row, &false)?;
                     ComponentType::MapRequireLastMove(MapRequireLastMove {
                         acceptable_categories,
                     })
                 } else if data.moves_in_a_row {
-                    test(&data.exact_moves_count, &u32::MAX)?;
-                    test(&data.max_moves_count, &u32::MAX)?;
-                    test(&data.only_map_last_move, &false)?;
-                    test(&data.all_map_moves_count, &false)?;
+                    test_eq(&data.exact_moves_count, &u32::MAX)?;
+                    test_eq(&data.max_moves_count, &u32::MAX)?;
+                    test_eq(&data.only_map_last_move, &false)?;
+                    test_eq(&data.all_map_moves_count, &false)?;
                     ComponentType::MapRequireXMovesInARow(MapRequireXMovesInARow {
                         min_moves_count: data.min_moves_count,
                         acceptable_categories,

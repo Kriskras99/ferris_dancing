@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Error};
-use dotstar_toolkit_utils::{testing::test, vfs::VirtualFile};
+use dotstar_toolkit_utils::{testing::test_eq, vfs::VirtualFile};
 use ubiart_toolkit::{
     cooked,
     json_types::{
@@ -68,9 +68,10 @@ fn save_images(
 
     // Save decooked image
     let image_path = mtg.files[0].to_string();
-    test(&image_path.is_empty(), &false)?;
+    test_eq(&image_path.is_empty(), &false)?;
     let cooked_image_path = cook_path(&image_path, is.ugi.platform)?;
-    let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?)?;
+    let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?, is.ugi)
+        .with_context(|| format!("Failed to decode {cooked_image_path}!"))?;
     let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
     decooked_image.save(&avatar_image_path)?;
 
@@ -136,7 +137,7 @@ fn parse_actor_v20v22<'a>(
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v22(&file, is.lax)?;
     let mut actor_template = template.actor()?;
-    test(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
     let avatar_desc = actor_template.components.remove(1).avatar_description()?;
     Ok(avatar_desc.into())
 }
@@ -147,7 +148,7 @@ fn parse_actor_v18v19<'a>(
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v19(&file, is.lax)?;
     let mut actor_template = template.actor()?;
-    test(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
     let avatar_desc = actor_template.components.remove(1).avatar_description()?;
     Ok(avatar_desc.into())
 }
@@ -158,7 +159,7 @@ fn parse_actor_v17<'a>(
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v17(&file, is.lax)?;
     let mut actor_template = template.actor()?;
-    test(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
     let avatar_desc = actor_template.components.remove(1).avatar_description()?;
     Ok(avatar_desc.into())
 }
@@ -313,7 +314,7 @@ fn import_unreferenced_avatars(
                 &format!("world/avatars/{avatar_id:0>4}/avatar.png"),
                 is.ugi.platform,
             )?;
-            let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?)?;
+            let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?, is.ugi)?;
             let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
             decooked_image.save(&avatar_image_path)?;
 
@@ -391,7 +392,10 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         76,
                         AvatarInfo::new("EverybodyNeeds_0", "EverybodyNeeds", 0, false),
                     ),
-                    // (347, "?""),
+                    (
+                        347,
+                        AvatarInfo::new("GangnamStyleDLC_0", "GangnamStyleDLC", 0, false),
+                    ),
                     (
                         717,
                         AvatarInfo::new("FearlessPirateKids_0", "FearlessPirateKids", 0, false),
@@ -404,6 +408,9 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         907,
                         AvatarInfo::new("MonstersAcademyKids_0", "MonstersAcademyKids", 0, false),
                     ),
+                    (922, AvatarInfo::new("MiMiMiALT_3", "MiMiMiALT", 3, false)),
+                    (933, AvatarInfo::new("Fire_1", "Fire", 1, false)),
+                    (953, AvatarInfo::new("OMG_2", "OMG", 2, false)),
                     (
                         1062,
                         AvatarInfo::new("MedievalKids_0", "MedievalKids", 0, false),
@@ -851,8 +858,8 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         347,
                         AvatarInfo::new("GangnamStyleDLC_0", "GangnamStyleDLC", 0, false),
                     ),
-                    // (922, "?"),
-                    // (933, "?"),
+                    (922, AvatarInfo::new("MiMiMiALT_3", "MiMiMiALT", 3, false)),
+                    (933, AvatarInfo::new("Fire_1", "Fire", 1, false)),
                     (953, AvatarInfo::new("OMG_2", "OMG", 2, false)),
                     (
                         1393,
@@ -1604,11 +1611,11 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         1164,
                         AvatarInfo::new("BornThisWay_1", "BornThisWay", 1, false),
                     ),
-                    (1165, AvatarInfo::new("Circus_2", "Circus", 2, false)),
+                    (1165, AvatarInfo::new("Circus_2_C3", "Circus", 2, false)),
                     (
                         1166,
                         AvatarInfo::new("UptownFunk_0", "UptownFunk", 0, false),
-                    ), // C3
+                    ),
                     (1167, AvatarInfo::new("Chiwawa_0", "Chiwawa", 0, false)),
                     (
                         1168,
@@ -2094,8 +2101,8 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         347,
                         AvatarInfo::new("GangnamStyleDLC_0", "GangnamStyleDLC", 0, false),
                     ),
-                    // (922, "?"),
-                    // (933, "?"),
+                    (922, AvatarInfo::new("MiMiMiALT_3", "MiMiMiALT", 3, false)),
+                    (933, AvatarInfo::new("Fire_1", "Fire", 1, false)),
                     (953, AvatarInfo::new("OMG_2", "OMG", 2, false)),
                     (
                         1058,
@@ -2317,7 +2324,10 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     ),
                     (1161, AvatarInfo::new("Blame_0", "Blame", 0, false)),
                     (1162, AvatarInfo::new("Animals_0", "Animals", 0, false)),
-                    // (1163, "?"),
+                    (
+                        1163,
+                        AvatarInfo::new("WilliamTell_0", "WilliamTell", 0, false),
+                    ),
                     (
                         1164,
                         AvatarInfo::new("BornThisWay_1", "BornThisWay", 1, false),
@@ -2325,8 +2335,8 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     (1165, AvatarInfo::new("Circus_2", "Circus", 2, false)),
                     (
                         1166,
-                        AvatarInfo::new("UptownFunk_0", "UptownFunk", 0, false),
-                    ), // C3
+                        AvatarInfo::new("UptownFunk_0_C3", "UptownFunk", 0, false),
+                    ),
                     (1167, AvatarInfo::new("Chiwawa_0", "Chiwawa", 0, false)),
                     (
                         1168,
@@ -2455,8 +2465,8 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     (1220, AvatarInfo::new("OMG_2", "OMG", 2, false)),
                     (
                         1221,
-                        AvatarInfo::new("NoTearsLeft_0", "NoTearsLeft", 0, false),
-                    ), // C1
+                        AvatarInfo::new("NoTearsLeft_0_C1", "NoTearsLeft", 0, false),
+                    ),
                     (1222, AvatarInfo::new("OneKiss_0", "OneKiss", 0, false)),
                     (
                         1223,
@@ -2613,6 +2623,18 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     (
                         1312,
                         AvatarInfo::new("Everybody_2_Gold", "Everybody", 2, true),
+                    ),
+                    (
+                        1313,
+                        AvatarInfo::new("LaRespuesta_0", "LaRespuesta", 0, false),
+                    ),
+                    (
+                        1314,
+                        AvatarInfo::new("LaRespuesta_1", "LaRespuesta", 1, false),
+                    ),
+                    (
+                        1315,
+                        AvatarInfo::new("LaRespuesta_0_Gold", "LaRespuesta", 0, true),
                     ),
                     (1316, AvatarInfo::new("TalkALT_0", "TalkALT", 0, false)),
                     (1317, AvatarInfo::new("TalkALT_0_Gold", "TalkALT", 0, true)),
@@ -3616,7 +3638,7 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     (
                         78,
                         AvatarInfo::new("GangnamStyleDLC_1_C1_V1", "GangnamStyleDLC", 1, false),
-                    ), // C1
+                    ),
                     (
                         80,
                         AvatarInfo::new("IstanbulQUAT_0", "IstanbulQUAT", 0, false),
@@ -3681,11 +3703,11 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                     (
                         345,
                         AvatarInfo::new("GangnamStyleDLC_1_C2", "GangnamStyleDLC", 1, false),
-                    ), // C2
+                    ),
                     (
                         346,
                         AvatarInfo::new("GangnamStyleDLC_1_C1_V2", "GangnamStyleDLC", 1, false),
-                    ), // C1
+                    ),
                     (
                         347,
                         AvatarInfo::new("GangnamStyleDLC_0", "GangnamStyleDLC", 0, false),
@@ -3900,16 +3922,27 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                         600,
                         AvatarInfo::new("LittleSwing_1", "LittleSwing", 1, false),
                     ),
-                    // (606, "?"),
-                    // (607, "?"),
-                    // (608, "?"),
-                    // (609, "?"),
-                    // (639, "?"),
-                    // (640, "?"),
-                    // (641, "?"),
-                    // (642, "?"),
+                    (606, AvatarInfo::new("LegSongCHN_0", "LegSongCHN", 0, false)),
+                    (
+                        607,
+                        AvatarInfo::new("KaraokeForeverCHN_0", "KaraokeForeverCHN", 0, false),
+                    ),
+                    (
+                        608,
+                        AvatarInfo::new("BigDreamerCHN_0", "BigDreamerCHN", 0, false),
+                    ),
+                    (
+                        609,
+                        AvatarInfo::new("BedtimeStoryCHN_0", "BedtimeStoryCHN", 0, false),
+                    ),
+                    (639, AvatarInfo::new("JDCBadGirl_0", "JDCBadGirl", 0, false)),
+                    (
+                        640,
+                        AvatarInfo::new("JDCBangBangBang_1", "JDCBangBangBang", 1, false),
+                    ),
+                    (641, AvatarInfo::new("JDCDeep_0", "JDCDeep", 0, false)),
+                    (642, AvatarInfo::new("JDCGrowl_0", "JDCGrowl", 0, false)),
                     (646, AvatarInfo::new("HowDeep_0", "HowDeep", 0, false)),
-                    // (id, "name", "map", "coach_id", "gold")
                 ]),
             ),
         ])

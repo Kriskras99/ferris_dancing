@@ -12,21 +12,23 @@ categories = ["command-line-utilities", "parser-implementations"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { version = "1.0.81", features = ["std", "backtrace"], default-features = false}
-bitvec = { version = "1.0.1", default-features = false }
-clap = { version = "4.5.4", features = ["std", "help", "usage", "suggestions", "derive"], default-features = false}
-crossbeam = { version = "0.8.4", features = ["std", "crossbeam-channel"], default-features = false}
+anyhow = { workspace = true, features = ["std", "backtrace"] }
+bitvec = { workspace = true }
+clap = { workspace = true, features = ["std", "help", "usage", "suggestions", "derive"] }
+crossbeam = { workspace = true, features = ["std", "crossbeam-channel"] }
 dotstar_toolkit_utils = { version = "0.1.0", path = "../dotstar_toolkit_utils" }
-flate2 = { version = "1.0.28", features = ["rust_backend"], default-features = false}
-hash32 = { version = "0.3.1", features = [], default-features = false}
-image = { version = "0.25.0", features = ["png"], default-features = false }
-memmap2 = { version = "0.9.4", features = ["stable_deref_trait"], default-features = false}
-path-clean = { version = "1.0.1", features = [], default-features = false}
-regex = { version = "1.10.4", features = ["std", "perf"], default-features = false}
-serde = { version = "1.0", features = ["std", "derive"], default-features = false}
-serde_json = { version = "1.0.115", features = ["std"], default-features = false}
-stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false}
-texpresso = { version = "2.0.1", features = [], default-features = false}
+flate2 = { workspace = true, features = ["rust_backend"] }
+hash32 = { workspace = true, features = [] }
+image = { workspace = true, features = ["png"] }
+memmap2 = { workspace = true, features = ["stable_deref_trait"] }
+path-clean = { workspace = true, features = [] }
+regex = { workspace = true, features = ["std", "perf"] }
+serde = { workspace = true, features = ["std", "derive"] }
+serde_json = { workspace = true, features = ["std"] }
+stable_deref_trait = { workspace = true, features = ["std"] }
+texpresso = { workspace = true, features = [] }
+tracing.workspace = { workspace = true, features = ["std", "attributes"] }
+tracing-subscriber = { version = "0.3.18", features = ["std", "fmt", "ansi", "local-time", "time", "env-filter"] }
 ubiart_toolkit = { path = "../ubiart_toolkit" }
 
 [lints]

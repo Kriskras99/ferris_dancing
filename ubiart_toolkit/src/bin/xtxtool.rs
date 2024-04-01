@@ -5,13 +5,15 @@ use std::{
 };
 
 use clap::Parser;
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use image::{imageops, ImageBuffer, ImageFormat, Rgba};
 use serde::Serialize;
-use ubiart_toolkit::cooked::{
-    self,
-    png::Png,
-    xtx::{Format, Image, Xtx},
+use ubiart_toolkit::{
+    cooked::{
+        self,
+        png::Png,
+        xtx::{Format, Image, Xtx},
+    },
+    utils::{Game, Platform, UniqueGameId},
 };
 
 #[derive(Parser)]
@@ -31,7 +33,16 @@ fn main() {
     let cli = Cli::parse();
 
     let file = File::open(&cli.source).unwrap();
-    let png = Png::deserialize(&file).unwrap();
+    let png = cooked::png::parse(
+        &file,
+        UniqueGameId {
+            game: Game::JustDance2022,
+            platform: Platform::Nx,
+            id: 0,
+        },
+    )
+    .unwrap();
+    let xtx = png.texture.xtx().unwrap();
     if cli.info {
         println!("Width:            0x{:x}", png.width);
         println!("Height:           0x{:x}", png.height);
@@ -42,9 +53,9 @@ fn main() {
     }
     if cli.xtx_info {
         println!("XTX Header:");
-        println!("Major version: {}", png.xtx.major_version);
-        println!("Minor version: {}", png.xtx.minor_version);
-        for (i, image) in png.xtx.images.iter().enumerate() {
+        println!("Major version: {}", xtx.major_version);
+        println!("Minor version: {}", xtx.minor_version);
+        for (i, image) in xtx.images.iter().enumerate() {
             println!("XTX Image {i}: {{");
             let data = image.header;
             println!("  Image size:     0x{:x}", data.image_size);
@@ -63,7 +74,7 @@ fn main() {
     }
 
     if let Some(savepath) = cli.output {
-        assert!(png.xtx.images.len() == 1, "More than one image in texture!");
+        assert!(xtx.images.len() == 1, "More than one image in texture!");
         assert!(savepath.is_dir(), "Save path is not a directory!");
 
         let stem = cli
@@ -75,7 +86,7 @@ fn main() {
             .and_then(OsStr::to_str)
             .unwrap();
 
-        let big_image = png.xtx.images.first().unwrap();
+        let big_image = xtx.images.first().unwrap();
         if big_image.data.len() > 1 {
             println!("Warning! Not extracting mipmaps, only original image!");
         }
@@ -133,11 +144,11 @@ pub struct Metadata {
     pub xtx: XtxMetadata,
 }
 
-impl From<&Png> for Metadata {
+impl From<&Png<'_>> for Metadata {
     fn from(value: &Png) -> Self {
         Self {
             png: PngMetadata::from(value),
-            xtx: XtxMetadata::from(&value.xtx),
+            xtx: XtxMetadata::from(value.texture.xtx().unwrap()),
         }
     }
 }
@@ -153,8 +164,8 @@ pub struct PngMetadata {
     pub unk10: u16,
 }
 
-impl From<&Png> for PngMetadata {
-    fn from(value: &Png) -> Self {
+impl From<&Png<'_>> for PngMetadata {
+    fn from(value: &Png<'_>) -> Self {
         Self {
             width: value.width,
             height: value.height,

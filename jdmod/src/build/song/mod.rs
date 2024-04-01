@@ -45,8 +45,8 @@ pub fn build(
     let song: Song = serde_json::from_reader(song_file)?;
     let map_name = song.map_name.as_ref();
     let lower_map_name = map_name.to_lowercase();
-    let cache_map_path = format!("cache/itf_cooked/nx/world/maps/{lower_map_name}");
-    let map_path = format!("world/maps/{lower_map_name}");
+    let cache_map_path = format!("cache/itf_cooked/nx/world/maps/{lower_map_name}/");
+    let map_path = format!("world/maps/{lower_map_name}/");
     println!("Building song '{map_name}'...");
 
     let ses = SongExportState {
@@ -107,11 +107,21 @@ pub fn build(
     let main_scene_vec = cooked::isc::create_vec_with_capacity_hint(&main_scene, 35_000)?;
 
     bf.generated_files.add_file(
-        format!("{cache_map_path}/{lower_map_name}_main_scene.sgs.ckd").into(),
+        [
+            &cache_map_path,
+            &format!("{lower_map_name}_main_scene.sgs.ckd"),
+        ]
+        .iter()
+        .collect(),
         scene_settings,
     )?;
     bf.generated_files.add_file(
-        format!("{cache_map_path}/{lower_map_name}_main_scene.isc.ckd").into(),
+        [
+            &cache_map_path,
+            &format!("{lower_map_name}_main_scene.isc.ckd"),
+        ]
+        .iter()
+        .collect(),
         main_scene_vec,
     )?;
 

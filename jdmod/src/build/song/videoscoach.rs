@@ -3,7 +3,7 @@
 use std::{borrow::Cow, ffi::OsStr, path::PathBuf};
 
 use anyhow::Error;
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::{test, test_eq};
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
@@ -38,14 +38,14 @@ pub fn build(
 
     // the actual video
     let video_path = ses.dirs.song().join(ses.song.videofile.as_ref());
-    test(
+    test_eq(
         &video_path.extension().and_then(OsStr::to_str),
         &Some("webm"),
     )
     .with_context(|| {
         format!("Video file is not a webm! Transcoding is not supported: {video_path:?}")
     })?;
-    test(&video_path.exists(), &true)
+    test(video_path.exists())
         .with_context(|| format!("Video file does not exist at {video_path:?}!"))?;
 
     bf.generated_files.add_file(
@@ -86,23 +86,23 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
     let map_path = ses.map_path;
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
-        tpl: SplitPath {
-            path: Cow::Borrowed("world/_common/videoscreen/"),
-            filename: Cow::Borrowed("video_player_main.tpl"),
-        },
+        tpl: SplitPath::new(
+            Cow::Borrowed("world/_common/videoscreen/"),
+            Cow::Borrowed("video_player_main.tpl"),
+        )?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
         components: vec![cooked::act::Component::PleoComponent(
             cooked::act::PleoComponent {
-                video: SplitPath {
-                    path: Cow::Owned(format!("{map_path}/videoscoach/")),
-                    filename: Cow::Owned(format!("{lower_map_name}.webm")),
-                },
-                dash_mpd: SplitPath {
-                    path: Cow::Owned(format!("{map_path}/videoscoach/")),
-                    filename: Cow::Owned(format!("{lower_map_name}.mpd")),
-                },
+                video: SplitPath::new(
+                    Cow::Owned(format!("{map_path}/videoscoach/")),
+                    Cow::Owned(format!("{lower_map_name}.webm")),
+                )?,
+                dash_mpd: SplitPath::new(
+                    Cow::Owned(format!("{map_path}/videoscoach/")),
+                    Cow::Owned(format!("{lower_map_name}.mpd")),
+                )?,
                 channel_id: map_preview.then(|| ses.song.map_name.clone()),
             },
         )],

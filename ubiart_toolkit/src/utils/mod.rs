@@ -1,6 +1,12 @@
 pub mod errors;
 
-use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref, path::Path};
+use std::{
+    borrow::Cow,
+    ffi::OsStr,
+    fmt::Display,
+    ops::Deref,
+    path::{Path, PathBuf},
+};
 
 pub mod bytes;
 pub mod plumbing;
@@ -12,7 +18,7 @@ use dotstar_toolkit_utils::{
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteAt, WriteError},
     },
-    testing::test,
+    testing::{test, test_eq, TestError},
 };
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
@@ -80,13 +86,65 @@ impl From<LocaleId> for u32 {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct SplitPath<'a> {
-    pub path: Cow<'a, str>,
-    pub filename: Cow<'a, str>,
+    path: Cow<'a, str>,
+    filename: Cow<'a, str>,
 }
 
-impl SplitPath<'_> {
-    const EMPTY_PATH_ID: u32 = 0xFFFF_FFFF;
+impl<'a> SplitPath<'a> {
+    const EMPTY_PATH_ID: PathId = PathId(0xFFFF_FFFF);
     const PADDING: u32 = 0x0;
+
+    #[must_use]
+    pub fn new(path: Cow<'a, str>, filename: Cow<'a, str>) -> Result<Self, TestError> {
+        test(path.ends_with('/')).or(test(path.is_empty()))?;
+        test(!path.contains('.'))?;
+        test(!filename.ends_with('/'))?;
+        test(!filename.starts_with('/'))?;
+        Ok(Self { path, filename })
+    }
+
+    /// The total length of the path and filename combined
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.path.len() + self.filename.len()
+    }
+
+    /// Returns `true` if the path and filename are empty
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.path.is_empty() && self.filename.is_empty()
+    }
+
+    #[must_use]
+    pub fn id(&self) -> PathId {
+        if self.is_empty() {
+            Self::EMPTY_PATH_ID
+        } else {
+            PathId::from(self)
+        }
+    }
+
+    #[must_use]
+    pub fn starts_with(&self, pattern: &str) -> bool {
+        let (path_pattern, filename_pattern) = pattern.split_at(self.path.len().min(pattern.len()));
+        self.path.starts_with(path_pattern) && self.filename.starts_with(filename_pattern)
+    }
+
+    #[must_use]
+    /// Will only check if pattern is completely in path or filename, not partly in both
+    // TODO: Make this work when the pattern is partly in both
+    pub fn contains(&self, pattern: &str) -> bool {
+        self.path.contains(pattern) || self.filename.contains(pattern)
+    }
+
+    #[must_use]
+    pub fn parent<'b>(&'b self) -> &'b str {
+        &self.path
+    }
+
+    pub fn filename<'b>(&'b self) -> &'b str {
+        &self.filename
+    }
 }
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
@@ -98,18 +156,11 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
         let result: Result<_, _> = try {
             let filename = reader.read_len_string_at::<u32be>(position)?;
             let path = reader.read_len_string_at::<u32be>(position)?;
-            let path_id = reader.read_at::<u32be>(position)?.into();
-            let split_path = if path.is_empty() && filename.is_empty() {
-                test(&path_id, &Self::EMPTY_PATH_ID)?;
-                SplitPath::default()
-            } else {
-                let split_path = SplitPath { path, filename };
-                let path_id_calc = PathId::from(&split_path);
-                test(&path_id, &path_id_calc)?;
-                split_path
-            };
+            let path_id = reader.read_at::<PathId>(position)?;
+            let split_path = SplitPath::new(path, filename)?;
+            test_eq(&path_id, &split_path.id())?;
             let padding = reader.read_at::<u32be>(position)?.into();
-            test(&padding, &Self::PADDING)?;
+            test_eq(&padding, &Self::PADDING)?;
             split_path
         };
         if result.is_err() {
@@ -127,28 +178,10 @@ impl BinarySerialize for SplitPath<'_> {
     ) -> Result<(), WriteError> {
         writer.write_len_string_at::<u32be>(position, &self.filename)?;
         writer.write_len_string_at::<u32be>(position, &self.path)?;
-        if self.path.is_empty() && self.filename.is_empty() {
-            writer.write_at(position, &PathId::EMPTY)?;
-        } else {
-            writer.write_at(position, &PathId::from(self))?;
-        }
+        writer.write_at(position, &self.id())?;
         writer.write_at(position, &u32be::from(Self::PADDING))?;
 
         Ok(())
-    }
-}
-
-impl SplitPath<'_> {
-    /// The total length of the path and filename combined
-    #[must_use]
-    pub fn len(&self) -> usize {
-        self.path.len() + self.filename.len()
-    }
-
-    /// Returns `true` if the path and filename are empty
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.path.is_empty() && self.filename.is_empty()
     }
 }
 
@@ -169,18 +202,34 @@ impl<'a> TryFrom<&'a str> for SplitPath<'a> {
     type Error = ParserError;
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        let pos = value
-            .rfind('/')
-            .ok_or_else(|| ParserError::custom("Path does not contain separator ('/')"))?;
-        let (path, filename) = value.split_at(pos + 1);
-        assert!(
-            !filename.contains('/'),
-            "Filename does not contain a '/': {filename}"
-        );
-        Ok(SplitPath {
-            path: Cow::Borrowed(path),
-            filename: Cow::Borrowed(filename),
-        })
+        let (path, filename) = match value.rfind('/') {
+            Some(pos) => value.split_at(pos + 1),
+            None => ("", value),
+        };
+        Ok(SplitPath::new(
+            Cow::Borrowed(path),
+            Cow::Borrowed(filename),
+        )?)
+    }
+}
+
+impl<'a> TryFrom<&'a Path> for SplitPath<'a> {
+    type Error = ParserError;
+
+    fn try_from(value: &'a Path) -> Result<Self, Self::Error> {
+        value
+            .to_str()
+            .ok_or_else(|| ParserError::custom(format!("{value:?} is not a valid str!")))?
+            .try_into()
+    }
+}
+
+impl From<&SplitPath<'_>> for PathBuf {
+    fn from(value: &SplitPath<'_>) -> Self {
+        let mut pb = PathBuf::with_capacity(value.len());
+        pb.push(value.path.as_ref());
+        pb.push(value.filename.as_ref());
+        pb
     }
 }
 
@@ -273,7 +322,7 @@ impl TryFrom<u32> for UniqueGameId {
         match value {
             0x1C24_B91A => Ok(Self {
                 game: Game::JustDance2014,
-                platform: Platform::Wii,
+                platform: Platform::WiiU,
                 id: value,
             }),
             0xC563_9F58 => Ok(Self {
@@ -588,7 +637,9 @@ const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
 
 #[cfg(test)]
 mod tests {
-    use super::string_id;
+    use std::{borrow::Cow, path::PathBuf};
+
+    use super::{string_id, PathId, SplitPath};
 
     #[test]
     fn test_string_id() {
@@ -596,5 +647,25 @@ mod tests {
             string_id("world/maps/adoreyou/videoscoach/adoreyou.vp9.720.webm"),
             0x45CC_A9CA
         );
+    }
+
+    #[test]
+    fn test_splitpath_try_from_path() {
+        let path = PathBuf::from("world/maps/adoreyou/videoscoach/adoreyou.vp9.720.webm");
+        let sp = SplitPath::try_from(path.as_path()).unwrap();
+        assert_eq!(&PathId::from(&sp), &PathId::from(0x45CC_A9CA));
+    }
+
+    #[test]
+    fn test_splitpath_starts_with() {
+        let split_path = SplitPath::new(
+            Cow::Borrowed("/cache/itf_cooked/nx/"),
+            Cow::Borrowed("atlascontainer.ckd"),
+        )
+        .unwrap();
+        assert!(split_path.starts_with("/cache"));
+        assert!(split_path.starts_with("/cache/itf_cooked/nx/"));
+        assert!(split_path.starts_with("/cache/itf_cooked/nx/atlas"));
+        assert!(split_path.starts_with("/cache/itf_cooked/nx/atlascontainer.ckd"));
     }
 }

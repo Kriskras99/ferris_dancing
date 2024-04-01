@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
     },
-    testing::{test, test_le},
+    testing::{test_eq, test_le},
 };
 
 use super::MovementSpaceMove;
@@ -17,9 +17,9 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
     ) -> Result<Self, ReadError> {
         // Check the magic
         let unk1 = reader.read_at::<u32be>(position)?.into();
-        test(&unk1, &0x1u32)?;
+        test_eq(&unk1, &0x1u32)?;
         let unk2 = reader.read_at::<u32be>(position)?.into();
-        test(&unk2, &0x7u32)?;
+        test_eq(&unk2, &0x7u32)?;
 
         // There are always 64 bytes for the string, so we read untill the null byte.
         // If the null byte is past 64 bytes there's something wrong and we error.
@@ -44,7 +44,7 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
         }
         *position = start + 64;
 
-        test(&device.as_ref(), &"Acc_Dev_Dir_NP")?;
+        test_eq(&device.as_ref(), &"Acc_Dev_Dir_NP")?;
 
         let unk3 = reader.read_at::<u32be>(position)?.into();
         let unk4 = reader.read_at::<u32be>(position)?.into();
@@ -53,16 +53,16 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
         let unk7 = reader.read_at::<u32be>(position)?.into();
 
         let unk8 = reader.read_at::<u32be>(position)?.into();
-        test(&unk8, &0x211C_0000u32)?;
+        test_eq(&unk8, &0x211C_0000u32)?;
         let unk9 = reader.read_at::<u32be>(position)?.into();
-        test(&unk9, &0x0u32)?;
+        test_eq(&unk9, &0x0u32)?;
         let unk10 = reader.read_at::<u32be>(position)?.into();
         test_le(&unk10, &0x3u32)?;
         let points = reader.read_at::<u32be>(position)?.into();
         let unk12 = reader.read_at::<u32be>(position)?.into();
-        test(&unk12, &0x2u32)?;
+        test_eq(&unk12, &0x2u32)?;
         let unk13 = reader.read_at::<u32be>(position)?.into();
-        test(&unk13, &0x0u32)?;
+        test_eq(&unk13, &0x0u32)?;
 
         let unk14 = reader.read_at::<u32be>(position)?.into();
         let unk15 = reader.read_at::<u32be>(position)?.into();

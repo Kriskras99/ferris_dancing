@@ -1,12 +1,12 @@
 use std::io::Write;
 
 use byteorder::{LittleEndian, WriteBytesExt};
+use dotstar_toolkit_utils::bytes::write::WriteError;
 
 use super::{count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Format, Xtx};
-use crate::utils::errors::WriterError;
 
 /// Writes the XTX texture to the file
-pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriterError> {
+pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriteError> {
     src.write_u32::<LittleEndian>(0x4E76_4644)?;
     src.write_u32::<LittleEndian>(0x10)?;
     src.write_u32::<LittleEndian>(xtx.major_version)?;
@@ -80,7 +80,7 @@ pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriterError> {
 }
 
 /// Swizzle the image in `data`
-fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, WriterError> {
+fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, WriteError> {
     let (origin_width, origin_height) = if format.is_bcn() {
         ((width + 3) / 4, (height + 3) / 4)
     } else {
@@ -102,7 +102,7 @@ fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u
         4 => Ok(16),
         8 => Ok(8),
         16 => Ok(4),
-        _ => Err(WriterError::custom(format!(
+        _ => Err(WriteError::custom(format!(
             "BPP is not 1, 2, 4, 8, or 16! {}",
             format.get_bpp()
         ))),
@@ -118,7 +118,7 @@ fn swizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u
         4 => Ok(2),
         8 => Ok(1),
         16 => Ok(0),
-        _ => Err(WriterError::custom(format!(
+        _ => Err(WriteError::custom(format!(
             "BPP is not 1, 2, 4, 8, or 16! {}",
             format.get_bpp()
         ))),

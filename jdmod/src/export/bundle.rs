@@ -34,7 +34,7 @@ pub fn bundle(
     patch: bool,
 ) -> Result<(), Error> {
     // Make sure the destination directory actually exists
-    test(&destination.exists(), &true)
+    test(destination.exists())
         .with_context(|| format!("Destination directory {destination:?} does not exist!"))?;
 
     // For files that go into the main (logic) bundle
@@ -113,7 +113,7 @@ pub fn bundle(
             OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
         let vfs = OverlayFs::new(&bundle_files_vfs, patch_vfs);
         let files = vfs.walk_filesystem("".as_ref())?;
-        let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
+        let filenames: Vec<_> = files.collect::<Vec<_>>();
 
         ipk::create(
             destination.join("patch_nx.ipk"),
@@ -122,7 +122,7 @@ pub fn bundle(
             config.engine_version,
             ipk::Options::default(),
             &vfs,
-            &files_str,
+            &filenames,
         )?;
 
         // Add the original bundle to the sfat
@@ -153,7 +153,7 @@ pub fn bundle(
         let patched_bundle_vfs = OverlayFs::new(patch_vfs, bundle_vfs);
         let vfs = OverlayFs::new(&bundle_files_vfs, &patched_bundle_vfs);
         let files = vfs.walk_filesystem("".as_ref())?;
-        let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
+        let filenames: Vec<_> = files.collect::<Vec<_>>();
 
         ipk::create(
             destination.join("bundle_nx.ipk"),
@@ -162,7 +162,7 @@ pub fn bundle(
             config.engine_version,
             ipk::Options::default(),
             &vfs,
-            &files_str,
+            &filenames,
         )?;
 
         // Add the bundle to the sfat
@@ -194,7 +194,7 @@ fn save_songs_bundle(
 
     let overlay_vfs = OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
     let files = overlay_vfs.walk_filesystem("".as_ref())?;
-    let files_str: Vec<_> = files.map(Path::to_str).collect::<Option<Vec<_>>>().unwrap();
+    let filenames: Vec<_> = files.collect::<Vec<_>>();
 
     ipk::create(
         destination.join(format!("{name}_nx.ipk")),
@@ -203,7 +203,7 @@ fn save_songs_bundle(
         config.engine_version,
         ipk::Options::default(),
         &overlay_vfs,
-        &files_str,
+        &filenames,
     )?;
 
     // Add the bundle to the sfat

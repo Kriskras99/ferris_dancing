@@ -4,7 +4,7 @@
 use std::{
     borrow::Cow,
     cmp::Ordering,
-    collections::{BinaryHeap, HashMap},
+    collections::{BTreeSet, HashMap},
     hash::Hash,
     path::{Path, PathBuf},
 };
@@ -720,7 +720,7 @@ impl From<json_types::tpl::MusicSection<'_>> for Section {
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Timeline<'a> {
     /// The events in chronological order
-    pub timeline: BinaryHeap<Clip<'a>>,
+    pub timeline: BTreeSet<Clip<'a>>,
 }
 
 /// A event that happens during a song

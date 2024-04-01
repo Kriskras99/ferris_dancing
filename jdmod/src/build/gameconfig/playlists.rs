@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap, fs::File, path::Path};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::test_eq;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
@@ -103,7 +103,7 @@ fn build_carousel(
     carousel_rule
         .categories
         .retain(|c| c.title == "Recommended for me");
-    test(&carousel_rule.categories.len(), &1)
+    test_eq(&carousel_rule.categories.len(), &1)
         .context("More than one category in carousel_rule!")?;
     let recommended = carousel_rule
         .categories
@@ -138,10 +138,10 @@ fn build_carousel(
 /// Build the cover actor
 fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
     let actor = cooked::act::Actor {
-        tpl: SplitPath {
-            path: Cow::Borrowed("enginedata/actortemplates/"),
-            filename: Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
-        },
+        tpl: SplitPath::new(
+            Cow::Borrowed("enginedata/actortemplates/"),
+            Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
+        )?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
@@ -149,10 +149,10 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
             cooked::act::MaterialGraphicComponent {
                 // TODO: Check values!
                 files: [
-                    SplitPath {
-                        path: Cow::Borrowed("world/ui/textures/covers/playlists_offline/"),
-                        filename: Cow::Borrowed(tga),
-                    },
+                    SplitPath::new(
+                        Cow::Borrowed("world/ui/textures/covers/playlists_offline/"),
+                        Cow::Borrowed(tga),
+                    )?,
                     SplitPath::default(),
                     SplitPath::default(),
                     SplitPath::default(),
@@ -162,10 +162,10 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
                     SplitPath::default(),
                     SplitPath::default(),
                     SplitPath::default(),
-                    SplitPath {
-                        path: Cow::Borrowed("world/_common/matshader/"),
-                        filename: Cow::Borrowed("multitexture_1layer.msh"),
-                    },
+                    SplitPath::new(
+                        Cow::Borrowed("world/_common/matshader/"),
+                        Cow::Borrowed("multitexture_1layer.msh"),
+                    )?,
                 ],
                 ..Default::default()
             },

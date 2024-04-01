@@ -73,10 +73,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     });
 
     let song_desc_act = cooked::act::Actor {
-        tpl: SplitPath {
-            path: Cow::Borrowed(ses.map_path),
-            filename: Cow::Borrowed("songdesc.tpl"),
-        },
+        tpl: SplitPath::new(Cow::Borrowed(ses.map_path), Cow::Borrowed("songdesc.tpl"))?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,

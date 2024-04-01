@@ -1,6 +1,7 @@
 //! Contains parsers for files ending with the `.ckd` extension.
 
 pub mod act;
+pub mod gtx;
 pub mod isc;
 pub mod json;
 pub mod png;

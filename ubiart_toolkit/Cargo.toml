@@ -12,28 +12,30 @@ categories = ["command-line-utilities", "parser-implementations"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arbitrary = { version = "1.3.2", optional = true, features = ["derive"], default-features = false}
-bitflags = { version = "2.5.0", features = ["std"], default-features = false}
-byteorder = { version = "1.5.0", features = ["std"], default-features = false}
-clap = { version = "4.5.4", features = ["std", "help", "usage", "suggestions", "derive"], default-features = false}
+arbitrary = { workspace = true, features = ["derive"], optional = true }
+bitflags = { workspace = true, features = ["std"] }
+byteorder = { workspace = true, features = ["std"] }
+clap = { workspace = true, features = ["std", "help", "usage", "suggestions", "derive"] }
 dotstar_toolkit_utils = { version = "0.1.0", path = "../dotstar_toolkit_utils" }
-flate2 = { version = "1.0.28", features = ["rust_backend"], default-features = false}
-image = { version = "0.25.0", features = ["png"], default-features = false }
-memmap2 = { version = "0.9.4", features = ["stable_deref_trait"], default-features = false}
-nohash-hasher = { version = "0.2.0", features = ["std"], default-features = false }
-oxipng = { version = "9.0.0", optional = true, default-features = false, features = ["zopfli"] }
-quick-xml = { version = "0.31.0", features = ["serialize", "overlapped-lists"], default-features = false}
-serde = { version = "1.0.197", features = ["std", "derive"], default-features = false }
-serde_json = { version = "1.0.115", features = ["std", "float_roundtrip"], default-features = false }
-serde_with = { version = "3.7.0", features = ["std", "macros"], default-features = false }
-stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false}
-texpresso = { version = "2.0.1", features = [], default-features = false}
-thiserror = { version = "1.0.58", features = [], default-features = false}
-yoke = { version = "0.7.3", features = ["alloc", "derive"], default-features = false}
-zopfli = { version = "0.8.0", optional = true, default-features = false, features = ["zlib", "std"]}
+flate2 = { workspace = true, features = ["rust_backend"] }
+image = { workspace = true, features = ["png"] }
+memmap2 = { workspace = true, features = ["stable_deref_trait"] }
+nohash-hasher = { workspace = true, features = ["std"] }
+oxipng = { workspace = true, features = ["zopfli"], optional = true }
+path-clean.workspace = true
+quick-xml = { workspace = true, features = ["serialize", "overlapped-lists"] }
+serde = { workspace = true, features = ["std", "derive"] }
+serde_json = { workspace = true, features = ["std", "float_roundtrip"] }
+serde_with = { workspace = true, features = ["std", "macros"] }
+stable_deref_trait = { workspace = true, features = ["std"] }
+texpresso = { workspace = true, features = [] }
+thiserror = { workspace = true, features = [] }
+tracing.workspace = true
+yoke = { workspace = true, features = ["alloc", "derive"] }
+zopfli = { workspace = true, features = ["zlib", "std"], optional = true }
 
 [dev-dependencies]
-datatest-stable = "0.2.3"
+datatest-stable = { workspace = true }
 
 [features]
 default = ["fuzz"]

@@ -9,7 +9,7 @@ use dotstar_toolkit_utils::{
         primitives::{u32be, u64be},
         write::{BinarySerialize, CursorAt, WriteAt, WriteError},
     },
-    testing::test,
+    testing::test_eq,
     vfs::VirtualFileSystem,
 };
 use flate2::{write::ZlibEncoder, Compression};
@@ -73,20 +73,20 @@ struct ReducedMetadata<'a> {
     pub compressed: u64,
     pub offset: u64,
     pub timestamp: u64,
-    pub path: &'a str,
+    pub path: &'a Path,
 }
 
 const STATIC_HEADER_SIZE: usize = 0x30;
 
 /// Create a secure_fat.gf file at the path
-pub fn create<P: AsRef<Path>>(
-    path: P,
+pub fn create(
+    path: impl AsRef<Path>,
     game_platform: UniqueGameId,
     unk4: u32,
     engine_version: u32,
     options: Options,
     vfs: &impl VirtualFileSystem,
-    files: &[&str],
+    files: &[&Path],
 ) -> Result<(), WriteError> {
     let file = File::create(path)?;
     let mut writer = BufWriter::new(file);
@@ -111,9 +111,13 @@ pub fn write(
     engine_version: u32,
     options: Options,
     vfs: &impl VirtualFileSystem,
-    files: &[&str],
+    files: &[&Path],
 ) -> Result<(), WriteError> {
     // TODO: Make this code position independent
+    assert!(
+        *position == 0,
+        "TODO: This code is not yet position independent!"
+    );
     // let static_header_size = *position + u64::try_from(STATIC_HEADER_SIZE)?;
     // Calculate the size of the header, starting with the static size
     let mut base_offset = STATIC_HEADER_SIZE;
@@ -129,7 +133,7 @@ pub fn write(
 
     // Add the static metadata size for every file plus the length of the path
     for path in files {
-        base_offset += 0x2C + path.len(); // metadata size + path length
+        base_offset += 0x2C + path.as_os_str().len(); // metadata size + path length
     }
 
     // Start writing the header
@@ -241,7 +245,7 @@ pub fn write(
         writer.write_at(position, &path)?;
         // The SplitPath padding byte is reused as a cooked indicator
         *position -= 4;
-        if path.path.starts_with("cache/itf_cooked") {
+        if path.starts_with("cache/itf_cooked") {
             writer.write_at(position, &u32be::from(0x2))?;
         } else {
             writer.write_at(position, &u32be::from(0))?;
@@ -256,7 +260,7 @@ pub fn write(
         writer.write_at(position, &u32be::from(0x0))?; // unknown seperator between metadata and data
     }
 
-    test(position, &base_offset)?;
+    test_eq(position, &base_offset)?;
 
     Ok(())
 }

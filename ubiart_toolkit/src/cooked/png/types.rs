@@ -1,9 +1,11 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use crate::cooked::xtx::Xtx;
+use dotstar_toolkit_utils::bytes::write::WriteError;
+
+use crate::cooked::{gtx::Gtx, xtx::Xtx};
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Png {
+pub struct Png<'a> {
     pub width: u16,
     pub height: u16,
     pub unk2: u32,
@@ -11,10 +13,26 @@ pub struct Png {
     pub unk8: u32,
     pub unk9: u32,
     pub unk10: u16,
-    pub xtx: Xtx,
+    pub texture: Texture<'a>,
 }
 
-impl Default for Png {
+#[derive(Debug, PartialEq, Eq)]
+pub enum Texture<'a> {
+    Xtx(Xtx),
+    Gtx(Gtx<'a>),
+    None,
+}
+
+impl Texture<'_> {
+    pub fn xtx(&self) -> Result<&Xtx, WriteError> {
+        match self {
+            Texture::Xtx(xtx) => Ok(xtx),
+            _ => Err(WriteError::custom(format!("Texture is not xtx!: {self:?}"))),
+        }
+    }
+}
+
+impl Default for Png<'_> {
     /// Creates a Png with default values for a picto
     fn default() -> Self {
         Self {
@@ -25,13 +43,13 @@ impl Default for Png {
             unk8: 0,
             unk9: 0,
             unk10: 0,
-            xtx: Xtx::default(),
+            texture: Texture::None,
         }
     }
 }
 
 #[cfg(feature = "arbitrary")]
-impl arbitrary::Arbitrary<'_> for Png {
+impl arbitrary::Arbitrary<'_> for Png<'_> {
     fn arbitrary(u: &mut arbitrary::Unstructured) -> arbitrary::Result<Self> {
         let xtx: Xtx = u.arbitrary()?;
 
@@ -43,7 +61,7 @@ impl arbitrary::Arbitrary<'_> for Png {
             unk8: u.arbitrary()?,
             unk9: u.arbitrary()?,
             unk10: *u.choose(&[0x0202, 0x0])?,
-            xtx,
+            texture: Texture::Xtx(xtx),
         })
     }
 }

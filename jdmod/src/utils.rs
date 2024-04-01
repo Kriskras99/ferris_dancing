@@ -2,17 +2,16 @@
 use std::{borrow::Cow, path::Path};
 
 use anyhow::{anyhow, Context, Error};
-use dotstar_toolkit_utils::bytes::read::{BinaryDeserialize, ZeroCopyReadAtExt};
-use image::{imageops, EncodableLayout, ImageBuffer, RgbaImage};
+use dotstar_toolkit_utils::bytes::read::ZeroCopyReadAtExt;
+use image::{imageops, EncodableLayout, RgbaImage};
 use regex::Regex;
 use texpresso::Format;
 use ubiart_toolkit::{
     cooked::{
-        self,
-        png::Png,
-        xtx::{Image, TextureHeader},
+        png::{self, Png, Texture},
+        xtx::{self, Image, TextureHeader},
     },
-    utils::Platform,
+    utils::{Platform, UniqueGameId},
 };
 
 /// Cook a path so it stars with 'cache/itf_cooked/...'
@@ -79,51 +78,58 @@ macro_rules! regex {
 ///
 /// # Panics
 /// Will panic if there is more than one image in the texture
-pub fn decode_texture(reader: &(impl ZeroCopyReadAtExt + ?Sized)) -> Result<RgbaImage, Error> {
-    let png = Png::deserialize(reader)?;
+pub fn decode_texture(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    ugi: UniqueGameId,
+) -> Result<RgbaImage, Error> {
+    let png = png::parse(reader, ugi)?;
 
     let png_height = u32::from(png.height);
     let png_width = u32::from(png.width);
 
-    assert!(
-        png.xtx.images.len() == 1,
-        "More than one image in texture, not supported!"
-    );
+    let mut buffer = match png.texture {
+        png::Texture::Xtx(xtx) => {
+            assert!(
+                xtx.images.len() == 1,
+                "More than one image in texture, not supported!"
+            );
 
-    let big_image = &png.xtx.images[0];
-    let header = &big_image.header;
-    let data_compressed = &big_image.data[0];
-    let width = usize::try_from(header.width)?;
-    let height = usize::try_from(header.height)?;
+            let big_image = &xtx.images[0];
+            let header = &big_image.header;
+            let data_compressed = &big_image.data[0];
+            let width = usize::try_from(header.width)?;
+            let height = usize::try_from(header.height)?;
 
-    let data_decompressed = match header.format {
-        cooked::xtx::Format::DXT1 => {
-            // TODO: Replace with Vec::with_capacity
-            let mut data_decompressed = vec![0xFF; width * height * 4];
-            Format::Bc1.decompress(data_compressed, width, height, &mut data_decompressed);
-            data_decompressed
+            let data_decompressed = match header.format {
+                xtx::Format::DXT1 => {
+                    // TODO: Replace with Vec::with_capacity
+                    let mut data_decompressed = vec![0xFF; width * height * 4];
+                    Format::Bc1.decompress(data_compressed, width, height, &mut data_decompressed);
+                    data_decompressed
+                }
+                xtx::Format::DXT3 => {
+                    // TODO: Replace with Vec::with_capacity
+                    let mut data_decompressed = vec![0xFF; width * height * 4];
+                    Format::Bc2.decompress(data_compressed, width, height, &mut data_decompressed);
+                    data_decompressed
+                }
+                xtx::Format::DXT5 => {
+                    // TODO: Replace with Vec::with_capacity
+                    let mut data_decompressed = vec![0xFF; width * height * 4];
+                    Format::Bc3.decompress(data_compressed, width, height, &mut data_decompressed);
+                    data_decompressed
+                }
+                xtx::Format::NvnFormatRGBA8 => data_compressed.clone(),
+                _ => unimplemented!("{:?}", header.format),
+            };
+
+            RgbaImage::from_vec(header.width, header.height, data_decompressed)
+                .ok_or_else(|| anyhow!("Failure decoding!"))?
         }
-        cooked::xtx::Format::DXT3 => {
-            // TODO: Replace with Vec::with_capacity
-            let mut data_decompressed = vec![0xFF; width * height * 4];
-            Format::Bc2.decompress(data_compressed, width, height, &mut data_decompressed);
-            data_decompressed
-        }
-        cooked::xtx::Format::DXT5 => {
-            // TODO: Replace with Vec::with_capacity
-            let mut data_decompressed = vec![0xFF; width * height * 4];
-            Format::Bc3.decompress(data_compressed, width, height, &mut data_decompressed);
-            data_decompressed
-        }
-        cooked::xtx::Format::NvnFormatRGBA8 => data_compressed.clone(),
-        _ => unimplemented!("{:?}", header.format),
+        _ => todo!(),
     };
 
-    let mut buffer: RgbaImage =
-        ImageBuffer::from_vec(header.width, header.height, data_decompressed)
-            .ok_or_else(|| anyhow!("Failure decoding!"))?;
-
-    if png_width != header.width || png_height != header.height {
+    if png_width != buffer.width() || png_height != buffer.height() {
         buffer = imageops::resize(
             &buffer,
             png_width,
@@ -144,7 +150,7 @@ pub fn decode_texture(reader: &(impl ZeroCopyReadAtExt + ?Sized)) -> Result<Rgba
 ///
 /// # Errors
 /// Will return an error if any IO or parsing fails
-pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
+pub fn encode_texture(image_path: &Path) -> Result<Png<'static>, Error> {
     // let mipmaps = false;
     let img = image::io::Reader::open(image_path)
         .with_context(|| format!("Failed to open {image_path:?}!"))?
@@ -195,7 +201,7 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
                 height,
                 depth: 1,
                 target: 1,
-                format: cooked::xtx::Format::DXT1,
+                format: xtx::Format::DXT1,
                 mipmaps: 1,
                 slice_size: u32::try_from(data.len())?,
                 mipmap_offsets: [0; 0x10],
@@ -214,7 +220,10 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
         //     }
         // }
 
-        new_picto.xtx.images.push(image);
+        new_picto.texture = Texture::Xtx(xtx::Xtx {
+            images: vec![image],
+            ..Default::default()
+        });
 
         Ok(new_picto)
     } else {
@@ -255,7 +264,7 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
                 height: u32::from(height),
                 depth: 1,
                 target: 1,
-                format: cooked::xtx::Format::DXT5,
+                format: xtx::Format::DXT5,
                 mipmaps: 1,
                 slice_size: u32::try_from(data.len())?,
                 mipmap_offsets: [0; 0x10],
@@ -263,7 +272,11 @@ pub fn encode_texture(image_path: &Path) -> Result<Png, Error> {
             },
             data: vec![data],
         };
-        new_picto.xtx.images.push(image);
+
+        new_picto.texture = Texture::Xtx(xtx::Xtx {
+            images: vec![image],
+            ..Default::default()
+        });
 
         Ok(new_picto)
     }

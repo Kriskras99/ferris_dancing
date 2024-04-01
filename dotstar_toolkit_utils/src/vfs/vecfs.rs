@@ -6,6 +6,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use path_clean::PathClean;
+
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
 
 /// A completely in-memory filesystem, storing files as [`Vec`]s.
@@ -37,6 +39,7 @@ impl VecFs {
     /// # Errors
     /// Will return an error if the file already exists
     pub fn add_file(&mut self, path: PathBuf, mut content: Vec<u8>) -> std::io::Result<()> {
+        let path = path.clean();
         if self.files.contains_key(&path) {
             return Err(std::io::ErrorKind::AlreadyExists.into());
         }
@@ -75,7 +78,8 @@ impl IntoIterator for VecFs {
 
 impl VirtualFileSystem for VecFs {
     fn open<'fs>(&'fs self, path: &Path) -> Result<VirtualFile<'fs>> {
-        if let Some(file) = self.files.get(path) {
+        let path = path.clean();
+        if let Some(file) = self.files.get(&path) {
             Ok(VirtualFile::Slice(file.as_slice()))
         } else {
             Err(ErrorKind::NotFound.into())
@@ -83,7 +87,8 @@ impl VirtualFileSystem for VecFs {
     }
 
     fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
-        if let Some(file) = self.files.get(path) {
+        let path = path.clean();
+        if let Some(file) = self.files.get(&path) {
             Ok(VirtualMetadata {
                 file_size: u64::try_from(file.len()).expect("Overflow"),
                 created: Err(ErrorKind::Unsupported),
@@ -94,17 +99,19 @@ impl VirtualFileSystem for VecFs {
     }
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        let path = path.clean();
         Ok(WalkFs {
             paths: self
                 .files
                 .keys()
-                .filter(|p| p.starts_with(path))
+                .filter(|p| p.starts_with(&path))
                 .map(PathBuf::as_path)
                 .collect(),
         })
     }
 
     fn exists(&self, path: &Path) -> bool {
-        self.files.contains_key(path)
+        let path = path.clean();
+        self.files.contains_key(&path)
     }
 }

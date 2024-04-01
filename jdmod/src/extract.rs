@@ -39,8 +39,8 @@ pub struct Extract {
 /// If `files` is specified, it will only extract those files
 pub fn main(extract: Extract) -> Result<(), Error> {
     let source = extract.source;
-    test(&source.try_exists()?, &true).context("Source does not exist!")?;
-    test(&source.is_file(), &true).context("Source is not a file!")?;
+    test(source.try_exists()?).context("Source does not exist!")?;
+    test(source.is_file()).context("Source is not a file!")?;
     let source = source.canonicalize()?;
     let destination = extract.destination.unwrap_or(fs::canonicalize(".")?);
     // Create the export directory
@@ -153,14 +153,14 @@ pub fn extract_vfs(
         // Search for the files in the vfs and extract
         for file in files {
             match vfs.open(file.as_ref()) {
-                Err(e) => println!("Failed to open file {file}: {e:?}"),
+                Err(e) => eprintln!("{e:?}"),
                 Ok(data) => save_file(&data, &destination.join(file), conflicts)?,
             }
         }
     } else {
         for file in vfs.walk_filesystem("".as_ref())? {
             match vfs.open(file.as_ref()) {
-                Err(e) => println!("Failed to open file {file:?}: {e:?}"),
+                Err(e) => eprintln!("{e:?}"),
                 Ok(data) => save_file(&data, &destination.join(file), conflicts)?,
             }
         }

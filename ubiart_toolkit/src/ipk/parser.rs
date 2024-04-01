@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::{u32be, u64be},
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
     },
-    testing::{test, test_any, TestResult},
+    testing::{test_any, test_eq, TestResult},
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
@@ -22,7 +22,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     ) -> Result<Self, ReadError> {
         // Read the header
         let magic = reader.read_at::<u32be>(position)?.into();
-        test(&magic, &MAGIC)?;
+        test_eq(&magic, &MAGIC)?;
         let version = reader.read_at::<u32be>(position)?.into();
         let platform = reader.read_at::<Platform>(position)?;
         let base_offset = u64::from(reader.read_at::<u32be>(position)?);
@@ -39,7 +39,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         let num_files_2 = reader.read_at::<u32be>(position)?.into();
 
         // Sanity check
-        test(&num_files, &num_files_2)?;
+        test_eq(&num_files, &num_files_2)?;
         if !platform.matches_game_platform(game_platform) {
             println!("Header: Warning! Platform (0x{:x} ({platform:?})) does not match GamePlatformId (0x{:x} ({game_platform}))!", u32::from(platform), u32::from(game_platform));
         }
@@ -52,7 +52,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         for _ in 0..num_files {
             // Read the file information
             let unk6 = reader.read_at::<u32be>(position)?.into();
-            test(&unk6, &UNK6)?;
+            test_eq(&unk6, &UNK6)?;
             let size = usize::try_from(reader.read_at::<u32be>(position)?)?;
             let compressed_size = usize::try_from(reader.read_at::<u32be>(position)?)?;
             let timestamp = reader.read_at::<u64be>(position)?.into();
@@ -60,6 +60,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             // Can't use read_at::<SplitPath> as the filename and path are swapped on JD2014 for the Wii
             let mut filename = reader.read_len_string_at::<u32be>(position)?;
             let mut path = reader.read_len_string_at::<u32be>(position)?;
+            assert!(path.ends_with('/'));
             let path_id = reader.read_at::<PathId>(position)?;
             let is_cooked_u32 = reader.read_at::<u32be>(position)?.into();
             test_any(&is_cooked_u32, IS_COOKED)?;
@@ -75,7 +76,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             }
 
             let path_id_calculated = string_id_2(path.as_ref(), filename.as_ref());
-            test(&*path_id, &path_id_calculated).with_context(|| format!("Path ID of {path}{filename} is {path_id_calculated}, but does not match what is in the file: {path_id:?}"))?;
+            test_eq(&*path_id, &path_id_calculated).with_context(|| format!("Path ID of {path}{filename} is {path_id_calculated}, but does not match what is in the file: {path_id:?}"))?;
 
             // Derive info from file information
             let is_cooked = is_cooked_u32 == 0x2;
@@ -100,7 +101,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             };
             let file = IpkFile {
                 timestamp,
-                path: SplitPath { path, filename },
+                path: SplitPath::new(path, filename)?,
                 is_cooked,
                 data,
             };
@@ -118,16 +119,16 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
                 || game_platform.game == Game::JustDanceChina)
         {
             // Make sure the separator is here
-            match test(&(header_end + 0x4), &base_offset) {
+            match test_eq(&(header_end + 0x4), &base_offset) {
                 TestResult::Ok => {
                     let separator = reader.read_at::<u32be>(position)?.into();
-                    test(&separator, &SEPARATOR)?;
+                    test_eq(&separator, &SEPARATOR)?;
                 }
                 result @ TestResult::Err(_) => result?,
             }
         } else {
             // Make sure the separator is not here
-            test(&header_end, &base_offset)
+            test_eq(&header_end, &base_offset)
                 .context("Found unexpected separator between header and files!")?;
         };
 

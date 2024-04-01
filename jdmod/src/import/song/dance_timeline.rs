@@ -1,9 +1,9 @@
 //! # Dance Timeline
 //! Imports the dance timeline, pictos, and classifiers
-use std::{collections::BinaryHeap, fs::File, io::Write};
+use std::{collections::BTreeSet, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::test_eq;
 use ubiart_toolkit::{cooked, json_types};
 
 use super::{montage, SongImportState};
@@ -18,7 +18,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
         .vfs
         .open(cook_path(dance_timeline_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&dance_timeline_file, sis.lax)?.actor()?;
-    test(&actor.components.len(), &1).context("More than one component in actor!")?;
+    test_eq(&actor.components.len(), &1).context("More than one component in actor!")?;
     let tape_case = actor.components.swap_remove(0).tape_case_component()?;
     let tape_case_path = tape_case
         .tapes_rack
@@ -34,7 +34,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
     let tape = template.tape()?;
 
     let mut timeline = Timeline {
-        timeline: BinaryHeap::with_capacity(tape.clips.len()),
+        timeline: BTreeSet::new(),
     };
 
     let montage_path = cook_path(
@@ -82,7 +82,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                     let cooked_path = cook_path(&picto_path, sis.ugi.platform)?;
                     match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
                         (Ok(from), _) => {
-                            let decooked_picto = decode_texture(&from)?;
+                            let decooked_picto = decode_texture(&from, sis.ugi)?;
                             let path = sis.dirs.pictos().join(new_picto.picto_filename.as_ref());
                             decooked_picto.save(path)?;
                         }
@@ -94,7 +94,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
             }
             _ => return Err(anyhow!("Unexpected Clip in Dance Timeline Tape! {clip:?}")),
         };
-        timeline.timeline.push(new_clip);
+        timeline.timeline.insert(new_clip);
     }
 
     if let Some(mut vec) = montage_vec {

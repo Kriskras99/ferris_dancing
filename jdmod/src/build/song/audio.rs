@@ -3,7 +3,7 @@
 use std::{borrow::Cow, fs::File, path::PathBuf};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::test_eq;
 use ubiart_toolkit::{cooked, json_types};
 
 use super::SongExportState;
@@ -28,7 +28,7 @@ pub fn build(
         .ok_or_else(|| anyhow!("Invalid extension! {from:?}"))?;
     let (to, extension) = match extension {
         "ckd" => {
-            test(&from.to_str().map(|s| s.ends_with("wav.ckd")), &Some(true))
+            test_eq(&from.to_str().map(|s| s.ends_with("wav.ckd")), &Some(true))
                 .with_context(|| format!("{from:?}"))?;
             (
                 PathBuf::from(cook_path(

@@ -1,9 +1,9 @@
 //! # Main sequence
 //! Imports the mainsequence and files referenced in it
-use std::{borrow::Cow, collections::BinaryHeap, fs::File, io::Write};
+use std::{borrow::Cow, collections::BTreeSet, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test;
+use dotstar_toolkit_utils::testing::test_eq;
 use ubiart_toolkit::{cooked, json_types};
 
 use super::SongImportState;
@@ -18,7 +18,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
         .vfs
         .open(cook_path(mainsequence_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&mainsequence_file, sis.lax)?.actor()?;
-    test(&actor.components.len(), &1).context("More than one component in actor!")?;
+    test_eq(&actor.components.len(), &1).context("More than one component in actor!")?;
     let tape_case = actor.components.swap_remove(0).master_tape()?;
 
     let mainsequence_tml_path_option = tape_case
@@ -41,7 +41,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
             let tape = cooked::json::parse_v22(&tape_file, sis.lax)?.tape()?;
 
             let mut timeline = Timeline {
-                timeline: BinaryHeap::with_capacity(tape.clips.len()),
+                timeline: BTreeSet::new(),
             };
 
             for clip in tape.clips {
@@ -76,7 +76,9 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                             match clip {
                                 json_types::tape::Clip::SoundSet(soundset) => {
                                     match (parse_soundset(sis, &soundset), sis.lax) {
-                                        (Ok(clip), _) => timeline.timeline.push(clip),
+                                        (Ok(clip), _) => {
+                                            timeline.timeline.insert(clip);
+                                        }
                                         (Err(error), true) => {
                                             println!("Warning! {error}");
                                             continue;
@@ -87,7 +89,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                                 json_types::tape::Clip::Vibration(vib) => {
                                     timeline
                                         .timeline
-                                        .push(Clip::Vibration(vib.to_owned().into()));
+                                        .insert(Clip::Vibration(vib.to_owned().into()));
                                 }
                                 _ => {
                                     return Err(anyhow!(
@@ -103,7 +105,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                     }
                     _ => return Err(anyhow!("Unexpected Clip in Mainsequence Tape! {clip:?}")),
                 };
-                timeline.timeline.push(new_clip);
+                timeline.timeline.insert(new_clip);
             }
             let mainsequence_path = sis.dirs.song().join("mainsequence.json");
 
@@ -113,7 +115,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
         (Err(error), true) => {
             println!("Warning! {error}");
             let timeline = Timeline {
-                timeline: BinaryHeap::new(),
+                timeline: BTreeSet::new(),
             };
 
             let mainsequence_path = sis.dirs.song().join("mainsequence.json");

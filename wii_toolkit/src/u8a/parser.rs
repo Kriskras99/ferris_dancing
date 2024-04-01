@@ -21,20 +21,20 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
     ) -> Result<Self, ReadError> {
         // Check the magic
         let magic = reader.read_at::<u32be>(position)?.into();
-        test(&magic, &0x55AA_382Du32)?;
+        test_eq(&magic, &0x55AA_382Du32)?;
 
         // Parse the header
         let rootnode_offset = reader.read_at::<u32be>(position)?.into();
-        test(&rootnode_offset, &0x20u32)?;
+        test_eq(&rootnode_offset, &0x20u32)?;
         let _header_size = reader.read_at::<u32be>(position)?;
         let _data_offset = reader.read_at::<u32be>(position)?;
         let reserved1: [u8; 0x10] = reader.read_fixed_slice_at(position)?;
-        test(&reserved1, &[0; 0x10])?;
+        test_eq(&reserved1, &[0; 0x10])?;
 
         // Parse the root node
         let node_type = NodeType::try_from(read_u8_at(src, &mut position)?)?;
         // Make sure the root node is a directory
-        test(&node_type, &NodeType::Directory)?;
+        test_eq(&node_type, &NodeType::Directory)?;
         // Read the rest of the metadata of the root node
         let name_offset = usize::try_from(read_u24_at::<BigEndian>(src, &mut position)?)?;
         let data_offset = usize::try_from(read_u32_at::<BigEndian>(src, &mut position)?)?;

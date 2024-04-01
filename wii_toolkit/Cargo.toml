@@ -13,18 +13,18 @@ rust-version = "1.70.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aes = { version = "0.8.4", default-features = false}
-anyhow = { version = "1.0.81", features = ["std", "backtrace"], default-features = false}
-byteorder = { version = "1.5.0", features = ["std"], default-features = false}
-cbc = { version = "0.1.2", features = ["std", "block-padding"], default-features = false}
-cipher = { version = "0.4.4", features = ["std"], default-features = false}
-clap = { version = "4.4.18", features = ["std", "help", "usage", "suggestions", "derive"], default-features = false}
+aes = { workspace = true }
+anyhow = { workspace = true, features = ["std", "backtrace"] }
+byteorder = { workspace = true, features = ["std"] }
+cbc = { workspace = true, features = ["std", "block-padding"] }
+cipher = { workspace = true, features = ["std"] }
+clap = { workspace = true, features = ["std", "help", "usage", "suggestions", "derive"] }
 dotstar_toolkit_utils = { version = "0.1.0", path = "../dotstar_toolkit_utils" }
-memmap2 = { version = "0.9.4", features = ["stable_deref_trait"], default-features = false}
-sha1 = { version = "0.10.6", features = ["std"], default-features = false}
-stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false}
-ux = { version = "0.1.5", features = ["std"], default-features = false }
-yoke = { version = "0.7.3", features = ["alloc", "derive"], default-features = false}
+memmap2 = { workspace = true, features = ["stable_deref_trait"] }
+sha1 = { workspace = true, features = ["std"] }
+stable_deref_trait = { workspace = true, features = ["std"] }
+ux = { workspace = true, features = ["std"] }
+yoke = { workspace = true, features = ["alloc", "derive"] }
 
 [lints]
 workspace = true

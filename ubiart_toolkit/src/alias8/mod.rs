@@ -29,7 +29,7 @@ use dotstar_toolkit_utils::{
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteAt, WriteError},
     },
-    testing::{test, test_any},
+    testing::{test_any, test_eq},
 };
 
 use crate::utils::SplitPath;
@@ -88,13 +88,13 @@ impl<'de> BinaryDeserialize<'de> for Alias<'de> {
             // Read the strings
             let alias = reader.read_len_string_at::<u32be>(position)?;
             let second_alias = reader.read_len_string_at::<u32be>(position)?;
-            test(&alias, &second_alias).context("1st and 2nd alias are not the same!")?;
+            test_eq(&alias, &second_alias).context("1st and 2nd alias are not the same!")?;
             let path = reader.read_at(position)?;
 
             // Read the unknown values and check them
             let unk2 = reader.read_at::<u16be>(position)?.into();
             let unk3 = reader.read_at::<u16be>(position)?.into();
-            test(&unk2, &Self::UNK2)?;
+            test_eq(&unk2, &Self::UNK2)?;
             test_any(&unk3, Self::UNK3)?;
 
             Self { alias, path, unk3 }
@@ -152,7 +152,7 @@ impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
         let result: Result<_, _> = try {
             // Read the unknown value at the beginning and check it's correct
             let unk1 = reader.read_at::<u32be>(position)?.into();
-            test(&unk1, &Self::UNK1)?;
+            test_eq(&unk1, &Self::UNK1)?;
 
             // Read the aliases
             let lazy_aliases = reader.read_len_type_at::<u32be, Alias>(position)?;
@@ -160,7 +160,7 @@ impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
             for alias in lazy_aliases {
                 let alias = alias?;
                 let exists = aliases.insert(alias.alias.clone(), alias).is_some();
-                test(&exists, &false)?;
+                test_eq(&exists, &false)?;
             }
             Alias8 { aliases }
         };

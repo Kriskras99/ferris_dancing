@@ -267,7 +267,31 @@ impl TestError {
 ///
 /// # Errors
 /// Will return an error if the two inputs are not the same, with a description of the values.
-pub fn test<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
+pub fn test(value: bool) -> TestResult {
+    if value {
+        TestResult::Ok
+    } else {
+        TestResult::Err(TestError::not_equal(&false, &true))
+    }
+}
+
+/// Test if `one` == `two` returning a descriptive error if they're not the same.
+///
+/// # Errors
+/// Will return an error if the two inputs are not the same, with a description of the values.
+pub fn test_eq<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
+    if left == right {
+        TestResult::Ok
+    } else {
+        TestResult::Err(TestError::not_equal(left, right))
+    }
+}
+
+/// Test if `one` != `two` returning a descriptive error if they're not the same.
+///
+/// # Errors
+/// Will return an error if the two inputs are not the same, with a description of the values.
+pub fn test_ne<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
     if left == right {
         TestResult::Ok
     } else {

@@ -63,10 +63,10 @@ pub fn build(
 fn autodance_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
-        tpl: SplitPath {
-            path: Cow::Owned(format!("world/maps/{lower_map_name}/autodance/")),
-            filename: Cow::Owned(format!("{lower_map_name}_autodance.tpl")),
-        },
+        tpl: SplitPath::new(
+            Cow::Owned(format!("world/maps/{lower_map_name}/autodance/")),
+            Cow::Owned(format!("{lower_map_name}_autodance.tpl")),
+        )?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,

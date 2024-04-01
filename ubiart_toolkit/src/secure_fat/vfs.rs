@@ -7,6 +7,7 @@ use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
     vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs},
 };
+use path_clean::PathClean;
 
 use super::{BundleId, SecureFat};
 use crate::{
@@ -95,15 +96,16 @@ impl<'f> SfatFilesystem<'f> {
 
 impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     fn open<'f>(&'f self, path: &Path) -> std::io::Result<VirtualFile<'f>> {
-        let path_id = path_id(path);
-        if let Some(file) = self.patch.as_ref().and_then(|p| p.open(path).ok()) {
+        let path = path.clean();
+        let path_id = path_id(&path);
+        if let Some(file) = self.patch.as_ref().and_then(|p| p.open(&path).ok()) {
             Ok(file)
         } else {
             match self.sfat.get_bundle_ids(&path_id) {
                 Some(ids) => {
                     for id in ids {
                         let bundle = self.bundles.get(id);
-                        let file = bundle.and_then(|p| p.open(path).ok());
+                        let file = bundle.and_then(|p| p.open(&path).ok());
                         if let Some(file) = file {
                             return Ok(file);
                         }
@@ -119,15 +121,16 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     }
 
     fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
-        let path_id = path_id(path);
-        if let Some(metadata) = self.patch.as_ref().and_then(|p| p.metadata(path).ok()) {
+        let path = path.clean();
+        let path_id = path_id(&path);
+        if let Some(metadata) = self.patch.as_ref().and_then(|p| p.metadata(&path).ok()) {
             Ok(metadata)
         } else {
             match self.sfat.get_bundle_ids(&path_id) {
                 Some(ids) => {
                     for id in ids {
                         let bundle = self.bundles.get(id);
-                        let metadata = bundle.and_then(|p| p.metadata(path).ok());
+                        let metadata = bundle.and_then(|p| p.metadata(&path).ok());
                         if let Some(metadata) = metadata {
                             return Ok(metadata);
                         }
@@ -143,12 +146,13 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     }
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+        let path = path.clean();
         let mut paths = Vec::new();
         for bundle in self.bundles.values() {
-            paths.append(&mut bundle.walk_filesystem(path)?.paths);
+            paths.append(&mut bundle.walk_filesystem(&path)?.paths);
         }
         if let Some(bundle) = self.patch.as_ref() {
-            paths.append(&mut bundle.walk_filesystem(path)?.paths);
+            paths.append(&mut bundle.walk_filesystem(&path)?.paths);
         }
         paths.sort_unstable();
         paths.dedup();
@@ -157,12 +161,13 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     }
 
     fn exists(&self, path: &Path) -> bool {
-        let path_id = path_id(path);
-        Some(true) == self.patch.as_ref().map(|p| p.exists(path))
+        let path = path.clean();
+        let path_id = path_id(&path);
+        Some(true) == self.patch.as_ref().map(|p| p.exists(&path))
             || Some(true)
                 == self.sfat.get_bundle_ids(&path_id).map(|bids| {
                     bids.iter()
-                        .map(|bid| self.bundles.get(bid).map(|p| p.exists(path)))
+                        .map(|bid| self.bundles.get(bid).map(|p| p.exists(&path)))
                         .any(|b| b == Some(true))
                 })
     }

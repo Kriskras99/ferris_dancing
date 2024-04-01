@@ -140,7 +140,7 @@ pub fn import_vfs(
 
     // Make sure the directory tree is intact
     let dirs = DirectoryTree::new(dir_root);
-    test(&dirs.exists(), &true)?;
+    test(dirs.exists())?;
 
     // Load localisations
     let locale_id_map = localisation::import(vfs, &dirs)?;

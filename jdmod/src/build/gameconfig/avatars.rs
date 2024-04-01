@@ -40,6 +40,7 @@ pub fn build(
     }
 
     let avatarsobjectives = &mut gameconfig.avatarsobjectives;
+    avatarsobjectives.clear();
     let mut scene_actors = Vec::with_capacity(avatars.len());
 
     for (name, avatar) in avatars {
@@ -134,10 +135,7 @@ pub fn build(
 /// Build the avatar description
 fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
     let actor = cooked::act::Actor {
-        tpl: SplitPath {
-            path: Cow::Borrowed(avatar_dir),
-            filename: Cow::Borrowed("desc.tpl"),
-        },
+        tpl: SplitPath::new(Cow::Borrowed(avatar_dir), Cow::Borrowed("desc.tpl"))?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
@@ -146,10 +144,7 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
                 cooked::act::MaterialGraphicComponent {
                     // TODO: Check values!
                     files: [
-                        SplitPath {
-                            path: Cow::Borrowed(avatar_dir),
-                            filename: Cow::Borrowed("avatar.png"),
-                        },
+                        SplitPath::new(Cow::Borrowed(avatar_dir), Cow::Borrowed("avatar.png"))?,
                         SplitPath::default(),
                         SplitPath::default(),
                         SplitPath::default(),
@@ -158,14 +153,14 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
                         SplitPath::default(),
                         SplitPath::default(),
                         SplitPath::default(),
-                        SplitPath {
-                            path: Cow::Borrowed("world/ui/atlas/"),
-                            filename: Cow::Borrowed("avatar.atl"),
-                        },
-                        SplitPath {
-                            path: Cow::Borrowed("world/ui/materials/_common/"),
-                            filename: Cow::Borrowed("alpha.msh"),
-                        },
+                        SplitPath::new(
+                            Cow::Borrowed("world/ui/atlas/"),
+                            Cow::Borrowed("avatar.atl"),
+                        )?,
+                        SplitPath::new(
+                            Cow::Borrowed("world/ui/materials/_common/"),
+                            Cow::Borrowed("alpha.msh"),
+                        )?,
                     ],
                     ..Default::default()
                 },

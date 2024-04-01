@@ -6,6 +6,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use path_clean::PathClean;
+
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
 
 // TODO: Add type alias for the PathBufs
@@ -24,6 +26,7 @@ impl SymlinkFs<'_> {
     /// Will error if `new_path` already exists and does not point to `orig_path`
     /// Will error if `orig_path` does not exist
     pub fn add_file(&mut self, orig_path: PathBuf, new_path: PathBuf) -> Result<()> {
+        let new_path = new_path.clean();
         if !self.backing_fs.exists(&orig_path) {
             return Err(Error::new(
                 ErrorKind::NotFound,

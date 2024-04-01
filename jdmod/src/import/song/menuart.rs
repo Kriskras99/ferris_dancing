@@ -61,7 +61,7 @@ pub fn import(
                 (Err(err), false) => return Err(err.into()),
             };
 
-            let decooked_picto = decode_texture(&from)?;
+            let decooked_picto = decode_texture(&from, sis.ugi)?;
             let to_filename = format!("{name}.png");
             let path = sis.dirs.menuart().join(&to_filename);
             decooked_picto.save(path)?;

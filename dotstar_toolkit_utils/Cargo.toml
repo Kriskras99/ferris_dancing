@@ -12,10 +12,12 @@ categories = ["filesystem", "parsing"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-byteorder = { version = "1.5.0", features = ["std"], default-features = false }
-memmap2 = { version = "0.9.4", features = ["stable_deref_trait"], default-features = false }
-positioned-io = { version ="0.3.3", features = [], default-features = false }
-stable_deref_trait = { version = "1.2.0", features = ["std"], default-features = false }
-thiserror = { version = "1.0.58", features = [], default-features = false }
-ux = { version = "0.1.5", features = ["std"], default-features = false }
-yoke = { version = "0.7.3", features = ["derive"] }
+byteorder = { workspace = true, features = ["std"] }
+memmap2 = { workspace = true, features = ["stable_deref_trait"] }
+path-clean = { workspace = true, features = [] }
+positioned-io = { workspace = true, features = [] }
+stable_deref_trait = { workspace = true, features = ["std"] }
+thiserror = { workspace = true, features = [] }
+tracing.workspace = true
+ux = { workspace = true, features = ["std"] }
+yoke = { workspace = true, features = ["derive"] }

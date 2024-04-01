@@ -11,7 +11,7 @@ use dotstar_toolkit_utils::{
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteAt, WriteError},
     },
-    testing::test,
+    testing::test_eq,
 };
 
 use crate::round_to_boundary;
@@ -137,20 +137,20 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
             let begin_position = *position;
             // Check the magic value
             let magic = reader.read_at(position)?;
-            test(&magic, &Self::MAGIC)?;
+            test_eq(&magic, &Self::MAGIC)?;
             // Check the rootnode offset
             let rootnode_offset = reader.read_at(position)?;
-            test(&rootnode_offset, &Self::ROOTNODE_OFFSET)?;
+            test_eq(&rootnode_offset, &Self::ROOTNODE_OFFSET)?;
             // Check that the data offset equals the header size plus the rootnode offset
             let header_size = reader.read_at::<u32be>(position)?;
             let data_offset = reader.read_at::<u32be>(position)?;
-            test(
+            test_eq(
                 &round_to_boundary(Self::ROOTNODE_OFFSET.checked_add(header_size).unwrap()),
                 &data_offset,
             )?;
             // Check the padding
             let padding = reader.read_fixed_slice_at::<16>(position)?;
-            test(&padding, &Self::PADDING)?;
+            test_eq(&padding, &Self::PADDING)?;
 
             let rootnode = reader.read_at(position)?;
             let UnparsedNode::Directory(rootnode) = rootnode else {

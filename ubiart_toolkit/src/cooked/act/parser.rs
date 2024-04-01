@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::{u32be, u64be},
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
     },
-    testing::{test, test_any},
+    testing::{test_any, test_eq},
 };
 
 use super::{
@@ -19,7 +19,7 @@ pub fn parse<'de>(
     gp: UniqueGameId,
 ) -> Result<Actor<'de>, ReadError> {
     let unk0 = reader.read_at::<u32be>(position)?.into();
-    test(&unk0, &1u32)?;
+    test_eq(&unk0, &1u32)?;
     let unk1 = reader.read_at::<u32be>(position)?.into();
     test_any(
         &unk1,
@@ -56,39 +56,39 @@ pub fn parse<'de>(
         ],
     )?;
     let unk3 = reader.read_at::<u64be>(position)?.into();
-    test(&unk3, &0u64)?;
+    test_eq(&unk3, &0u64)?;
     let unk3_5 = reader.read_at::<u32be>(position)?.into();
-    test(&unk3_5, &0u32)?;
+    test_eq(&unk3_5, &0u32)?;
     match gp.game {
         Game::JustDance2022 | Game::JustDance2021 | Game::JustDance2020 | Game::JustDance2019 => {
             let unk4 = reader.read_at::<u64be>(position)?.into();
-            test(&unk4, &0x1_0000_0000)?;
+            test_eq(&unk4, &0x1_0000_0000)?;
         }
         _ => {
             let unk4 = reader.read_at::<u32be>(position)?.into();
             test_any(&unk4, &[0x1u32, 0x0])?;
             if unk4 == 0x1 {
                 let unk4_5 = reader.read_at::<u32be>(position)?.into();
-                test(&unk4_5, &0u32)?;
+                test_eq(&unk4_5, &0u32)?;
             }
         }
     };
     let unk5 = reader.read_at::<u32be>(position)?.into();
-    test(&unk5, &0u32)?;
+    test_eq(&unk5, &0u32)?;
     let unk6 = reader.read_at::<u64be>(position)?.into();
-    test(&unk6, &0)?;
+    test_eq(&unk6, &0)?;
     let unk7 = reader.read_at::<u64be>(position)?.into();
-    test(&unk7, &0xFFFF_FFFF)?;
+    test_eq(&unk7, &0xFFFF_FFFF)?;
     let unk8 = reader.read_at::<u32be>(position)?.into();
-    test(&unk8, &0u32)?;
+    test_eq(&unk8, &0u32)?;
 
     let tpl = reader.read_at::<SplitPath>(position)?;
     #[cfg(not(feature = "fuzz"))]
     {
-        test(&tpl.is_empty(), &false)?;
+        test_eq(&tpl.is_empty(), &false)?;
     }
     let unk9 = reader.read_at::<u32be>(position)?.into();
-    test(&unk9, &0u32)?;
+    test_eq(&unk9, &0u32)?;
     let actor_amount: usize = reader.read_at::<u32be>(position)?.try_into()?;
 
     let mut components = Vec::with_capacity(actor_amount);
@@ -269,7 +269,7 @@ fn parse_registration_component(
     let unk11 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk11, &[0xAA55_B6BDu32, 0xFFFF_FFFF])?;
     let unk12 = reader.read_at::<u32be>(position)?.into();
-    test(&unk12, &0x0u32)?;
+    test_eq(&unk12, &0x0u32)?;
     Ok(())
 }
 
@@ -280,19 +280,19 @@ fn parse_box_interpolator_component(
 ) -> Result<(), ReadError> {
     for _ in 0..2 {
         let unk11 = reader.read_at::<u32be>(position)?.into();
-        test(&unk11, &0xBF00_0000u32)?;
+        test_eq(&unk11, &0xBF00_0000u32)?;
     }
     for _ in 0..2 {
         let unk12 = reader.read_at::<u32be>(position)?.into();
-        test(&unk12, &0x3F00_0000u32)?;
+        test_eq(&unk12, &0x3F00_0000u32)?;
     }
     for _ in 0..2 {
         let unk13 = reader.read_at::<u32be>(position)?.into();
-        test(&unk13, &0xBF80_0000u32)?;
+        test_eq(&unk13, &0xBF80_0000u32)?;
     }
     for _ in 0..2 {
         let unk14 = reader.read_at::<u32be>(position)?.into();
-        test(&unk14, &0x3F80_0000u32)?;
+        test_eq(&unk14, &0x3F80_0000u32)?;
     }
     Ok(())
 }
@@ -303,9 +303,9 @@ fn parse_afx_post_process_component(
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk16 = reader.read_at::<u64be>(position)?.into();
-    test(&unk16, &8u64)?;
+    test_eq(&unk16, &8u64)?;
     let unk17 = reader.read_at::<u32be>(position)?.into();
-    test(&unk17, &1u32)?;
+    test_eq(&unk17, &1u32)?;
     Ok(())
 }
 
@@ -315,7 +315,7 @@ fn parse_converted_tml_tape(
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
-    test(&unk11, &0u32)?;
+    test_eq(&unk11, &0u32)?;
     Ok(())
 }
 
@@ -327,9 +327,9 @@ fn parse_fixed_camera_component(
     let unk11 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk11, &[0x0u32, 0x1])?;
     let unk12 = reader.read_at::<u64be>(position)?.into();
-    test(&unk12, &0u64)?;
+    test_eq(&unk12, &0u64)?;
     let unk13 = reader.read_at::<u32be>(position)?.into();
-    test(&unk13, &0x4120_0000u32)?;
+    test_eq(&unk13, &0x4120_0000u32)?;
     let unk14 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk14, &[0x0u32, 0x1])?;
     Ok(())
@@ -341,7 +341,7 @@ fn parse_fx_controller(
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u64be>(position)?.into();
-    test(&unk11, &0u64)?;
+    test_eq(&unk11, &0u64)?;
     Ok(())
 }
 
@@ -352,16 +352,16 @@ fn parse_fx_bank_component(
 ) -> Result<(), ReadError> {
     for _ in 0..4 {
         let unk11 = reader.read_at::<u32be>(position)?.into();
-        test(&unk11, &0x3F80_0000u32)?;
+        test_eq(&unk11, &0x3F80_0000u32)?;
     }
     for _ in 0..3 {
         let unk12 = reader.read_at::<u32be>(position)?.into();
-        test(&unk12, &0u32)?;
+        test_eq(&unk12, &0u32)?;
     }
     let unk13 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk13, &[0x0u32, 0xFFFF_FFFF])?;
     let unk14 = reader.read_at::<u32be>(position)?.into();
-    test(&unk14, &0xFFFF_FFFFu32)?;
+    test_eq(&unk14, &0xFFFF_FFFFu32)?;
     Ok(())
 }
 
@@ -371,35 +371,35 @@ fn parse_bezier_tree_component(
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk18 = reader.read_at::<u32be>(position)?.into();
-    test(&unk18, &2u32)?;
+    test_eq(&unk18, &2u32)?;
     for _ in 0..4 {
         let unk19 = reader.read_at::<u32be>(position)?.into();
-        test(&unk19, &0u32)?;
+        test_eq(&unk19, &0u32)?;
     }
     for _ in 0..2 {
         let unk20 = reader.read_at::<u32be>(position)?.into();
-        test(&unk20, &0x3F80_0000u32)?;
+        test_eq(&unk20, &0x3F80_0000u32)?;
     }
     for _ in 0..2 {
         let unk21 = reader.read_at::<u32be>(position)?.into();
-        test(&unk21, &0u32)?;
+        test_eq(&unk21, &0u32)?;
     }
     let unk22 = reader.read_at::<u32be>(position)?.into();
-    test(&unk22, &0x4040_0000u32)?;
+    test_eq(&unk22, &0x4040_0000u32)?;
     for _ in 0..2 {
         let unk23 = reader.read_at::<u32be>(position)?.into();
-        test(&unk23, &0u32)?;
+        test_eq(&unk23, &0u32)?;
     }
     for _ in 0..2 {
         let unk24 = reader.read_at::<u32be>(position)?.into();
-        test(&unk24, &0x3F80_0000u32)?;
+        test_eq(&unk24, &0x3F80_0000u32)?;
     }
     for _ in 0..3 {
         let unk25 = reader.read_at::<u32be>(position)?.into();
-        test(&unk25, &0u32)?;
+        test_eq(&unk25, &0u32)?;
     }
     let unk26 = reader.read_at::<u32be>(position)?.into();
-    test(&unk26, &1u32)?;
+    test_eq(&unk26, &1u32)?;
     Ok(())
 }
 
@@ -413,7 +413,7 @@ fn parse_material_graphic_component<'de>(
     let game = gp.game;
     for _ in 0..3 {
         let unk11 = reader.read_at::<u32be>(position)?.into();
-        test(&unk11, &0x3F80_0000u32)?;
+        test_eq(&unk11, &0x3F80_0000u32)?;
     }
     let unk11_5 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk11_5, &[0x3F80_0000u32, 0x0])?;
@@ -499,7 +499,7 @@ fn parse_material_graphic_component<'de>(
     }
 
     let unk22 = reader.read_at::<u64be>(position)?.into();
-    test(&unk22, &0xFFFF_FFFF_FFFF_FFFF)?;
+    test_eq(&unk22, &0xFFFF_FFFF_FFFF_FFFF)?;
 
     for _ in 0..3 {
         let _unk23 = reader.read_at::<u32be>(position)?;
@@ -515,7 +515,7 @@ fn parse_material_graphic_component<'de>(
 
     if is_pleo {
         let unk27 = reader.read_at::<u32be>(position)?.into();
-        test(&unk27, &0x0u32)?;
+        test_eq(&unk27, &0x0u32)?;
     }
 
     Ok(MaterialGraphicComponent {
@@ -627,12 +627,12 @@ fn parse_property_patcher(
     gp: UniqueGameId,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
-    test(&unk11, &1u32)?;
+    test_eq(&unk11, &1u32)?;
     let unk12 = reader.read_at::<u32be>(position)?.into();
-    test(&unk12, &0u32)?;
+    test_eq(&unk12, &0u32)?;
     if gp.game != Game::JustDance2017 {
         let unk13 = reader.read_at::<u32be>(position)?.into();
-        test(&unk13, &0u32)?;
+        test_eq(&unk13, &0u32)?;
     }
     Ok(())
 }
@@ -659,9 +659,9 @@ fn parse_ui_text_box<'de>(
         ],
     )?;
     let unk13 = reader.read_at::<u32be>(position)?.into();
-    test(&unk13, &0xFFFF_FFFFu32)?;
+    test_eq(&unk13, &0xFFFF_FFFFu32)?;
     let unk14 = reader.read_at::<u64be>(position)?.into();
-    test(&unk14, &0u64)?;
+    test_eq(&unk14, &0u64)?;
     for _ in 0..3 {
         let unk15 = reader.read_at::<u32be>(position)?.into();
         test_any(&unk15, &[0x0u32, 0x3F80_0000])?;
@@ -673,7 +673,7 @@ fn parse_ui_text_box<'de>(
     let unk18 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk18, &[0xBF80_0000u32, 0x443B_8000, 0x458C_A000])?;
     let unk19 = reader.read_at::<u32be>(position)?.into();
-    test(&unk19, &0xBF80_0000u32)?;
+    test_eq(&unk19, &0xBF80_0000u32)?;
     let string1 = reader.read_len_string_at::<u32be>(position)?;
     let string1 = if string1.is_empty() {
         None
@@ -681,19 +681,19 @@ fn parse_ui_text_box<'de>(
         Some(string1)
     };
     let unk20 = reader.read_at::<u32be>(position)?.into();
-    test(&unk20, &0u32)?;
+    test_eq(&unk20, &0u32)?;
     let unk21 = reader.read_at::<u32be>(position)?.into();
-    test(&unk21, &1u32)?;
+    test_eq(&unk21, &1u32)?;
     let unk22 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk22, &[0xFFFF_FFFFu32, 0x317A, 0x3B])?;
     let unk23_1 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk23_1, &[0x0u32, 0x4140_0000, 0xC170_0000, 0xC120_0000])?;
     let unk23_2 = reader.read_at::<u32be>(position)?.into();
-    test(&unk23_2, &0u32)?;
+    test_eq(&unk23_2, &0u32)?;
     let unk23_3 = reader.read_at::<u32be>(position)?.into();
-    test(&unk23_3, &0u32)?;
+    test_eq(&unk23_3, &0u32)?;
     let unk23_4 = reader.read_at::<u32be>(position)?.into();
-    test(&unk23_4, &0u32)?;
+    test_eq(&unk23_4, &0u32)?;
     let string2 = reader.read_len_string_at::<u32be>(position)?;
     let string2 = if string2.is_empty() {
         None
@@ -701,9 +701,9 @@ fn parse_ui_text_box<'de>(
         Some(string2)
     };
     let unk23_6 = reader.read_at::<u32be>(position)?.into();
-    test(&unk23_6, &0u32)?;
+    test_eq(&unk23_6, &0u32)?;
     let unk23_7 = reader.read_at::<u32be>(position)?.into();
-    test(&unk23_7, &0x0u32)?;
+    test_eq(&unk23_7, &0x0u32)?;
     let unk23_8 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk23_8, &[0u32, 0x2, 0xFFFF_FFFF])?;
     let unk24 = reader.read_at::<u32be>(position)?.into();
@@ -721,16 +721,16 @@ fn parse_ui_text_box<'de>(
     };
     for _ in 0..i {
         let unk28 = reader.read_at::<u64be>(position)?.into();
-        test(&unk28, &0u64)?;
+        test_eq(&unk28, &0u64)?;
     }
     let unk29 = reader.read_at::<u32be>(position)?.into();
-    test(&unk29, &0xBF80_0000u32)?;
+    test_eq(&unk29, &0xBF80_0000u32)?;
     if game == Game::JustDance2019 || game == Game::JustDance2018 || game == Game::JustDance2017 {
         let unk30 = reader.read_at::<u32be>(position)?.into();
-        test(&unk30, &0u32)?;
+        test_eq(&unk30, &0u32)?;
     } else {
         let unk30 = reader.read_at::<u64be>(position)?.into();
-        test(&unk30, &0u64)?;
+        test_eq(&unk30, &0u64)?;
     }
     let unk31 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk31, &[0xFFFF_FFFFu32, 0x1])?;
