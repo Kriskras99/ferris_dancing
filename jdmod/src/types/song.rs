@@ -1248,7 +1248,7 @@ impl<'a> From<KaraokeClip<'a>> for json_types::tape::KaraokeClip<'a> {
             pitch: value.pitch,
             lyrics: value.lyrics,
             is_end_of_line: u8::from(value.is_end_of_line),
-            content_type: 2,
+            content_type: 1,
             start_time_tolerance: 4,
             end_time_tolerance: 4,
             semitone_tolerance: 5.0,

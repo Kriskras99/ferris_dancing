@@ -126,13 +126,16 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
                 .map(PathBuf::from)
                 .collect()
         });
-
-        Ok(WalkFs::new(
-            list.iter()
-                .filter(|p| p.starts_with(&path))
-                .map(PathBuf::as_path)
-                .collect(),
-        ))
+        if &path == &Path::new(".") {
+            Ok(WalkFs::new(list.iter().map(PathBuf::as_path).collect()))
+        } else {
+            Ok(WalkFs::new(
+                list.iter()
+                    .filter(|p| p.starts_with(&path))
+                    .map(PathBuf::as_path)
+                    .collect(),
+            ))
+        }
     }
 
     fn exists(&self, path: &Path) -> bool {

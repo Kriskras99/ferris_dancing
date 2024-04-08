@@ -156,8 +156,7 @@ pub fn bundle(
             OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
         let patched_bundle_vfs = OverlayFs::new(patch_vfs, bundle_vfs);
         let vfs = OverlayFs::new(&bundle_files_vfs, &patched_bundle_vfs);
-        let files = vfs.walk_filesystem("".as_ref())?;
-        let filenames: Vec<_> = files.collect::<Vec<_>>();
+        let filenames: Vec<_> = vfs.walk_filesystem("".as_ref())?.collect();
 
         ipk::create(
             destination.join("bundle_nx.ipk"),
@@ -174,10 +173,7 @@ pub fn bundle(
         // Add the bundle to the sfat
         let bundle_id = sfat.add_bundle("bundle".to_string());
         // Link all the file paths to the bundle
-        sfat.add_path_ids_to_bundle(
-            bundle_id,
-            vfs.walk_filesystem("".as_ref())?.map(PathId::from),
-        );
+        sfat.add_path_ids_to_bundle(bundle_id, filenames.into_iter().map(PathId::from));
     }
 
     // Create secure_fat.gf

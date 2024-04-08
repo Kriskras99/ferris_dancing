@@ -103,14 +103,20 @@ impl VirtualFileSystem for VecFs {
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
         let path = path.clean();
-        Ok(WalkFs {
-            paths: self
-                .files
-                .keys()
-                .filter(|p| p.starts_with(&path))
-                .map(PathBuf::as_path)
-                .collect(),
-        })
+        if &path == &Path::new(".") {
+            Ok(WalkFs {
+                paths: self.files.keys().map(PathBuf::as_path).collect(),
+            })
+        } else {
+            Ok(WalkFs {
+                paths: self
+                    .files
+                    .keys()
+                    .filter(|p| p.starts_with(&path))
+                    .map(PathBuf::as_path)
+                    .collect(),
+            })
+        }
     }
 
     fn exists(&self, path: &Path) -> bool {

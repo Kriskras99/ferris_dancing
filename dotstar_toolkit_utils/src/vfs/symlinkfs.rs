@@ -126,14 +126,20 @@ impl VirtualFileSystem for SymlinkFs<'_> {
     }
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
-        Ok(WalkFs {
-            paths: self
-                .mapping
-                .keys()
-                .filter(|p| p.starts_with(path))
-                .map(PathBuf::as_path)
-                .collect(),
-        })
+        if &path == &Path::new(".") {
+            Ok(WalkFs {
+                paths: self.mapping.keys().map(PathBuf::as_path).collect(),
+            })
+        } else {
+            Ok(WalkFs {
+                paths: self
+                    .mapping
+                    .keys()
+                    .filter(|p| p.starts_with(path))
+                    .map(PathBuf::as_path)
+                    .collect(),
+            })
+        }
     }
 
     fn exists(&self, path: &Path) -> bool {

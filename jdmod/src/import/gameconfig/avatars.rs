@@ -219,12 +219,10 @@ pub fn import(
             _ => todo!(),
         };
 
-        let avatar_info = match get_name(is.ugi.game, avatar_desc.avatar_id) {
-            Ok(name) => name,
-            Err(error) => {
-                println!("{error}");
-                continue;
-            }
+        let avatar_info = if let Ok(name) = get_name(is.ugi.game, avatar_desc.avatar_id) {
+            name
+        } else {
+            continue;
         };
 
         let name = avatar_info.name;

@@ -127,13 +127,22 @@ impl VirtualFileSystem for NativeFs {
             Self::recursive_file_list(&self.root, &mut list)?;
             Ok(list)
         })?;
-        Ok(WalkFs {
-            paths: list
-                .iter()
-                .filter(|p| p.starts_with(&path))
-                .filter_map(|p| p.strip_prefix(&self.root).ok())
-                .collect(),
-        })
+        if &path == Path::new(".") {
+            Ok(WalkFs {
+                paths: list
+                    .iter()
+                    .filter_map(|p| p.strip_prefix(&self.root).ok())
+                    .collect(),
+            })
+        } else {
+            Ok(WalkFs {
+                paths: list
+                    .iter()
+                    .filter(|p| p.starts_with(&path))
+                    .filter_map(|p| p.strip_prefix(&self.root).ok())
+                    .collect(),
+            })
+        }
     }
 
     fn exists(&self, path: &Path) -> bool {
