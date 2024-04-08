@@ -148,7 +148,7 @@ impl From<&Png<'_>> for Metadata {
     fn from(value: &Png) -> Self {
         Self {
             png: PngMetadata::from(value),
-            xtx: XtxMetadata::from(value.texture.xtx().unwrap()),
+            xtx: XtxMetadata::from(value.texture.xtx().unwrap_or_else(|_| unreachable!())),
         }
     }
 }

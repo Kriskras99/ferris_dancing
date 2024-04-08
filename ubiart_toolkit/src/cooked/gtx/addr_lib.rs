@@ -62,10 +62,10 @@ pub fn get_surface_info(
 
     if surface_tile_mode == 16 {
         let num_samples = 1u32;
-        let block_size = if hw_format < 0x31 || hw_format > 0x35 {
-            1u32
+        let block_size = if (0x31..=0x35).contains(&hw_format) {
+            4u32
         } else {
-            4
+            1
         };
         let width = !(block_size - 1) & (1.max(surface_width >> level) + block_size - 1);
 
@@ -129,7 +129,7 @@ pub fn get_surface_info(
             2 => {
                 surface_in.height = 1.max(surface_height >> level);
                 surface_in.num_slices = 1.max(surface_depth >> level);
-                surface_in.flags |= 0x20
+                surface_in.flags |= 0x20;
             }
             3 => {
                 surface_in.height = 1.max(surface_height >> level);
@@ -148,9 +148,9 @@ pub fn get_surface_info(
         }
 
         if level == 0 {
-            surface_in.flags = (1 << 12) | surface_in.flags & 0xFFFFEFFF;
+            surface_in.flags = (1 << 12) | surface_in.flags & 0xFFFF_EFFF;
         } else {
-            surface_in.flags &= 0xFFFFEFFF;
+            surface_in.flags &= 0xFFFF_EFFF;
         }
 
         compute_surface_info(surface_in, &mut surface_out)?;
@@ -185,7 +185,7 @@ fn compute_surface_info(
         surface_in.width = 1.max(surface_in.width);
         surface_in.height = 1.max(surface_in.height);
     } else {
-        return Err(ReadError::custom(format!("Texture is corrupt")));
+        return Err(ReadError::custom("Texture is corrupt".to_string()));
     }
 
     todo!()
@@ -248,29 +248,29 @@ fn hwl_compute_mip_level(surface_in: &mut SurfaceIn) -> bool {
 
 fn get_bits_per_pixel(format: u32) -> (u32, u32, u32, u32) {
     let fmt_idx = usize::try_from(format * 4).unwrap_or_else(|_| unreachable!());
-    return (
+    (
         FORMAT_EX_INFO[fmt_idx],
         FORMAT_EX_INFO[fmt_idx + 1],
         FORMAT_EX_INFO[fmt_idx + 2],
         FORMAT_EX_INFO[fmt_idx + 3],
-    );
+    )
 }
 
-fn pow_2_align(x: u32, align: u32) -> u32 {
+const fn pow_2_align(x: u32, align: u32) -> u32 {
     !(align - 1) & (x + align - 1)
 }
 
-fn next_pow_2(dim: u32) -> u32 {
+const fn next_pow_2(dim: u32) -> u32 {
     let mut new_dim = 1;
-    if dim <= 0x7FFFFFFF {
+    if dim <= 0x7FFF_FFFF {
         while new_dim < dim {
             new_dim *= 2;
         }
     } else {
-        new_dim = 0x80000000;
+        new_dim = 0x8000_0000;
     }
 
-    return new_dim;
+    new_dim
 }
 
 fn adjust_surface_info(
@@ -282,10 +282,7 @@ fn adjust_surface_info(
 ) -> u32 {
     let width = surface_in.width;
     let height = surface_in.height;
-    let mut bcn_format = false;
-    if bpp != 0 && [9, 10, 11, 12, 13].contains(&elem_mode) {
-        bcn_format = true;
-    }
+    let bcn_format = bpp != 0 && [9, 10, 11, 12, 13].contains(&elem_mode);
 
     if width != 0 && height != 0 && (expand_x > 1 || expand_y > 1) {
         let (width, height) = if elem_mode == 4 {

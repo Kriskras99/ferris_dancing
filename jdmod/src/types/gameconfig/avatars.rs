@@ -6,7 +6,8 @@ use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::testing::{test, test_any, test_not, TestResult};
 use serde::{Deserialize, Serialize};
 
-fn be_false() -> bool {
+/// For serde to set a value to default to `false`
+const fn be_false() -> bool {
     false
 }
 

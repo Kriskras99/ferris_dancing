@@ -29,46 +29,57 @@ all = "deny"
 pedantic = "warn"
 nursery = "warn"
 cargo = "warn"
-# If an integer doesn't fit it's a good indication that something broke
 as_conversions = "deny"
 empty_structs_with_brackets = "deny"
 get_unwrap = "deny"
-if_then_some_else_none = "deny"
 lossy_float_literal = "deny"
 missing_assert_message = "deny"
 missing_panics_doc = "deny"
 allow_attributes_without_reason = "deny"
 
+multiple_crate_versions = "allow" # Not much we can do about this
+similar_names = "allow" # triggers too often
+doc_markdown = "allow" # unreliable
+missing_errors_doc = "allow" # the error types are descriptive enough
+option_if_let_else = "allow" # much less readable than the original
+too_many_lines = "allow" # parsers and writers are large and not easy to split
+module_name_repetitions = "allow" # they're named like that for a reason
+struct_field_names = "allow"
+
+# TODO: Too many undocumented stuff in ubiart_toolkit
+#missing_docs = "deny"
+#missing_docs_in_private_items = "deny"
+
 [workspace.dependencies]
 aes = { version = "0.8.4", default-features = false }
-anyhow = { version = "1.0.81", default-features = false }
-arbitrary = { version = "1.3.2", default-features = false }
-bitflags = { version = "2.5.0", default-features = false }
+anyhow = { version = "1.0.81", default-features = false, features = ["std", "backtrace"] }
+arbitrary = { version = "1.3.2", default-features = false, features = ["derive"] }
+bitflags = { version = "2.5.0", default-features = false, features = ["std"] }
 bitvec = { version = "1.0.1", default-features = false }
-byteorder = { version = "1.5.0", default-features = false }
-cbc = { version = "0.1.2", default-features = false }
-cipher = { version = "0.4.4", default-features = false }
-clap = { version = "4.5.4", default-features = false }
-crossbeam = { version = "0.8.4", default-features = false }
-datatest-stable = "0.2.3"
-flate2 = { version = "1.0.28", default-features = false }
+byteorder = { version = "1.5.0", default-features = false, features = ["std"] }
+cbc = { version = "0.1.2", default-features = false, features = ["std", "block-padding"] }
+cipher = { version = "0.4.4", default-features = false, features = ["std"] }
+clap = { version = "4.5.4", default-features = false, features = ["std", "help", "usage", "suggestions", "derive"] }
+crossbeam = { version = "0.8.4", default-features = false, features = ["std", "crossbeam-channel"] }
+datatest-stable = { version = "0.2.3", default-features = false }
+flate2 = { version = "1.0.28", default-features = false, features = ["rust_backend"] }
 hash32 = { version = "0.3.1", default-features = false }
-image = { version = "0.25.1", default-features = false }
-memmap2 = { version = "0.9.4", default-features = false }
-nohash-hasher = { version = "0.2.0", default-features = false }
-oxipng = { version = "9.0.0", default-features = false }
+image = { version = "0.25.1", default-features = false, features = ["png"] }
+memmap2 = { version = "0.9.4", default-features = false, features = ["stable_deref_trait"] }
+nohash-hasher = { version = "0.2.0", default-features = false, features = ["std"] }
 path-clean = { version = "1.0.1", default-features = false }
 positioned-io = { version = "0.3.3", default-features = false }
-quick-xml = { version = "0.31.0", default-features = false }
-regex = { version = "1.10.4", default-features = false }
-serde = { version = "1.0.197", default-features = false }
-serde_json = { version = "1.0.115", default-features = false }
-serde_with = { version = "3.7.0", default-features = false }
-sha1 = { version = "0.10.6", default-features = false }
-stable_deref_trait = { version = "1.2.0", default-features = false }
+quick-xml = { version = "0.31.0", default-features = false, features = ["serialize", "overlapped-lists"] }
+regex = { version = "1.10.4", default-features = false, features = ["std", "perf"] }
+serde = { version = "1.0.197", default-features = false, features = ["std", "derive"] }
+serde_json = { version = "1.0.115", default-features = false, features = ["std"] }
+serde_with = { version = "3.7.0", default-features = false, features = ["std", "macros"] }
+sha1 = { version = "0.10.6", default-features = false, features = ["std"] }
+stable_deref_trait = { version = "1.2.0", default-features = false, features = ["std"] }
 texpresso = { version = "2.0.1", default-features = false }
 thiserror = { version = "1.0.58", default-features = false }
-tracing = { version = "0.1.40", default-features = false }
-ux = { version = "0.1.5", default-features = false }
-yoke = { version = "0.7.3", default-features = false }
-zopfli = { version = "0.8.0", default-features = false }
+tracing = { version = "0.1.40", default-features = false, features = ["std", "attributes"] }
+tracing-subscriber = { version = "0.3.18", features = ["std", "fmt", "ansi", "local-time", "time", "env-filter"] }
+ux = { version = "0.1.5", default-features = false, features = ["std"] }
+yoke = { version = "0.7.3", default-features = false, features = ["alloc", "derive"] }
+zopfli = { version = "0.8.0", default-features = false, features = ["zlib", "std"] }

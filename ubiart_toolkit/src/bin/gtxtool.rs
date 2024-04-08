@@ -15,7 +15,7 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let file = File::open(&cli.source).unwrap();
+    let file = File::open(cli.source).unwrap();
     let _ = cooked::png::parse(
         &file,
         UniqueGameId {

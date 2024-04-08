@@ -95,7 +95,10 @@ impl TryFrom<u16> for ContentType {
 }
 
 impl From<ContentType> for u16 {
-    #[allow(clippy::as_conversions)]
+    #[allow(
+        clippy::as_conversions,
+        reason = "ContentType is repr(u16) so this is safe"
+    )]
     fn from(value: ContentType) -> Self {
         value as Self
     }

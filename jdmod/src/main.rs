@@ -1,20 +1,6 @@
 // Everything should be documented
 #![deny(missing_docs)]
 #![deny(clippy::missing_docs_in_private_items)]
-// There are a lot of big conversion functions that can't really be rewritten in a shorter way
-#![allow(clippy::too_many_lines)]
-// It's named like that for a reason
-#![allow(clippy::struct_field_names)]
-#![allow(clippy::module_name_repetitions)]
-// They are the wrong self convention for a reason
-#![allow(clippy::wrong_self_convention)]
-// Broken by serde_with
-#![allow(clippy::multiple_crate_versions)]
-// Significantly less readable than the original
-#![allow(clippy::option_if_let_else)]
-// Not reliable enough
-#![allow(clippy::doc_markdown)]
-#![allow(clippy::missing_errors_doc)]
 
 //! # JDMod
 //! Application for modding Just Dance games.
@@ -108,7 +94,7 @@ fn main() -> ExitCode {
     };
 
     match result {
-        Ok(_) => ExitCode::SUCCESS,
+        Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
             eprintln!("Error: {err:#?}");
             ExitCode::FAILURE

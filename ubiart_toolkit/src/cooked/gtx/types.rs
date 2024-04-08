@@ -79,44 +79,46 @@ pub struct Gx2Surface {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum Format {
-    TcsR8G8B8A8Unorm = 0x0000001A,
-    TcsR8G8B8A8Srgb = 0x0000041A,
-    TcsR10G10B10A2Unorm = 0x00000019,
-    TcsR5G6B5Unorm = 0x00000008,
-    TcR5G5B5A1Unorm = 0x0000000A,
-    TcR4G4B4A4Unorm = 0x0000000B,
-    TcR8Unorm = 0x00000001,
-    TcR8G8Unorm = 0x00000007,
-    TcR4G4Unorm = 0x00000002,
-    TBc1Unorm = 0x00000031,
-    TBc1Srgb = 0x00000431,
-    TBc2Unorm = 0x00000032,
-    TBc2Srgb = 0x00000432,
-    TBc3Unorm = 0x00000033,
-    TBc3Srgb = 0x00000433,
-    TBc4Unorm = 0x00000034,
-    TBc4Snorm = 0x00000234,
-    TBc5Unorm = 0x00000035,
-    TBc5Snorm = 0x00000235,
+    TcsR8G8B8A8Unorm = 0x0000_001A,
+    TcsR8G8B8A8Srgb = 0x0000_041A,
+    TcsR10G10B10A2Unorm = 0x0000_0019,
+    TcsR5G6B5Unorm = 0x0000_0008,
+    TcR5G5B5A1Unorm = 0x0000_000A,
+    TcR4G4B4A4Unorm = 0x0000_000B,
+    TcR8Unorm = 0x0000_0001,
+    TcR8G8Unorm = 0x0000_0007,
+    TcR4G4Unorm = 0x0000_0002,
+    TBc1Unorm = 0x0000_0031,
+    TBc1Srgb = 0x0000_0431,
+    TBc2Unorm = 0x0000_0032,
+    TBc2Srgb = 0x0000_0432,
+    TBc3Unorm = 0x0000_0033,
+    TBc3Srgb = 0x0000_0433,
+    TBc4Unorm = 0x0000_0034,
+    TBc4Snorm = 0x0000_0234,
+    TBc5Unorm = 0x0000_0035,
+    TBc5Snorm = 0x0000_0235,
 }
 
 impl Format {
-    pub fn is_bcn(&self) -> bool {
-        match self {
+    #[must_use]
+    pub const fn is_bcn(&self) -> bool {
+        matches!(
+            self,
             Self::TBc1Srgb
-            | Self::TBc1Unorm
-            | Self::TBc2Srgb
-            | Self::TBc2Unorm
-            | Self::TBc3Srgb
-            | Self::TBc3Unorm
-            | Self::TBc4Snorm
-            | Self::TBc4Unorm
-            | Self::TBc5Snorm
-            | Self::TBc5Unorm => true,
-            _ => false,
-        }
+                | Self::TBc1Unorm
+                | Self::TBc2Srgb
+                | Self::TBc2Unorm
+                | Self::TBc3Srgb
+                | Self::TBc3Unorm
+                | Self::TBc4Snorm
+                | Self::TBc4Unorm
+                | Self::TBc5Snorm
+                | Self::TBc5Unorm
+        )
     }
 
+    #[must_use]
     pub fn get_bpp(&self) -> u32 {
         (surface_get_bits_per_pixel(self.into()).unwrap_or_else(|_| unreachable!()) + 0x7) & !0x7
     }
@@ -127,33 +129,34 @@ impl TryFrom<u32> for Format {
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
-            0x0000001A => Ok(Self::TcsR8G8B8A8Unorm),
-            0x0000041A => Ok(Self::TcsR8G8B8A8Srgb),
-            0x00000019 => Ok(Self::TcsR10G10B10A2Unorm),
-            0x00000008 => Ok(Self::TcsR5G6B5Unorm),
-            0x0000000A => Ok(Self::TcR5G5B5A1Unorm),
-            0x0000000B => Ok(Self::TcR4G4B4A4Unorm),
-            0x00000001 => Ok(Self::TcR8Unorm),
-            0x00000007 => Ok(Self::TcR8G8Unorm),
-            0x00000002 => Ok(Self::TcR4G4Unorm),
-            0x00000031 => Ok(Self::TBc1Unorm),
-            0x00000431 => Ok(Self::TBc1Srgb),
-            0x00000032 => Ok(Self::TBc2Unorm),
-            0x00000432 => Ok(Self::TBc2Srgb),
-            0x00000033 => Ok(Self::TBc3Unorm),
-            0x00000433 => Ok(Self::TBc3Srgb),
-            0x00000034 => Ok(Self::TBc4Unorm),
-            0x00000234 => Ok(Self::TBc4Snorm),
-            0x00000035 => Ok(Self::TBc5Unorm),
-            0x00000235 => Ok(Self::TBc5Snorm),
+            0x0000_001A => Ok(Self::TcsR8G8B8A8Unorm),
+            0x0000_041A => Ok(Self::TcsR8G8B8A8Srgb),
+            0x0000_0019 => Ok(Self::TcsR10G10B10A2Unorm),
+            0x0000_0008 => Ok(Self::TcsR5G6B5Unorm),
+            0x0000_000A => Ok(Self::TcR5G5B5A1Unorm),
+            0x0000_000B => Ok(Self::TcR4G4B4A4Unorm),
+            0x0000_0001 => Ok(Self::TcR8Unorm),
+            0x0000_0007 => Ok(Self::TcR8G8Unorm),
+            0x0000_0002 => Ok(Self::TcR4G4Unorm),
+            0x0000_0031 => Ok(Self::TBc1Unorm),
+            0x0000_0431 => Ok(Self::TBc1Srgb),
+            0x0000_0032 => Ok(Self::TBc2Unorm),
+            0x0000_0432 => Ok(Self::TBc2Srgb),
+            0x0000_0033 => Ok(Self::TBc3Unorm),
+            0x0000_0433 => Ok(Self::TBc3Srgb),
+            0x0000_0034 => Ok(Self::TBc4Unorm),
+            0x0000_0234 => Ok(Self::TBc4Snorm),
+            0x0000_0035 => Ok(Self::TBc5Unorm),
+            0x0000_0235 => Ok(Self::TBc5Snorm),
             _ => Err(ReadError::custom(format!("Unknown format!: 0x{value:x}"))),
         }
     }
 }
 
 impl From<Format> for u32 {
+    #[allow(clippy::as_conversions, reason = "Format is repr(u32)")]
     fn from(value: Format) -> Self {
-        value as u32
+        value as Self
     }
 }
 

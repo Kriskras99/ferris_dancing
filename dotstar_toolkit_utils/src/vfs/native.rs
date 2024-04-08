@@ -20,6 +20,7 @@ pub struct NativeFs {
     root: PathBuf,
     /// Cache open files
     cache: Mutex<HashMap<PathBuf, Weak<Mmap>>>,
+    /// Cache the file paths
     list: OnceLock<Vec<PathBuf>>,
 }
 
@@ -77,6 +78,10 @@ impl VirtualFileSystem for NativeFs {
     fn open(&self, path: &Path) -> std::io::Result<VirtualFile<'static>> {
         let path = self.canonicalize(path)?;
 
+        #[allow(
+            clippy::significant_drop_in_scrutinee,
+            reason = "Can't reduce it further"
+        )]
         let data = match self.cache.lock().unwrap().entry(path) {
             Entry::Occupied(mut entry) => {
                 if let Some(data) = entry.get().upgrade() {

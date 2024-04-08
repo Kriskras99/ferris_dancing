@@ -104,10 +104,12 @@ pub fn bundle(
         let file_path = destination.join("patch_nx.ipk");
         ipk::create(
             &file_path,
-            config.game_platform,
-            config.ipk_unk4,
-            config.engine_version,
-            ipk::Options::default(),
+            ipk::Options {
+                compression: ipk::CompressionEffort::Best,
+                game_platform: config.game_platform,
+                unk4: config.ipk_unk4,
+                engine_version: config.engine_version,
+            },
             &vfs,
             &filenames,
         )?;
@@ -252,10 +254,12 @@ pub fn bundle(
         println!("Creating bundle_nx.ipk");
         ipk::create(
             destination.join("bundle_nx.ipk"),
-            config.game_platform,
-            config.ipk_unk4,
-            config.engine_version,
-            ipk::Options::default(),
+            ipk::Options {
+                compression: ipk::CompressionEffort::Best,
+                game_platform: config.game_platform,
+                unk4: config.ipk_unk4,
+                engine_version: config.engine_version,
+            },
             &vfs,
             &main_bundle_entries,
         )?;
@@ -271,10 +275,12 @@ pub fn bundle(
             println!("Creating {name}");
             ipk::create(
                 destination.join(&name),
-                config.game_platform,
-                config.ipk_unk4,
-                config.engine_version,
-                ipk::Options::default(),
+                ipk::Options {
+                    compression: ipk::CompressionEffort::Best,
+                    game_platform: config.game_platform,
+                    unk4: config.ipk_unk4,
+                    engine_version: config.engine_version,
+                },
                 &vfs,
                 entries,
             )?;
@@ -286,10 +292,12 @@ pub fn bundle(
         println!("Creating patch_nx.ipk");
         ipk::create(
             destination.join("patch_nx.ipk"),
-            config.game_platform,
-            config.ipk_unk4,
-            config.engine_version,
-            ipk::Options::default(),
+            ipk::Options {
+                compression: ipk::CompressionEffort::Best,
+                game_platform: config.game_platform,
+                unk4: config.ipk_unk4,
+                engine_version: config.engine_version,
+            },
             &vfs,
             &[],
         )?;

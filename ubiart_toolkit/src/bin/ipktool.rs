@@ -163,11 +163,11 @@ pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> 
     ipk::write(
         &mut file,
         &mut 0,
-        UniqueGameId::try_from(0x1DDB_2268)?,
-        0x937D0,
-        0x4FD39,
         ipk::Options {
             compression: ipk::CompressionEffort::Best,
+            game_platform: UniqueGameId::try_from(0x1DDB_2268)?,
+            unk4: 0x937D0,
+            engine_version: 0x4FD39,
         },
         &vfs,
         &files,

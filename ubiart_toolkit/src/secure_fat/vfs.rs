@@ -147,17 +147,14 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
         let path = path.clean();
-        let mut paths = Vec::new();
+        let mut walker = WalkFs::default();
         for bundle in self.bundles.values() {
-            paths.append(&mut bundle.walk_filesystem(&path)?.paths);
+            walker.merge(&bundle.walk_filesystem(&path)?);
         }
         if let Some(bundle) = self.patch.as_ref() {
-            paths.append(&mut bundle.walk_filesystem(&path)?.paths);
+            walker.merge(&bundle.walk_filesystem(&path)?);
         }
-        paths.sort_unstable();
-        paths.dedup();
-        paths.shrink_to_fit();
-        Ok(WalkFs { paths })
+        Ok(walker)
     }
 
     fn exists(&self, path: &Path) -> bool {

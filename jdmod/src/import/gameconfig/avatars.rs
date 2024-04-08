@@ -37,13 +37,18 @@ fn load_avatar_config(is: &ImportState<'_>) -> Result<HashMap<String, Avatar<'st
     }
 }
 
-fn save_avatar_config(is: &ImportState<'_>, avatars: HashMap<String, Avatar>) -> Result<(), Error> {
+/// Save the avatar metadata to avatars.json
+fn save_avatar_config(
+    is: &ImportState<'_>,
+    avatars: &HashMap<String, Avatar>,
+) -> Result<(), Error> {
     let avatars_config_path = is.dirs.avatars().join("avatars.json");
     let file = File::create(avatars_config_path)?;
     serde_json::to_writer_pretty(file, &avatars)?;
     Ok(())
 }
 
+/// Decode and save the avatar images in the right location
 fn save_images(
     is: &ImportState<'_>,
     name: &str,
@@ -57,7 +62,7 @@ fn save_images(
     })?;
     let alt_actor_file = is
         .vfs
-        .open(cook_path(actor_path.as_ref(), is.ugi.platform)?.as_ref())?;
+        .open(cook_path(actor_path, is.ugi.platform)?.as_ref())?;
     let alt_actor = cooked::act::parse(&alt_actor_file, &mut 0, is.ugi)?;
 
     let image_actor = alt_actor
@@ -77,18 +82,25 @@ fn save_images(
 
     // Save phone image
     let avatar_image_phone_path = is.dirs.avatars().join(avatar.image_phone_path.as_ref());
-    let mut avatar_image_phone_file = File::create(&avatar_image_phone_path)?;
+    let mut avatar_image_phone_file = File::create(avatar_image_phone_path)?;
     avatar_image_phone_file.write_all(&is.vfs.open(phone_image.as_ref())?)?;
 
     Ok(())
 }
 
+/// Minimum information to correctly parse an avatar
 struct MinAvatarDesc<'a> {
+    /// The id in the current game
     pub avatar_id: u16,
+    /// The sound effect
     pub sound_family: Cow<'a, str>,
+    /// Unkown, so better keep it around
     pub status: u8,
+    /// How is it unlocked in the game
     pub unlock_type: u8,
+    /// Path to the actor
     pub actor_path: Cow<'a, str>,
+    /// Path to the image for the phone controller
     pub phone_image: Cow<'a, str>,
 }
 
@@ -131,39 +143,43 @@ impl<'a> From<AvatarDescription17<'a>> for MinAvatarDesc<'a> {
     }
 }
 
+/// Parse the avatar database scene for v20-v22
 fn parse_actor_v20v22<'a>(
     is: &ImportState,
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
-    let template = cooked::json::parse_v22(&file, is.lax)?;
+    let template = cooked::json::parse_v22(file, is.lax)?;
     let mut actor_template = template.actor()?;
     test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
     let avatar_desc = actor_template.components.remove(1).avatar_description()?;
     Ok(avatar_desc.into())
 }
 
+/// Parse the avatar database scene for v18-v19
 fn parse_actor_v18v19<'a>(
     is: &ImportState,
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
-    let template = cooked::json::parse_v19(&file, is.lax)?;
+    let template = cooked::json::parse_v19(file, is.lax)?;
     let mut actor_template = template.actor()?;
     test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
     let avatar_desc = actor_template.components.remove(1).avatar_description()?;
     Ok(avatar_desc.into())
 }
 
+/// Parse the avatar database for v17
 fn parse_actor_v17<'a>(
     is: &ImportState,
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
-    let template = cooked::json::parse_v17(&file, is.lax)?;
+    let template = cooked::json::parse_v17(file, is.lax)?;
     let mut actor_template = template.actor()?;
     test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
     let avatar_desc = actor_template.components.remove(1).avatar_description()?;
     Ok(avatar_desc.into())
 }
 
+/// Parse the avatar database and import all avatars
 pub fn import(
     is: &ImportState,
     avatardb_scene: &str,
@@ -251,11 +267,12 @@ pub fn import(
 
     import_unreferenced_avatars(is, &mut avatars)?;
 
-    save_avatar_config(is, avatars)?;
+    save_avatar_config(is, &avatars)?;
 
     Ok(())
 }
 
+/// Imports avatars that were not in the avatar database
 fn import_unreferenced_avatars(
     is: &ImportState<'_>,
     avatars: &mut HashMap<String, Avatar>,
@@ -265,14 +282,10 @@ fn import_unreferenced_avatars(
         .vfs
         .walk_filesystem(import_path.as_ref())?
         .filter(|p| p.ends_with("avatar.png.ckd"))
-        .map(Path::parent)
-        .flatten()
-        .map(Path::file_name)
-        .flatten()
-        .map(OsStr::to_str)
-        .flatten()
-        .map(str::parse::<u16>)
-        .flatten()
+        .filter_map(Path::parent)
+        .filter_map(Path::file_name)
+        .filter_map(OsStr::to_str)
+        .flat_map(str::parse::<u16>)
     {
         let avatar_info = match get_name(is.ugi.game, avatar_id) {
             Ok(avatar_info) => avatar_info,
@@ -3950,14 +3963,20 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
 }
 
 #[derive(Debug, Clone, Copy)]
+/// Documents avatar information which might be missing in the game
 pub struct AvatarInfo {
+    /// Unique name for the avatar
     pub name: &'static str,
+    /// The map this avatar belongs to
     pub map: &'static str,
+    /// Which coach this avatar is based on
     pub coach: u8,
+    /// Is this a golden avatar
     pub special_effect: bool,
 }
 
 impl AvatarInfo {
+    /// Create a `AvatarInfo`
     pub const fn new(
         name: &'static str,
         map: &'static str,
@@ -3972,11 +3991,10 @@ impl AvatarInfo {
         }
     }
 
+    /// Get the main avatar for this avatar if it exists
     pub fn main_avatar(&self) -> Option<&'static str> {
-        if self.name.ends_with("_Gold") {
-            Some(&self.name[0..self.name.len() - 5])
-        } else {
-            None
-        }
+        self.name
+            .ends_with("_Gold")
+            .then(|| &self.name[0..self.name.len() - 5])
     }
 }

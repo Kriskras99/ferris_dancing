@@ -33,7 +33,9 @@ enum UnparsedNode {
 }
 
 impl UnparsedNode {
+    /// Magic number for files
     const MAGIC_FILE: u8 = 0x0;
+    /// Magic number for directories
     const MAGIC_DIRECTORY: u8 = 0x1;
 }
 
@@ -122,8 +124,11 @@ pub struct U8Archive<'a> {
 }
 
 impl U8Archive<'_> {
+    /// Magic of .u8 files
     const MAGIC: u32be = u32be::new(0x55AA_382D);
+    /// Offset to the root node
     const ROOTNODE_OFFSET: u32be = u32be::new(0x20);
+    /// Padding between the header and root node
     const PADDING: [u8; 16] = [0; 16];
 }
 
@@ -158,8 +163,12 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
             };
 
             let total_nodes = u32::from(rootnode.last_included_node_index);
-            let string_table_offset =
-                u64::from(u32::from(Self::ROOTNODE_OFFSET) + total_nodes * 12) + begin_position;
+            let string_table_offset = total_nodes
+                .checked_mul(12)
+                .and_then(|c| c.checked_add(u32::from(Self::ROOTNODE_OFFSET)))
+                .map(u64::from)
+                .and_then(|c| c.checked_add(begin_position))
+                .ok_or_else(ReadError::int_under_overflow)?;
 
             let file_tree = FileTree {
                 directories: HashMap::new(),
@@ -173,7 +182,9 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
                 let node = reader.read_at(position)?;
                 match node {
                     UnparsedNode::Directory(node) => {
-                        let mut string_offset = u64::from(node.name_offset) + string_table_offset;
+                        let mut string_offset = u64::from(node.name_offset)
+                            .checked_add(string_table_offset)
+                            .ok_or_else(ReadError::int_under_overflow)?;
                         let name = reader.read_null_terminated_string_at(&mut string_offset)?;
                         let tree = FileTree {
                             directories: HashMap::new(),
@@ -183,9 +194,13 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
                         indexes.push(u32::from(node.last_included_node_index));
                     }
                     UnparsedNode::File(node) => {
-                        let mut data_offset = u64::from(node.data_offset) + begin_position;
+                        let mut data_offset = u64::from(node.data_offset)
+                            .checked_add(begin_position)
+                            .ok_or_else(ReadError::int_under_overflow)?;
                         let size = usize::try_from(node.size).unwrap();
-                        let mut string_offset = u64::from(node.name_offset) + string_table_offset;
+                        let mut string_offset = u64::from(node.name_offset)
+                            .checked_add(string_table_offset)
+                            .ok_or_else(ReadError::int_under_overflow)?;
                         let name = reader.read_null_terminated_string_at(&mut string_offset)?;
                         let data = reader.read_slice_at(&mut data_offset, size)?;
 
@@ -231,7 +246,7 @@ impl BinarySerialize for U8Archive<'_> {
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
-        let count = self.file_tree.count();
+        let count = self.file_tree.count()?;
         let (string_table_size, string_table) = self.file_tree.string_table()?;
 
         // Write the magic value
@@ -239,7 +254,11 @@ impl BinarySerialize for U8Archive<'_> {
         // Write the rootnode offset
         writer.write_at(position, &Self::ROOTNODE_OFFSET)?;
         // Calculate and write the header size and data offset
-        let header_size = u32be::from(count * 12 + string_table_size);
+        let header_size = count
+            .checked_mul(12)
+            .and_then(|c| c.checked_add(string_table_size))
+            .ok_or_else(WriteError::int_under_overflow)?;
+        let header_size = u32be::from(header_size);
         let data_offset = round_to_boundary(
             Self::ROOTNODE_OFFSET
                 .checked_add(header_size)
@@ -265,6 +284,7 @@ impl BinarySerialize for U8Archive<'_> {
     }
 }
 
+/// Write the tree metadata recursively
 fn write_filetree_rec(
     writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
@@ -275,13 +295,19 @@ fn write_filetree_rec(
     name: &str,
 ) -> Result<(), WriteError> {
     // Create and write this directory node
-    let count = file_tree.count();
+    let count = file_tree.count()?;
     let node = NewUnparsedDirectory {
         name_offset: u24be::try_from(*string_table.get(name).unwrap_or_else(|| unreachable!()))?,
-        last_included_node_index: u32be::from(*current_idx + count),
+        last_included_node_index: u32be::from(
+            current_idx
+                .checked_add(count)
+                .ok_or_else(WriteError::int_under_overflow)?,
+        ),
     };
     writer.write_at(position, &node)?;
-    *current_idx += 1;
+    *current_idx = current_idx
+        .checked_add(1)
+        .ok_or_else(WriteError::int_under_overflow)?;
     // Write all files directly in this directory
     for (filename, data) in &file_tree.files {
         let size = u32::try_from(data.len())?;
@@ -297,10 +323,14 @@ fn write_filetree_rec(
         // Write the data
         let mut data_offset_u64 = u64::from(*data_offset);
         writer.write_slice_at(&mut data_offset_u64, data.as_ref())?;
-        *data_offset += size;
+        *data_offset = data_offset
+            .checked_add(size)
+            .ok_or_else(WriteError::int_under_overflow)?;
         // Write the file node
         writer.write_at(position, &node)?;
-        *current_idx += 1;
+        *current_idx = current_idx
+            .checked_add(1)
+            .ok_or_else(WriteError::int_under_overflow)?;
     }
 
     // Write all subdirectories and files
@@ -329,17 +359,25 @@ pub struct FileTree<'a> {
 }
 
 impl FileTree<'_> {
-    fn count(&self) -> u32 {
-        let n = self.directories.len() + self.files.len();
-        let mut n = u32::try_from(n).expect("Too many nodes!");
+    /// Count the amount of files and directories in this tree
+    fn count(&self) -> Result<u32, WriteError> {
+        let n = self
+            .directories
+            .len()
+            .checked_add(self.files.len())
+            .ok_or_else(WriteError::int_under_overflow)?;
+        let mut n = u32::try_from(n)?;
         for directory in self.directories.values() {
-            n = n.checked_add(directory.count()).expect("Too many nodes");
+            n = n
+                .checked_add(directory.count()?)
+                .ok_or_else(WriteError::int_under_overflow)?;
         }
-        n
+        Ok(n)
     }
 }
 
 impl<'a> FileTree<'a> {
+    /// Creates a string table from this tree
     fn string_table(&self) -> Result<(u32, HashMap<Cow<'a, str>, u32>), WriteError> {
         let mut string_map = HashMap::new();
         let mut offset = 1;
@@ -347,6 +385,7 @@ impl<'a> FileTree<'a> {
         Ok((offset, string_map))
     }
 
+    /// Recursive part of `string_table`
     fn string_table_rec(
         &self,
         string_map: &mut HashMap<Cow<'a, str>, u32>,

@@ -1,3 +1,5 @@
+//! Integer primitives with a specific endianness
+
 use std::{marker::PhantomData, num::TryFromIntError};
 
 use super::{
@@ -7,6 +9,7 @@ use super::{
     Len,
 };
 
+/// Creates a uint of n bytes
 macro_rules! create_uint {
     ( $name:ident, $lename:ident, $bename:ident, $native:ident, $n_bytes:literal ) => {
         #[doc = concat!(r" Unsigned integer type of ", stringify!($n_bytes), r" bytes invariant over [`Endianness`].")]
@@ -28,6 +31,7 @@ macro_rules! create_uint {
 
         impl<E: Endianness> $name<E> {
             #[must_use]
+            /// Checked integer addition. Computes `self + rhs`, returning None if overflow occurred.
             pub fn checked_add(self, rhs: Self) -> Option<Self> {
                 $native::from(self).checked_add($native::from(rhs)).and_then(|n| Self::try_from(n).ok())
             }
@@ -142,6 +146,7 @@ create_uint!(U48, u48le, u48be, u64, 6);
 create_uint!(U56, u56le, u56be, u64, 7);
 create_uint!(U64, u64le, u64be, u64, 8);
 
+/// Implements From for types of the same width
 macro_rules! impl_pow2_uint {
     ( $name:ident, $native:ident) => {
         impl<E: Endianness> From<$native> for $name<E> {
@@ -155,6 +160,8 @@ macro_rules! impl_pow2_uint {
         }
 
         impl<E: Endianness> $name<E> {
+            /// Create a new value
+            #[must_use]
             pub const fn new(value: $native) -> Self {
                 Self {
                     bytes: value.to_ne_bytes(),
@@ -169,6 +176,7 @@ impl_pow2_uint!(U16, u16);
 impl_pow2_uint!(U32, u32);
 impl_pow2_uint!(U64, u64);
 
+/// Implement try_from for types that are smaller
 macro_rules! impl_non_pow2_uint {
     ( $name:ident, $native:ident, $n_bytes:literal, $max:literal) => {
         impl<E: Endianness> TryFrom<$native> for $name<E> {
@@ -183,6 +191,7 @@ macro_rules! impl_non_pow2_uint {
                 let wide_bytes = value.to_ne_bytes();
                 let mut bytes = [0; $n_bytes];
                 #[cfg(target_endian = "big")]
+                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
                 {
                     let mut i = 0;
                     while i < $n_bytes {
@@ -191,6 +200,7 @@ macro_rules! impl_non_pow2_uint {
                     }
                 }
                 #[cfg(target_endian = "little")]
+                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
                 {
                     let mut i = 0;
                     while i < $n_bytes {
@@ -207,6 +217,7 @@ macro_rules! impl_non_pow2_uint {
 
         impl<E: Endianness> $name<E> {
             #[must_use]
+            /// Create a new value
             pub const fn new(value: $native) -> Self {
                 if value > $max {
                     panic!(concat!("value is larger than", stringify!("$max")))
@@ -214,6 +225,7 @@ macro_rules! impl_non_pow2_uint {
                 let wide_bytes = value.to_ne_bytes();
                 let mut bytes = [0; $n_bytes];
                 #[cfg(target_endian = "big")]
+                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
                 {
                     let mut i = 0;
                     while i < $n_bytes {
@@ -222,6 +234,7 @@ macro_rules! impl_non_pow2_uint {
                     }
                 }
                 #[cfg(target_endian = "little")]
+                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
                 {
                     let mut i = 0;
                     while i < $n_bytes {
@@ -243,6 +256,7 @@ impl_non_pow2_uint!(U40, u64, 5, 0x00FF_FFFF_FFFF);
 impl_non_pow2_uint!(U48, u64, 6, 0xFFFF_FFFF_FFFF);
 impl_non_pow2_uint!(U56, u64, 7, 0x00FF_FFFF_FFFF_FFFF);
 
+/// Implements From for wider types
 macro_rules! impl_widening_pow2_uint {
     ( $name:ident, $native:ident, $n_bytes:literal ) => {
         impl<E: Endianness> From<$name<E>> for $native {

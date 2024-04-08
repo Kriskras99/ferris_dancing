@@ -146,7 +146,7 @@ impl<'c> Alias<'c> {
     }
 
     /// Convert to the UbiArt representation
-    pub fn to_unlockable_alias_descriptor(
+    pub fn into_unlockable_alias_descriptor(
         self,
         aliasesobjectives: &mut AliasesObjectives<'c>,
     ) -> UnlockableAliasDescriptor<'c> {

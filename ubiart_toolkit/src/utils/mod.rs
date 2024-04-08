@@ -94,7 +94,6 @@ impl<'a> SplitPath<'a> {
     const EMPTY_PATH_ID: PathId = PathId(0xFFFF_FFFF);
     const PADDING: u32 = 0x0;
 
-    #[must_use]
     pub fn new(path: Cow<'a, str>, filename: Cow<'a, str>) -> Result<Self, TestError> {
         test(path.ends_with('/')).or(test(path.is_empty()))?;
         test(!path.contains('.'))?;
@@ -138,11 +137,12 @@ impl<'a> SplitPath<'a> {
     }
 
     #[must_use]
-    pub fn parent<'b>(&'b self) -> &'b str {
+    pub fn parent(&self) -> &str {
         &self.path
     }
 
-    pub fn filename<'b>(&'b self) -> &'b str {
+    #[must_use]
+    pub fn filename(&self) -> &str {
         &self.filename
     }
 }
@@ -226,7 +226,7 @@ impl<'a> TryFrom<&'a Path> for SplitPath<'a> {
 
 impl From<&SplitPath<'_>> for PathBuf {
     fn from(value: &SplitPath<'_>) -> Self {
-        let mut pb = PathBuf::with_capacity(value.len());
+        let mut pb = Self::with_capacity(value.len());
         pb.push(value.path.as_ref());
         pb.push(value.filename.as_ref());
         pb

@@ -280,7 +280,9 @@ pub trait WriteAt {
 impl WriteAt for Vec<u8> {
     fn write_slice_at(&mut self, position: &mut u64, buf: &[u8]) -> Result<(), WriteError> {
         let position_usize = usize::try_from(*position)?;
-        let end = position_usize + buf.len();
+        let end = position_usize
+            .checked_add(buf.len())
+            .ok_or_else(WriteError::int_under_overflow)?;
         if end >= self.len() {
             self.resize(end, 0);
         }
@@ -303,7 +305,9 @@ impl WriteAt for Cursor<&mut Vec<u8>> {
 impl WriteAt for File {
     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
         self.write_all_at(*position, ty)?;
-        *position += u64::try_from(ty.len())?;
+        *position = position
+            .checked_add(u64::try_from(ty.len())?)
+            .ok_or_else(WriteError::int_under_overflow)?;
         Ok(())
     }
 }
@@ -312,17 +316,23 @@ impl<T: Write + Seek> WriteAt for BufWriter<T> {
     fn write_slice_at(&mut self, position: &mut u64, ty: &[u8]) -> Result<(), WriteError> {
         self.seek(SeekFrom::Start(*position))?;
         self.write_all(ty)?;
-        *position += u64::try_from(ty.len())?;
+        *position = position
+            .checked_add(u64::try_from(ty.len())?)
+            .ok_or_else(WriteError::int_under_overflow)?;
         Ok(())
     }
 }
 
+/// Provides a wrapper around a `WriteAt` item so it can be used with `Write`-based interfaces
 pub struct CursorAt<'a, W: WriteAt + ?Sized> {
+    /// The writer that is wrapped
     writer: &'a mut W,
+    /// The current position in the writer
     position: &'a mut u64,
 }
 
 impl<'a, W: WriteAt + ?Sized> CursorAt<'a, W> {
+    /// Create a new `CursorAt` that will start writing at `position`
     pub fn new(writer: &'a mut W, position: &'a mut u64) -> Self {
         Self { writer, position }
     }

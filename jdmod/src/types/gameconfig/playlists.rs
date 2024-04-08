@@ -93,7 +93,7 @@ impl<'a> Playlist<'a> {
     ///
     /// # Errors
     /// Will error if parsing the filename fails
-    pub fn to_offline_playlist(self) -> Result<json_types::isg::OfflinePlaylist<'a>, Error> {
+    pub fn into_offline_playlist(self) -> Result<json_types::isg::OfflinePlaylist<'a>, Error> {
         let file_stem = AsRef::<Path>::as_ref(self.cover.as_ref())
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)

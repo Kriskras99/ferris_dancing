@@ -200,7 +200,7 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
                     false
                 }
             })
-            .map(|c| c.to_tape(&ses.song))
+            .map(|c| c.into_tape(&ses.song))
             .collect::<Result<_, _>>()?,
         tape_clock: 0,
         tape_bar_count: 1,

@@ -1,3 +1,5 @@
+//! Interfaces and utilities for reading and writing data and types
+
 pub mod endian;
 pub mod primitives;
 // pub mod primitives2;
@@ -12,12 +14,6 @@ use self::{
 };
 
 /// Read the file at path into a `Vec`
-///
-/// # Errors
-/// - Cannot open the file
-/// - Cannot get metadata for the file
-/// - Filesize is bigger than `usize`
-/// - Cannot read the entire file
 pub fn read_to_vec<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<u8>> {
     let mut file = File::open(path.as_ref())?;
     let file_size = usize::try_from(file.metadata()?.len()).map_err(std::io::Error::other)?;

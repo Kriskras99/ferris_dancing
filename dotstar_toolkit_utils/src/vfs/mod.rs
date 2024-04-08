@@ -37,19 +37,28 @@ pub trait VirtualFileSystem: Sync {
     fn exists(&self, path: &Path) -> bool;
 }
 
+/// An iterator over all files under a directory
+#[derive(Default)]
 pub struct WalkFs<'a> {
-    pub paths: Vec<&'a Path>,
+    /// The files that haven't been iterated yet
+    paths: Vec<&'a Path>,
 }
 
 impl ExactSizeIterator for WalkFs<'_> {}
 
 impl<'a> WalkFs<'a> {
+    /// Create a `WalkFs` that iterates over `paths`
     #[must_use]
-    pub fn merge(mut self, mut other: Self) -> Self {
-        let mut paths = Vec::with_capacity(self.paths.capacity() + other.paths.capacity());
-        paths.append(&mut self.paths);
-        paths.append(&mut other.paths);
-        WalkFs { paths }
+    pub fn new(paths: Vec<&'a Path>) -> Self {
+        Self { paths }
+    }
+
+    /// Merge another `WalkFs` iterator into this one
+    pub fn merge(&mut self, other: &Self) {
+        self.paths.extend_from_slice(&other.paths);
+        self.paths.sort_unstable();
+        self.paths.dedup();
+        self.paths.shrink_to_fit();
     }
 }
 
@@ -68,7 +77,9 @@ impl<'a> Iterator for WalkFs<'a> {
 
 /// Represents metadata that can be obtained about a file
 pub struct VirtualMetadata {
+    /// The size of the file in bytes, without any filesystem based compression
     pub file_size: u64,
+    /// Creation time of file in seconds since the Unix Epoch
     pub created: Result<u64, std::io::ErrorKind>,
 }
 

@@ -828,7 +828,7 @@ impl<'a> Clip<'a> {
     ///
     /// # Errors
     /// Will return an error if song is a [`Clip::SoundSet`]
-    pub fn to_tape(self, song: &Song) -> Result<json_types::tape::Clip<'a>, Error> {
+    pub fn into_tape(self, song: &Song) -> Result<json_types::tape::Clip<'a>, Error> {
         match self {
             Self::SoundSet(_) => Err(anyhow!(
                 "Converting SoundSetClip through the Clip enum is not supported!"

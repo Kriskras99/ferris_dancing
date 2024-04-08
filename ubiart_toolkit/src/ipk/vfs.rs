@@ -127,17 +127,16 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
                 .collect()
         });
 
-        Ok(WalkFs {
-            paths: list
-                .iter()
+        Ok(WalkFs::new(
+            list.iter()
                 .filter(|p| p.starts_with(&path))
                 .map(PathBuf::as_path)
                 .collect(),
-        })
+        ))
     }
 
     fn exists(&self, path: &Path) -> bool {
         let path = path.clean();
-        self.bundle.get().files.contains_key(&path_id(&path))
+        self.bundle.get().files.contains_key(&path_id(path))
     }
 }

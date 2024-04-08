@@ -117,10 +117,12 @@ pub fn bundle(
 
         ipk::create(
             destination.join("patch_nx.ipk"),
-            config.game_platform,
-            config.ipk_unk4,
-            config.engine_version,
-            ipk::Options::default(),
+            ipk::Options {
+                compression: ipk::CompressionEffort::Best,
+                game_platform: config.game_platform,
+                unk4: config.ipk_unk4,
+                engine_version: config.engine_version,
+            },
             &vfs,
             &filenames,
         )?;
@@ -138,10 +140,12 @@ pub fn bundle(
         ipk::write(
             &mut patch_file,
             &mut 0,
-            config.game_platform,
-            config.ipk_unk4,
-            config.engine_version,
-            ipk::Options::default(),
+            ipk::Options {
+                compression: ipk::CompressionEffort::Best,
+                game_platform: config.game_platform,
+                unk4: config.ipk_unk4,
+                engine_version: config.engine_version,
+            },
             native_vfs,
             &[],
         )?;
@@ -157,10 +161,12 @@ pub fn bundle(
 
         ipk::create(
             destination.join("bundle_nx.ipk"),
-            config.game_platform,
-            config.ipk_unk4,
-            config.engine_version,
-            ipk::Options::default(),
+            ipk::Options {
+                compression: ipk::CompressionEffort::Best,
+                game_platform: config.game_platform,
+                unk4: config.ipk_unk4,
+                engine_version: config.engine_version,
+            },
             &vfs,
             &filenames,
         )?;
@@ -198,10 +204,12 @@ fn save_songs_bundle(
 
     ipk::create(
         destination.join(format!("{name}_nx.ipk")),
-        config.game_platform,
-        config.ipk_unk4,
-        config.engine_version,
-        ipk::Options::default(),
+        ipk::Options {
+            compression: ipk::CompressionEffort::Best,
+            game_platform: config.game_platform,
+            unk4: config.ipk_unk4,
+            engine_version: config.engine_version,
+        },
         &overlay_vfs,
         &filenames,
     )?;

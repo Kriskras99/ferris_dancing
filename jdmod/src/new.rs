@@ -56,7 +56,6 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
         ));
     }
 
-    tracing::trace!("Importing {game_path:?} into {dir_root:?}");
     // Init the native filesystem and load the securefat as a virtual filesystem
     let native_vfs = NativeFs::new(
         game_path

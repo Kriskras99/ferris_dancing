@@ -14,10 +14,10 @@ use crate::{
     utils::{Platform, UniqueGameId},
 };
 
-pub fn parse<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+pub fn parse(
+    reader: &(impl ZeroCopyReadAtExt + ?Sized),
     ugi: UniqueGameId,
-) -> Result<Png<'de>, ReadError> {
+) -> Result<Png<'_>, ReadError> {
     parse_at(reader, &mut 0, ugi)
 }
 pub fn parse_at<'de>(
@@ -61,10 +61,7 @@ pub fn parse_at<'de>(
     // Always zero for just dance 2022
     let _unk11 = reader.read_at::<u16be>(position)?;
 
-    assert!(
-        start_position + u64::from(header_size) == *position,
-        "Implementation is incorrect!"
-    );
+    test_eq(&(start_position + u64::from(header_size)), position)?;
 
     let texture = match ugi.platform {
         Platform::Nx => {

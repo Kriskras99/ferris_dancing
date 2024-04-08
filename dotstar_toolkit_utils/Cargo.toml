@@ -9,15 +9,16 @@ description = "Utility functions and VFS implementation useful for parsers"
 keywords = ["vfs", "utilities"]
 categories = ["filesystem", "parsing"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-byteorder = { workspace = true, features = ["std"] }
-memmap2 = { workspace = true, features = ["stable_deref_trait"] }
-path-clean = { workspace = true, features = [] }
-positioned-io = { workspace = true, features = [] }
-stable_deref_trait = { workspace = true, features = ["std"] }
-thiserror = { workspace = true, features = [] }
-tracing.workspace = true
-ux = { workspace = true, features = ["std"] }
-yoke = { workspace = true, features = ["derive"] }
+byteorder = { workspace = true }
+memmap2 = { workspace = true }
+path-clean = { workspace = true }
+positioned-io = { workspace = true }
+stable_deref_trait = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+ux = { workspace = true }
+yoke = { workspace = true }
+
+[lints]
+workspace = true

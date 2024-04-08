@@ -9,36 +9,33 @@ description = "Library and CLI tools for working with UbiArt Engine file formats
 keywords = ["ubiart", "ipk"]
 categories = ["command-line-utilities", "parser-implementations"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-arbitrary = { workspace = true, features = ["derive"], optional = true }
-bitflags = { workspace = true, features = ["std"] }
-byteorder = { workspace = true, features = ["std"] }
-clap = { workspace = true, features = ["std", "help", "usage", "suggestions", "derive"] }
-dotstar_toolkit_utils = { version = "0.1.0", path = "../dotstar_toolkit_utils" }
-flate2 = { workspace = true, features = ["rust_backend"] }
-image = { workspace = true, features = ["png"] }
-memmap2 = { workspace = true, features = ["stable_deref_trait"] }
-nohash-hasher = { workspace = true, features = ["std"] }
-oxipng = { workspace = true, features = ["zopfli"], optional = true }
-path-clean.workspace = true
-quick-xml = { workspace = true, features = ["serialize", "overlapped-lists"] }
-serde = { workspace = true, features = ["std", "derive"] }
-serde_json = { workspace = true, features = ["std", "float_roundtrip"] }
-serde_with = { workspace = true, features = ["std", "macros"] }
-stable_deref_trait = { workspace = true, features = ["std"] }
-texpresso = { workspace = true, features = [] }
-thiserror = { workspace = true, features = [] }
-tracing.workspace = true
-yoke = { workspace = true, features = ["alloc", "derive"] }
-zopfli = { workspace = true, features = ["zlib", "std"], optional = true }
+arbitrary = { workspace = true, optional = true }
+bitflags = { workspace = true }
+byteorder = { workspace = true }
+clap = { workspace = true }
+dotstar_toolkit_utils = { path = "../dotstar_toolkit_utils" }
+flate2 = { workspace = true }
+image = { workspace = true }
+memmap2 = { workspace = true }
+nohash-hasher = { workspace = true }
+path-clean = { workspace = true }
+quick-xml = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_with = { workspace = true }
+stable_deref_trait = { workspace = true }
+texpresso = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+yoke = { workspace = true }
+zopfli = { workspace = true, optional = true }
 
 [dev-dependencies]
 datatest-stable = { workspace = true }
 
 [features]
-default = ["fuzz"]
+default = []
 fuzz = ["arbitrary"]
 zopfli = ["dep:zopfli"]
 arbitrary = ["dep:arbitrary"]

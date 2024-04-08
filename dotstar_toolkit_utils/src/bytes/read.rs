@@ -1,3 +1,5 @@
+//! Types and traits for reading data from byte sources
+
 use std::{
     backtrace::Backtrace, borrow::Cow, fs::File, io::ErrorKind, marker::PhantomData,
     num::TryFromIntError, ops::Deref, rc::Rc, str::Utf8Error, string::FromUtf8Error, sync::Arc,
@@ -88,6 +90,7 @@ impl From<FromUtf8Error> for ReadError {
 
 impl ReadError {
     #[must_use]
+    /// The byte source ended while reading
     pub fn unexpected_eof() -> Self {
         Self::IoError {
             error: ErrorKind::UnexpectedEof.into(),
@@ -96,6 +99,7 @@ impl ReadError {
     }
 
     #[must_use]
+    /// An integer under- or overflowed
     pub fn int_under_overflow() -> Self {
         Self::IntUnderOverflow {
             backtrace: Backtrace::capture(),
@@ -173,6 +177,7 @@ impl<'de> BinaryDeserialize<'de> for u8 {
     }
 }
 
+/// A byte source implementing
 pub trait ZeroCopyReadAt {
     /// Read a `&str` from `source` at `position`
     ///
@@ -364,7 +369,7 @@ impl ZeroCopyReadAt for [u8] {
         len: usize,
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
         let new_position = position
-            .checked_add(len as u64)
+            .checked_add(u64::try_from(len)?)
             .ok_or_else(ReadError::int_under_overflow)?;
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
@@ -404,7 +409,7 @@ impl ZeroCopyReadAt for Vec<u8> {
         len: usize,
     ) -> Result<Cow<'rf, [u8]>, ReadError> {
         let new_position = position
-            .checked_add(len as u64)
+            .checked_add(u64::try_from(len)?)
             .ok_or_else(ReadError::int_under_overflow)?;
         let new_position_usize = usize::try_from(new_position)?;
         let position_usize = usize::try_from(*position)?;
@@ -477,6 +482,7 @@ impl<T: ZeroCopyReadAt> ZeroCopyReadAt for Rc<T> {
     }
 }
 
+/// Utility functions for items that implement `ZeroCopyReadAt`
 pub trait ZeroCopyReadAtExt: ZeroCopyReadAt {
     /// Read a `T` at `position`
     ///
@@ -579,15 +585,20 @@ pub trait ZeroCopyReadAtExt: ZeroCopyReadAt {
     }
 }
 
-impl<T: ?Sized> ZeroCopyReadAtExt for T where T: ZeroCopyReadAt {}
+impl<T> ZeroCopyReadAtExt for T where T: ZeroCopyReadAt + ?Sized {}
 
+/// Iterator that reads `T` from a source for `Len` times
 pub struct LenTypeIterator<'rf, T, R: ZeroCopyReadAtExt + ?Sized>
 where
     T: BinaryDeserialize<'rf>,
 {
+    /// Remaining items to read from the iterator
     remaining: usize,
+    /// The current position in the reader
     position: u64,
+    /// The type that is being read
     _type: PhantomData<T>,
+    /// The reader
     reader: &'rf R,
 }
 
@@ -596,6 +607,9 @@ where
     T: BinaryDeserialize<'rf>,
 {
     #[must_use]
+    /// The current position of the iterator
+    ///
+    /// This value might change after calling `next`
     pub const fn current_position(&self) -> u64 {
         self.position
     }
@@ -610,6 +624,10 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.remaining > 0 {
             let res = T::deserialize_at(self.reader, &mut self.position);
+            #[allow(
+                clippy::arithmetic_side_effects,
+                reason = "It's checked that remaining is larger than 0"
+            )]
             if res.is_ok() {
                 self.remaining -= 1;
             }

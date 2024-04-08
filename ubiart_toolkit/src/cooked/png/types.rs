@@ -54,8 +54,8 @@ impl arbitrary::Arbitrary<'_> for Png<'_> {
         let xtx: Xtx = u.arbitrary()?;
 
         Ok(Self {
-            width: xtx.images[0].header.width as u16,
-            height: xtx.images[0].header.height as u16,
+            width: u16::try_from(xtx.images[0].header.width).unwrap_or_else(|_| unreachable!()),
+            height: u16::try_from(xtx.images[0].header.height).unwrap_or_else(|_| unreachable!()),
             unk2: u.arbitrary()?,
             unk5: *u.choose(&[0x1800, 0x1801, 0x2000, 0x2002])?,
             unk8: u.arbitrary()?,

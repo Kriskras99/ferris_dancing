@@ -41,7 +41,7 @@ pub fn build(
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
             .ok_or_else(|| anyhow!("Failure parsing filename!"))?;
-        let offline_playlist = playlist.to_offline_playlist()?;
+        let offline_playlist = playlist.into_offline_playlist()?;
 
         let tga = format!("{file_stem}.tga");
         let cover_actor_vec = cover_actor(&tga)?;

@@ -20,12 +20,18 @@ use crate::utils::{self, Game, SplitPath, UniqueGameId};
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
     pub compression: CompressionEffort,
+    pub game_platform: UniqueGameId,
+    pub unk4: u32,
+    pub engine_version: u32,
 }
 
 impl Default for Options {
     fn default() -> Self {
         Self {
             compression: CompressionEffort::None,
+            game_platform: UniqueGameId::try_from(0x1DDB_2268).unwrap_or_else(|_| unreachable!()),
+            unk4: 0x0009_37D0,
+            engine_version: 0x0004_FD39,
         }
     }
 }
@@ -81,52 +87,37 @@ const STATIC_HEADER_SIZE: usize = 0x30;
 /// Create a secure_fat.gf file at the path
 pub fn create(
     path: impl AsRef<Path>,
-    game_platform: UniqueGameId,
-    unk4: u32,
-    engine_version: u32,
     options: Options,
     vfs: &impl VirtualFileSystem,
     files: &[&Path],
 ) -> Result<(), WriteError> {
     let file = File::create(path)?;
     let mut writer = BufWriter::new(file);
-    write(
-        &mut writer,
-        &mut 0,
-        game_platform,
-        unk4,
-        engine_version,
-        options,
-        vfs,
-        files,
-    )
+    write(&mut writer, &mut 0, options, vfs, files)
 }
 
 /// Create an .ipk file with the specified files.
 pub fn write(
     writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
-    game_platform: UniqueGameId,
-    unk4: u32,
-    engine_version: u32,
     options: Options,
     vfs: &impl VirtualFileSystem,
     files: &[&Path],
 ) -> Result<(), WriteError> {
     // TODO: Make this code position independent
-    assert!(
-        *position == 0,
-        "TODO: This code is not yet position independent!"
-    );
+    // assert!(
+    //     *position == 0,
+    //     "TODO: This code is not yet position independent!"
+    // );
     // let static_header_size = *position + u64::try_from(STATIC_HEADER_SIZE)?;
     // Calculate the size of the header, starting with the static size
     let mut base_offset = STATIC_HEADER_SIZE;
 
     // On NX, JD2020-JD2022 have a 4 null bytes between the header and the content of the files
-    if game_platform.platform == utils::Platform::Nx
-        && (game_platform.game == Game::JustDance2020
-            || game_platform.game == Game::JustDance2021
-            || game_platform.game == Game::JustDance2022)
+    if options.game_platform.platform == utils::Platform::Nx
+        && (options.game_platform.game == Game::JustDance2020
+            || options.game_platform.game == Game::JustDance2021
+            || options.game_platform.game == Game::JustDance2022)
     {
         base_offset += 0x4;
     }
@@ -139,15 +130,15 @@ pub fn write(
     // Start writing the header
     writer.write_at(position, &u32be::from(MAGIC))?;
     writer.write_at(position, &u32be::from(0x5))?; // version
-    writer.write_at(position, &Platform::from(game_platform.platform))?;
+    writer.write_at(position, &Platform::from(options.game_platform.platform))?;
     writer.write_at(position, &u32be::try_from(base_offset)?)?;
     writer.write_at(position, &u32be::try_from(files.len())?)?;
     writer.write_at(position, &u32be::from(0x0))?; // unk1
     writer.write_at(position, &u32be::from(0x0))?; // unk2
     writer.write_at(position, &u32be::from(0x0))?; // unk3
-    writer.write_at(position, &u32be::from(unk4))?;
-    writer.write_at(position, &game_platform)?;
-    writer.write_at(position, &u32be::from(engine_version))?;
+    writer.write_at(position, &u32be::from(options.unk4))?;
+    writer.write_at(position, &options.game_platform)?;
+    writer.write_at(position, &u32be::from(options.engine_version))?;
     writer.write_at(position, &u32be::try_from(files.len())?)?;
 
     // Skip the file metadata for now, as it depends on compression results
@@ -229,7 +220,7 @@ pub fn write(
     }
 
     // Go back to the start of the metadata portion of the header
-    *position = STATIC_HEADER_SIZE as u64;
+    *position = u64::try_from(STATIC_HEADER_SIZE).unwrap_or_else(|_| unreachable!());
 
     // Write all the metadata
     for metadata in &reduced_metadata {
@@ -252,10 +243,10 @@ pub fn write(
         }
     }
 
-    if game_platform.platform == utils::Platform::Nx
-        && (game_platform.game == Game::JustDance2020
-            || game_platform.game == Game::JustDance2021
-            || game_platform.game == Game::JustDance2022)
+    if options.game_platform.platform == utils::Platform::Nx
+        && (options.game_platform.game == Game::JustDance2020
+            || options.game_platform.game == Game::JustDance2021
+            || options.game_platform.game == Game::JustDance2022)
     {
         writer.write_at(position, &u32be::from(0x0))?; // unknown seperator between metadata and data
     }

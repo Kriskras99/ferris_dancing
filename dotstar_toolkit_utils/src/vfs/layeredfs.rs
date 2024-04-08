@@ -41,9 +41,9 @@ impl VirtualFileSystem for OverlayFs<'_> {
     }
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
-        let upper = self.upper.walk_filesystem(path)?;
-        let merged = upper.merge(self.lower.walk_filesystem(path)?);
-        Ok(merged)
+        let mut upper = self.upper.walk_filesystem(path)?;
+        upper.merge(&self.lower.walk_filesystem(path)?);
+        Ok(upper)
     }
 
     fn exists(&self, path: &Path) -> bool {

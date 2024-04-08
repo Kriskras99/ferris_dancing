@@ -153,7 +153,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
     for orig_clip in timeline.timeline {
         let some = match orig_clip {
             Clip::HideUserInterface(_) | Clip::GameplayEvent(_) | Clip::Vibration(_) => {
-                Some(orig_clip.to_tape(&ses.song)?)
+                Some(orig_clip.into_tape(&ses.song)?)
             }
             Clip::SoundSet(orig_clip) => {
                 let name = orig_clip.name.as_ref();

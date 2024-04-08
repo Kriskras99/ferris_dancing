@@ -3,20 +3,12 @@
 #![feature(lint_reasons)]
 #![feature(try_blocks)]
 #![feature(once_cell_try)]
-// #![deny(missing_docs, reason = "Everything should be documented")]
-// #![deny(
-//     clippy::missing_docs_in_private_items,
-//     reason = "Everything should be documented"
-// )]
-// #![deny(
-//     clippy::arithmetic_side_effects,
-//     reason = "If an overflow or underflow occurs it's a good indication that something broke"
-// )]
-#![allow(
-    clippy::option_if_let_else,
-    reason = "Significantly less readable than the original"
+#![deny(
+    clippy::arithmetic_side_effects,
+    reason = "If an overflow or underflow occurs it's a good indication that something broke"
 )]
-#![allow(clippy::doc_markdown, reason = "Not reliable enough")]
+#![allow(clippy::inline_always, reason = "It's useful here")]
+#![allow(clippy::explicit_deref_methods, reason = "It's clearer this way")]
 
 //! # .* Toolkit Utils
 //! This library contains various utilities for writing parsers.

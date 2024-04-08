@@ -25,15 +25,16 @@ impl SymlinkFs<'_> {
     /// # Errors
     /// Will error if `new_path` already exists and does not point to `orig_path`
     /// Will error if `orig_path` does not exist
+    #[tracing::instrument(skip(self))]
     pub fn add_file(&mut self, orig_path: PathBuf, new_path: PathBuf) -> Result<()> {
-        let new_path = new_path.clean();
+        let clean_new_path = new_path.clean();
         if !self.backing_fs.exists(&orig_path) {
             return Err(Error::new(
                 ErrorKind::NotFound,
-                format!("Failed to find original file '{orig_path:?}' while adding symlink to '{new_path:?}'"),
+                format!("Failed to find original file '{orig_path:?}' while adding symlink to '{clean_new_path:?}'"),
             ));
         }
-        match self.mapping.entry(new_path) {
+        match self.mapping.entry(clean_new_path) {
             Entry::Occupied(entry) => {
                 if entry.get() != &orig_path {
                     return Err(Error::new(
@@ -43,6 +44,7 @@ impl SymlinkFs<'_> {
                 }
             }
             Entry::Vacant(entry) => {
+                tracing::trace!("Adding {:?}", entry.key());
                 entry.insert(orig_path);
             }
         }

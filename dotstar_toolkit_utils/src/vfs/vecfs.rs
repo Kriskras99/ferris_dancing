@@ -38,13 +38,16 @@ impl VecFs {
     ///
     /// # Errors
     /// Will return an error if the file already exists
+    #[tracing::instrument(skip(self, content))]
     pub fn add_file(&mut self, path: PathBuf, mut content: Vec<u8>) -> std::io::Result<()> {
-        let path = path.clean();
-        if self.files.contains_key(&path) {
+        let clean_path = path.clean();
+        if self.files.contains_key(&clean_path) {
             return Err(std::io::ErrorKind::AlreadyExists.into());
         }
         content.shrink_to_fit();
-        self.files.insert(path, content);
+
+        tracing::trace!("Adding {clean_path:?} of size {}", content.len());
+        self.files.insert(clean_path, content);
         Ok(())
     }
 

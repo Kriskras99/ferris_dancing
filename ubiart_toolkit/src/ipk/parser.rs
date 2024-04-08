@@ -60,7 +60,6 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             // Can't use read_at::<SplitPath> as the filename and path are swapped on JD2014 for the Wii
             let mut filename = reader.read_len_string_at::<u32be>(position)?;
             let mut path = reader.read_len_string_at::<u32be>(position)?;
-            assert!(path.ends_with('/'));
             let path_id = reader.read_at::<PathId>(position)?;
             let is_cooked_u32 = reader.read_at::<u32be>(position)?.into();
             test_any(&is_cooked_u32, IS_COOKED)?;
