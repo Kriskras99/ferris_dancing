@@ -1,9 +1,16 @@
 //! # Bundle
 //! Contains the code for bundling files into .ipk files
-use std::{fs::File, path::Path};
+use std::{
+    fs::File,
+    path::Path,
+    sync::{
+        atomic::{AtomicU8, Ordering},
+        Arc, Mutex,
+    },
+};
 
-use anyhow::{anyhow, Error};
-use crossbeam::channel::Receiver;
+use anyhow::Error;
+use crossbeam::channel::{Receiver, Sender};
 use dotstar_toolkit_utils::{
     testing::test,
     vfs::{
@@ -24,14 +31,14 @@ use crate::{build::BuildFiles, types::Config};
 const MAX_BUNDLE_SIZE_FAT32: u64 = 4_294_967_295;
 
 /// Receives files in `rx` and bundles them into .ipk files at `destination`
-pub fn bundle(
+pub fn bundle<'fs: 'bf, 'bf>(
     bundle_vfs: &IpkFilesystem<'_>,
     patch_vfs: &IpkFilesystem<'_>,
-    native_vfs: &NativeFs,
-    rx: &Receiver<FilesToAdd>,
+    native_vfs: &'fs NativeFs,
+    rx_files: &Receiver<FilesToAdd>,
+    tx_bundle_job: Sender<(Arc<Mutex<SecureFat>>, BuildFiles<'bf>)>,
     config: Config,
     destination: &Path,
-    patch: bool,
 ) -> Result<(), Error> {
     // Make sure the destination directory actually exists
     test(destination.exists())
@@ -49,13 +56,17 @@ pub fn bundle(
         static_files: SymlinkFs::with_capacity(native_vfs, 500),
     };
 
-    let mut sfat = SecureFat::with_capacity(config.game_platform, 30_000);
+    let mut sfat = Arc::new(Mutex::new(SecureFat::with_capacity(
+        config.game_platform,
+        30_000,
+    )));
 
-    let mut bundle_n = 0;
+    // Make sure that bundle_nx.ipk is the first bundle, so loading goes faster
+    let main_bundle_id = { sfat.lock().unwrap().add_bundle("bundle".into()) };
 
     // Loop while the channel we receive files on is still open
     loop {
-        match rx.recv() {
+        match rx_files.recv() {
             Ok(FilesToAdd::Bundle(new_bundle_files)) => {
                 bundle_files.merge(new_bundle_files)?;
             }
@@ -63,10 +74,7 @@ pub fn bundle(
                 // Check if the song bundle would be too big if this song is added
                 if song_files.size()? + new_song_files.size()? >= MAX_BUNDLE_SIZE_FAT32 {
                     // Save this bundle and create a new one
-                    save_songs_bundle(&mut sfat, &song_files, bundle_n, config, destination)?;
-                    bundle_n = bundle_n
-                        .checked_add(1)
-                        .ok_or_else(|| anyhow!("Overflow occurred"))?;
+                    tx_bundle_job.send((sfat.clone(), song_files)).unwrap();
                     song_files = BuildFiles {
                         generated_files: VecFs::with_capacity(1000),
                         static_files: SymlinkFs::with_capacity(native_vfs, 500),
@@ -104,77 +112,63 @@ pub fn bundle(
     }
 
     // Save last song bundle
-    save_songs_bundle(&mut sfat, &song_files, bundle_n, config, destination)?;
+    tx_bundle_job.send((sfat.clone(), song_files)).unwrap();
+    // Other threads will keep waiting for jobs until this channel is closed/dropped
+    drop(tx_bundle_job);
 
-    if patch {
-        // Create a patch file instead of a bundle file
-        println!("Creating patch bundle");
-        let bundle_files_vfs =
-            OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
-        let vfs = OverlayFs::new(&bundle_files_vfs, patch_vfs);
-        let files = vfs.walk_filesystem("".as_ref())?;
-        let filenames: Vec<_> = files.collect::<Vec<_>>();
+    println!("Bundling jobs done!");
 
-        ipk::create(
-            destination.join("patch_nx.ipk"),
-            ipk::Options {
-                compression: ipk::CompressionEffort::Best,
-                game_platform: config.game_platform,
-                unk4: config.ipk_unk4,
-                engine_version: config.engine_version,
-            },
-            &vfs,
-            &filenames,
-        )?;
+    // Create empty patch file
+    let mut patch_file = File::create(destination.join("patch_nx.ipk"))?;
+    ipk::write(
+        &mut patch_file,
+        &mut 0,
+        ipk::Options {
+            compression: ipk::CompressionEffort::Best,
+            game_platform: config.game_platform,
+            unk4: config.ipk_unk4,
+            engine_version: config.engine_version,
+        },
+        native_vfs,
+        &[],
+    )?;
 
-        // Add the original bundle to the sfat
-        let bundle_id = sfat.add_bundle("bundle".to_string());
-        // Link all the original file paths to the bundle
-        sfat.add_path_ids_to_bundle(
-            bundle_id,
-            bundle_vfs.walk_filesystem("".as_ref())?.map(PathId::from),
-        );
-    } else {
-        // Create empty patch file
-        let mut patch_file = File::create(destination.join("patch_nx.ipk"))?;
-        ipk::write(
-            &mut patch_file,
-            &mut 0,
-            ipk::Options {
-                compression: ipk::CompressionEffort::Best,
-                game_platform: config.game_platform,
-                unk4: config.ipk_unk4,
-                engine_version: config.engine_version,
-            },
-            native_vfs,
-            &[],
-        )?;
+    // Create main bundle
+    println!("Creating main bundle");
+    let bundle_files_vfs =
+        OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
+    let patched_bundle_vfs = OverlayFs::new(patch_vfs, bundle_vfs);
+    let vfs = OverlayFs::new(&bundle_files_vfs, &patched_bundle_vfs);
+    let filenames: Vec<_> = vfs.walk_filesystem("".as_ref())?.collect();
 
-        // Create main bundle
-        println!("Creating main bundle");
-        let bundle_files_vfs =
-            OverlayFs::new(&bundle_files.generated_files, &bundle_files.static_files);
-        let patched_bundle_vfs = OverlayFs::new(patch_vfs, bundle_vfs);
-        let vfs = OverlayFs::new(&bundle_files_vfs, &patched_bundle_vfs);
-        let filenames: Vec<_> = vfs.walk_filesystem("".as_ref())?.collect();
+    ipk::create(
+        destination.join("bundle_nx.ipk"),
+        ipk::Options {
+            compression: ipk::CompressionEffort::Best,
+            game_platform: config.game_platform,
+            unk4: config.ipk_unk4,
+            engine_version: config.engine_version,
+        },
+        &vfs,
+        &filenames,
+    )?;
 
-        ipk::create(
-            destination.join("bundle_nx.ipk"),
-            ipk::Options {
-                compression: ipk::CompressionEffort::Best,
-                game_platform: config.game_platform,
-                unk4: config.ipk_unk4,
-                engine_version: config.engine_version,
-            },
-            &vfs,
-            &filenames,
-        )?;
-
-        // Add the bundle to the sfat
-        let bundle_id = sfat.add_bundle("bundle".to_string());
+    {
         // Link all the file paths to the bundle
-        sfat.add_path_ids_to_bundle(bundle_id, filenames.into_iter().map(PathId::from));
+        sfat.lock()
+            .unwrap()
+            .add_path_ids_to_bundle(main_bundle_id, filenames.into_iter().map(PathId::from));
     }
+
+    println!("Waiting for bundle threads to finish");
+
+    // Wait until all bundles are added
+    let sfat = loop {
+        sfat = match Arc::try_unwrap(sfat) {
+            Ok(unwrapped) => break unwrapped.into_inner().unwrap(),
+            Err(still_shared) => still_shared,
+        }
+    };
 
     // Create secure_fat.gf
     println!("Creating secure_fat.gf");
@@ -183,14 +177,20 @@ pub fn bundle(
     Ok(())
 }
 
+static BUNDLE_N: AtomicU8 = AtomicU8::new(0);
+
 /// Create the nth bundle file with songs
-fn save_songs_bundle(
-    sfat: &mut SecureFat,
-    bundle_files: &BuildFiles,
-    bundle_n: u8,
+pub fn save_songs_bundle(
+    sfat: Arc<Mutex<SecureFat>>,
+    bundle_files: BuildFiles,
     config: Config,
     destination: &Path,
 ) -> Result<(), Error> {
+    let bundle_n = BUNDLE_N.fetch_add(1, Ordering::AcqRel);
+    if bundle_n == u8::MAX {
+        panic!("Too many bundles! ");
+    }
+
     let name = format!("songs_{bundle_n}");
     println!("Creating bundle {name}");
 
@@ -210,13 +210,15 @@ fn save_songs_bundle(
         &filenames,
     )?;
 
-    // Add the bundle to the sfat
-    let bundle_id = sfat.add_bundle(name);
-    // Link all the file paths to the bundle
-    sfat.add_path_ids_to_bundle(
-        bundle_id,
-        overlay_vfs.walk_filesystem("".as_ref())?.map(PathId::from),
-    );
+    {
+        let mut sfat = sfat.lock().unwrap();
+        // Add the bundle to the sfat
+        let bundle_id = sfat.add_bundle(name.clone());
+        // Link all the file paths to the bundle
+        sfat.add_path_ids_to_bundle(bundle_id, filenames.into_iter().map(PathId::from));
+    }
+
+    println!("Finished bundle {name}");
 
     Ok(())
 }

@@ -103,7 +103,7 @@ impl VirtualFileSystem for VecFs {
 
     fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
         let path = path.clean();
-        if &path == &Path::new(".") {
+        if path == Path::new(".") {
             Ok(WalkFs {
                 paths: self.files.keys().map(PathBuf::as_path).collect(),
             })

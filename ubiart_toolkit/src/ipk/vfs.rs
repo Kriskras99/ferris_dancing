@@ -126,7 +126,7 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
                 .map(PathBuf::from)
                 .collect()
         });
-        if &path == &Path::new(".") {
+        if path == Path::new(".") {
             Ok(WalkFs::new(list.iter().map(PathBuf::as_path).collect()))
         } else {
             Ok(WalkFs::new(

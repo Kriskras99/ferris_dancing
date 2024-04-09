@@ -127,7 +127,7 @@ impl VirtualFileSystem for NativeFs {
             Self::recursive_file_list(&self.root, &mut list)?;
             Ok(list)
         })?;
-        if &path == Path::new(".") {
+        if path == Path::new(".") {
             Ok(WalkFs {
                 paths: list
                     .iter()
@@ -147,7 +147,6 @@ impl VirtualFileSystem for NativeFs {
 
     fn exists(&self, path: &Path) -> bool {
         Self::canonicalize(self, path)
-            .map(|p| p.exists())
-            .unwrap_or_default()
+            .is_ok_and(|p| p.exists())
     }
 }

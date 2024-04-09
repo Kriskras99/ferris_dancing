@@ -7,6 +7,7 @@ use std::{
 
 use anyhow::{bail, Error};
 use clap::Args;
+use crossbeam::channel::TryRecvError;
 use dotstar_toolkit_utils::vfs::{
     layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
 };
@@ -42,14 +43,14 @@ pub enum FilesToAdd<'a> {
 
 /// Wrapper around [`export`]
 pub fn main(cli: &Build) -> Result<(), anyhow::Error> {
-    export(&cli.source, &cli.destination, cli.patch)
+    export(&cli.source, &cli.destination)
 }
 
 /// Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
 ///
 /// # Panics
 /// Will panic if any of the threads it creates return an error
-pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Error> {
+pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
     // Check the directory structure
     let dir_tree = DirectoryTree::new(source);
     if !dir_tree.exists() {
@@ -109,6 +110,7 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
     let (tx_name, rx_name) = crossbeam::channel::unbounded();
     let (tx_job, rx_job) = crossbeam::channel::unbounded();
     let (tx_files, rx_files) = crossbeam::channel::unbounded();
+    let (tx_bundle_job, rx_bundle_job) = crossbeam::channel::unbounded();
 
     for path in paths {
         let dirs = SongDirectoryTree::new(&path);
@@ -124,22 +126,23 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
     std::thread::scope(|s| {
         let build_state = &build_state;
         let native_vfs = &native_vfs;
-        std::thread::Builder::new()
-            .name("Bundle".to_string())
-            .spawn_scoped(s, || {
-                bundle::bundle(
-                    &bundle_nx_vfs,
-                    &patch_nx_vfs,
-                    native_vfs,
-                    &rx_files,
-                    config,
-                    destination,
-                    patch,
-                )
+        {
+            std::thread::Builder::new()
+                .name("Bundle".to_string())
+                .spawn_scoped(s, || {
+                    bundle::bundle(
+                        &bundle_nx_vfs,
+                        &patch_nx_vfs,
+                        native_vfs,
+                        &rx_files,
+                        tx_bundle_job,
+                        config,
+                        destination,
+                    )
+                    .unwrap();
+                })
                 .unwrap();
-            })
-            .unwrap();
-
+        }
         {
             // New scope so the channel variables can be shadowed
             let tx_name = tx_name.clone();
@@ -156,19 +159,23 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
                     build::localisation::build(build_state, &mut build_files).unwrap();
 
                     loop {
-                        if let Ok(job) = rx_job.recv() {
-                            let mut bf = BuildFiles {
-                                generated_files: VecFs::with_capacity(100),
-                                static_files: SymlinkFs::with_capacity(native_vfs, 50),
-                            };
-                            let songname = build::song::build(build_state, &mut bf, job).unwrap();
-                            tx_name.send(songname).unwrap();
-                            tx_files.send(FilesToAdd::Song(bf)).unwrap();
-                        } else {
-                            // Otherwise the rx_name.iter() will never stop
-                            drop(tx_name);
-                            println!("No more song available to build! Breaking!");
-                            break;
+                        match rx_job.try_recv() {
+                            Ok(job) => {
+                                let mut bf = BuildFiles {
+                                    generated_files: VecFs::with_capacity(100),
+                                    static_files: SymlinkFs::with_capacity(native_vfs, 50),
+                                };
+                                let songname =
+                                    build::song::build(build_state, &mut bf, job).unwrap();
+                                tx_name.send(songname).unwrap();
+                                tx_files.send(FilesToAdd::Song(bf)).unwrap();
+                            }
+                            Err(TryRecvError::Empty) => {}
+                            Err(TryRecvError::Disconnected) => {
+                                println!("No more songs! Creating song database!");
+                                drop(tx_name);
+                                break;
+                            }
                         }
                     }
 
@@ -189,6 +196,7 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
             let tx_name = tx_name.clone();
             let tx_files = tx_files.clone();
             let rx_job = rx_job.clone();
+            let rx_bundle_job = rx_bundle_job.clone();
             std::thread::Builder::new()
                 .name("Gameconfig + Songs".to_string())
                 .spawn_scoped(s, move || {
@@ -201,17 +209,45 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
                     tx_files.send(FilesToAdd::Bundle(build_files)).unwrap();
 
                     loop {
-                        if let Ok(job) = rx_job.recv() {
-                            let mut bf = BuildFiles {
-                                generated_files: VecFs::with_capacity(100),
-                                static_files: SymlinkFs::with_capacity(native_vfs, 50),
-                            };
-                            let songname = build::song::build(build_state, &mut bf, job).unwrap();
-                            tx_name.send(songname).unwrap();
-                            tx_files.send(FilesToAdd::Song(bf)).unwrap();
-                        } else {
-                            println!("No more song available to build! Exiting thread!");
-                            return;
+                        match rx_job.try_recv() {
+                            Ok(job) => {
+                                let mut bf = BuildFiles {
+                                    generated_files: VecFs::with_capacity(100),
+                                    static_files: SymlinkFs::with_capacity(native_vfs, 50),
+                                };
+                                let songname =
+                                    build::song::build(build_state, &mut bf, job).unwrap();
+                                tx_name.send(songname).unwrap();
+                                tx_files.send(FilesToAdd::Song(bf)).unwrap();
+                            }
+                            Err(TryRecvError::Empty) => {}
+                            Err(TryRecvError::Disconnected) => {
+                                println!("No more songs! Only bundling now!");
+                                drop(tx_name);
+                                drop(tx_files);
+                                break;
+                            }
+                        }
+                        match rx_bundle_job.try_recv() {
+                            Ok((sfat, bundle_files)) => {
+                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
+                                    .unwrap();
+                            }
+                            Err(TryRecvError::Empty) => {}
+                            Err(TryRecvError::Disconnected) => {}
+                        }
+                    }
+                    loop {
+                        match rx_bundle_job.try_recv() {
+                            Ok((sfat, bundle_files)) => {
+                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
+                                    .unwrap();
+                            }
+                            Err(TryRecvError::Empty) => {}
+                            Err(TryRecvError::Disconnected) => {
+                                println!("Finished bundling!");
+                                break;
+                            }
                         }
                     }
                 })
@@ -223,20 +259,51 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
             let tx_name = tx_name.clone();
             let rx_job = rx_job.clone();
             let tx_files = tx_files.clone();
+            let rx_bundle_job = rx_bundle_job.clone();
             std::thread::Builder::new()
                 .name(format!("Songs ({i})"))
-                .spawn_scoped(s, move || loop {
-                    if let Ok(job) = rx_job.recv() {
-                        let mut bf = BuildFiles {
-                            generated_files: VecFs::with_capacity(100),
-                            static_files: SymlinkFs::with_capacity(native_vfs, 50),
-                        };
-                        let songname = build::song::build(build_state, &mut bf, job).unwrap();
-                        tx_name.send(songname).unwrap();
-                        tx_files.send(FilesToAdd::Song(bf)).unwrap();
-                    } else {
-                        println!("No more song available to build! Exiting thread!");
-                        return;
+                .spawn_scoped(s, move || {
+                    loop {
+                        match rx_job.try_recv() {
+                            Ok(job) => {
+                                let mut bf = BuildFiles {
+                                    generated_files: VecFs::with_capacity(100),
+                                    static_files: SymlinkFs::with_capacity(native_vfs, 50),
+                                };
+                                let songname =
+                                    build::song::build(build_state, &mut bf, job).unwrap();
+                                tx_name.send(songname).unwrap();
+                                tx_files.send(FilesToAdd::Song(bf)).unwrap();
+                            }
+                            Err(TryRecvError::Empty) => {}
+                            Err(TryRecvError::Disconnected) => {
+                                println!("No more songs! Only bundling now!");
+                                drop(tx_name);
+                                drop(tx_files);
+                                break;
+                            }
+                        }
+                        match rx_bundle_job.try_recv() {
+                            Ok((sfat, bundle_files)) => {
+                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
+                                    .unwrap();
+                            }
+                            Err(TryRecvError::Empty) => {}
+                            Err(TryRecvError::Disconnected) => {}
+                        }
+                    }
+                    loop {
+                        match rx_bundle_job.try_recv() {
+                            Ok((sfat, bundle_files)) => {
+                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
+                                    .unwrap();
+                            }
+                            Err(TryRecvError::Empty) => {}
+                            Err(TryRecvError::Disconnected) => {
+                                println!("Finished bundling!");
+                                break;
+                            }
+                        }
                     }
                 })
                 .unwrap();
@@ -245,7 +312,6 @@ pub fn export(source: &Path, destination: &Path, patch: bool) -> Result<(), Erro
         // If these aren't dropped before the scope ends, the threads will infinitely wait for more jobs
         drop(tx_files);
         drop(tx_name);
-        drop(rx_job);
     });
 
     println!("Done!");
