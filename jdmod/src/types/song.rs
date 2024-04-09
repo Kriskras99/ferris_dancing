@@ -1189,6 +1189,8 @@ pub struct KaraokeClip<'a> {
     pub lyrics: Cow<'a, str>,
     /// Should the next lyric be on a new line
     pub is_end_of_line: bool,
+    /// Unknown
+    pub content_type: u8,
 }
 
 impl PartialEq for KaraokeClip<'_> {
@@ -1248,7 +1250,7 @@ impl<'a> From<KaraokeClip<'a>> for json_types::tape::KaraokeClip<'a> {
             pitch: value.pitch,
             lyrics: value.lyrics,
             is_end_of_line: u8::from(value.is_end_of_line),
-            content_type: 1,
+            content_type: value.content_type,
             start_time_tolerance: 4,
             end_time_tolerance: 4,
             semitone_tolerance: 5.0,
@@ -1265,6 +1267,7 @@ impl<'a> From<json_types::tape::KaraokeClip<'a>> for KaraokeClip<'a> {
             pitch: value.pitch,
             lyrics: value.lyrics,
             is_end_of_line: value.is_end_of_line == 1,
+            content_type: value.content_type,
         }
     }
 }
