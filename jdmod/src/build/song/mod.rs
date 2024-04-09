@@ -45,8 +45,8 @@ pub fn build(
     let song: Song = serde_json::from_reader(song_file)?;
     let map_name = song.map_name.as_ref();
     let lower_map_name = map_name.to_lowercase();
-    let cache_map_path = format!("cache/itf_cooked/nx/world/maps/{lower_map_name}/");
-    let map_path = format!("world/maps/{lower_map_name}/");
+    let cache_map_path = format!("cache/itf_cooked/nx/world/maps/{lower_map_name}");
+    let map_path = format!("world/maps/{lower_map_name}");
     println!("Building song '{map_name}'...");
 
     let ses = SongExportState {

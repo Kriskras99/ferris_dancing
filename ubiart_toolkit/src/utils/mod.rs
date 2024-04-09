@@ -94,7 +94,12 @@ impl<'a> SplitPath<'a> {
     const EMPTY_PATH_ID: PathId = PathId(0xFFFF_FFFF);
     const PADDING: u32 = 0x0;
 
-    pub fn new(path: Cow<'a, str>, filename: Cow<'a, str>) -> Result<Self, TestError> {
+    pub fn new(mut path: Cow<'a, str>, filename: Cow<'a, str>) -> Result<Self, TestError> {
+        if !path.is_empty() && !path.ends_with('/') {
+            let mut string = path.into_owned();
+            string.push('/');
+            path = string.into();
+        }
         test(path.ends_with('/')).or(test(path.is_empty()))?;
         test(!path.contains('.'))?;
         test(!filename.ends_with('/'))?;

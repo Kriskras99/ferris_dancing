@@ -30,6 +30,13 @@ impl KorD {
             Self::Dance => "dance",
         }
     }
+    /// Convert this to the label name
+    const fn to_label(self) -> &'static str {
+        match self {
+            Self::Karaoke(_) => "karaoke",
+            Self::Dance => "motion",
+        }
+    }
 
     /// Convert this to the end of the filename
     const fn to_tape_end(self) -> &'static str {
@@ -315,12 +322,13 @@ fn tml_template(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Erro
     } else {
         let map_path = ses.map_path;
         let lower_map_name = ses.lower_map_name;
+        let label = k_or_d.to_label();
         let k_or_d = k_or_d.to_tape_end();
         vec![json_types::tpl::TapeGroup {
             class: Some(json_types::tpl::TapeGroup::CLASS),
             entries: vec![json_types::tpl::TapeEntry {
                 class: Some(json_types::tpl::TapeEntry::CLASS),
-                label: Cow::Borrowed("tml_motion"),
+                label: Cow::Owned(format!("tml_{label}")),
                 path: Cow::Owned(format!("{map_path}/timeline/{lower_map_name}_tml_{k_or_d}")),
             }],
         }]
