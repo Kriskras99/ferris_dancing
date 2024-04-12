@@ -1,6 +1,6 @@
 //! # Overlay Filesystem
 //! Implements a filesystem that overlays two filesystems, preferring the upper filesystem for operations.
-use std::io::ErrorKind;
+use std::io::{Error, ErrorKind};
 
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs};
 
@@ -26,7 +26,10 @@ impl VirtualFileSystem for OverlayFs<'_> {
         } else if let Ok(file) = self.lower.open(path) {
             Ok(file)
         } else {
-            Err(ErrorKind::NotFound.into())
+            Err(Error::new(
+                ErrorKind::NotFound,
+                format!("Could not open {path:?}, file not found!"),
+            ))
         }
     }
 

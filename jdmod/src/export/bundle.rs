@@ -82,12 +82,24 @@ pub fn bundle<'fs: 'bf, 'bf>(
                 }
                 for (path, content) in new_song_files.generated_files {
                     // Check if the file belongs to the main bundle
-                    if path.ends_with("_cover_generic.act.ckd")
-                        || path.ends_with("_cover_online.act.ckd")
-                        || path.ends_with("_cover_generic.tga.ckd")
-                        || path.ends_with("_cover_online.tga.ckd")
-                        || path.ends_with("songdesc.act.ckd")
-                        || path.ends_with("songdesc.tpl.ckd")
+                    if path
+                        .file_name()
+                        .is_some_and(|s| s.ends_with("_cover_generic.act.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("_cover_online.act.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("_cover_generic.tga.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("_cover_online.tga.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("songdesc.act.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("songdesc.tpl.ckd"))
                     {
                         // Add the file to the main bundle
                         bundle_files.generated_files.add_file(path, content)?;
@@ -98,7 +110,10 @@ pub fn bundle<'fs: 'bf, 'bf>(
                 }
                 for (new_path, orig_path) in new_song_files.static_files {
                     // Check if the file belongs to the main bundle
-                    if new_path.ends_with("_phone.png") {
+                    if new_path
+                        .file_name()
+                        .is_some_and(|s| s.ends_with("_phone.png"))
+                    {
                         // Add the file to the main bundle
                         bundle_files.static_files.add_file(orig_path, new_path)?;
                     } else {

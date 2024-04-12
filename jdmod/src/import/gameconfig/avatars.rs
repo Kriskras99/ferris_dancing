@@ -278,7 +278,7 @@ fn import_unreferenced_avatars(
     for avatar_id in is
         .vfs
         .walk_filesystem(import_path.as_ref())?
-        .filter(|p| p.ends_with("avatar.png.ckd"))
+        .filter(|p| p.file_name().is_some_and(|s| s.ends_with("avatar.png.ckd")))
         .filter_map(VirtualPath::parent)
         .filter_map(VirtualPath::file_name)
         .flat_map(str::parse::<u16>)

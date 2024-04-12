@@ -140,14 +140,27 @@ pub fn bundle(
             */
             // Check if the file belongs to a song or the main bundle
             if (!path.starts_with(path_cache_maps) && !path.starts_with(path_maps))
-                || (path.starts_with(path_maps) && path.ends_with("_phone.png"))
+                || (path.starts_with(path_maps)
+                    && path.file_name().is_some_and(|s| s.ends_with("_phone.png")))
                 || (path.starts_with(path_cache_maps)
-                    && (path.ends_with("_cover_generic.act.ckd")
-                        || path.ends_with("_cover_online.act.ckd")
-                        || path.ends_with("_cover_generic.tga.ckd")
-                        || path.ends_with("_cover_online.tga.ckd")
-                        || path.ends_with("/songdesc.act.ckd")
-                        || path.ends_with("/songdesc.tpl.ckd")))
+                    && (path
+                        .file_name()
+                        .is_some_and(|s| s.ends_with("_cover_generic.act.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("_cover_online.act.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("_cover_generic.tga.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("_cover_online.tga.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("/songdesc.act.ckd"))
+                        || path
+                            .file_name()
+                            .is_some_and(|s| s.ends_with("/songdesc.tpl.ckd"))))
             {
                 // Add the file to the main bundle
                 main_bundle_size += file_size;

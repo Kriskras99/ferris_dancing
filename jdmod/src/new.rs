@@ -1,6 +1,7 @@
 //! # New
 //! Contains the logic for creating a new mod
 use std::{
+    ffi::OsStr,
     fs::File,
     io::ErrorKind,
     path::{Path, PathBuf},
@@ -50,7 +51,7 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
     }
 
     // TODO: import directly from XCI/NSP?
-    if !game_path.ends_with("secure_fat.gf") {
+    if game_path.file_name().and_then(OsStr::to_str) != Some("secure_fat.gf") {
         return Err(anyhow!(
             "Expected path to 'secure_fat.gf', got {game_path:?} instead!"
         ));

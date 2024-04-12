@@ -11,7 +11,7 @@ use std::{
 };
 
 use memmap2::Mmap;
-use path_clean::PathClean;
+use tracing::instrument;
 
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs};
 
@@ -30,9 +30,11 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if `root` does not exist
+    #[instrument]
     pub fn new(root: &Path) -> std::io::Result<Self> {
+        tracing::trace!("Created NativeFs");
         Ok(Self {
-            root: root.clean(),
+            root: root.canonicalize()?,
             cache: Mutex::new(HashMap::new()),
             list: OnceLock::new(),
         })
@@ -43,7 +45,11 @@ impl NativeFs {
     /// # Errors
     /// Will error if the path is outside the root or if the path does not exist
     fn canonicalize(&self, path: &VirtualPath) -> std::io::Result<PathBuf> {
-        let path = self.root.join(path.clean());
+        let mut clean = path.clean().to_string();
+        if clean.starts_with('/') {
+            clean.remove(0);
+        }
+        let path = self.root.join(clean);
         let path = path.canonicalize()?;
         if path.starts_with(&self.root) {
             Ok(path)

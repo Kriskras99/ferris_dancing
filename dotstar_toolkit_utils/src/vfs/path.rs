@@ -83,6 +83,8 @@ use std::{
     sync::Arc,
 };
 
+use tracing::instrument;
+
 /// Create a [`VirtualPathBuf`] from a [`format!`] string
 ///
 /// This expands to `VirtualPathBuf::from(format!(/* macro arguments */))`
@@ -857,19 +859,24 @@ impl VirtualPathBuf {
         self._push(path.as_ref());
     }
 
+    #[instrument]
     fn _push(&mut self, path: &VirtualPath) {
         // in general, a separator is needed if the rightmost byte is not a separator
-        let need_sep = self.inner.chars().last().is_some_and(|c| c == SEPARATOR);
+        let need_sep = self.inner.chars().last().is_some_and(|c| c != SEPARATOR);
 
+        tracing::trace!("needs a separator: {need_sep}");
         // absolute `path` replaces `self`
         if path.is_absolute() {
+            tracing::trace!("path is absolute, truncating");
             self.as_mut_vec().truncate(0);
 
         // `path` is a pure relative path
         } else if need_sep {
+            tracing::trace!("adding separator");
             self.inner.push(SEPARATOR);
         }
 
+        tracing::trace!("appending path");
         self.inner.push_str(&path.inner);
     }
 

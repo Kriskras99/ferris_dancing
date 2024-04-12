@@ -13,6 +13,7 @@ use dotstar_toolkit_utils::{
     vfs::{VirtualFileSystem, VirtualPath},
 };
 use flate2::{write::ZlibEncoder, Compression};
+use tracing::instrument;
 
 use super::{Platform, MAGIC};
 use crate::utils::{self, Game, SplitPath, UniqueGameId};
@@ -97,6 +98,7 @@ pub fn create(
 }
 
 /// Create an .ipk file with the specified files.
+#[instrument(skip(writer, vfs, files))]
 pub fn write(
     writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
@@ -163,11 +165,12 @@ pub fn write(
         // File content can be stored compressed.
         // Skip compression for small files, and already compressed files.
         let compressed = if size < 2048
-            || path.ends_with("jpg")
-            || path.ends_with("webm")
-            || path.ends_with("ogg")
-            || path.ends_with("png")
+            || path.file_name().is_some_and(|s| s.ends_with("jpg"))
+            || path.file_name().is_some_and(|s| s.ends_with("webm"))
+            || path.file_name().is_some_and(|s| s.ends_with("ogg"))
+            || path.file_name().is_some_and(|s| s.ends_with("png"))
         {
+            tracing::trace!("Not compressing {path:?}");
             // Skip compression for already compressed files and small files
             writer.write_slice_at(position, &file)?;
             // No compression thus compressed size is 0

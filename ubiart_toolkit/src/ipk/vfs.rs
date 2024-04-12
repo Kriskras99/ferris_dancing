@@ -9,6 +9,7 @@ use dotstar_toolkit_utils::{
     vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs},
 };
 use nohash_hasher::IntMap;
+use tracing::instrument;
 use yoke::Yoke;
 
 use super::Bundle;
@@ -32,11 +33,13 @@ impl<'fs> IpkFilesystem<'fs> {
     }
 
     /// Create a new virtual filesystem from the IPK file at `path`.
+    #[instrument(skip(fs))]
     pub fn new(fs: &'fs dyn VirtualFileSystem, path: &VirtualPath) -> Result<Self, std::io::Error> {
+        tracing::trace!("creating IpkFilesystem");
         let file = fs.open(path)?;
         let bundle = Yoke::try_attach_to_cart(file, |data: &[u8]| Bundle::deserialize(data))
             .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
-
+        tracing::trace!("succesfully parsed bundle file");
         Ok(Self {
             bundle,
             cache: Mutex::new(IntMap::default()),
@@ -50,9 +53,12 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
         clippy::significant_drop_in_scrutinee,
         reason = "Guard is needed in the entire match"
     )]
+    #[instrument(skip(self))]
     fn open<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<VirtualFile<'rf>> {
         let path = path.clean();
+        tracing::trace!("cleaned: {path:?}");
         let path_id = path_id(&path);
+        tracing::trace!("path id: {path_id:?}");
         let file = self.bundle.get().files.get(&path_id).ok_or_else(|| {
             std::io::Error::new(
                 ErrorKind::NotFound,
