@@ -1,9 +1,12 @@
 //! # Playlists Building
 //! Build the playlists
-use std::{borrow::Cow, collections::HashMap, path::Path};
+use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{testing::test_eq, vfs::VirtualFileSystem};
+use dotstar_toolkit_utils::{
+    testing::test_eq,
+    vfs::{VirtualFileSystem, VirtualPath},
+};
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
@@ -40,9 +43,8 @@ pub fn build(
         ));
 
         let cover = playlist.cover.clone();
-        let file_stem = AsRef::<Path>::as_ref(cover.as_ref())
+        let file_stem = VirtualPath::new(cover.as_ref())
             .file_stem()
-            .and_then(std::ffi::OsStr::to_str)
             .ok_or_else(|| anyhow!("Failure parsing filename!"))?;
         let offline_playlist = playlist.into_offline_playlist()?;
 

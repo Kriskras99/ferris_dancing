@@ -90,7 +90,6 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
         patched_base_vfs: &patched_base_vfs,
         native_vfs: &native_vfs,
         rel_tree,
-        abs_dirs: dir_tree,
         platform,
         engine_version: config.engine_version,
     };

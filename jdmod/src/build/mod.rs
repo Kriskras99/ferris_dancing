@@ -11,10 +11,7 @@ use ubiart_toolkit::{
     utils::Platform,
 };
 
-use crate::{
-    types::{DirectoryTree, RelativeDirectoryTree},
-    utils::cook_path,
-};
+use crate::{types::RelativeDirectoryTree, utils::cook_path};
 
 pub mod gameconfig;
 pub mod localisation;
@@ -26,10 +23,8 @@ pub struct BuildState<'a> {
     pub patched_base_vfs: &'a OverlayFs<'a>,
     /// Vfs with mod directory as the root
     pub native_vfs: &'a NativeFs,
-    /// VirtualPath based directory tree
+    /// The directory tree
     pub rel_tree: RelativeDirectoryTree,
-    /// Path based directory tree
-    pub abs_dirs: DirectoryTree,
     /// Export platform
     pub platform: Platform,
     /// Export Engine version
