@@ -1,8 +1,7 @@
 //! # Gacha Machine building
 //! Build the gacha machine
-use std::fs::File;
-
 use anyhow::Error;
+use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
@@ -21,8 +20,10 @@ pub fn build(
     gameconfig: &mut GameManagerConfig22<'_>,
     gacha_items: Vec<GachaItem>,
 ) -> Result<(), Error> {
-    let gacha_config: GachaConfig =
-        serde_json::from_reader(File::open(bs.rel_tree.config().join("gacha.json"))?)?;
+    let gacha_config_file = bs
+        .native_vfs
+        .open(&bs.rel_tree.config().join("gacha.json"))?;
+    let gacha_config: GachaConfig = serde_json::from_slice(&gacha_config_file)?;
 
     gameconfig.gachaconfig.force_high_rarity_reward_count =
         gacha_config.force_high_rarity_reward_count;

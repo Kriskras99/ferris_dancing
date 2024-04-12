@@ -1,9 +1,9 @@
 //! # Portrait borders building
 //! Build the portrait borders
-use std::{collections::HashMap, fs::File};
+use std::collections::HashMap;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::vfs::VirtualPathBuf;
+use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
 use ubiart_toolkit::{
     cooked,
     json_types::{self, isg::PortraitBordersDatabase, v22::GameManagerConfig22},
@@ -22,9 +22,11 @@ pub fn build(
     gameconfig: &GameManagerConfig22<'_>,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
-    let saved_portraitborders: HashMap<String, PortraitBorder> = serde_json::from_reader(
-        File::open(bs.rel_tree.portraitborders().join("portraitborders.json"))?,
-    )?;
+    let saved_portraitborders_file = bs
+        .native_vfs
+        .open(&bs.rel_tree.portraitborders().join("portraitborders.json"))?;
+    let saved_portraitborders: HashMap<String, PortraitBorder> =
+        serde_json::from_slice(&saved_portraitborders_file)?;
 
     let mut portrait_borders = Vec::with_capacity(saved_portraitborders.keys().len());
 

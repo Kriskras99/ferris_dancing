@@ -1,9 +1,12 @@
 //! # Audio Building
 //! Build the audio and musictrack
-use std::{borrow::Cow, fs::File};
+use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{testing::test_eq, vfs::VirtualPathBuf};
+use dotstar_toolkit_utils::{
+    testing::test_eq,
+    vfs::{VirtualFileSystem, VirtualPathBuf},
+};
 use ubiart_toolkit::{cooked, json_types};
 
 use super::SongExportState;
@@ -129,8 +132,10 @@ fn musictrack_template(ses: &SongExportState<'_>, extension: &str) -> Result<Vec
     let lower_map_name = ses.lower_map_name;
     let map_name = ses.song.map_name.as_ref();
 
-    let musictrack: MusicTrack =
-        serde_json::from_reader(File::open(ses.dirs.song().join("musictrack.json"))?)?;
+    let musictrack_file = ses
+        .native_vfs
+        .open(&ses.dirs.song().join("musictrack.json"))?;
+    let musictrack: MusicTrack = serde_json::from_slice(&musictrack_file)?;
 
     let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
         class: None,

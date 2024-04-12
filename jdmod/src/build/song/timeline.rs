@@ -1,6 +1,6 @@
 //! # Timeline Building
 //! Builds the karaoke and dance timelines, and pictos
-use std::{borrow::Cow, fs::File};
+use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
@@ -82,8 +82,10 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
     let lower_map_name = ses.lower_map_name;
     let timeline_cache_dir = cache_map_path.join("timeline");
 
-    let timeline: Timeline =
-        serde_json::from_reader(File::open(ses.dirs.song().join("dance_timeline.json"))?)?;
+    let timeline_file = ses
+        .native_vfs
+        .open(&ses.dirs.song().join("dance_timeline.json"))?;
+    let timeline: Timeline = serde_json::from_slice(&timeline_file)?;
 
     let dance_act_vec = tml_actor(ses, KorD::Dance)?;
     let dance_tpl_vec = tml_template(ses, KorD::Dance)?;
@@ -186,8 +188,10 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
     let lower_map_name = ses.lower_map_name;
     let timeline_cache_dir = cache_map_path.join("timeline");
 
-    let timeline: Timeline =
-        serde_json::from_reader(File::open(ses.dirs.song().join("karaoke_timeline.json"))?)?;
+    let timeline_file = ses
+        .native_vfs
+        .open(&ses.dirs.song().join("karaoke_timeline.json"))?;
+    let timeline: Timeline = serde_json::from_slice(&timeline_file)?;
     let is_empty = timeline.timeline.is_empty();
     let k = KorD::Karaoke(is_empty);
 

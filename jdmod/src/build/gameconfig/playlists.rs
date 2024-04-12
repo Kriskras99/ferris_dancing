@@ -1,6 +1,6 @@
 //! # Playlists Building
 //! Build the playlists
-use std::{borrow::Cow, collections::HashMap, fs::File, path::Path};
+use std::{borrow::Cow, collections::HashMap, path::Path};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{testing::test_eq, vfs::VirtualFileSystem};
@@ -22,8 +22,11 @@ pub fn build(
     bf: &mut BuildFiles,
     gameconfig: &GameManagerConfig22<'_>,
 ) -> Result<(), Error> {
+    let saved_playlists_file = bs
+        .native_vfs
+        .open(&bs.rel_tree.playlists().join("playlists.json"))?;
     let saved_playlists: HashMap<Cow<'_, str>, Playlist> =
-        serde_json::from_reader(File::open(bs.rel_tree.playlists().join("playlists.json"))?)?;
+        serde_json::from_slice(&saved_playlists_file)?;
 
     let mut playlists = HashMap::with_capacity(saved_playlists.len());
     let mut requests = Vec::new();

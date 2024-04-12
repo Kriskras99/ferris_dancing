@@ -1,6 +1,6 @@
 //! # Mainsequence Building
 //! Build the mainsequence
-use std::{borrow::Cow, fs::File};
+use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
@@ -142,8 +142,10 @@ fn mainsequence_template(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
 
 /// Build the mainsequence timeline
 fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
-    let timeline: Timeline =
-        serde_json::from_reader(File::open(ses.dirs.song().join("mainsequence.json"))?)?;
+    let timeline_file = ses
+        .native_vfs
+        .open(&ses.dirs.song().join("mainsequence.json"))?;
+    let timeline: Timeline = serde_json::from_slice(&timeline_file)?;
     let lower_map_name = ses.lower_map_name;
     let cache_map_path = &ses.cache_map_path;
     let map_path = &ses.map_path;

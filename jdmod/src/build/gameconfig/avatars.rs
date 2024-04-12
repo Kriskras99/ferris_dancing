@@ -1,9 +1,9 @@
 //! # Avatars
 //! Build the avatars
-use std::{borrow::Cow, collections::HashMap, fs::File};
+use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::vfs::VirtualPathBuf;
+use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
 use ubiart_toolkit::{
     cooked,
     json_types::{
@@ -30,8 +30,11 @@ pub fn build(
     gameconfig: &mut GameManagerConfig22<'_>,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
-    let avatars: HashMap<Cow<'_, str>, Avatar> =
-        serde_json::from_reader(File::open(bs.rel_tree.avatars().join("avatars.json"))?)?;
+    let avatars_file = bs
+        .native_vfs
+        .open(&bs.rel_tree.avatars().join("avatars.json"))?;
+
+    let avatars: HashMap<Cow<'_, str>, Avatar> = serde_json::from_slice(&avatars_file)?;
 
     // Avatars can refer to other avatars, so the IDs need to be known before we start the conversions
     let mut id_map = HashMap::with_capacity(avatars.len());

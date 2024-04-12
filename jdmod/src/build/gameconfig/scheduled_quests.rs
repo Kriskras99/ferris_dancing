@@ -1,8 +1,7 @@
 //! # Scheduled Quests Building
 //! Build the scheduled quests
-use std::fs::File;
-
 use anyhow::Error;
+use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
@@ -20,8 +19,10 @@ pub fn build(
     bf: &mut BuildFiles,
     gameconfig: &mut GameManagerConfig22<'_>,
 ) -> Result<(), Error> {
-    let quest_config: ScheduledQuests =
-        serde_json::from_reader(File::open(bs.rel_tree.config().join("quests.json"))?)?;
+    let quest_config_file = bs
+        .native_vfs
+        .open(&bs.rel_tree.config().join("quests.json"))?;
+    let quest_config: ScheduledQuests = serde_json::from_slice(&quest_config_file)?;
 
     let mut scheduled_quests = Vec::new();
 

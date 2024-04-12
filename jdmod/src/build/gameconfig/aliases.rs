@@ -1,8 +1,7 @@
 //! # Aliases building
 //! Build aliases
-use std::fs::File;
-
 use anyhow::Error;
+use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
     json_types::{
@@ -24,8 +23,10 @@ pub fn build(
     gameconfig: &mut GameManagerConfig22<'_>,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
-    let aliases: Aliases =
-        serde_json::from_reader(File::open(bs.rel_tree.config().join("aliases.json"))?)?;
+    let aliases_file = bs
+        .native_vfs
+        .open(&bs.rel_tree.config().join("aliases.json"))?;
+    let aliases: Aliases = serde_json::from_slice(&aliases_file)?;
 
     let aliasesobjectives = &mut gameconfig.aliasesobjectives;
     aliasesobjectives.clear();

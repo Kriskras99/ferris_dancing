@@ -19,6 +19,7 @@ use extract::Extract;
 use import::Import;
 use new::New;
 use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
+use unlock::Unlock;
 
 mod build;
 mod bundle;
@@ -28,6 +29,7 @@ mod extract;
 mod import;
 mod new;
 mod types;
+mod unlock;
 mod utils;
 
 /// The command line interface generated with Clap derive
@@ -54,6 +56,8 @@ enum Commands {
     // Check(Check),
     /// Bundle files into a .ipk
     Bundle(Bundle),
+    /// Unlock all songs, avatars, etc...
+    Unlock(Unlock),
 }
 
 /// Strategies for resolving file conflicts
@@ -91,6 +95,7 @@ fn main() -> ExitCode {
         Commands::Export(data) => export::main(&data),
         // Commands::Check(data) => check::main(&data),
         Commands::Bundle(data) => bundle::main(&data),
+        Commands::Unlock(data) => unlock::main(&data),
     };
 
     match result {
