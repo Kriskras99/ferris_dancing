@@ -1,8 +1,8 @@
 //! # Overlay Filesystem
 //! Implements a filesystem that overlays two filesystems, preferring the upper filesystem for operations.
-use std::{io::ErrorKind, path::Path};
+use std::io::ErrorKind;
 
-use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs};
 
 /// A filesystem that overlays two filesystems, preferring the upper filesystem for operations.
 pub struct OverlayFs<'fs> {
@@ -20,7 +20,7 @@ impl<'fs> OverlayFs<'fs> {
 }
 
 impl VirtualFileSystem for OverlayFs<'_> {
-    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<VirtualFile<'fs>> {
+    fn open<'fs>(&'fs self, path: &VirtualPath) -> std::io::Result<VirtualFile<'fs>> {
         if let Ok(file) = self.upper.open(path) {
             Ok(file)
         } else if let Ok(file) = self.lower.open(path) {
@@ -30,7 +30,7 @@ impl VirtualFileSystem for OverlayFs<'_> {
         }
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
         if let Ok(metadata) = self.upper.metadata(path) {
             Ok(metadata)
         } else if let Ok(metadata) = self.lower.metadata(path) {
@@ -40,13 +40,13 @@ impl VirtualFileSystem for OverlayFs<'_> {
         }
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
         let mut upper = self.upper.walk_filesystem(path)?;
         upper.merge(&self.lower.walk_filesystem(path)?);
         Ok(upper)
     }
 
-    fn exists(&self, path: &Path) -> bool {
+    fn exists(&self, path: &VirtualPath) -> bool {
         self.upper.exists(path) || self.lower.exists(path)
     }
 }

@@ -1,13 +1,12 @@
 //! A [`VirtualFileSystem`] implementation for [`SecureFat`]
 //!
 //! It will load the secure_fat.gf file and any IPK bundles listed therein plus the patch file.
-use std::{collections::HashMap, io::ErrorKind, path::Path};
+use std::{collections::HashMap, io::ErrorKind};
 
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
-    vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs},
+    vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs},
 };
-use path_clean::PathClean;
 
 use super::{BundleId, SecureFat};
 use crate::{
@@ -55,7 +54,7 @@ impl<'f> SfatFilesystem<'f> {
     }
 
     /// Create a new virtual filesystem from a secure_fat.gf at `path`
-    pub fn new(fs: &'f dyn VirtualFileSystem, path: &Path) -> std::io::Result<Self> {
+    pub fn new(fs: &'f dyn VirtualFileSystem, path: &VirtualPath) -> std::io::Result<Self> {
         let sfat_file = fs.open(path).map_err(|error| {
             std::io::Error::other(format!("Failed to open {path:?}: {error:?}"))
         })?;
@@ -95,7 +94,7 @@ impl<'f> SfatFilesystem<'f> {
 }
 
 impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
-    fn open<'f>(&'f self, path: &Path) -> std::io::Result<VirtualFile<'f>> {
+    fn open<'f>(&'f self, path: &VirtualPath) -> std::io::Result<VirtualFile<'f>> {
         let path = path.clean();
         let path_id = path_id(&path);
         if let Some(file) = self.patch.as_ref().and_then(|p| p.open(&path).ok()) {
@@ -120,7 +119,7 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
         }
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
         let path = path.clean();
         let path_id = path_id(&path);
         if let Some(metadata) = self.patch.as_ref().and_then(|p| p.metadata(&path).ok()) {
@@ -145,7 +144,7 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
         }
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
         let path = path.clean();
         let mut walker = WalkFs::default();
         for bundle in self.bundles.values() {
@@ -157,7 +156,7 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
         Ok(walker)
     }
 
-    fn exists(&self, path: &Path) -> bool {
+    fn exists(&self, path: &VirtualPath) -> bool {
         let path = path.clean();
         let path_id = path_id(&path);
         Some(true) == self.patch.as_ref().map(|p| p.exists(&path))

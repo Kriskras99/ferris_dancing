@@ -9,7 +9,7 @@ use std::{
     },
 };
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use crossbeam::channel::{Receiver, Sender};
 use dotstar_toolkit_utils::{
     testing::test,
@@ -177,18 +177,19 @@ pub fn bundle<'fs: 'bf, 'bf>(
     Ok(())
 }
 
+/// Atomic counter for the song bundle nummer
 static BUNDLE_N: AtomicU8 = AtomicU8::new(0);
 
 /// Create the nth bundle file with songs
 pub fn save_songs_bundle(
-    sfat: Arc<Mutex<SecureFat>>,
-    bundle_files: BuildFiles,
+    sfat: &Arc<Mutex<SecureFat>>,
+    bundle_files: &BuildFiles,
     config: Config,
     destination: &Path,
 ) -> Result<(), Error> {
     let bundle_n = BUNDLE_N.fetch_add(1, Ordering::AcqRel);
     if bundle_n == u8::MAX {
-        panic!("Too many bundles! ");
+        return Err(anyhow!("Too many bundles! "));
     }
 
     let name = format!("songs_{bundle_n}");

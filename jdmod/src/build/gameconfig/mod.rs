@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use dotstar_toolkit_utils::{bytes::read::BinaryDeserialize, vfs::VirtualFileSystem};
 use ubiart_toolkit::{alias8::Alias8, cooked, json_types};
 
 use super::{BuildFiles, BuildState};

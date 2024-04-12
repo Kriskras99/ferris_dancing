@@ -1,8 +1,9 @@
 //! # Menuart building
 //! Builds the menuart textures and phone images
-use std::{borrow::Cow, fs::File, path::PathBuf};
+use std::borrow::Cow;
 
 use anyhow::{bail, Error};
+use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
@@ -17,16 +18,18 @@ pub fn build(
     ses: &SongExportState<'_>,
     bf: &mut BuildFiles,
 ) -> Result<cooked::isc::WrappedScene<'static>, Error> {
-    let map_path = ses.map_path;
-    let cache_map_path = ses.cache_map_path;
+    let map_path = &ses.map_path;
+    let cache_map_path = &ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let menuart_cache_dir = format!("{cache_map_path}/menuart");
-    let textures_cache_dir = format!("{cache_map_path}/menuart/textures");
-    let actors_cache_dir = format!("{cache_map_path}/menuart/actors");
-    let textures_dir = format!("{map_path}/menuart/textures");
+    let menuart_cache_dir = cache_map_path.join("menuart");
+    let textures_cache_dir = menuart_cache_dir.join("textures");
+    let actors_cache_dir = menuart_cache_dir.join("actors");
+    let textures_dir = map_path.join("menuart/textures");
 
-    let menuart: Vec<MenuArt> =
-        serde_json::from_reader(File::open(ses.dirs.menuart().join("menuart.json"))?)?;
+    let menuart_file = ses
+        .native_vfs
+        .open(&ses.dirs.menuart().join("menuart.json"))?;
+    let menuart: Vec<MenuArt> = serde_json::from_slice(&menuart_file)?;
 
     let mut scene_actors = Vec::new();
 
@@ -44,29 +47,33 @@ pub fn build(
                 scene_actors.push(scene_actor);
 
                 let from = ses.dirs.menuart().join(texture.filename.as_ref());
-                let encoded = encode_texture(&from)?;
-                let to = format!("{textures_cache_dir}/{lower_map_name}_{lower_name}.tga.ckd");
+                let encoded = encode_texture(ses.native_vfs, &from)?;
+                let to = textures_cache_dir.join(format!("{lower_map_name}_{lower_name}.tga.ckd"));
 
                 let encoded_vec = cooked::png::create_vec(&encoded)?;
 
                 bf.generated_files.add_file(
-                    format!("{actors_cache_dir}/{lower_map_name}_{lower_name}.act.ckd").into(),
+                    actors_cache_dir.join(format!("{lower_map_name}_{lower_name}.act.ckd")),
                     mgc_actor_vec,
                 )?;
-                bf.generated_files.add_file(to.into(), encoded_vec)?;
+                bf.generated_files.add_file(to, encoded_vec)?;
             }
             MenuArt::Phone(phone) => {
                 let from = ses.dirs.menuart().join(phone.filename.as_ref());
                 let to = match phone.name.as_ref() {
-                    "cover" | "Cover" => format!("{textures_dir}/{lower_map_name}_cover_phone.jpg"),
-                    "cover_kids" => format!("{textures_dir}/{lower_map_name}_cover_kids_phone.jpg"),
-                    "coach1" => format!("{textures_dir}/{lower_map_name}_coach_1_phone.png"),
-                    "coach2" => format!("{textures_dir}/{lower_map_name}_coach_2_phone.png"),
-                    "coach3" => format!("{textures_dir}/{lower_map_name}_coach_3_phone.png"),
-                    "coach4" => format!("{textures_dir}/{lower_map_name}_coach_4_phone.png"),
+                    "cover" | "Cover" => {
+                        textures_dir.join(format!("{lower_map_name}_cover_phone.jpg"))
+                    }
+                    "cover_kids" => {
+                        textures_dir.join(format!("{lower_map_name}_cover_kids_phone.jpg"))
+                    }
+                    "coach1" => textures_dir.join(format!("{lower_map_name}_coach_1_phone.png")),
+                    "coach2" => textures_dir.join(format!("{lower_map_name}_coach_2_phone.png")),
+                    "coach3" => textures_dir.join(format!("{lower_map_name}_coach_3_phone.png")),
+                    "coach4" => textures_dir.join(format!("{lower_map_name}_coach_4_phone.png")),
                     _ => bail!("Unknown phone image name: {phone:?}"),
                 };
-                bf.static_files.add_file(from, PathBuf::from(to))?;
+                bf.static_files.add_file(from, to)?;
             }
         }
     }
@@ -75,7 +82,7 @@ pub fn build(
     let menuart_scene_vec = cooked::isc::create_vec_with_capacity_hint(&menuart_scene, 20_000)?;
 
     bf.generated_files.add_file(
-        format!("{menuart_cache_dir}/{lower_map_name}_menuart.isc.ckd").into(),
+        menuart_cache_dir.join(format!("{lower_map_name}_menuart.isc.ckd")),
         menuart_scene_vec,
     )?;
 

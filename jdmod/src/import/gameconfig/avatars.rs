@@ -3,12 +3,13 @@
 //!
 //! Current implementation is a bit wonky. A better option would be too manually match all avatar ids
 //! to names per game. Then Just Dance 2017 avatars can also be imported.
-use std::{
-    borrow::Cow, collections::HashMap, ffi::OsStr, fs::File, io::Write, path::Path, sync::OnceLock,
-};
+use std::{borrow::Cow, collections::HashMap, fs::File, io::Write, sync::OnceLock};
 
 use anyhow::{anyhow, Context, Error};
-use dotstar_toolkit_utils::{testing::test_eq, vfs::VirtualFile};
+use dotstar_toolkit_utils::{
+    testing::test_eq,
+    vfs::{VirtualFile, VirtualPath},
+};
 use ubiart_toolkit::{
     cooked,
     json_types::{
@@ -219,9 +220,7 @@ pub fn import(
             _ => todo!(),
         };
 
-        let avatar_info = if let Ok(name) = get_name(is.ugi.game, avatar_desc.avatar_id) {
-            name
-        } else {
+        let Ok(avatar_info) = get_name(is.ugi.game, avatar_desc.avatar_id) else {
             continue;
         };
 
@@ -280,9 +279,8 @@ fn import_unreferenced_avatars(
         .vfs
         .walk_filesystem(import_path.as_ref())?
         .filter(|p| p.ends_with("avatar.png.ckd"))
-        .filter_map(Path::parent)
-        .filter_map(Path::file_name)
-        .filter_map(OsStr::to_str)
+        .filter_map(VirtualPath::parent)
+        .filter_map(VirtualPath::file_name)
         .flat_map(str::parse::<u16>)
     {
         let avatar_info = match get_name(is.ugi.game, avatar_id) {

@@ -2,7 +2,7 @@
 //! This module contains all the types that are shared between the various portions of this application
 use std::path::{Path, PathBuf};
 
-use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPath, VirtualPathBuf};
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{alias8::Alias8, utils::UniqueGameId};
@@ -160,6 +160,93 @@ impl DirectoryTree {
 
     /// Used to store the portraitborders
     pub fn portraitborders(&self) -> &Path {
+        &self.dir_root_portraitborders
+    }
+}
+
+/// The directory tree of a mod
+pub struct RelativeDirectoryTree {
+    /// The .mod directory, used for non-user editable config files
+    dir_root_mod: VirtualPathBuf,
+    /// The .mod/base directory, used for storing base_nx.ipk and patch_nx.ipk
+    dir_root_mod_base: VirtualPathBuf,
+    /// The songs directory
+    dir_root_songs: VirtualPathBuf,
+    /// The config directory, used for user editable config files
+    dir_root_config: VirtualPathBuf,
+    /// The translations directory
+    dir_root_translations: VirtualPathBuf,
+    /// The playlists directory
+    dir_root_playlists: VirtualPathBuf,
+    /// The avatars directory
+    dir_root_avatars: VirtualPathBuf,
+    /// The portraitborders directory
+    dir_root_portraitborders: VirtualPathBuf,
+}
+
+impl RelativeDirectoryTree {
+    /// Create a new relative directory tree.
+    ///
+    /// This does not create directories or check if they exists!
+    pub fn new() -> Self {
+        let dir_root = VirtualPathBuf::from("/");
+        let dir_root_mod = dir_root.join(".mod");
+        let dir_root_mod_base = dir_root_mod.join("base");
+        let dir_root_songs = dir_root.join("songs");
+        let dir_root_config = dir_root.join("config");
+        let dir_root_translations = dir_root.join("translations");
+        let dir_root_playlists = dir_root.join("playlists");
+        let dir_root_avatars = dir_root.join("avatars");
+        let dir_root_portraitborders = dir_root.join("portraitborders");
+        Self {
+            dir_root_mod,
+            dir_root_mod_base,
+            dir_root_songs,
+            dir_root_config,
+            dir_root_translations,
+            dir_root_playlists,
+            dir_root_avatars,
+            dir_root_portraitborders,
+        }
+    }
+
+    /// .mod directory, used for storing data the user is not expected to change.
+    pub fn dot_mod(&self) -> &VirtualPath {
+        &self.dir_root_mod
+    }
+
+    /// Used to store (some of) the .ipk files of the base game.
+    pub fn base(&self) -> &VirtualPath {
+        &self.dir_root_mod_base
+    }
+
+    /// Used to store all the parsed songs.
+    pub fn songs(&self) -> &VirtualPath {
+        &self.dir_root_songs
+    }
+
+    /// Used to store the translations.
+    pub fn translations(&self) -> &VirtualPath {
+        &self.dir_root_translations
+    }
+
+    /// Used to store everything that doesn't need it owns directory but does need to be user changeable.
+    pub fn config(&self) -> &VirtualPath {
+        &self.dir_root_config
+    }
+
+    /// Used to store the playlists and their covers
+    pub fn playlists(&self) -> &VirtualPath {
+        &self.dir_root_playlists
+    }
+
+    /// Used to store the avatars
+    pub fn avatars(&self) -> &VirtualPath {
+        &self.dir_root_avatars
+    }
+
+    /// Used to store the portraitborders
+    pub fn portraitborders(&self) -> &VirtualPath {
         &self.dir_root_portraitborders
     }
 }

@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Error};
 use clap::Args;
-use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem};
+use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem, VirtualPath};
 use ubiart_toolkit::{
     ipk,
     secure_fat::{self, SecureFat},
@@ -124,7 +124,7 @@ pub fn bundle(
         // Track the total size of the mod
         let mut total_size = 0u64;
         // Collects all the files that belong to a song along with the total size of the song
-        let mut song_bundles: HashMap<String, (u64, Vec<&Path>)> = HashMap::new();
+        let mut song_bundles: HashMap<String, (u64, Vec<&VirtualPath>)> = HashMap::new();
 
         // Extract common string
         let path_cache_maps = "cache/itf_cooked/nx/world/maps/";
@@ -153,9 +153,7 @@ pub fn bundle(
                 main_bundle_size += file_size;
                 main_bundle_entries.push(path);
             } else {
-                let path_str = path
-                    .to_str()
-                    .ok_or_else(|| anyhow!("Path is not a valid str! {path:?}"))?;
+                let path_str = path.as_str();
                 // Extract the map name from the path
                 let mut map_name = if path_str.starts_with(path_cache_maps) {
                     path_str.replace(path_cache_maps, "")

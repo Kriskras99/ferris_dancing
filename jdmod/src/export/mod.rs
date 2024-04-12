@@ -1,22 +1,18 @@
 //! # Export
 //! Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
-use std::{
-    fs::File,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Error};
 use clap::Args;
 use crossbeam::channel::TryRecvError;
 use dotstar_toolkit_utils::vfs::{
-    layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
+    layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem,
 };
 use ubiart_toolkit::{ipk::vfs::IpkFilesystem, utils::Platform};
 
 use crate::{
-    build,
-    build::{BuildFiles, BuildState},
-    types::{song::SongDirectoryTree, Config, DirectoryTree},
+    build::{self, BuildFiles, BuildState},
+    types::{song::RelativeSongDirectoryTree, Config, DirectoryTree, RelativeDirectoryTree},
 };
 
 mod bundle;
@@ -67,10 +63,13 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
         std::fs::create_dir(destination)?;
     }
 
+    // Do everything through a virtual filesystem with the mod directory as the root
+    let native_vfs = NativeFs::new(dir_tree.root())?;
+    let rel_tree = RelativeDirectoryTree::new();
+
     // Load bundle_nx.ipk and patch_nx.ipk to use as a base
-    let base_native_vfs = NativeFs::new(dir_tree.base())?;
-    let bundle_nx_vfs = IpkFilesystem::new(&base_native_vfs, "bundle_nx.ipk".as_ref())?;
-    let patch_nx_vfs = IpkFilesystem::new(&base_native_vfs, "patch_nx.ipk".as_ref())?;
+    let bundle_nx_vfs = IpkFilesystem::new(&native_vfs, &rel_tree.base().join("bundle_nx.ipk"))?;
+    let patch_nx_vfs = IpkFilesystem::new(&native_vfs, &rel_tree.base().join("patch_nx.ipk"))?;
     let patched_base_vfs = OverlayFs::new(&patch_nx_vfs, &bundle_nx_vfs);
 
     /*
@@ -85,22 +84,23 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
 
     // Setup the (read-only) build state
     let config: Config =
-        serde_json::from_reader(File::open(dir_tree.dot_mod().join("config.json"))?)?;
+        serde_json::from_slice(&native_vfs.open(&rel_tree.dot_mod().join("config.json"))?)?;
     let platform = Platform::Nx;
     let build_state = BuildState {
         patched_base_vfs: &patched_base_vfs,
-        dirs: &dir_tree,
+        native_vfs: &native_vfs,
+        rel_tree,
+        abs_dirs: dir_tree,
         platform,
         engine_version: config.engine_version,
     };
 
-    let native_vfs = NativeFs::new(dir_tree.root())?;
-
     // Get a list of all songs in the directory
-    let mut paths: Vec<_> = std::fs::read_dir(build_state.dirs.songs())?
-        .filter_map(Result::ok)
-        .map(|d| std::fs::DirEntry::path(&d))
-        .filter(|p| p.is_dir())
+    let mut paths: Vec<_> = build_state
+        .native_vfs
+        .walk_filesystem(build_state.rel_tree.songs())?
+        .filter(|p| p.file_name() == Some("song.json"))
+        .filter_map(|p| p.parent())
         .collect();
     // Sort them, so we go through them alphabetically. This way the user can see how far we are in building the songs.
     paths.sort();
@@ -113,19 +113,15 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
     let (tx_bundle_job, rx_bundle_job) = crossbeam::channel::unbounded();
 
     for path in paths {
-        let dirs = SongDirectoryTree::new(&path);
-        if dirs.exists() {
-            tx_job.send(dirs)?;
-        } else {
-            println!("Warning! Path '{path:?}' has a incomplete directory structure, skipping!");
-        }
+        let dirs = RelativeSongDirectoryTree::new(path);
+        tx_job.send(dirs)?;
     }
 
     drop(tx_job);
 
     std::thread::scope(|s| {
         let build_state = &build_state;
-        let native_vfs = &native_vfs;
+        let native_vfs = build_state.native_vfs;
         {
             std::thread::Builder::new()
                 .name("Bundle".to_string())
@@ -230,18 +226,27 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
                         }
                         match rx_bundle_job.try_recv() {
                             Ok((sfat, bundle_files)) => {
-                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
-                                    .unwrap();
+                                bundle::save_songs_bundle(
+                                    &sfat,
+                                    &bundle_files,
+                                    config,
+                                    destination,
+                                )
+                                .unwrap();
                             }
-                            Err(TryRecvError::Empty) => {}
-                            Err(TryRecvError::Disconnected) => {}
+                            Err(TryRecvError::Empty | TryRecvError::Disconnected) => {}
                         }
                     }
                     loop {
                         match rx_bundle_job.try_recv() {
                             Ok((sfat, bundle_files)) => {
-                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
-                                    .unwrap();
+                                bundle::save_songs_bundle(
+                                    &sfat,
+                                    &bundle_files,
+                                    config,
+                                    destination,
+                                )
+                                .unwrap();
                             }
                             Err(TryRecvError::Empty) => {}
                             Err(TryRecvError::Disconnected) => {
@@ -285,18 +290,27 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
                         }
                         match rx_bundle_job.try_recv() {
                             Ok((sfat, bundle_files)) => {
-                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
-                                    .unwrap();
+                                bundle::save_songs_bundle(
+                                    &sfat,
+                                    &bundle_files,
+                                    config,
+                                    destination,
+                                )
+                                .unwrap();
                             }
-                            Err(TryRecvError::Empty) => {}
-                            Err(TryRecvError::Disconnected) => {}
+                            Err(TryRecvError::Empty | TryRecvError::Disconnected) => {}
                         }
                     }
                     loop {
                         match rx_bundle_job.try_recv() {
                             Ok((sfat, bundle_files)) => {
-                                bundle::save_songs_bundle(sfat, bundle_files, config, destination)
-                                    .unwrap();
+                                bundle::save_songs_bundle(
+                                    &sfat,
+                                    &bundle_files,
+                                    config,
+                                    destination,
+                                )
+                                .unwrap();
                             }
                             Err(TryRecvError::Empty) => {}
                             Err(TryRecvError::Disconnected) => {

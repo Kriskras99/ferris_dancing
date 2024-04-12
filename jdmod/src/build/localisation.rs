@@ -1,8 +1,9 @@
 //! # Localisation building
 //! Build the localisations
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
 
 use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 use ubiart_toolkit::{
     loc8::{self, Language},
     utils::LocaleId,
@@ -91,7 +92,7 @@ const LOC8_FILES: &[(Language, &str)] = &[
 pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
     println!("Building localisations...");
     // Load localisations
-    let localisations = Localisation::load(bs.dirs)?;
+    let localisations = Localisation::load_vfs(bs.native_vfs, &bs.rel_tree)?;
     let mut map: HashMap<Language, HashMap<LocaleId, &str>> =
         HashMap::with_capacity(LOC8_FILES.len());
 
@@ -113,7 +114,7 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
         )?;
 
         bf.generated_files
-            .add_file(PathBuf::from(*file), loc8_vec)?;
+            .add_file(VirtualPathBuf::from(*file), loc8_vec)?;
     }
 
     Ok(())

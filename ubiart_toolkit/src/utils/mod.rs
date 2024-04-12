@@ -1,12 +1,6 @@
 pub mod errors;
 
-use std::{
-    borrow::Cow,
-    ffi::OsStr,
-    fmt::Display,
-    ops::Deref,
-    path::{Path, PathBuf},
-};
+use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref};
 
 pub mod bytes;
 pub mod plumbing;
@@ -19,6 +13,7 @@ use dotstar_toolkit_utils::{
         write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::{test, test_eq, TestError},
+    vfs::{VirtualPath, VirtualPathBuf},
 };
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
@@ -218,18 +213,23 @@ impl<'a> TryFrom<&'a str> for SplitPath<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a Path> for SplitPath<'a> {
+impl<'a> TryFrom<&'a VirtualPath> for SplitPath<'a> {
     type Error = ParserError;
 
-    fn try_from(value: &'a Path) -> Result<Self, Self::Error> {
-        value
-            .to_str()
-            .ok_or_else(|| ParserError::custom(format!("{value:?} is not a valid str!")))?
-            .try_into()
+    fn try_from(value: &'a VirtualPath) -> Result<Self, Self::Error> {
+        let value = value.as_str();
+        let (path, filename) = match value.rfind('/') {
+            Some(pos) => value.split_at(pos + 1),
+            None => ("", value),
+        };
+        Ok(SplitPath::new(
+            Cow::Borrowed(path),
+            Cow::Borrowed(filename),
+        )?)
     }
 }
 
-impl From<&SplitPath<'_>> for PathBuf {
+impl From<&SplitPath<'_>> for VirtualPathBuf {
     fn from(value: &SplitPath<'_>) -> Self {
         let mut pb = Self::with_capacity(value.len());
         pb.push(value.path.as_ref());
@@ -252,11 +252,9 @@ impl From<&str> for PathId {
     }
 }
 
-impl From<&Path> for PathId {
-    fn from(value: &Path) -> Self {
-        Self(string_id(
-            value.to_str().expect("Refactor to use ubicrc directly"),
-        ))
+impl From<&VirtualPath> for PathId {
+    fn from(value: &VirtualPath) -> Self {
+        Self(string_id(value.as_str()))
     }
 }
 
@@ -298,8 +296,8 @@ impl BinarySerialize for PathId {
     }
 }
 
-pub fn path_id<P: AsRef<Path>>(path: P) -> PathId {
-    PathId::from(os_string_id(path.as_ref().as_os_str()))
+pub fn path_id<P: AsRef<str>>(path: P) -> PathId {
+    PathId::from(path.as_ref())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -642,7 +640,9 @@ const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
 
 #[cfg(test)]
 mod tests {
-    use std::{borrow::Cow, path::PathBuf};
+    use std::borrow::Cow;
+
+    use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 
     use super::{string_id, PathId, SplitPath};
 
@@ -656,7 +656,7 @@ mod tests {
 
     #[test]
     fn test_splitpath_try_from_path() {
-        let path = PathBuf::from("world/maps/adoreyou/videoscoach/adoreyou.vp9.720.webm");
+        let path = VirtualPathBuf::from("world/maps/adoreyou/videoscoach/adoreyou.vp9.720.webm");
         let sp = SplitPath::try_from(path.as_path()).unwrap();
         assert_eq!(&PathId::from(&sp), &PathId::from(0x45CC_A9CA));
     }

@@ -3,8 +3,9 @@
 use std::{
     collections::{hash_map::Entry, HashMap},
     fs::{self, File},
-    io::{self, ErrorKind, Result},
+    io::{self, ErrorKind},
     path::{Path, PathBuf},
+    str::Utf8Error,
     sync::{Arc, Mutex, OnceLock, Weak},
     time::SystemTime,
 };
@@ -12,7 +13,7 @@ use std::{
 use memmap2::Mmap;
 use path_clean::PathClean;
 
-use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs};
 
 /// The native filesystem on this device
 pub struct NativeFs {
@@ -29,7 +30,7 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if `root` does not exist
-    pub fn new(root: &Path) -> Result<Self> {
+    pub fn new(root: &Path) -> std::io::Result<Self> {
         Ok(Self {
             root: root.clean(),
             cache: Mutex::new(HashMap::new()),
@@ -41,12 +42,9 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if the path is outside the root or if the path does not exist
-    fn canonicalize(&self, path: &Path) -> Result<PathBuf> {
-        let path = if path.starts_with(&self.root) {
-            path.clean()
-        } else {
-            self.root.join(path.clean())
-        };
+    fn canonicalize(&self, path: &VirtualPath) -> std::io::Result<PathBuf> {
+        let path = self.root.join(path.clean());
+        let path = path.canonicalize()?;
         if path.starts_with(&self.root) {
             Ok(path)
         } else {
@@ -61,7 +59,7 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if it cannot read the error or files escape outside the root
-    fn recursive_file_list(path: &Path, list: &mut Vec<PathBuf>) -> Result<()> {
+    fn recursive_file_list(path: &Path, list: &mut Vec<PathBuf>) -> std::io::Result<()> {
         for entry in path.read_dir()?.flatten() {
             let path = entry.path();
             if path.is_dir() {
@@ -75,7 +73,7 @@ impl NativeFs {
 }
 
 impl VirtualFileSystem for NativeFs {
-    fn open(&self, path: &Path) -> std::io::Result<VirtualFile<'static>> {
+    fn open(&self, path: &VirtualPath) -> std::io::Result<VirtualFile<'static>> {
         let path = self.canonicalize(path)?;
 
         #[allow(
@@ -106,7 +104,7 @@ impl VirtualFileSystem for NativeFs {
         Ok(VirtualFile::Mmap(data))
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
         let metadata = fs::metadata(self.canonicalize(path)?)?;
         let file_size = metadata.len();
         let created = metadata
@@ -120,33 +118,32 @@ impl VirtualFileSystem for NativeFs {
         Ok(VirtualMetadata { file_size, created })
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
         let path = self.canonicalize(path)?;
         let list = self.list.get_or_try_init::<_, io::Error>(|| {
             let mut list = Vec::new();
             Self::recursive_file_list(&self.root, &mut list)?;
             Ok(list)
         })?;
-        if path == Path::new(".") {
-            Ok(WalkFs {
-                paths: list
-                    .iter()
-                    .filter_map(|p| p.strip_prefix(&self.root).ok())
-                    .collect(),
-            })
+
+        let paths = if path == Path::new(".") {
+            list.iter()
+                .filter_map(|p| p.strip_prefix(&self.root).ok())
+                .map(TryFrom::try_from)
+                .collect::<Result<_, Utf8Error>>()
+                .map_err(|e| std::io::Error::new(ErrorKind::InvalidInput, e))?
         } else {
-            Ok(WalkFs {
-                paths: list
-                    .iter()
-                    .filter(|p| p.starts_with(&path))
-                    .filter_map(|p| p.strip_prefix(&self.root).ok())
-                    .collect(),
-            })
-        }
+            list.iter()
+                .filter(|p| p.starts_with(&path))
+                .filter_map(|p| p.strip_prefix(&self.root).ok())
+                .map(TryFrom::try_from)
+                .collect::<Result<_, Utf8Error>>()
+                .map_err(|e| std::io::Error::new(ErrorKind::InvalidInput, e))?
+        };
+        Ok(WalkFs { paths })
     }
 
-    fn exists(&self, path: &Path) -> bool {
-        Self::canonicalize(self, path)
-            .is_ok_and(|p| p.exists())
+    fn exists(&self, path: &VirtualPath) -> bool {
+        Self::canonicalize(self, path).is_ok_and(|p| p.exists())
     }
 }

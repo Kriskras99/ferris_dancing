@@ -14,7 +14,7 @@ use crate::{
 /// Build the objectives
 pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
     let name_map: HashMap<Cow<'_, str>, Objective> =
-        serde_json::from_reader(File::open(bs.dirs.config().join("objectives.json"))?)?;
+        serde_json::from_reader(File::open(bs.rel_tree.config().join("objectives.json"))?)?;
     let objective_descs = name_map
         .into_iter()
         .map(|(name, descriptor)| (name, descriptor.into()))

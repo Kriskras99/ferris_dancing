@@ -1,8 +1,11 @@
 //! Various utilities like texture encoding/decoding and dealing with paths
-use std::{borrow::Cow, path::Path};
+use std::borrow::Cow;
 
-use anyhow::{anyhow, Context, Error};
-use dotstar_toolkit_utils::bytes::read::ZeroCopyReadAtExt;
+use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::{
+    bytes::read::ZeroCopyReadAtExt,
+    vfs::{native::NativeFs, VirtualFileSystem, VirtualPath},
+};
 use image::{imageops, EncodableLayout, RgbaImage};
 use regex::Regex;
 use texpresso::Format;
@@ -150,11 +153,13 @@ pub fn decode_texture(
 ///
 /// # Errors
 /// Will return an error if any IO or parsing fails
-pub fn encode_texture(image_path: &Path) -> Result<Png<'static>, Error> {
+pub fn encode_texture(
+    native_vfs: &NativeFs,
+    image_path: &VirtualPath,
+) -> Result<Png<'static>, Error> {
     // let mipmaps = false;
-    let img = image::io::Reader::open(image_path)
-        .with_context(|| format!("Failed to open {image_path:?}!"))?
-        .decode()?;
+    let img_file = native_vfs.open(image_path)?;
+    let img = image::load_from_memory(&img_file)?;
     let img = img.into_rgba8();
 
     let width = u16::try_from(img.width())?;

@@ -10,7 +10,7 @@ use std::{
 use clap::Parser;
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
-    vfs::{native::NativeFs, VirtualFileSystem},
+    vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
 };
 use ubiart_toolkit::{
     ipk::{self, Bundle},
@@ -156,7 +156,7 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path) {
 /// Create a IPK bundle from all files and directories in `source`
 pub fn create_ipk(source: &Path, destination: &Path) -> Result<(), WriterError> {
     let vfs = NativeFs::new(source)?;
-    let root = PathBuf::from("");
+    let root = VirtualPathBuf::from("");
     let file_list = vfs.walk_filesystem(&root)?;
     let files: Vec<_> = file_list.collect();
     let mut file = File::create(destination)?;

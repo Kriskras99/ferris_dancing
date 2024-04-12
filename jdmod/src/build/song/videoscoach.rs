@@ -1,9 +1,12 @@
 //! # Video Building
 //! Build the video scenes, actors, and video
-use std::{borrow::Cow, ffi::OsStr, path::PathBuf};
+use std::borrow::Cow;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::testing::{test, test_eq};
+use dotstar_toolkit_utils::{
+    testing::{test, test_eq},
+    vfs::VirtualFileSystem,
+};
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
@@ -17,8 +20,8 @@ pub fn build(
     let map_path = ses.map_path;
     let cache_map_path = ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let videoscoach_cache_dir = format!("{cache_map_path}/videoscoach");
-    let videoscoach_dir = format!("{map_path}/videoscoach");
+    let videoscoach_cache_dir = cache_map_path.join("videoscoach");
+    let videoscoach_dir = map_path.join("videoscoach");
 
     // .mpd.ckd is always the same
     let mpd_vec = vec![
@@ -38,40 +41,36 @@ pub fn build(
 
     // the actual video
     let video_path = ses.dirs.song().join(ses.song.videofile.as_ref());
-    test_eq(
-        &video_path.extension().and_then(OsStr::to_str),
-        &Some("webm"),
-    )
-    .with_context(|| {
+    test_eq(&video_path.extension(), &Some("webm")).with_context(|| {
         format!("Video file is not a webm! Transcoding is not supported: {video_path:?}")
     })?;
-    test(video_path.exists())
+    test(ses.native_vfs.exists(&video_path))
         .with_context(|| format!("Video file does not exist at {video_path:?}!"))?;
 
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/{lower_map_name}.mpd.ckd").into(),
+        videoscoach_cache_dir.join(format!("{lower_map_name}.mpd.ckd")),
         mpd_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/video_player_main.act.ckd").into(),
+        videoscoach_cache_dir.join("video_player_main.act.ckd"),
         video_player_main_act_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/video_player_map_preview.act.ckd").into(),
+        videoscoach_cache_dir.join("video_player_map_preview.act.ckd"),
         video_player_map_preview_act_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/{lower_map_name}_video.isc.ckd").into(),
+        videoscoach_cache_dir.join(format!("{lower_map_name}_video.isc.ckd")),
         video_scene_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{videoscoach_cache_dir}/{lower_map_name}_video_map_preview.isc.ckd").into(),
+        videoscoach_cache_dir.join(format!("{lower_map_name}_video_map_preview.isc.ckd")),
         video_map_preview_scene_vec,
     )?;
 
     bf.static_files.add_file(
         video_path,
-        PathBuf::from(format!("{videoscoach_dir}/{lower_map_name}.vp9.720.webm")),
+        videoscoach_dir.join(format!("{lower_map_name}.vp9.720.webm")),
     )?;
 
     Ok(cooked::isc::WrappedScene {
@@ -96,11 +95,11 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         components: vec![cooked::act::Component::PleoComponent(
             cooked::act::PleoComponent {
                 video: SplitPath::new(
-                    Cow::Owned(format!("{map_path}/videoscoach/")),
+                    Cow::Owned(map_path.join("videoscoach/").to_string()),
                     Cow::Owned(format!("{lower_map_name}.webm")),
                 )?,
                 dash_mpd: SplitPath::new(
-                    Cow::Owned(format!("{map_path}/videoscoach/")),
+                    Cow::Owned(map_path.join("videoscoach/").to_string()),
                     Cow::Owned(format!("{lower_map_name}.mpd")),
                 )?,
                 channel_id: map_preview.then(|| ses.song.map_name.clone()),
@@ -142,8 +141,8 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                     pos2d: (0.0, -4.5),
                     lua: Cow::Borrowed("world/_common/videoscreen/video_player_main.tpl"),
                     components: vec![cooked::isc::WrappedComponent::Pleo(cooked::isc::WrappedPleoComponent{ pleo_component: cooked::isc::PleoComponent {
-                        video: Cow::Owned(format!("{map_path}/videoscoach/{lower_map_name}.webm")),
-                        dash_mpd: Cow::Owned(format!("{map_path}/videoscoach/{lower_map_name}.mpd")),
+                        video: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.webm")).to_string()),
+                        dash_mpd: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.mpd")).to_string()),
                         channel_id: Cow::Borrowed(""),
                     }})],
                     ..Default::default()
@@ -259,12 +258,16 @@ fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'
                         components: vec![cooked::isc::WrappedComponent::Pleo(
                             cooked::isc::WrappedPleoComponent {
                                 pleo_component: cooked::isc::PleoComponent {
-                                    video: Cow::Owned(format!(
-                                        "{map_path}/videoscoach/{lower_map_name}.webm"
-                                    )),
-                                    dash_mpd: Cow::Owned(format!(
-                                        "{map_path}/videoscoach/{lower_map_name}.mpd"
-                                    )),
+                                    video: Cow::Owned(
+                                        map_path
+                                            .join(format!("videoscoach/{lower_map_name}.webm"))
+                                            .to_string(),
+                                    ),
+                                    dash_mpd: Cow::Owned(
+                                        map_path
+                                            .join(format!("videoscoach/{lower_map_name}.mpd"))
+                                            .to_string(),
+                                    ),
                                     channel_id: ses.song.map_name.clone(),
                                 },
                             },

@@ -3,13 +3,18 @@
 use std::borrow::Cow;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::vfs::{symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem};
+use dotstar_toolkit_utils::vfs::{
+    layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem,
+};
 use ubiart_toolkit::{
     cooked::{self, isc, sgs},
     utils::Platform,
 };
 
-use crate::{types::DirectoryTree, utils::cook_path};
+use crate::{
+    types::{DirectoryTree, RelativeDirectoryTree},
+    utils::cook_path,
+};
 
 pub mod gameconfig;
 pub mod localisation;
@@ -18,9 +23,13 @@ pub mod song;
 /// State that is used a lot during the build
 pub struct BuildState<'a> {
     /// Filesystem containing the files in bundle_nx.ipk and patch_nx.ipk
-    pub patched_base_vfs: &'a dyn VirtualFileSystem,
-    /// Mod directory tree
-    pub dirs: &'a DirectoryTree,
+    pub patched_base_vfs: &'a OverlayFs<'a>,
+    /// Vfs with mod directory as the root
+    pub native_vfs: &'a NativeFs,
+    /// VirtualPath based directory tree
+    pub rel_tree: RelativeDirectoryTree,
+    /// Path based directory tree
+    pub abs_dirs: DirectoryTree,
     /// Export platform
     pub platform: Platform,
     /// Export Engine version

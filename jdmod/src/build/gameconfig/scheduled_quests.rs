@@ -21,7 +21,7 @@ pub fn build(
     gameconfig: &mut GameManagerConfig22<'_>,
 ) -> Result<(), Error> {
     let quest_config: ScheduledQuests =
-        serde_json::from_reader(File::open(bs.dirs.config().join("quests.json"))?)?;
+        serde_json::from_reader(File::open(bs.rel_tree.config().join("quests.json"))?)?;
 
     let mut scheduled_quests = Vec::new();
 

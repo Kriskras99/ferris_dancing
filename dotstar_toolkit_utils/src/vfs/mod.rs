@@ -1,6 +1,6 @@
 //! Virtual Filesystem
 //! Contains traits for a virtual filesystem and implementations of some basic filesystems.
-use std::{borrow::Cow, ops::Deref, path::Path, sync::Arc};
+use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use memmap2::Mmap;
 use stable_deref_trait::StableDeref;
@@ -10,8 +10,11 @@ use crate::bytes::read::{ReadError, TrivialClone, ZeroCopyReadAt};
 
 pub mod layeredfs;
 pub mod native;
+pub mod path;
 pub mod symlinkfs;
 pub mod vecfs;
+
+pub use path::{Component, VirtualPath, VirtualPathBuf};
 
 /// Represents the operations that can be done on a readonly filesystem
 pub trait VirtualFileSystem: Sync {
@@ -19,29 +22,29 @@ pub trait VirtualFileSystem: Sync {
     ///
     /// # Errors
     /// Can error if the file does not exist or if file access failed
-    fn open<'rf>(&'rf self, path: &Path) -> std::io::Result<VirtualFile<'rf>>;
+    fn open<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<VirtualFile<'rf>>;
 
     /// Get the metadata for the file at `path`
     ///
     /// # Errors
     /// Can error if the file does not exist or if file access failed
-    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata>;
+    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata>;
 
     /// List all files at `path` and deeper
     ///
     /// # Errors
     /// Can error if the directory does not exist or if directory access failed
-    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>>;
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>>;
 
     /// Check if `path` exists
-    fn exists(&self, path: &Path) -> bool;
+    fn exists(&self, path: &VirtualPath) -> bool;
 }
 
 /// An iterator over all files under a directory
 #[derive(Default)]
 pub struct WalkFs<'a> {
     /// The files that haven't been iterated yet
-    paths: Vec<&'a Path>,
+    paths: Vec<&'a VirtualPath>,
 }
 
 impl ExactSizeIterator for WalkFs<'_> {}
@@ -49,7 +52,7 @@ impl ExactSizeIterator for WalkFs<'_> {}
 impl<'a> WalkFs<'a> {
     /// Create a `WalkFs` that iterates over `paths`
     #[must_use]
-    pub fn new(paths: Vec<&'a Path>) -> Self {
+    pub fn new(paths: Vec<&'a VirtualPath>) -> Self {
         Self { paths }
     }
 
@@ -63,7 +66,7 @@ impl<'a> WalkFs<'a> {
 }
 
 impl<'a> Iterator for WalkFs<'a> {
-    type Item = &'a Path;
+    type Item = &'a VirtualPath;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.paths.pop()

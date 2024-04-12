@@ -1,9 +1,9 @@
 //! # Audio Building
 //! Build the audio and musictrack
-use std::{borrow::Cow, fs::File, path::PathBuf};
+use std::{borrow::Cow, fs::File};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test_eq;
+use dotstar_toolkit_utils::{testing::test_eq, vfs::VirtualPathBuf};
 use ubiart_toolkit::{cooked, json_types};
 
 use super::SongExportState;
@@ -14,32 +14,30 @@ pub fn build(
     ses: &SongExportState<'_>,
     bf: &mut BuildFiles,
 ) -> Result<cooked::isc::WrappedScene<'static>, Error> {
-    let map_path = ses.map_path;
-    let cache_map_path = ses.cache_map_path;
+    let map_path = &ses.map_path;
+    let cache_map_path = &ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let audio_cache_dir = format!("{cache_map_path}/audio");
-    let audio_dir = format!("{map_path}/audio");
+    let audio_cache_dir = cache_map_path.join("audio");
+    let audio_dir = map_path.join("audio");
 
     // audio file
     let from = ses.dirs.audio().join(ses.song.audiofile.as_ref());
     let extension = from
         .extension()
-        .and_then(|e| e.to_str())
         .ok_or_else(|| anyhow!("Invalid extension! {from:?}"))?;
     let (to, extension) = match extension {
         "ckd" => {
-            test_eq(&from.to_str().map(|s| s.ends_with("wav.ckd")), &Some(true))
-                .with_context(|| format!("{from:?}"))?;
+            test_eq(&from.ends_with("wav.ckd"), &true).with_context(|| format!("{from:?}"))?;
             (
-                PathBuf::from(cook_path(
-                    &format!("{audio_dir}/{lower_map_name}.wav"),
+                VirtualPathBuf::from(cook_path(
+                    audio_dir.join(format!("{lower_map_name}.wav")).as_ref(),
                     ses.platform,
                 )?),
                 "wav",
             )
         }
         _ => (
-            PathBuf::from(&format!("{audio_dir}/{lower_map_name}.{extension}")),
+            audio_dir.join(format!("{lower_map_name}.{extension}")),
             extension,
         ),
     };
@@ -59,22 +57,22 @@ pub fn build(
     let audio_scene_vec = cooked::isc::create_vec_with_capacity_hint(&audio_scene, 1200)?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}_musictrack.tpl.ckd").into(),
+        audio_cache_dir.join(format!("{lower_map_name}_musictrack.tpl.ckd")),
         musictrack_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}_sequence.tpl.ckd").into(),
+        audio_cache_dir.join(format!("{lower_map_name}_sequence.tpl.ckd")),
         sequence_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}.stape.ckd").into(),
+        audio_cache_dir.join(format!("{lower_map_name}.stape.ckd")),
         sequence_tape_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{audio_cache_dir}/{lower_map_name}_audio.isc.ckd").into(),
+        audio_cache_dir.join(format!("{lower_map_name}_audio.isc.ckd")),
         audio_scene_vec,
     )?;
 
@@ -85,7 +83,7 @@ pub fn build(
 
 /// Build the audio scene
 fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
-    let map_path = ses.map_path;
+    let map_path = &ses.map_path;
     let lower_map_name = ses.lower_map_name;
     let map_name = ses.song.map_name.as_ref();
     cooked::isc::Root {
@@ -96,9 +94,11 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                     actor: cooked::isc::Actor {
                         userfriendly: Cow::Borrowed("MusicTrack"),
                         pos2d: (1.125_962, -0.418_641),
-                        lua: Cow::Owned(format!(
-                            "{map_path}/audio/{lower_map_name}_musictrack.tpl"
-                        )),
+                        lua: Cow::Owned(
+                            map_path
+                                .join(format!("audio/{lower_map_name}_musictrack.tpl"))
+                                .to_string(),
+                        ),
                         components: vec![cooked::isc::WrappedComponent::MusicTrack],
                         ..Default::default()
                     },
@@ -108,7 +108,11 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         relativez: 0.000_001,
                         userfriendly: Cow::Owned(format!("{map_name}_sequence")),
                         pos2d: (-0.006_158, -0.006_158),
-                        lua: Cow::Owned(format!("{map_path}/audio/{lower_map_name}_sequence.tpl")),
+                        lua: Cow::Owned(
+                            map_path
+                                .join(format!("audio/{lower_map_name}_sequence.tpl"))
+                                .to_string(),
+                        ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
                     },
@@ -121,7 +125,7 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
 
 /// Build the musictrack template
 fn musictrack_template(ses: &SongExportState<'_>, extension: &str) -> Result<Vec<u8>, Error> {
-    let map_path = ses.map_path;
+    let map_path = &ses.map_path;
     let lower_map_name = ses.lower_map_name;
     let map_name = ses.song.map_name.as_ref();
 
@@ -163,7 +167,11 @@ fn musictrack_template(ses: &SongExportState<'_>, extension: &str) -> Result<Vec
                         fade_out_type: 0,
                         entry_points: Vec::new(),
                     },
-                    path: Cow::Owned(format!("{map_path}/audio/{lower_map_name}.{extension}")),
+                    path: Cow::Owned(
+                        map_path
+                            .join(format!("audio/{lower_map_name}.{extension}"))
+                            .to_string(),
+                    ),
                     url: Cow::Owned(format!("jmcs://jd-contents/{map_name}/{map_name}.ogg")),
                 },
             },

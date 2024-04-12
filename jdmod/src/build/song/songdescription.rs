@@ -16,16 +16,22 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     let mut phone_images = HashMap::new();
     phone_images.insert(
         Cow::Borrowed("cover"),
-        Cow::Owned(format!(
-            "{map_path}/menuart/textures/{lower_map_name}_cover_phone.jpg"
-        )),
+        Cow::Owned(
+            map_path
+                .join(format!("menuart/textures/{lower_map_name}_cover_phone.jpg"))
+                .to_string(),
+        ),
     );
     for i in 1..=(u8::from(ses.song.number_of_coaches)) {
         phone_images.insert(
             Cow::Owned(format!("coach{i}")),
-            Cow::Owned(format!(
-                "{map_path}/menuart/textures/{lower_map_name}_coach_{i}_phone.png"
-            )),
+            Cow::Owned(
+                map_path
+                    .join(format!(
+                        "menuart/textures/{lower_map_name}_coach_{i}_phone.png"
+                    ))
+                    .to_string(),
+            ),
         );
     }
 
@@ -73,7 +79,10 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     });
 
     let song_desc_act = cooked::act::Actor {
-        tpl: SplitPath::new(Cow::Borrowed(ses.map_path), Cow::Borrowed("songdesc.tpl"))?,
+        tpl: SplitPath::new(
+            Cow::Borrowed(ses.map_path.as_str()),
+            Cow::Borrowed("songdesc.tpl"),
+        )?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,
@@ -83,14 +92,10 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     let song_desc_tpl_vec = cooked::json::create_vec(&song_desc_tpl)?;
     let song_desc_act_vec = cooked::act::create_vec(&song_desc_act)?;
 
-    bf.generated_files.add_file(
-        format!("{cache_map_path}/songdesc.tpl.ckd").into(),
-        song_desc_tpl_vec,
-    )?;
-    bf.generated_files.add_file(
-        format!("{cache_map_path}/songdesc.act.ckd").into(),
-        song_desc_act_vec,
-    )?;
+    bf.generated_files
+        .add_file(cache_map_path.join("songdesc.tpl.ckd"), song_desc_tpl_vec)?;
+    bf.generated_files
+        .add_file(cache_map_path.join("songdesc.act.ckd"), song_desc_act_vec)?;
 
     Ok(())
 }

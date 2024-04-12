@@ -1,8 +1,9 @@
 //! # Portrait borders building
 //! Build the portrait borders
-use std::{collections::HashMap, fs::File, path::PathBuf};
+use std::{collections::HashMap, fs::File};
 
 use anyhow::Error;
+use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, isg::PortraitBordersDatabase, v22::GameManagerConfig22},
@@ -22,7 +23,7 @@ pub fn build(
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let saved_portraitborders: HashMap<String, PortraitBorder> = serde_json::from_reader(
-        File::open(bs.dirs.portraitborders().join("portraitborders.json"))?,
+        File::open(bs.rel_tree.portraitborders().join("portraitborders.json"))?,
     )?;
 
     let mut portrait_borders = Vec::with_capacity(saved_portraitborders.keys().len());
@@ -34,7 +35,8 @@ pub fn build(
 
         // Save the background and foreground textures and phone images (if they exist)
         let background_texture_encoded = encode_texture(
-            &bs.dirs
+            bs.native_vfs,
+            &bs.rel_tree
                 .portraitborders()
                 .join(pb.background_texture_path.as_ref()),
         )?;
@@ -46,7 +48,8 @@ pub fn build(
 
         if let Some(foreground_texture_path) = &pb.foreground_texture_path {
             let foreground_texture_encoded = encode_texture(
-                &bs.dirs
+                bs.native_vfs,
+                &bs.rel_tree
                     .portraitborders()
                     .join(foreground_texture_path.as_ref()),
             )?;
@@ -58,18 +61,18 @@ pub fn build(
         }
 
         bf.static_files.add_file(
-            bs.dirs
+            bs.rel_tree
                 .portraitborders()
                 .join(pb.background_phone_path.as_ref()),
-            PathBuf::from(desc.background_phone_path.as_ref()),
+            VirtualPathBuf::from(desc.background_phone_path.as_ref()),
         )?;
 
         if let Some(foreground_phone_path) = &pb.foreground_phone_path {
             bf.static_files.add_file(
-                bs.dirs
+                bs.rel_tree
                     .portraitborders()
                     .join(foreground_phone_path.as_ref()),
-                PathBuf::from(desc.foreground_phone_path.as_ref()),
+                VirtualPathBuf::from(desc.foreground_phone_path.as_ref()),
             )?;
         }
 

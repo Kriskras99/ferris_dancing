@@ -10,7 +10,7 @@ use crate::build::BuildState;
 /// Build the offline recommendations
 pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Result<(), Error> {
     let offline_recommendation: Vec<Cow<'_, str>> = serde_json::from_reader(File::open(
-        bs.dirs.config().join("offline_recommendations.json"),
+        bs.rel_tree.config().join("offline_recommendations.json"),
     )?)?;
 
     gameconfig.offline_recommendation = offline_recommendation;

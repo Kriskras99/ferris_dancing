@@ -10,7 +10,7 @@ use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::{
     testing::test,
-    vfs::{native::NativeFs, VirtualFileSystem},
+    vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
 };
 use ubiart_toolkit::{ipk, secure_fat};
 
@@ -90,7 +90,7 @@ pub fn extract_secure_fat(
     let source_directory = source
         .parent()
         .ok_or_else(|| anyhow!("Source file has no parent directory!"))?;
-    let source_filename = PathBuf::from(
+    let source_filename = VirtualPathBuf::from(
         source
             .file_name()
             .ok_or_else(|| anyhow!("Source does not have a filename!"))?
@@ -121,7 +121,7 @@ pub fn extract_ipk(
     let source_directory = source
         .parent()
         .ok_or_else(|| anyhow!("Source file has no parent directory!"))?;
-    let source_filename = PathBuf::from(
+    let source_filename = VirtualPathBuf::from(
         source
             .file_name()
             .ok_or_else(|| anyhow!("Source does not have a filename!"))?
@@ -161,7 +161,7 @@ pub fn extract_vfs(
         for file in vfs.walk_filesystem("".as_ref())? {
             match vfs.open(file.as_ref()) {
                 Err(e) => eprintln!("{e:?}"),
-                Ok(data) => save_file(&data, &destination.join(file), conflicts)?,
+                Ok(data) => save_file(&data, &destination.join(file.as_str()), conflicts)?,
             }
         }
     }

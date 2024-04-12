@@ -1,8 +1,9 @@
 //! # Avatars
 //! Build the avatars
-use std::{borrow::Cow, collections::HashMap, fs::File, path::PathBuf};
+use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 use ubiart_toolkit::{
     cooked,
     json_types::{
@@ -30,7 +31,7 @@ pub fn build(
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let avatars: HashMap<Cow<'_, str>, Avatar> =
-        serde_json::from_reader(File::open(bs.dirs.avatars().join("avatars.json"))?)?;
+        serde_json::from_reader(File::open(bs.rel_tree.avatars().join("avatars.json"))?)?;
 
     // Avatars can refer to other avatars, so the IDs need to be known before we start the conversions
     let mut id_map = HashMap::with_capacity(avatars.len());
@@ -54,15 +55,18 @@ pub fn build(
         let actor_vec = desc_actor(&avatar_dir)?;
 
         // Encode the avatar image
-        let cooked_image = encode_texture(&bs.dirs.avatars().join(avatar.image_path.as_ref()))?;
+        let cooked_image = encode_texture(
+            bs.native_vfs,
+            &bs.rel_tree.avatars().join(avatar.image_path.as_ref()),
+        )?;
         let to = cook_path(&format!("world/avatars/{id:04}/avatar.png"), bs.platform)?;
         let cooked_image_vec = cooked::png::create_vec(&cooked_image)?;
 
         // Add the phone image for copying
         let phone_image = format!("world/avatars/{id:04}/avatar_phone.png");
         bf.static_files.add_file(
-            bs.dirs.avatars().join(avatar.image_phone_path.as_ref()),
-            PathBuf::from(phone_image.clone()),
+            bs.rel_tree.avatars().join(avatar.image_phone_path.as_ref()),
+            VirtualPathBuf::from(phone_image.clone()),
         )?;
 
         // Add an avatar objective or add it to the gacha items

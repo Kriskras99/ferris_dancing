@@ -1,9 +1,9 @@
 //! # Mainsequence Building
 //! Build the mainsequence
-use std::{borrow::Cow, fs::File, path::PathBuf};
+use std::{borrow::Cow, fs::File};
 
 use anyhow::Error;
-use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
 use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
 
 use super::SongExportState;
@@ -18,9 +18,9 @@ pub fn build(
     ses: &SongExportState<'_>,
     bf: &mut BuildFiles,
 ) -> Result<cooked::isc::WrappedScene<'static>, Error> {
-    let cache_map_path = ses.cache_map_path;
+    let cache_map_path = &ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let cinematics_cache_dir = format!("{cache_map_path}/cinematics");
+    let cinematics_cache_dir = cache_map_path.join("cinematics");
 
     // main sequence actor
     let mainsequence_actor_vec = mainsequence_actor(ses)?;
@@ -33,17 +33,17 @@ pub fn build(
     let cine_scene_vec = cooked::isc::create_vec_with_capacity_hint(&cine_scene, 900)?;
 
     bf.generated_files.add_file(
-        format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.act.ckd").into(),
+        cinematics_cache_dir.join(format!("{lower_map_name}_mainsequence.act.ckd")),
         mainsequence_actor_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{cinematics_cache_dir}/{lower_map_name}_mainsequence.tpl.ckd").into(),
+        cinematics_cache_dir.join(format!("{lower_map_name}_mainsequence.tpl.ckd")),
         mainsequence_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{cinematics_cache_dir}/{lower_map_name}_cine.isc.ckd").into(),
+        cinematics_cache_dir.join(format!("{lower_map_name}_cine.isc.ckd")),
         cine_scene_vec,
     )?;
 
@@ -145,8 +145,8 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
     let timeline: Timeline =
         serde_json::from_reader(File::open(ses.dirs.song().join("mainsequence.json"))?)?;
     let lower_map_name = ses.lower_map_name;
-    let cache_map_path = ses.cache_map_path;
-    let map_path = ses.map_path;
+    let cache_map_path = &ses.cache_map_path;
+    let map_path = &ses.map_path;
 
     let mut clips = Vec::with_capacity(timeline.timeline.len());
 
@@ -157,13 +157,15 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
             }
             Clip::SoundSet(orig_clip) => {
                 let name = orig_clip.name.as_ref();
-                let filename = Cow::Owned(format!("{map_path}/audio/amb/{name}.wav"));
+                let filename =
+                    Cow::Owned(map_path.join(format!("audio/amb/{name}.wav")).to_string());
                 let cooked_filename = cook_path(&filename, ses.platform)?;
 
                 // Add amb clip to copy list
                 let from = ses.dirs.audio().join(orig_clip.audio_filename.as_ref());
-                let to = PathBuf::from(cooked_filename);
-                let template_path = Cow::Owned(format!("{map_path}/audio/amb/{name}.tpl"));
+                let to = VirtualPathBuf::from(cooked_filename);
+                let template_path =
+                    Cow::Owned(map_path.join(format!("audio/amb/{name}.tpl")).to_string());
 
                 // If the amb clip is already in the list, we skip building the template
                 if !bf.static_files.exists(&to) {
@@ -219,7 +221,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
 
     let mainsequence_tape_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
-        format!("{cache_map_path}/cinematics/{lower_map_name}_mainsequence.tape.ckd").into(),
+        cache_map_path.join(format!("cinematics/{lower_map_name}_mainsequence.tape.ckd")),
         mainsequence_tape_vec,
     )?;
 

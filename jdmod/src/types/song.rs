@@ -10,6 +10,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Error};
+use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
 use hash32::{Hasher, Murmur3Hasher};
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
@@ -97,6 +98,65 @@ impl SongDirectoryTree {
 
     /// Used to store the pictos.
     pub fn audio(&self) -> &Path {
+        &self.dir_song_audio
+    }
+}
+
+/// Directory structure of a song
+pub struct RelativeSongDirectoryTree {
+    /// Root song dir
+    dir_song: VirtualPathBuf,
+    /// Contains the msm files
+    dir_song_moves: VirtualPathBuf,
+    /// Contains the pictos
+    dir_song_pictos: VirtualPathBuf,
+    /// Contains the menuart
+    dir_song_menuart: VirtualPathBuf,
+    /// Contains the audio clips
+    dir_song_audio: VirtualPathBuf,
+}
+
+impl RelativeSongDirectoryTree {
+    /// Create a new directory tree from root.
+    ///
+    /// This does not create directories or check if they exists!
+    pub fn new(dir_song: &VirtualPath) -> Self {
+        let dir_song = dir_song.to_owned();
+        let dir_song_moves = dir_song.join("moves");
+        let dir_song_pictos = dir_song.join("pictos");
+        let dir_song_menuart = dir_song.join("menuart");
+        let dir_song_audio = dir_song.join("audio");
+        Self {
+            dir_song,
+            dir_song_moves,
+            dir_song_pictos,
+            dir_song_menuart,
+            dir_song_audio,
+        }
+    }
+
+    /// The root of the song directory.
+    pub fn song(&self) -> &VirtualPath {
+        &self.dir_song
+    }
+
+    /// Used to store the MovementSpace files.
+    pub fn moves(&self) -> &VirtualPath {
+        &self.dir_song_moves
+    }
+
+    /// Used to store the pictos.
+    pub fn pictos(&self) -> &VirtualPath {
+        &self.dir_song_pictos
+    }
+
+    /// Used to store the pictos.
+    pub fn menuart(&self) -> &VirtualPath {
+        &self.dir_song_menuart
+    }
+
+    /// Used to store the pictos.
+    pub fn audio(&self) -> &VirtualPath {
         &self.dir_song_audio
     }
 }

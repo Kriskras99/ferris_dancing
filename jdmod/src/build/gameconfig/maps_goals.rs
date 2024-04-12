@@ -10,7 +10,7 @@ use crate::build::BuildState;
 /// Build map goals
 pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Result<(), Error> {
     let maps_goals: MapsGoals =
-        serde_json::from_reader(File::open(bs.dirs.config().join("maps_goals.json"))?)?;
+        serde_json::from_reader(File::open(bs.rel_tree.config().join("maps_goals.json"))?)?;
 
     gameconfig.maps_goals = maps_goals;
 

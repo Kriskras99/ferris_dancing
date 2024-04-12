@@ -10,7 +10,7 @@ use dotstar_toolkit_utils::{
         write::{BinarySerialize, CursorAt, WriteAt, WriteError},
     },
     testing::test_eq,
-    vfs::VirtualFileSystem,
+    vfs::{VirtualFileSystem, VirtualPath},
 };
 use flate2::{write::ZlibEncoder, Compression};
 
@@ -79,7 +79,7 @@ struct ReducedMetadata<'a> {
     pub compressed: u64,
     pub offset: u64,
     pub timestamp: u64,
-    pub path: &'a Path,
+    pub path: &'a VirtualPath,
 }
 
 const STATIC_HEADER_SIZE: usize = 0x30;
@@ -89,7 +89,7 @@ pub fn create(
     path: impl AsRef<Path>,
     options: Options,
     vfs: &impl VirtualFileSystem,
-    files: &[&Path],
+    files: &[&VirtualPath],
 ) -> Result<(), WriteError> {
     let file = File::create(path)?;
     let mut writer = BufWriter::new(file);
@@ -102,7 +102,7 @@ pub fn write(
     position: &mut u64,
     options: Options,
     vfs: &impl VirtualFileSystem,
-    files: &[&Path],
+    files: &[&VirtualPath],
 ) -> Result<(), WriteError> {
     // TODO: Make this code position independent
     // assert!(
@@ -124,7 +124,7 @@ pub fn write(
 
     // Add the static metadata size for every file plus the length of the path
     for path in files {
-        base_offset += 0x2C + path.as_os_str().len(); // metadata size + path length
+        base_offset += 0x2C + path.as_str().len(); // metadata size + path length
     }
 
     // Start writing the header

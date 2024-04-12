@@ -4,10 +4,11 @@ use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Error};
 use bitvec::BitArr;
+use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem};
 use ubiart_toolkit::loc8::Language;
 pub use ubiart_toolkit::utils::LocaleId;
 
-use super::DirectoryTree;
+use super::{DirectoryTree, RelativeDirectoryTree};
 
 /// All language files that could be found in a mod directory
 pub const LANGUAGE_FILES: &[(Language, &str)] = &[
@@ -96,6 +97,45 @@ impl Localisation<'_> {
             if let Ok(file) = File::open(path) {
                 let new_translations: HashMap<LocaleId, Cow<'_, str>> =
                     serde_json::from_reader(file)?;
+                for (id, translation) in new_translations {
+                    translations
+                        .entry(id)
+                        .or_default()
+                        .add_translation(*lang, translation);
+                }
+            }
+        }
+        let reverse: HashMap<Translation<'_>, LocaleId> =
+            translations.iter().map(|(k, v)| (v.clone(), *k)).collect();
+
+        let free_id = translations
+            .keys()
+            .copied()
+            .max()
+            .unwrap_or(LocaleId::MIN)
+            .increment();
+
+        Ok(Self {
+            translations,
+            reverse,
+            free_id,
+        })
+    }
+
+    /// Load all existing translations in the mod from the vfs
+    ///
+    /// # Errors
+    /// Will error when parsing of a localisation files fails
+    pub fn load_vfs(
+        native_vfs: &NativeFs,
+        rel_tree: &RelativeDirectoryTree,
+    ) -> Result<Self, Error> {
+        let mut translations: HashMap<LocaleId, Translation<'_>> = HashMap::new();
+        for (lang, file) in LANGUAGE_FILES {
+            let path = rel_tree.translations().join(file);
+            if let Ok(file) = native_vfs.open(&path) {
+                let new_translations: HashMap<LocaleId, Cow<'_, str>> =
+                    serde_json::from_slice(&file)?;
                 for (id, translation) in new_translations {
                     translations
                         .entry(id)

@@ -25,7 +25,7 @@ pub fn build(
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let aliases: Aliases =
-        serde_json::from_reader(File::open(bs.dirs.config().join("aliases.json"))?)?;
+        serde_json::from_reader(File::open(bs.rel_tree.config().join("aliases.json"))?)?;
 
     let aliasesobjectives = &mut gameconfig.aliasesobjectives;
     aliasesobjectives.clear();

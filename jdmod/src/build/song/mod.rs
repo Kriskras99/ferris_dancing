@@ -1,12 +1,16 @@
 //! # Song building
 //! All the logic for building a song
-use std::{borrow::Cow, fs::File};
+use std::borrow::Cow;
 
-use anyhow::{Context, Error};
+use anyhow::Error;
+use dotstar_toolkit_utils::{
+    path,
+    vfs::{native::NativeFs, VirtualFileSystem, VirtualPath, VirtualPathBuf},
+};
 use ubiart_toolkit::{cooked, utils::Platform};
 
 use super::{BuildFiles, BuildState};
-use crate::types::song::{Song, SongDirectoryTree};
+use crate::types::song::{RelativeSongDirectoryTree, Song};
 
 mod audio;
 mod autodance;
@@ -21,32 +25,33 @@ pub struct SongExportState<'a> {
     /// Lowercase version of the map codename
     pub lower_map_name: &'a str,
     /// The map path in the game
-    pub map_path: &'a str,
+    pub map_path: &'a VirtualPath,
     /// Cache version of the map path
-    pub cache_map_path: &'a str,
+    pub cache_map_path: &'a VirtualPath,
     /// Song directory tree
-    pub dirs: SongDirectoryTree,
+    pub dirs: RelativeSongDirectoryTree,
     /// Export platform
     pub platform: Platform,
     /// Export Engine version
     pub engine_version: u32,
     /// The song metadata
     pub song: Song<'a>,
+    /// Vfs with mod directory as the root
+    pub native_vfs: &'a NativeFs,
 }
 
 /// Build the song at `dirs`
 pub fn build(
     bs: &BuildState<'_>,
     bf: &mut BuildFiles,
-    dirs: SongDirectoryTree,
+    dirs: RelativeSongDirectoryTree,
 ) -> Result<String, Error> {
-    let song_file = File::open(dirs.song().join("song.json"))
-        .with_context(|| format!("Missing song.json in {:?}", dirs.song()))?;
-    let song: Song = serde_json::from_reader(song_file)?;
+    let song_file = bs.native_vfs.open(&dirs.song().join("song.json"))?;
+    let song: Song = serde_json::from_slice(&song_file)?;
     let map_name = song.map_name.as_ref();
     let lower_map_name = map_name.to_lowercase();
-    let cache_map_path = format!("cache/itf_cooked/nx/world/maps/{lower_map_name}");
-    let map_path = format!("world/maps/{lower_map_name}");
+    let cache_map_path = path!("cache/itf_cooked/nx/world/maps/{lower_map_name}");
+    let map_path = path!("world/maps/{lower_map_name}");
     println!("Building song '{map_name}'...");
 
     let ses = SongExportState {
@@ -57,6 +62,7 @@ pub fn build(
         cache_map_path: &cache_map_path,
         map_path: &map_path,
         engine_version: bs.engine_version,
+        native_vfs: bs.native_vfs,
     };
 
     // Build the songdescription
@@ -107,21 +113,11 @@ pub fn build(
     let main_scene_vec = cooked::isc::create_vec_with_capacity_hint(&main_scene, 35_000)?;
 
     bf.generated_files.add_file(
-        [
-            &cache_map_path,
-            &format!("{lower_map_name}_main_scene.sgs.ckd"),
-        ]
-        .iter()
-        .collect(),
+        cache_map_path.join(format!("{lower_map_name}_main_scene.sgs.ckd")),
         scene_settings,
     )?;
     bf.generated_files.add_file(
-        [
-            &cache_map_path,
-            &format!("{lower_map_name}_main_scene.isc.ckd"),
-        ]
-        .iter()
-        .collect(),
+        cache_map_path.join(format!("{lower_map_name}_main_scene.isc.ckd")),
         main_scene_vec,
     )?;
 
@@ -177,7 +173,7 @@ fn graph_scene(
     let graph_scene_vec = cooked::isc::create_vec_with_capacity_hint(&root, 791)?;
 
     bf.generated_files.add_file(
-        format!("{cache_map_path}/{lower_map_name}_graph.isc.ckd").into(),
+        cache_map_path.join(format!("{lower_map_name}_graph.isc.ckd")),
         graph_scene_vec,
     )?;
 

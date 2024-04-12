@@ -3,18 +3,15 @@
 use std::{
     collections::HashMap,
     io::{ErrorKind, Result},
-    path::{Path, PathBuf},
 };
 
-use path_clean::PathClean;
-
-use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs};
 
 /// A completely in-memory filesystem, storing files as [`Vec`]s.
 #[derive(Debug, Clone, Default)]
 pub struct VecFs {
     /// Maps paths to the files
-    files: HashMap<PathBuf, Vec<u8>>,
+    files: HashMap<VirtualPathBuf, Vec<u8>>,
 }
 
 impl VecFs {
@@ -39,7 +36,7 @@ impl VecFs {
     /// # Errors
     /// Will return an error if the file already exists
     #[tracing::instrument(skip(self, content))]
-    pub fn add_file(&mut self, path: PathBuf, mut content: Vec<u8>) -> std::io::Result<()> {
+    pub fn add_file(&mut self, path: VirtualPathBuf, mut content: Vec<u8>) -> std::io::Result<()> {
         let clean_path = path.clean();
         if self.files.contains_key(&clean_path) {
             return Err(std::io::ErrorKind::AlreadyExists.into());
@@ -70,9 +67,9 @@ impl VecFs {
 }
 
 impl IntoIterator for VecFs {
-    type Item = (PathBuf, Vec<u8>);
+    type Item = (VirtualPathBuf, Vec<u8>);
 
-    type IntoIter = std::collections::hash_map::IntoIter<PathBuf, Vec<u8>>;
+    type IntoIter = std::collections::hash_map::IntoIter<VirtualPathBuf, Vec<u8>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.files.into_iter()
@@ -80,7 +77,7 @@ impl IntoIterator for VecFs {
 }
 
 impl VirtualFileSystem for VecFs {
-    fn open<'fs>(&'fs self, path: &Path) -> Result<VirtualFile<'fs>> {
+    fn open<'fs>(&'fs self, path: &VirtualPath) -> Result<VirtualFile<'fs>> {
         let path = path.clean();
         if let Some(file) = self.files.get(&path) {
             Ok(VirtualFile::Slice(file.as_slice()))
@@ -89,7 +86,7 @@ impl VirtualFileSystem for VecFs {
         }
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
         let path = path.clean();
         if let Some(file) = self.files.get(&path) {
             Ok(VirtualMetadata {
@@ -101,11 +98,11 @@ impl VirtualFileSystem for VecFs {
         }
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
         let path = path.clean();
-        if path == Path::new(".") {
+        if path == VirtualPath::new(".") {
             Ok(WalkFs {
-                paths: self.files.keys().map(PathBuf::as_path).collect(),
+                paths: self.files.keys().map(VirtualPathBuf::as_path).collect(),
             })
         } else {
             Ok(WalkFs {
@@ -113,13 +110,13 @@ impl VirtualFileSystem for VecFs {
                     .files
                     .keys()
                     .filter(|p| p.starts_with(&path))
-                    .map(PathBuf::as_path)
+                    .map(VirtualPathBuf::as_path)
                     .collect(),
             })
         }
     }
 
-    fn exists(&self, path: &Path) -> bool {
+    fn exists(&self, path: &VirtualPath) -> bool {
         let path = path.clean();
         self.files.contains_key(&path)
     }

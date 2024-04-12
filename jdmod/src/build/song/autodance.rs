@@ -1,8 +1,9 @@
 //! # Autodance Building
 //! Build the autodance and preview audio file
-use std::{borrow::Cow, fs::File, path::PathBuf};
+use std::borrow::Cow;
 
 use anyhow::Error;
+use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
 
 use super::SongExportState;
@@ -13,14 +14,16 @@ pub fn build(
     ses: &SongExportState<'_>,
     bf: &mut BuildFiles,
 ) -> Result<cooked::isc::WrappedScene<'static>, Error> {
-    let map_path = ses.map_path;
-    let cache_map_path = ses.cache_map_path;
+    let map_path = &ses.map_path;
+    let cache_map_path = &ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let autodance_cache_dir = format!("{cache_map_path}/autodance");
-    let autodance_dir = format!("{map_path}/autodance");
+    let autodance_cache_dir = cache_map_path.join("autodance");
+    let autodance_dir = map_path.join("autodance");
 
-    let autodance: Autodance =
-        serde_json::from_reader(File::open(ses.dirs.song().join("autodance.json"))?)?;
+    let autodance_file = ses
+        .native_vfs
+        .open(&ses.dirs.song().join("autodance.json"))?;
+    let autodance: Autodance = serde_json::from_slice(&autodance_file)?;
 
     // autodance actor
     let autodance_actor_vec = autodance_actor(ses)?;
@@ -33,23 +36,23 @@ pub fn build(
     let autodance_scene_vec = cooked::isc::create_vec_with_capacity_hint(&autodance_scene, 900)?;
 
     bf.generated_files.add_file(
-        format!("{autodance_cache_dir}/{lower_map_name}_autodance.act.ckd").into(),
+        autodance_cache_dir.join(format!("{lower_map_name}_autodance.act.ckd")),
         autodance_actor_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{autodance_cache_dir}/{lower_map_name}_autodance.tpl.ckd").into(),
+        autodance_cache_dir.join(format!("{lower_map_name}_autodance.tpl.ckd")),
         autodance_template_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{autodance_cache_dir}/{lower_map_name}_autodance.isc.ckd").into(),
+        autodance_cache_dir.join(format!("{lower_map_name}_autodance.isc.ckd")),
         autodance_scene_vec,
     )?;
 
     // preview audio file
     let from = ses.dirs.audio().join("autodance.ogg");
-    let to = PathBuf::from(format!("{autodance_dir}/{lower_map_name}.ogg"));
+    let to = autodance_dir.join(format!("{lower_map_name}.ogg"));
     if bf.static_files.add_file(from, to).is_err() {
         println!("Warning! Missing autodance.ogg for {lower_map_name}!");
     }

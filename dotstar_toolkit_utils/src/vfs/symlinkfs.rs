@@ -3,12 +3,9 @@
 use std::{
     collections::{hash_map::Entry, HashMap},
     io::{Error, ErrorKind, Result},
-    path::{Path, PathBuf},
 };
 
-use path_clean::PathClean;
-
-use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, WalkFs};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs};
 
 // TODO: Add type alias for the PathBufs
 /// A filesystem that maps paths to a backing filesystem
@@ -16,7 +13,7 @@ pub struct SymlinkFs<'fs> {
     /// The backing filesystem
     backing_fs: &'fs dyn VirtualFileSystem,
     /// Mapping of new_paths to paths on the backing filesystem
-    mapping: HashMap<PathBuf, PathBuf>,
+    mapping: HashMap<VirtualPathBuf, VirtualPathBuf>,
 }
 
 impl SymlinkFs<'_> {
@@ -26,7 +23,7 @@ impl SymlinkFs<'_> {
     /// Will error if `new_path` already exists and does not point to `orig_path`
     /// Will error if `orig_path` does not exist
     #[tracing::instrument(skip(self))]
-    pub fn add_file(&mut self, orig_path: PathBuf, new_path: PathBuf) -> Result<()> {
+    pub fn add_file(&mut self, orig_path: VirtualPathBuf, new_path: VirtualPathBuf) -> Result<()> {
         let clean_new_path = new_path.clean();
         if !self.backing_fs.exists(&orig_path) {
             return Err(Error::new(
@@ -81,9 +78,9 @@ impl SymlinkFs<'_> {
 }
 
 impl IntoIterator for SymlinkFs<'_> {
-    type Item = (PathBuf, PathBuf);
+    type Item = (VirtualPathBuf, VirtualPathBuf);
 
-    type IntoIter = std::collections::hash_map::IntoIter<PathBuf, PathBuf>;
+    type IntoIter = std::collections::hash_map::IntoIter<VirtualPathBuf, VirtualPathBuf>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.mapping.into_iter()
@@ -109,7 +106,7 @@ impl<'fs> SymlinkFs<'fs> {
 }
 
 impl VirtualFileSystem for SymlinkFs<'_> {
-    fn open<'fs>(&'fs self, path: &Path) -> std::io::Result<VirtualFile<'fs>> {
+    fn open<'fs>(&'fs self, path: &VirtualPath) -> std::io::Result<VirtualFile<'fs>> {
         let actual_path = self
             .mapping
             .get(path)
@@ -117,7 +114,7 @@ impl VirtualFileSystem for SymlinkFs<'_> {
         self.backing_fs.open(actual_path)
     }
 
-    fn metadata(&self, path: &Path) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
         let actual_path = self
             .mapping
             .get(path)
@@ -125,10 +122,10 @@ impl VirtualFileSystem for SymlinkFs<'_> {
         self.backing_fs.metadata(actual_path)
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &Path) -> std::io::Result<WalkFs<'rf>> {
-        if path == Path::new(".") {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
+        if path == VirtualPath::new(".") {
             Ok(WalkFs {
-                paths: self.mapping.keys().map(PathBuf::as_path).collect(),
+                paths: self.mapping.keys().map(VirtualPathBuf::as_path).collect(),
             })
         } else {
             Ok(WalkFs {
@@ -136,13 +133,13 @@ impl VirtualFileSystem for SymlinkFs<'_> {
                     .mapping
                     .keys()
                     .filter(|p| p.starts_with(path))
-                    .map(PathBuf::as_path)
+                    .map(VirtualPathBuf::as_path)
                     .collect(),
             })
         }
     }
 
-    fn exists(&self, path: &Path) -> bool {
+    fn exists(&self, path: &VirtualPath) -> bool {
         self.mapping.contains_key(path)
     }
 }

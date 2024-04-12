@@ -22,7 +22,7 @@ pub fn build(
     gacha_items: Vec<GachaItem>,
 ) -> Result<(), Error> {
     let gacha_config: GachaConfig =
-        serde_json::from_reader(File::open(bs.dirs.config().join("gacha.json"))?)?;
+        serde_json::from_reader(File::open(bs.rel_tree.config().join("gacha.json"))?)?;
 
     gameconfig.gachaconfig.force_high_rarity_reward_count =
         gacha_config.force_high_rarity_reward_count;

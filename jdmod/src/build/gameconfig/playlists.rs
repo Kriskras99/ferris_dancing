@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap, fs::File, path::Path};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test_eq;
+use dotstar_toolkit_utils::{testing::test_eq, vfs::VirtualFileSystem};
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
@@ -23,7 +23,7 @@ pub fn build(
     gameconfig: &GameManagerConfig22<'_>,
 ) -> Result<(), Error> {
     let saved_playlists: HashMap<Cow<'_, str>, Playlist> =
-        serde_json::from_reader(File::open(bs.dirs.playlists().join("playlists.json"))?)?;
+        serde_json::from_reader(File::open(bs.rel_tree.playlists().join("playlists.json"))?)?;
 
     let mut playlists = HashMap::with_capacity(saved_playlists.len());
     let mut requests = Vec::new();
@@ -46,7 +46,8 @@ pub fn build(
         let tga = format!("{file_stem}.tga");
         let cover_actor_vec = cover_actor(&tga)?;
 
-        let cooked_cover = encode_texture(&bs.dirs.playlists().join(cover.as_ref()))?;
+        let cooked_cover =
+            encode_texture(bs.native_vfs, &bs.rel_tree.playlists().join(cover.as_ref()))?;
         let cooked_cover_vec = cooked::png::create_vec(&cooked_cover)?;
         bf.generated_files.add_file(
             cook_path(offline_playlist.cover_path.as_ref(), bs.platform)?.into(),

@@ -1,9 +1,9 @@
 //! # Timeline Building
 //! Builds the karaoke and dance timelines, and pictos
-use std::{borrow::Cow, fs::File, path::PathBuf};
+use std::{borrow::Cow, fs::File};
 
 use anyhow::Error;
-use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
 use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
 
 use super::SongExportState;
@@ -54,14 +54,14 @@ pub fn build(
 ) -> Result<cooked::isc::WrappedScene<'static>, Error> {
     let cache_map_path = ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let timeline_cache_dir = format!("{cache_map_path}/timeline");
+    let timeline_cache_dir = cache_map_path.join("timeline");
 
     // tml scene
     let tml_scene = tml_scene(ses);
     let tml_scene_vec = cooked::isc::create_vec_with_capacity_hint(&tml_scene, 1300)?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml.isc.ckd").into(),
+        timeline_cache_dir.join(format!("{lower_map_name}_tml.isc.ckd")),
         tml_scene_vec,
     )?;
 
@@ -80,7 +80,7 @@ pub fn build(
 fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
     let cache_map_path = ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let timeline_cache_dir = format!("{cache_map_path}/timeline");
+    let timeline_cache_dir = cache_map_path.join("timeline");
 
     let timeline: Timeline =
         serde_json::from_reader(File::open(ses.dirs.song().join("dance_timeline.json"))?)?;
@@ -106,8 +106,8 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                 // Classifier path does not include platform specifier
                 let to = MotionClip::fix_classifier_path(&new_clip.classifier_path, ses.platform)?;
 
-                if from.exists() {
-                    bf.static_files.add_file(from, PathBuf::from(to))?;
+                if ses.native_vfs.exists(&from) {
+                    bf.static_files.add_file(from, VirtualPathBuf::from(to))?;
                 } else {
                     println!(
                         "Warning! Missing {} for {lower_map_name}!",
@@ -124,8 +124,8 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                 // A picto will be used multiple times, so only create it once
                 if !bf.generated_files.exists(to.as_ref()) {
                     let from = ses.dirs.pictos().join(orig_clip.picto_filename.as_ref());
-                    if from.exists() {
-                        let encoded = encode_texture(&from)?;
+                    if ses.native_vfs.exists(&from) {
+                        let encoded = encode_texture(ses.native_vfs, &from)?;
                         let encoded_vec = cooked::png::create_vec(&encoded)?;
 
                         bf.generated_files.add_file(to.into(), encoded_vec)?;
@@ -163,17 +163,17 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
     let dance_dtape_vec = cooked::json::create_vec(&template)?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.act.ckd").into(),
+        timeline_cache_dir.join(format!("{lower_map_name}_tml_dance.act.ckd")),
         dance_act_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.tpl.ckd").into(),
+        timeline_cache_dir.join(format!("{lower_map_name}_tml_dance.tpl.ckd")),
         dance_tpl_vec,
     )?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_dance.dtape.ckd").into(),
+        timeline_cache_dir.join(format!("{lower_map_name}_tml_dance.dtape.ckd")),
         dance_dtape_vec,
     )?;
 
@@ -184,7 +184,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
 fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
     let cache_map_path = ses.cache_map_path;
     let lower_map_name = ses.lower_map_name;
-    let timeline_cache_dir = format!("{cache_map_path}/timeline");
+    let timeline_cache_dir = cache_map_path.join("timeline");
 
     let timeline: Timeline =
         serde_json::from_reader(File::open(ses.dirs.song().join("karaoke_timeline.json"))?)?;
@@ -220,15 +220,15 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
     let ktape_vec = cooked::json::create_vec(&template)?;
 
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.act.ckd").into(),
+        timeline_cache_dir.join(format!("{lower_map_name}_tml_karaoke.act.ckd")),
         tml_actor_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.tpl.ckd").into(),
+        timeline_cache_dir.join(format!("{lower_map_name}_tml_karaoke.tpl.ckd")),
         tml_template_vec,
     )?;
     bf.generated_files.add_file(
-        format!("{timeline_cache_dir}/{lower_map_name}_tml_karaoke.ktape.ckd").into(),
+        timeline_cache_dir.join(format!("{lower_map_name}_tml_karaoke.ktape.ckd")),
         ktape_vec,
     )?;
     Ok(())
@@ -265,9 +265,11 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         relativez: 0.000_001,
                         userfriendly: Cow::Owned(format!("{map_name}_tml_dance")),
                         pos2d: (-1.157_74, 0.006_158),
-                        lua: Cow::Owned(format!(
-                            "{map_path}/timeline/{lower_map_name}_tml_dance.tpl"
-                        )),
+                        lua: Cow::Owned(
+                            map_path
+                                .join(format!("timeline/{lower_map_name}_tml_dance.tpl"))
+                                .to_string(),
+                        ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
                     },
@@ -277,9 +279,11 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         relativez: 0.000_001,
                         userfriendly: Cow::Owned(format!("{map_name}_tml_karaoke")),
                         pos2d: (-1.157_74, 0.006_158),
-                        lua: Cow::Owned(format!(
-                            "{map_path}/timeline/{lower_map_name}_tml_karaoke.tpl"
-                        )),
+                        lua: Cow::Owned(
+                            map_path
+                                .join(format!("timeline/{lower_map_name}_tml_karaoke.tpl"))
+                                .to_string(),
+                        ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
                     },
@@ -302,7 +306,7 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
     let k_or_d = k_or_d.to_str();
     let actor = cooked::act::Actor {
         tpl: SplitPath::new(
-            Cow::Owned(format!("{map_path}/timeline/")),
+            Cow::Owned(map_path.join("timeline/").to_string()),
             Cow::Owned(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
         )?,
         unk1: 0,
@@ -329,7 +333,11 @@ fn tml_template(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Erro
             entries: vec![json_types::tpl::TapeEntry {
                 class: Some(json_types::tpl::TapeEntry::CLASS),
                 label: Cow::Owned(format!("tml_{label}")),
-                path: Cow::Owned(format!("{map_path}/timeline/{lower_map_name}_tml_{k_or_d}")),
+                path: Cow::Owned(
+                    map_path
+                        .join(format!("timeline/{lower_map_name}_tml_{k_or_d}"))
+                        .to_string(),
+                ),
             }],
         }]
     };

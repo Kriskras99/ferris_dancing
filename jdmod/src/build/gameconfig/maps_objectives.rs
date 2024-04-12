@@ -9,8 +9,9 @@ use crate::build::BuildState;
 
 /// Build the maps objective
 pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Result<(), Error> {
-    let maps_objectives: MapsObjectives =
-        serde_json::from_reader(File::open(bs.dirs.config().join("maps_objectives.json"))?)?;
+    let maps_objectives: MapsObjectives = serde_json::from_reader(File::open(
+        bs.rel_tree.config().join("maps_objectives.json"),
+    )?)?;
 
     gameconfig.mapsobjectives = maps_objectives;
 

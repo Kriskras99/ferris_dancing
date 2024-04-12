@@ -7,7 +7,7 @@ use clap::Args;
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
     testing::test,
-    vfs::{native::NativeFs, VirtualFileSystem},
+    vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
 };
 use ubiart_toolkit::{
     alias8::Alias8,
@@ -82,7 +82,7 @@ pub fn import(
                 .parent()
                 .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
         )?;
-        let sfat_vfs = SfatFilesystem::new(&native_vfs, &PathBuf::from("secure_fat.gf"))?;
+        let sfat_vfs = SfatFilesystem::new(&native_vfs, &VirtualPathBuf::from("secure_fat.gf"))?;
 
         // TODO: Check engine version and warn user they're missing an update
 
