@@ -7,7 +7,7 @@ use clap::Args;
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
     testing::test,
-    vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
+    vfs::{native::NativeFs, VirtualFileSystem, VirtualPath, VirtualPathBuf},
 };
 use ubiart_toolkit::{
     alias8::Alias8,
@@ -146,7 +146,7 @@ pub fn import_vfs(
     let locale_id_map = localisation::import(vfs, &dirs)?;
 
     // Load alias8, which contains the locations of important files
-    let alias8_file = vfs.open(String::from("enginedata/common.alias8").as_ref())?;
+    let alias8_file = vfs.open(VirtualPath::new("enginedata/common.alias8"))?;
     let aliases = Alias8::deserialize(&alias8_file)?;
 
     // Collect common required items in a convenient place
@@ -172,43 +172,43 @@ pub fn import_vfs(
         let songdb_scene = match ugi.game {
             Game::JustDance2017 => {
                 let parsed_json =
-                    cooked::json::parse_v17(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v17(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
             Game::JustDance2018 => {
                 let parsed_json =
-                    cooked::json::parse_v18(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v18(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
             Game::JustDance2019 => {
                 let parsed_json =
-                    cooked::json::parse_v19(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v19(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
             Game::JustDance2020 => {
                 let parsed_json =
-                    cooked::json::parse_v20(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v20(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
             Game::JustDanceChina => {
                 let parsed_json =
-                    cooked::json::parse_v20c(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v20c(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
             Game::JustDance2021 => {
                 let parsed_json =
-                    cooked::json::parse_v21(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v21(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
             Game::JustDance2022 => {
                 let parsed_json =
-                    cooked::json::parse_v22(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v22(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
             _ => {
                 println!("Unknown game, trying JustDance2022");
                 let parsed_json =
-                    cooked::json::parse_v22(&gameconfig_file, true)?.game_manager_config()?;
+                    cooked::json::parse_v22(&gameconfig_file, true)?.into_game_manager_config()?;
                 parsed_json.songdb_scene.into_owned()
             }
         };

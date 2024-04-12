@@ -48,7 +48,7 @@ pub fn import(is: &ImportState<'_>) -> Result<(), Error> {
 fn import_v22(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v22(&gameconfig_file, is.lax)?;
-    let gameconfig = parsed_json.game_manager_config()?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse objectives
     objectives::import_v20v22(is, &gameconfig.config_files_path.objectives)?;
@@ -101,7 +101,7 @@ fn import_v22(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 fn import_v21(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v21(&gameconfig_file, is.lax)?;
-    let gameconfig = parsed_json.game_manager_config()?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse objectives
     objectives::import_v20v22(is, &gameconfig.config_files_path.objectives)?;
@@ -154,7 +154,7 @@ fn import_v21(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 fn import_v20(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v20(&gameconfig_file, is.lax)?;
-    let gameconfig = parsed_json.game_manager_config()?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse objectives
     objectives::import_v20v22(is, &gameconfig.config_files_path.objectives)?;
@@ -207,7 +207,7 @@ fn import_v20(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 fn import_v20c(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v20c(&gameconfig_file, is.lax)?;
-    let gameconfig = parsed_json.game_manager_config()?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse objectives
     objectives::import_v20v22(is, &gameconfig.config_files_path.objectives)?;
@@ -260,7 +260,7 @@ fn import_v20c(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error>
 fn import_v19(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v19(&gameconfig_file, is.lax)?;
-    let gameconfig = parsed_json.game_manager_config()?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse scheduled quests
     scheduled_quests::import_v18v19(is, gameconfig.scheduled_quests)?;
@@ -290,7 +290,7 @@ fn import_v19(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 fn import_v18(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v18(&gameconfig_file, is.lax)?;
-    let gameconfig = parsed_json.game_manager_config()?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse scheduled quests
     scheduled_quests::import_v18v19(is, gameconfig.scheduled_quests)?;
@@ -311,7 +311,7 @@ fn import_v18(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 fn import_v17(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v17(&gameconfig_file, is.lax)?;
-    let gameconfig = parsed_json.game_manager_config()?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse the avatars
     avatars::import(is, &gameconfig.avatardb_scene, None)?;

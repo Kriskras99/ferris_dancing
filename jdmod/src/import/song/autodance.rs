@@ -14,9 +14,9 @@ pub fn import(sis: &SongImportState<'_>, autodance_path: &str) -> Result<(), Err
     let autodance_file = sis
         .vfs
         .open(cook_path(autodance_path, sis.ugi.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&autodance_file, sis.lax)?.actor()?;
+    let mut actor = cooked::json::parse_v22(&autodance_file, sis.lax)?.into_actor()?;
     test_eq(&actor.components.len(), &1).context("More than one component in actor!")?;
-    let autodance = actor.components.swap_remove(0).autodance_component()?;
+    let autodance = actor.components.swap_remove(0).into_autodance_component()?;
 
     let data = &autodance.autodance_data;
     let audiofile_rel_path = "autodance.ogg";

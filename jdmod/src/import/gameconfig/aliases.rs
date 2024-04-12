@@ -29,7 +29,7 @@ pub fn import_v20v22(
         .vfs
         .open(cook_path(alias_db_path, is.ugi.platform)?.as_ref())?;
     let template = cooked::json::parse_v22(&local_aliases, is.lax)?;
-    let local_aliases = template.local_aliases()?;
+    let local_aliases = template.into_local_aliases()?;
 
     let mut aliases = load_aliases(
         is,
@@ -68,7 +68,7 @@ pub fn import_v19(is: &ImportState<'_>, alias_db_path: &str) -> Result<(), Error
         .vfs
         .open(cook_path(alias_db_path, is.ugi.platform)?.as_ref())?;
     let template = cooked::json::parse_v19(&local_aliases, is.lax)?;
-    let local_aliases = template.local_aliases()?;
+    let local_aliases = template.into_local_aliases()?;
 
     let mut aliases = load_aliases(
         is,

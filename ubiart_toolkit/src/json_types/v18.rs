@@ -245,7 +245,7 @@ pub enum Template18<'a> {
 
 impl<'a> Template18<'a> {
     /// Convert this template to a `GameManagerConfig18`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig18<'a>, ParserError> {
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig18<'a>, ParserError> {
         if let Template18::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {

@@ -265,7 +265,7 @@ pub enum Template19<'a> {
 
 impl<'a> Template19<'a> {
     /// Convert this template to a `Actor19`.
-    pub fn actor(self) -> Result<Actor19<'a>, ParserError> {
+    pub fn into_actor(self) -> Result<Actor19<'a>, ParserError> {
         if let Template19::Actor(actor) = self {
             Ok(actor)
         } else {
@@ -276,7 +276,7 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `AvatarDescription22`.
-    pub fn avatar_description(self) -> Result<AvatarDescription1819<'a>, ParserError> {
+    pub fn into_avatar_description(self) -> Result<AvatarDescription1819<'a>, ParserError> {
         if let Template19::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {
@@ -287,7 +287,7 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `GameManagerConfig19`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig19<'a>, ParserError> {
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig19<'a>, ParserError> {
         if let Template19::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
@@ -298,7 +298,7 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    pub fn playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
+    pub fn into_playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
         if let Template19::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {
@@ -309,7 +309,7 @@ impl<'a> Template19<'a> {
     }
 
     /// Convert this template to a `LocalAliases1719`.
-    pub fn local_aliases(self) -> Result<LocalAliases19<'a>, ParserError> {
+    pub fn into_local_aliases(self) -> Result<LocalAliases19<'a>, ParserError> {
         if let Template19::LocalAliases(local_aliases) = self {
             Ok(local_aliases)
         } else {

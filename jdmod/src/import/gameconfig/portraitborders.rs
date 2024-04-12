@@ -21,7 +21,7 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
         .vfs
         .open(cook_path(portraitborders_path, is.ugi.platform)?.as_ref())?;
     let template = cooked::json::parse_v22(&new_portraitborders, is.lax)?;
-    let portrait_borders_database = template.portrait_borders_database()?;
+    let portrait_borders_database = template.into_portrait_borders_database()?;
 
     // Load existing avatars in the mod
     let pb_config_path = is.dirs.portraitborders().join("portraitborders.json");

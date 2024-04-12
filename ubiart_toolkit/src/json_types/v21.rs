@@ -337,7 +337,7 @@ pub enum Template21<'a> {
 
 impl<'a> Template21<'a> {
     /// Convert this template to a `GameManagerConfig21`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig21<'a>, ParserError> {
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig21<'a>, ParserError> {
         if let Template21::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
@@ -348,7 +348,7 @@ impl<'a> Template21<'a> {
     }
 
     /// Convert this template to a `ObjectivesDatabase`.
-    pub fn objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
+    pub fn into_objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
         if let Template21::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
         } else {
@@ -359,7 +359,7 @@ impl<'a> Template21<'a> {
     }
 
     /// Convert this template to a `ScheduledQuestDatabase`.
-    pub fn scheduled_quests_database(
+    pub fn into_scheduled_quests_database(
         &'a self,
     ) -> Result<&'a ScheduledQuestDatabase<'a>, ParserError> {
         if let Template21::ScheduledQuestDatabase(sqst_db) = self {
@@ -372,7 +372,7 @@ impl<'a> Template21<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    pub fn playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
+    pub fn into_playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
         if let Template21::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {

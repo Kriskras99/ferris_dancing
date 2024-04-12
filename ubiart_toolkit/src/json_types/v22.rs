@@ -331,7 +331,7 @@ pub enum Template22<'a> {
 
 impl<'a> Template22<'a> {
     /// Convert this template to a `GameManagerConfig22`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig22<'a>, ParserError> {
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig22<'a>, ParserError> {
         if let Template22::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
@@ -342,7 +342,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `ObjectivesDatabase`.
-    pub fn objectives_database(self) -> Result<ObjectivesDatabase<'a>, ParserError> {
+    pub fn into_objectives_database(self) -> Result<ObjectivesDatabase<'a>, ParserError> {
         if let Template22::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
         } else {
@@ -353,7 +353,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `ScheduledQuestDatabase`.
-    pub fn scheduled_quests_database(self) -> Result<ScheduledQuestDatabase<'a>, ParserError> {
+    pub fn into_scheduled_quests_database(self) -> Result<ScheduledQuestDatabase<'a>, ParserError> {
         if let Template22::ScheduledQuestDatabase(sqst_db) = self {
             Ok(sqst_db)
         } else {
@@ -364,7 +364,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    pub fn playlists_database(self) -> Result<PlaylistDatabase<'a>, ParserError> {
+    pub fn into_playlists_database(self) -> Result<PlaylistDatabase<'a>, ParserError> {
         if let Template22::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {
@@ -375,7 +375,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `LocalAliases`.
-    pub fn local_aliases(self) -> Result<LocalAliases<'a>, ParserError> {
+    pub fn into_local_aliases(self) -> Result<LocalAliases<'a>, ParserError> {
         if let Template22::LocalAliases(local_aliases) = self {
             Ok(local_aliases)
         } else {
@@ -386,7 +386,9 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `PortraitBordersDatabase`.
-    pub fn portrait_borders_database(self) -> Result<PortraitBordersDatabase<'a>, ParserError> {
+    pub fn into_portrait_borders_database(
+        self,
+    ) -> Result<PortraitBordersDatabase<'a>, ParserError> {
         if let Template22::PortraitBordersDatabase(portrait_borders_database) = self {
             Ok(portrait_borders_database)
         } else {
@@ -397,7 +399,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `Actor22`.
-    pub fn actor(self) -> Result<Actor22<'a>, ParserError> {
+    pub fn into_actor(self) -> Result<Actor22<'a>, ParserError> {
         if let Template22::Actor(actor) = self {
             Ok(actor)
         } else {
@@ -408,7 +410,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `AvatarDescription22`.
-    pub fn avatar_description(self) -> Result<AvatarDescription2022<'a>, ParserError> {
+    pub fn into_avatar_description(self) -> Result<AvatarDescription2022<'a>, ParserError> {
         if let Template22::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {
@@ -419,7 +421,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `SongDescription`.
-    pub fn song_description(self) -> Result<SongDescription<'a>, ParserError> {
+    pub fn into_song_description(self) -> Result<SongDescription<'a>, ParserError> {
         if let Template22::SongDescription(song_description) = self {
             Ok(song_description)
         } else {
@@ -430,7 +432,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `AutodanceComponent`.
-    pub fn autodance_component(self) -> Result<AutodanceComponent<'a>, ParserError> {
+    pub fn into_autodance_component(self) -> Result<AutodanceComponent<'a>, ParserError> {
         if let Template22::AutodanceComponent(autodance_component) = self {
             Ok(autodance_component)
         } else {
@@ -441,7 +443,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `MasterTape`.
-    pub fn master_tape(self) -> Result<MasterTape<'a>, ParserError> {
+    pub fn into_master_tape(self) -> Result<MasterTape<'a>, ParserError> {
         if let Template22::MasterTape(master_tape) = self {
             Ok(master_tape)
         } else {
@@ -452,7 +454,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `MusicTrackComponent`.
-    pub fn tape_case_component(self) -> Result<MasterTape<'a>, ParserError> {
+    pub fn into_tape_case_component(self) -> Result<MasterTape<'a>, ParserError> {
         if let Template22::TapeCase(tape_case_component) = self {
             Ok(tape_case_component)
         } else {
@@ -463,7 +465,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `CarouselRules`.
-    pub fn carousel_rules(self) -> Result<CarouselRules<'a>, ParserError> {
+    pub fn into_carousel_rules(self) -> Result<CarouselRules<'a>, ParserError> {
         if let Template22::CarouselRules(carousel_rules) = self {
             Ok(carousel_rules)
         } else {
@@ -474,7 +476,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `Tape`.
-    pub fn tape(self) -> Result<Tape<'a>, ParserError> {
+    pub fn into_tape(self) -> Result<Tape<'a>, ParserError> {
         if let Template22::Tape(tape) = self {
             Ok(tape)
         } else {
@@ -485,7 +487,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `SoundComponent`.
-    pub fn sound_component(&'a self) -> Result<&'a SoundComponent<'a>, ParserError> {
+    pub fn into_sound_component(&'a self) -> Result<&'a SoundComponent<'a>, ParserError> {
         if let Template22::SoundComponent(sound_component) = self {
             Ok(sound_component)
         } else {
@@ -496,7 +498,7 @@ impl<'a> Template22<'a> {
     }
 
     /// Convert this template to a `MusicTrackComponent`.
-    pub fn musictrack_component(self) -> Result<MusicTrackComponent<'a>, ParserError> {
+    pub fn into_musictrack_component(self) -> Result<MusicTrackComponent<'a>, ParserError> {
         if let Template22::MusicTrackComponent(musictrack_component) = self {
             Ok(musictrack_component)
         } else {

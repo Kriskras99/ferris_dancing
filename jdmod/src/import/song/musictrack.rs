@@ -15,12 +15,12 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         .vfs
         .open(cook_path(musictrack_path, sis.ugi.platform)?.as_ref())?;
     let template = cooked::json::parse_v22(&mainsequence_file, sis.lax)?;
-    let mut actor = template.actor()?;
+    let mut actor = template.into_actor()?;
     test_eq(&actor.components.len(), &1).context("More than one component in muisctrack")?;
     let track_data = actor
         .components
         .swap_remove(0)
-        .musictrack_component()?
+        .into_musictrack_component()?
         .track_data;
 
     let path = track_data.path.as_ref();

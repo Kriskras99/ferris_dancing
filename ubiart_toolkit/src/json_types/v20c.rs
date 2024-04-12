@@ -329,7 +329,7 @@ pub enum Template20C<'a> {
 
 impl<'a> Template20C<'a> {
     /// Convert this template to a `GameManagerConfig20C`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig20C<'a>, ParserError> {
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig20C<'a>, ParserError> {
         if let Template20C::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
@@ -340,7 +340,7 @@ impl<'a> Template20C<'a> {
     }
 
     /// Convert this template to a `ObjectivesDatabase`.
-    pub fn objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
+    pub fn into_objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
         if let Template20C::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
         } else {
@@ -351,7 +351,7 @@ impl<'a> Template20C<'a> {
     }
 
     /// Convert this template to a `ScheduledQuestDatabase`.
-    pub fn scheduled_quests_database(
+    pub fn into_scheduled_quests_database(
         &'a self,
     ) -> Result<&'a ScheduledQuestDatabase<'a>, ParserError> {
         if let Template20C::ScheduledQuestDatabase(sqst_db) = self {
@@ -364,7 +364,7 @@ impl<'a> Template20C<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    pub fn playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
+    pub fn into_playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
         if let Template20C::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {

@@ -218,7 +218,7 @@ pub enum Template17<'a> {
 
 impl<'a> Template17<'a> {
     /// Convert this template to a `Actor17`.
-    pub fn actor(self) -> Result<Actor17<'a>, ParserError> {
+    pub fn into_actor(self) -> Result<Actor17<'a>, ParserError> {
         if let Template17::Actor(actor) = self {
             Ok(actor)
         } else {
@@ -229,7 +229,7 @@ impl<'a> Template17<'a> {
     }
 
     /// Convert this template to a `AvatarDescription17`.
-    pub fn avatar_description(self) -> Result<AvatarDescription17<'a>, ParserError> {
+    pub fn into_avatar_description(self) -> Result<AvatarDescription17<'a>, ParserError> {
         if let Template17::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {
@@ -240,7 +240,7 @@ impl<'a> Template17<'a> {
     }
 
     /// Convert this template to a `GameManagerConfig17`.
-    pub fn game_manager_config(self) -> Result<GameManagerConfig17<'a>, ParserError> {
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig17<'a>, ParserError> {
         if let Template17::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {

@@ -150,9 +150,12 @@ fn parse_actor_v20v22<'a>(
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v22(file, is.lax)?;
-    let mut actor_template = template.actor()?;
+    let mut actor_template = template.into_actor()?;
     test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
-    let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+    let avatar_desc = actor_template
+        .components
+        .remove(1)
+        .into_avatar_description()?;
     Ok(avatar_desc.into())
 }
 
@@ -162,9 +165,12 @@ fn parse_actor_v18v19<'a>(
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v19(file, is.lax)?;
-    let mut actor_template = template.actor()?;
+    let mut actor_template = template.into_actor()?;
     test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
-    let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+    let avatar_desc = actor_template
+        .components
+        .remove(1)
+        .into_avatar_description()?;
     Ok(avatar_desc.into())
 }
 
@@ -174,9 +180,12 @@ fn parse_actor_v17<'a>(
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v17(file, is.lax)?;
-    let mut actor_template = template.actor()?;
+    let mut actor_template = template.into_actor()?;
     test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
-    let avatar_desc = actor_template.components.remove(1).avatar_description()?;
+    let avatar_desc = actor_template
+        .components
+        .remove(1)
+        .into_avatar_description()?;
     Ok(avatar_desc.into())
 }
 

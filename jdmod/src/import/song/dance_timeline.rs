@@ -17,9 +17,9 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
     let dance_timeline_file = sis
         .vfs
         .open(cook_path(dance_timeline_path, sis.ugi.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&dance_timeline_file, sis.lax)?.actor()?;
+    let mut actor = cooked::json::parse_v22(&dance_timeline_file, sis.lax)?.into_actor()?;
     test_eq(&actor.components.len(), &1).context("More than one component in actor!")?;
-    let tape_case = actor.components.swap_remove(0).tape_case_component()?;
+    let tape_case = actor.components.swap_remove(0).into_tape_case_component()?;
     let tape_case_path = tape_case
         .tapes_rack
         .first()
@@ -31,7 +31,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
 
     let tape_file = sis.vfs.open(dance_tml_path.as_ref())?;
     let template = cooked::json::parse_v22(&tape_file, sis.lax)?;
-    let tape = template.tape()?;
+    let tape = template.into_tape()?;
 
     let mut timeline = Timeline {
         timeline: BTreeSet::new(),

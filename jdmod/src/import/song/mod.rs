@@ -42,8 +42,8 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let songdesc_file = is
         .vfs
         .open(cook_path(songdesc_path, is.ugi.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&songdesc_file, is.lax)?.actor()?;
-    let songdesc = actor.components.swap_remove(0).song_description()?;
+    let mut actor = cooked::json::parse_v22(&songdesc_file, is.lax)?.into_actor()?;
+    let songdesc = actor.components.swap_remove(0).into_song_description()?;
 
     let map_name = &songdesc.map_name;
     let lower_map_name = map_name.to_lowercase();

@@ -24,7 +24,7 @@ pub fn import_v20v22(is: &ImportState<'_>, objectives_path: &str) -> Result<(), 
         .vfs
         .open(cook_path(objectives_path, is.ugi.platform)?.as_ref())?;
     let parsed_json = cooked::json::parse_v22(&objectives_file, is.lax)?;
-    let objective_database = parsed_json.objectives_database()?;
+    let objective_database = parsed_json.into_objectives_database()?;
     for (name, descriptor) in &objective_database.objective_descs {
         objectives.add_objective_with_name(
             Objective::from_descriptor(descriptor, &is.locale_id_map)?,

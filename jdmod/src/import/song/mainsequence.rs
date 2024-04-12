@@ -17,9 +17,9 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
     let mainsequence_file = sis
         .vfs
         .open(cook_path(mainsequence_path, sis.ugi.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&mainsequence_file, sis.lax)?.actor()?;
+    let mut actor = cooked::json::parse_v22(&mainsequence_file, sis.lax)?.into_actor()?;
     test_eq(&actor.components.len(), &1).context("More than one component in actor!")?;
-    let tape_case = actor.components.swap_remove(0).master_tape()?;
+    let tape_case = actor.components.swap_remove(0).into_master_tape()?;
 
     let mainsequence_tml_path_option = tape_case
         .tapes_rack
@@ -38,7 +38,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
 
     match (sis.vfs.open(mainsequence_tml_path.as_ref()), sis.lax) {
         (Ok(tape_file), _) => {
-            let tape = cooked::json::parse_v22(&tape_file, sis.lax)?.tape()?;
+            let tape = cooked::json::parse_v22(&tape_file, sis.lax)?.into_tape()?;
 
             let mut timeline = Timeline {
                 timeline: BTreeSet::new(),
@@ -70,7 +70,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                         let ref_file = sis
                             .vfs
                             .open(cook_path(&reference.path, sis.ugi.platform)?.as_ref())?;
-                        let ref_tape = cooked::json::parse_v22(&ref_file, sis.lax)?.tape()?;
+                        let ref_tape = cooked::json::parse_v22(&ref_file, sis.lax)?.into_tape()?;
 
                         for clip in ref_tape.clips {
                             match clip {
@@ -136,11 +136,11 @@ pub fn parse_soundset(
 ) -> Result<Clip<'static>, Error> {
     let sound_set_path = cook_path(&soundset.sound_set_path, sis.ugi.platform)?;
     let template_file = sis.vfs.open(sound_set_path.as_ref())?;
-    let template = cooked::json::parse_v22(&template_file, sis.lax)?.actor()?;
+    let template = cooked::json::parse_v22(&template_file, sis.lax)?.into_actor()?;
     let descriptor = template
         .components
         .first()
-        .and_then(|c| c.sound_component().ok())
+        .and_then(|c| c.into_sound_component().ok())
         .and_then(|c| c.sound_list.first())
         .ok_or_else(|| anyhow!("Template is missing proper SoundDescriptor"))?;
 
