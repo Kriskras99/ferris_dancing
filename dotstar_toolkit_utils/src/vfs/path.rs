@@ -82,6 +82,7 @@ use std::{
     str::{FromStr, Utf8Error},
     sync::Arc,
 };
+use std::fmt::{Display, Formatter};
 
 use tracing::instrument;
 
@@ -192,9 +193,9 @@ enum State {
 /// # Examples
 ///
 /// ```rust
-/// use ubiart_toolkit::vfs::{Component, Path};
+/// use dotstar_toolkit_utils::vfs::{Component, VirtualPath};
 ///
-/// let path = Path::new("/tmp/foo/bar.txt");
+/// let path = VirtualPath::new("/tmp/foo/bar.txt");
 /// let components = path.components().collect::<Vec<_>>();
 /// assert_eq!(&components, &[
 ///     Component::RootDir,
@@ -229,7 +230,7 @@ impl<'a> Component<'a> {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let path = VirtualPath::new("./tmp/foo/bar.txt");
     /// let components: Vec<_> = path.components().map(|comp| comp.as_str()).collect();
@@ -268,7 +269,7 @@ impl AsRef<VirtualPath> for Component<'_> {
 /// # Examples
 ///
 /// ```
-/// use ubiart_toolkit::vfs::VirtualPath;
+/// use dotstar_toolkit_utils::vfs::VirtualPath;
 ///
 /// let path = VirtualPath::new("/tmp/foo/bar.txt");
 ///
@@ -468,7 +469,7 @@ impl<'a> Iter<'a> {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let mut iter = VirtualPath::new("/tmp/foo/bar.txt").iter();
     /// iter.next();
@@ -670,7 +671,7 @@ fn compare_components(mut left: Components<'_>, mut right: Components<'_>) -> cm
 /// # Examples
 ///
 /// ```
-/// use ubiart_toolkit::vfs::VirtualPath;
+/// use dotstar_toolkit_utils::vfs::VirtualPath;
 ///
 /// let path = VirtualPath::new("/foo/bar");
 ///
@@ -721,7 +722,7 @@ impl FusedIterator for Ancestors<'_> {}
 /// components:
 ///
 /// ```
-/// use ubiart_toolkit::vfs::VirtualPathBuf;
+/// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 ///
 /// let mut path = VirtualPathBuf::new();
 ///
@@ -736,7 +737,7 @@ impl FusedIterator for Ancestors<'_> {}
 /// to do this when you know all of the components ahead of time:
 ///
 /// ```
-/// use ubiart_toolkit::vfs::VirtualPathBuf;
+/// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 ///
 /// let path: VirtualPathBuf = [r"/", "windows", "system32.dll"].iter().collect();
 /// ```
@@ -745,13 +746,12 @@ impl FusedIterator for Ancestors<'_> {}
 /// `From::from`:
 ///
 /// ```
-/// use ubiart_toolkit::vfs::VirtualPathBuf;
+/// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 ///
 /// let path = VirtualPathBuf::from(r"/windows/system32.dll");
 /// ```
 ///
 /// Which method works best depends on what kind of situation you're in.
-#[derive(Debug)]
 #[repr(transparent)]
 pub struct VirtualPathBuf {
     inner: String,
@@ -773,7 +773,7 @@ impl VirtualPathBuf {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPathBuf;
+    /// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
     ///
     /// let path = VirtualPathBuf::new();
     /// ```
@@ -791,9 +791,9 @@ impl VirtualPathBuf {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPathBuf;
+    /// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
     ///
-    /// let mut path = PathBuf::with_capacity(10);
+    /// let mut path = VirtualPathBuf::with_capacity(10);
     /// let capacity = path.capacity();
     ///
     /// // This push is done without reallocating
@@ -816,7 +816,7 @@ impl VirtualPathBuf {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// let p = VirtualPathBuf::from("/test");
     /// assert_eq!(VirtualPath::new("/test"), p.as_path());
@@ -839,17 +839,17 @@ impl VirtualPathBuf {
     /// Pushing a relative path extends the existing path:
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPathBuf;
+    /// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
     ///
     /// let mut path = VirtualPathBuf::from("/tmp");
     /// path.push("file.bk");
-    /// assert_eq!(path, PathBuf::from("/tmp/file.bk"));
+    /// assert_eq!(path, VirtualPathBuf::from("/tmp/file.bk"));
     /// ```
     ///
     /// Pushing an absolute path replaces the existing path:
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPathBuf;
+    /// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
     ///
     /// let mut path = VirtualPathBuf::from("/tmp");
     /// path.push("/etc");
@@ -890,7 +890,7 @@ impl VirtualPathBuf {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// let mut p = VirtualPathBuf::from("/spirited/away.rs");
     ///
@@ -924,7 +924,7 @@ impl VirtualPathBuf {
     /// # Examples
     ///
     /// ```
-    /// use use ubiart_toolkit::vfs::VirtualPathBuf;
+    /// use dotstar_toolkit_utils::vfs::VirtualPathBuf;
     ///
     /// let mut buf = VirtualPathBuf::from("/");
     /// assert!(buf.file_name() == None);
@@ -980,7 +980,7 @@ impl VirtualPathBuf {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// let mut p = VirtualPathBuf::from("/feel/the");
     ///
@@ -1102,9 +1102,15 @@ impl VirtualPathBuf {
     }
 }
 
-impl ToString for VirtualPathBuf {
-    fn to_string(&self) -> String {
-        self.inner.clone()
+impl Display for VirtualPathBuf {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.inner)
+    }
+}
+
+impl std::fmt::Debug for VirtualPathBuf {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.inner)
     }
 }
 
@@ -1174,13 +1180,33 @@ impl Clone for Box<VirtualPath> {
     }
 }
 
-impl<T: ?Sized + AsRef<str>> From<&T> for VirtualPathBuf {
+impl From<&str> for VirtualPathBuf {
     /// Converts a borrowed [`str`] to a [`VirtualPathBuf`].
     ///
     /// Allocates a [`VirtualPathBuf`] and copies the data into it.
     #[inline]
-    fn from(s: &T) -> VirtualPathBuf {
-        VirtualPathBuf::from(s.as_ref().to_string())
+    fn from(s: &str) -> VirtualPathBuf {
+        Self { inner: s.to_string() }
+    }
+}
+
+impl From<Cow<'_, str>> for VirtualPathBuf {
+    /// Converts a [`Cow<str>`] to a [`VirtualPathBuf`].
+    ///
+    /// Reuses the allocation if the [`Cow`] is owned.
+    #[inline]
+    fn from(s: Cow<'_, str>) -> VirtualPathBuf {
+        Self { inner: s.into_owned() }
+    }
+}
+
+impl From<&String> for VirtualPathBuf {
+    /// Converts a borrowed [`String`] to a [`VirtualPathBuf`].
+    ///
+    /// Allocates a [`VirtualPathBuf`] and copies the data into it.
+    #[inline]
+    fn from(s: &String) -> VirtualPathBuf {
+        Self { inner: s.clone() }
     }
 }
 
@@ -1402,7 +1428,7 @@ impl Ord for VirtualPathBuf {
 /// # Examples
 ///
 /// ```
-/// use ubiart_toolkit::vfs::VirtualPath;
+/// use dotstar_toolkit_utils::vfs::VirtualPath;
 ///
 /// let path = VirtualPath::new("./foo/bar.txt");
 ///
@@ -1415,7 +1441,6 @@ impl Ord for VirtualPathBuf {
 /// let extension = path.extension();
 /// assert_eq!(extension, Some("txt"));
 /// ```
-#[derive(Debug)]
 #[repr(transparent)]
 pub struct VirtualPath {
     inner: str,
@@ -1448,7 +1473,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// VirtualPath::new("foo.txt");
     /// ```
@@ -1456,7 +1481,7 @@ impl VirtualPath {
     /// You can create `VirtualPath`s from `String`s, or even other `VirtualPath`s:
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let string = String::from("foo.txt");
     /// let from_string = VirtualPath::new(&string);
@@ -1478,7 +1503,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let string = VirtualPath::new("foo.txt").as_str();
     /// assert_eq!(string, "foo.txt");
@@ -1494,7 +1519,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// let path_buf = VirtualPath::new("foo.txt").to_path_buf();
     /// assert_eq!(path_buf, VirtualPathBuf::from("foo.txt"));
@@ -1512,7 +1537,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// assert!(VirtualPath::new("foo.txt").is_relative());
     /// ```
@@ -1531,7 +1556,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// assert!(VirtualPath::new("/etc/passwd").has_root());
     /// ```
@@ -1551,7 +1576,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let path = VirtualPath::new("/foo/bar");
     /// let parent = path.parent().unwrap();
@@ -1592,7 +1617,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let mut ancestors = VirtualPath::new("/foo/bar").ancestors();
     /// assert_eq!(ancestors.next(), Some(VirtualPath::new("/foo/bar")));
@@ -1624,22 +1649,25 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// assert_eq!(Some("bin"), VirtualPath::new("/usr/bin/").file_name());
     /// assert_eq!(Some("foo.txt"), VirtualPath::new("tmp/foo.txt").file_name());
     /// assert_eq!(Some("foo.txt"), VirtualPath::new("foo.txt/.").file_name());
     /// assert_eq!(Some("foo.txt"), VirtualPath::new("foo.txt/.//").file_name());
-    /// assert_eq!(None, Path::new("foo.txt/..").file_name());
-    /// assert_eq!(None, Path::new("/").file_name());
+    /// assert_eq!(None, VirtualPath::new("foo.txt/..").file_name());
+    /// assert_eq!(None, VirtualPath::new("/").file_name());
     /// ```
     #[doc(alias = "basename")]
     #[must_use]
+    #[instrument]
     pub fn file_name(&self) -> Option<&str> {
-        self.components().next_back().and_then(|p| match p {
+        let filename = self.components().next_back().and_then(|p| match p {
             Component::Normal(p) => Some(p),
             _ => None,
-        })
+        });
+        tracing::trace!("Filename: {filename:?}");
+        filename
     }
 
     /// Returns a path that, when joined onto `base`, yields `self`.
@@ -1654,7 +1682,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// let path = VirtualPath::new("/test/haha/foo.txt");
     ///
@@ -1690,7 +1718,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let path = VirtualPath::new("/etc/passwd");
     ///
@@ -1721,7 +1749,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// let path = VirtualPath::new("/etc/resolv.conf");
     ///
@@ -1755,7 +1783,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// assert_eq!(Some("foo"), VirtualPath::new("foo.rs").file_stem());
     /// assert_eq!(Some("foo.tar"), VirtualPath::new("foo.tar.gz").file_stem());
@@ -1790,7 +1818,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::VirtualPath;
+    /// use dotstar_toolkit_utils::vfs::VirtualPath;
     ///
     /// assert_eq!("rs", VirtualPath::new("foo.rs").extension().unwrap());
     /// assert_eq!("gz", VirtualPath::new("foo.tar.gz").extension().unwrap());
@@ -1811,7 +1839,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// assert_eq!(VirtualPath::new("/etc").join("passwd"), VirtualPathBuf::from("/etc/passwd"));
     /// assert_eq!(VirtualPath::new("/etc").join("/bin/sh"), VirtualPathBuf::from("/bin/sh"));
@@ -1834,7 +1862,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// let path = VirtualPath::new("/tmp/foo.png");
     /// assert_eq!(path.with_file_name("bar"), VirtualPathBuf::from("/tmp/bar"));
@@ -1861,7 +1889,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use use ubiart_toolkit::vfs::{VirtualPath, VirtualPathBuf};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
     ///
     /// let path = VirtualPath::new("foo.rs");
     /// assert_eq!(path.with_extension("txt"), VirtualPathBuf::from("foo.txt"));
@@ -1920,7 +1948,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{VirtualPath, Component};
+    /// use dotstar_toolkit_utils::vfs::{VirtualPath, Component};
     ///
     /// let mut components = VirtualPath::new("/tmp/foo.txt").components();
     ///
@@ -1951,7 +1979,7 @@ impl VirtualPath {
     /// # Examples
     ///
     /// ```
-    /// use ubiart_toolkit::vfs::{path, VirtualPath};
+    /// use dotstar_toolkit_utils::vfs::{path, VirtualPath};
     ///
     /// let mut it = VirtualPath::new("/tmp/foo.txt").iter();
     /// assert_eq!(it.next(), Some(&path::SEPARATOR));
@@ -1993,15 +2021,18 @@ impl VirtualPath {
     /// # Example
     ///
     /// ```rust
-    /// # use std::path::PathBuf;
-    /// # use clean_path::{clean, Clean};
-    /// assert_eq!(Pat::new("foo/../../bar").clean(), PathBuf::from("../bar"));
+    /// # use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
+    /// assert_eq!(VirtualPath::new("foo/../../bar").clean(), VirtualPathBuf::from("../bar"));
     /// ```
     #[must_use]
     pub fn clean(&self) -> VirtualPathBuf {
         let mut out = Vec::new();
+        let mut components = self.components().peekable();
+        if components.peek() != Some(&Component::RootDir) {
+            out.push(Component::RootDir)
+        }
 
-        for comp in self.components() {
+        for comp in components {
             match comp {
                 Component::CurDir => (),
                 Component::ParentDir => match out.last() {
@@ -2015,11 +2046,19 @@ impl VirtualPath {
             }
         }
 
-        if out.is_empty() {
-            VirtualPathBuf::from(".")
-        } else {
-            out.iter().collect()
-        }
+        out.iter().collect()
+    }
+}
+
+impl Display for VirtualPath {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.inner)
+    }
+}
+
+impl std::fmt::Debug for VirtualPath {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.inner)
     }
 }
 
@@ -2093,6 +2132,13 @@ impl AsRef<VirtualPath> for VirtualPath {
     }
 }
 
+impl AsRef<str> for VirtualPath {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        &self.inner
+    }
+}
+
 impl AsRef<VirtualPath> for str {
     #[inline]
     fn as_ref(&self) -> &VirtualPath {
@@ -2121,12 +2167,29 @@ impl AsRef<std::ffi::OsStr> for VirtualPath {
     }
 }
 
-impl<'a> TryFrom<&'a Path> for &'a VirtualPath {
+impl TryFrom<&Path> for VirtualPathBuf {
     type Error = Utf8Error;
 
-    fn try_from(value: &'a Path) -> Result<Self, Self::Error> {
-        let string: &str = value.as_os_str().try_into()?;
-        Ok(VirtualPath::new(string))
+    fn try_from(value: &Path) -> Result<Self, Self::Error> {
+        #[cfg(target_os = "windows")]
+        {
+            let mut new_path = Self::with_capacity(value.as_os_str().len());
+            for component in value.components() {
+                match component {
+                    std::path::Component::Prefix(_) => panic!("Replace with error! Prefix found"),
+                    std::path::Component::RootDir => new_path.push("/"),
+                    std::path::Component::CurDir => new_path.push("."),
+                    std::path::Component::ParentDir => new_path.push(".."),
+                    std::path::Component::Normal(comp) => new_path.push(TryInto::<&str>::try_into(comp)?)
+                }
+            }
+            Ok(new_path)
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let string: &str = value.as_os_str().try_into()?;
+            Ok(Self::from(string))
+        }
     }
 }
 

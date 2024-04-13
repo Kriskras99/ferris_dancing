@@ -72,17 +72,26 @@ enum FileConflictStrategy {
 }
 
 fn main() -> ExitCode {
+    // take_hook() returns the default hook in case when a custom one is not set
+    let orig_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        // invoke the default handler and exit the process
+        orig_hook(panic_info);
+        std::process::exit(1);
+    }));
+
     let cli = Cli::parse();
 
     let fmt_layer = tracing_subscriber::fmt::layer()
         // Display source code file paths
-        .with_file(true)
+        .with_file(false)
         // Display source code line numbers
-        .with_line_number(true)
+        .with_line_number(false)
         // Display the thread ID an event was recorded on
-        .with_thread_ids(false)
+        .with_thread_ids(true)
         // Don't display the event's target (module path)
-        .with_target(true);
+        .with_target(true)
+        .without_time();
     tracing_subscriber::registry()
         .with(fmt_layer)
         .with(tracing_subscriber::EnvFilter::from_default_env())

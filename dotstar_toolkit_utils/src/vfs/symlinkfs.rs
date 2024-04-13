@@ -107,14 +107,16 @@ impl<'fs> SymlinkFs<'fs> {
 
 impl VirtualFileSystem for SymlinkFs<'_> {
     fn open<'fs>(&'fs self, path: &VirtualPath) -> std::io::Result<VirtualFile<'fs>> {
+        let path = path.clean();
         let actual_path = self
             .mapping
-            .get(path)
+            .get(&path)
             .ok_or_else(|| Error::from(ErrorKind::NotFound))?;
         self.backing_fs.open(actual_path)
     }
 
     fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
+        let path = &path.clean();
         let actual_path = self
             .mapping
             .get(path)
@@ -123,7 +125,8 @@ impl VirtualFileSystem for SymlinkFs<'_> {
     }
 
     fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
-        if path == VirtualPath::new(".") {
+        let path = path.clean();
+        if path == VirtualPath::new("/") {
             Ok(WalkFs {
                 paths: self.mapping.keys().map(VirtualPathBuf::as_path).collect(),
             })
@@ -132,7 +135,7 @@ impl VirtualFileSystem for SymlinkFs<'_> {
                 paths: self
                     .mapping
                     .keys()
-                    .filter(|p| p.starts_with(path))
+                    .filter(|p| p.starts_with(&path))
                     .map(VirtualPathBuf::as_path)
                     .collect(),
             })
@@ -140,6 +143,7 @@ impl VirtualFileSystem for SymlinkFs<'_> {
     }
 
     fn exists(&self, path: &VirtualPath) -> bool {
-        self.mapping.contains_key(path)
+        let path = path.clean();
+        self.mapping.contains_key(&path)
     }
 }

@@ -5,7 +5,6 @@ use std::{
     fs::{self, File},
     io::{self, ErrorKind},
     path::{Path, PathBuf},
-    str::Utf8Error,
     sync::{Arc, Mutex, OnceLock, Weak},
     time::SystemTime,
 };
@@ -13,7 +12,7 @@ use std::{
 use memmap2::Mmap;
 use tracing::instrument;
 
-use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs};
+use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs};
 
 /// The native filesystem on this device
 pub struct NativeFs {
@@ -22,7 +21,7 @@ pub struct NativeFs {
     /// Cache open files
     cache: Mutex<HashMap<PathBuf, Weak<Mmap>>>,
     /// Cache the file paths
-    list: OnceLock<Vec<PathBuf>>,
+    list: OnceLock<Vec<VirtualPathBuf>>,
 }
 
 impl NativeFs {
@@ -65,12 +64,14 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if it cannot read the error or files escape outside the root
-    fn recursive_file_list(path: &Path, list: &mut Vec<PathBuf>) -> std::io::Result<()> {
-        for entry in path.read_dir()?.flatten() {
+    fn recursive_file_list(root: &Path, current: &Path, list: &mut Vec<VirtualPathBuf>) -> std::io::Result<()> {
+        for entry in current.read_dir()?.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                Self::recursive_file_list(&path, list)?;
+                Self::recursive_file_list(root, &path, list)?;
             } else if path.is_file() {
+                let path = path.strip_prefix(root).map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
+                let path = VirtualPathBuf::try_from(path).map_err(|e| std::io::Error::new(ErrorKind::Other, e))?.clean();
                 list.push(path);
             }
         }
@@ -125,26 +126,21 @@ impl VirtualFileSystem for NativeFs {
     }
 
     fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
-        let path = self.canonicalize(path)?;
         let list = self.list.get_or_try_init::<_, io::Error>(|| {
             let mut list = Vec::new();
-            Self::recursive_file_list(&self.root, &mut list)?;
+            Self::recursive_file_list(&self.root, &self.root, &mut list)?;
             Ok(list)
         })?;
 
-        let paths = if path == Path::new(".") {
+        let paths = if path == "/" {
             list.iter()
-                .filter_map(|p| p.strip_prefix(&self.root).ok())
-                .map(TryFrom::try_from)
-                .collect::<Result<_, Utf8Error>>()
-                .map_err(|e| std::io::Error::new(ErrorKind::InvalidInput, e))?
+                .map(VirtualPathBuf::as_path)
+                .collect()
         } else {
             list.iter()
                 .filter(|p| p.starts_with(&path))
-                .filter_map(|p| p.strip_prefix(&self.root).ok())
-                .map(TryFrom::try_from)
-                .collect::<Result<_, Utf8Error>>()
-                .map_err(|e| std::io::Error::new(ErrorKind::InvalidInput, e))?
+                .map(VirtualPathBuf::as_path)
+                .collect()
         };
         Ok(WalkFs { paths })
     }

@@ -39,7 +39,7 @@ impl VecFs {
     pub fn add_file(&mut self, path: VirtualPathBuf, mut content: Vec<u8>) -> std::io::Result<()> {
         let clean_path = path.clean();
         if self.files.contains_key(&clean_path) {
-            return Err(std::io::ErrorKind::AlreadyExists.into());
+            return Err(std::io::Error::new(ErrorKind::AlreadyExists, format!("{clean_path} already exists!")));
         }
         content.shrink_to_fit();
 

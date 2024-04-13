@@ -7,6 +7,7 @@ use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
     vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs},
 };
+use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 
 use super::{BundleId, SecureFat};
 use crate::{
@@ -95,7 +96,12 @@ impl<'f> SfatFilesystem<'f> {
 
 impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     fn open<'f>(&'f self, path: &VirtualPath) -> std::io::Result<VirtualFile<'f>> {
-        let path = path.clean();
+        let mut path = path.clean();
+        if path.as_str().starts_with('/') {
+            let mut string = path.into_string();
+            string.remove(0);
+            path = VirtualPathBuf::from(string);
+        }
         let path_id = path_id(&path);
         if let Some(file) = self.patch.as_ref().and_then(|p| p.open(&path).ok()) {
             Ok(file)
@@ -120,7 +126,12 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     }
 
     fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
-        let path = path.clean();
+        let mut path = path.clean();
+        if path.as_str().starts_with('/') {
+            let mut string = path.into_string();
+            string.remove(0);
+            path = VirtualPathBuf::from(string);
+        }
         let path_id = path_id(&path);
         if let Some(metadata) = self.patch.as_ref().and_then(|p| p.metadata(&path).ok()) {
             Ok(metadata)
@@ -157,7 +168,12 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
     }
 
     fn exists(&self, path: &VirtualPath) -> bool {
-        let path = path.clean();
+        let mut path = path.clean();
+        if path.as_str().starts_with('/') {
+            let mut string = path.into_string();
+            string.remove(0);
+            path = VirtualPathBuf::from(string);
+        }
         let path_id = path_id(&path);
         Some(true) == self.patch.as_ref().map(|p| p.exists(&path))
             || Some(true)

@@ -55,7 +55,12 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
     )]
     #[instrument(skip(self))]
     fn open<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<VirtualFile<'rf>> {
-        let path = path.clean();
+        let mut path = path.clean();
+        if path.as_str().starts_with('/') {
+            let mut string = path.into_string();
+            string.remove(0);
+            path = VirtualPathBuf::from(string);
+        }
         tracing::trace!("cleaned: {path:?}");
         let path_id = path_id(&path);
         tracing::trace!("path id: {path_id:?}");
@@ -104,7 +109,12 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
     }
 
     fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
-        let path = path.clean();
+        let mut path = path.clean();
+        if path.as_str().starts_with('/') {
+            let mut string = path.into_string();
+            string.remove(0);
+            path = VirtualPathBuf::from(string);
+        }
         let path_id = path_id(&path);
         let file = self.bundle.get().files.get(&path_id);
         match file {
@@ -128,9 +138,10 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
                 .values()
                 .map(|f| &f.path)
                 .map(VirtualPathBuf::from)
+                .map(|p| p.clean())
                 .collect()
         });
-        if path == VirtualPath::new(".") {
+        if path == VirtualPath::new("/") {
             Ok(WalkFs::new(
                 list.iter().map(VirtualPathBuf::as_path).collect(),
             ))
@@ -145,7 +156,12 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
     }
 
     fn exists(&self, path: &VirtualPath) -> bool {
-        let path = path.clean();
+        let mut path = path.clean();
+        if path.as_str().starts_with('/') {
+            let mut string = path.into_string();
+            string.remove(0);
+            path = VirtualPathBuf::from(string);
+        }
         self.bundle.get().files.contains_key(&path_id(path))
     }
 }

@@ -112,6 +112,7 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
     paths.sort();
 
     let ncpus = usize::from(std::thread::available_parallelism()?);
+    // let ncpus: usize = 1;
 
     let (tx_name, rx_name) = crossbeam::channel::unbounded();
     let (tx_job, rx_job) = crossbeam::channel::unbounded();
