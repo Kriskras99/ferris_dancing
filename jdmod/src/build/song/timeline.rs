@@ -272,7 +272,7 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         lua: Cow::Owned(
                             map_path
                                 .join(format!("timeline/{lower_map_name}_tml_dance.tpl"))
-                                .to_string(),
+                                .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
@@ -286,7 +286,7 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         lua: Cow::Owned(
                             map_path
                                 .join(format!("timeline/{lower_map_name}_tml_karaoke.tpl"))
-                                .to_string(),
+                                .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
@@ -310,7 +310,7 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
     let k_or_d = k_or_d.to_str();
     let actor = cooked::act::Actor {
         tpl: SplitPath::new(
-            Cow::Owned(map_path.join("timeline/").to_string()),
+            Cow::Owned(map_path.join("timeline/").into_string()),
             Cow::Owned(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
         )?,
         unk1: 0,
@@ -340,7 +340,7 @@ fn tml_template(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Erro
                 path: Cow::Owned(
                     map_path
                         .join(format!("timeline/{lower_map_name}_tml_{k_or_d}"))
-                        .to_string(),
+                        .into_string(),
                 ),
             }],
         }]

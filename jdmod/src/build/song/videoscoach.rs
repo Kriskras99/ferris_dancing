@@ -95,11 +95,11 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         components: vec![cooked::act::Component::PleoComponent(
             cooked::act::PleoComponent {
                 video: SplitPath::new(
-                    Cow::Owned(map_path.join("videoscoach/").to_string()),
+                    Cow::Owned(map_path.join("videoscoach/").into_string()),
                     Cow::Owned(format!("{lower_map_name}.webm")),
                 )?,
                 dash_mpd: SplitPath::new(
-                    Cow::Owned(map_path.join("videoscoach/").to_string()),
+                    Cow::Owned(map_path.join("videoscoach/").into_string()),
                     Cow::Owned(format!("{lower_map_name}.mpd")),
                 )?,
                 channel_id: map_preview.then(|| ses.song.map_name.clone()),
@@ -141,8 +141,8 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                     pos2d: (0.0, -4.5),
                     lua: Cow::Borrowed("world/_common/videoscreen/video_player_main.tpl"),
                     components: vec![cooked::isc::WrappedComponent::Pleo(cooked::isc::WrappedPleoComponent{ pleo_component: cooked::isc::PleoComponent {
-                        video: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.webm")).to_string()),
-                        dash_mpd: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.mpd")).to_string()),
+                        video: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.webm")).into_string()),
+                        dash_mpd: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.mpd")).into_string()),
                         channel_id: Cow::Borrowed(""),
                     }})],
                     ..Default::default()
@@ -261,12 +261,12 @@ fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'
                                     video: Cow::Owned(
                                         map_path
                                             .join(format!("videoscoach/{lower_map_name}.webm"))
-                                            .to_string(),
+                                            .into_string(),
                                     ),
                                     dash_mpd: Cow::Owned(
                                         map_path
                                             .join(format!("videoscoach/{lower_map_name}.mpd"))
-                                            .to_string(),
+                                            .into_string(),
                                     ),
                                     channel_id: ses.song.map_name.clone(),
                                 },

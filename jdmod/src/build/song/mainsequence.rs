@@ -160,14 +160,14 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
             Clip::SoundSet(orig_clip) => {
                 let name = orig_clip.name.as_ref();
                 let filename =
-                    Cow::Owned(map_path.join(format!("audio/amb/{name}.wav")).to_string());
+                    Cow::Owned(map_path.join(format!("audio/amb/{name}.wav")).into_string());
                 let cooked_filename = cook_path(&filename, ses.platform)?;
 
                 // Add amb clip to copy list
                 let from = ses.dirs.audio().join(orig_clip.audio_filename.as_ref());
                 let to = VirtualPathBuf::from(cooked_filename);
                 let template_path =
-                    Cow::Owned(map_path.join(format!("audio/amb/{name}.tpl")).to_string());
+                    Cow::Owned(map_path.join(format!("audio/amb/{name}.tpl")).into_string());
 
                 // If the amb clip is already in the list, we skip building the template
                 if !bf.static_files.exists(&to) {

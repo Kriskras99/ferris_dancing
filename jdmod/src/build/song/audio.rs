@@ -104,7 +104,7 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         lua: Cow::Owned(
                             map_path
                                 .join(format!("audio/{lower_map_name}_musictrack.tpl"))
-                                .to_string(),
+                                .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::MusicTrack],
                         ..Default::default()
@@ -118,7 +118,7 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         lua: Cow::Owned(
                             map_path
                                 .join(format!("audio/{lower_map_name}_sequence.tpl"))
-                                .to_string(),
+                                .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
@@ -179,7 +179,7 @@ fn musictrack_template(ses: &SongExportState<'_>, extension: &str) -> Result<Vec
                     path: Cow::Owned(
                         map_path
                             .join(format!("audio/{lower_map_name}.{extension}"))
-                            .to_string(),
+                            .into_string(),
                     ),
                     url: Cow::Owned(format!("jmcs://jd-contents/{map_name}/{map_name}.ogg")),
                 },

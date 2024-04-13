@@ -19,7 +19,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
         Cow::Owned(
             map_path
                 .join(format!("menuart/textures/{lower_map_name}_cover_phone.jpg"))
-                .to_string(),
+                .into_string(),
         ),
     );
     for i in 1..=(u8::from(ses.song.number_of_coaches)) {
@@ -30,7 +30,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
                     .join(format!(
                         "menuart/textures/{lower_map_name}_coach_{i}_phone.png"
                     ))
-                    .to_string(),
+                    .into_string(),
             ),
         );
     }

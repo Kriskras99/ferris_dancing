@@ -44,7 +44,7 @@ impl NativeFs {
     /// # Errors
     /// Will error if the path is outside the root or if the path does not exist
     fn canonicalize(&self, path: &VirtualPath) -> std::io::Result<PathBuf> {
-        let mut clean = path.clean().to_string();
+        let mut clean = path.clean().into_string();
         if clean.starts_with('/') {
             clean.remove(0);
         }

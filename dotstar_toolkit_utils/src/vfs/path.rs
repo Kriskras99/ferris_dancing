@@ -72,15 +72,7 @@
 //! [`push`]: VirtualPathBuf::push
 
 use std::{
-    borrow::{Borrow, Cow},
-    cmp,
-    collections::TryReserveError,
-    iter::FusedIterator,
-    ops::{Deref, DerefMut},
-    path::Path,
-    rc::Rc,
-    str::{FromStr, Utf8Error},
-    sync::Arc,
+    borrow::{Borrow, Cow}, cmp, collections::TryReserveError, fmt::Display, iter::FusedIterator, ops::{Deref, DerefMut}, path::Path, rc::Rc, str::{FromStr, Utf8Error}, sync::Arc
 };
 use std::fmt::{Display, Formatter};
 
@@ -763,11 +755,6 @@ impl VirtualPathBuf {
         unsafe { self.inner.as_mut_vec() }
     }
 
-    #[must_use]
-    pub fn into_string(self) -> String {
-        self.inner
-    }
-
     /// Allocates an empty `VirtualPathBuf`.
     ///
     /// # Examples
@@ -1100,16 +1087,22 @@ impl VirtualPathBuf {
     pub fn shrink_to(&mut self, min_capacity: usize) {
         self.inner.shrink_to(min_capacity);
     }
+
+    /// Get the inner string
+    #[inline]
+    pub fn into_string(self) -> String {
+        self.inner
+    }
 }
 
 impl Display for VirtualPathBuf {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.inner)
     }
 }
 
 impl std::fmt::Debug for VirtualPathBuf {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.inner)
     }
 }
@@ -2058,6 +2051,12 @@ impl Display for VirtualPath {
 
 impl std::fmt::Debug for VirtualPath {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.inner)
+    }
+}
+
+impl Display for VirtualPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.inner)
     }
 }
