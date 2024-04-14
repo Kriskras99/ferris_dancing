@@ -115,7 +115,7 @@ pub fn write(
     // Calculate the size of the header, starting with the static size
     let mut base_offset = STATIC_HEADER_SIZE;
 
-    // On NX, JD2020-JD2022 have a 4 null bytes between the header and the content of the files
+    // On NX, JD2020-JD2022 have 4 null bytes between the header and the content of the files
     if options.game_platform.platform == utils::Platform::Nx
         && (options.game_platform.game == Game::JustDance2020
             || options.game_platform.game == Game::JustDance2021
@@ -165,10 +165,10 @@ pub fn write(
         // File content can be stored compressed.
         // Skip compression for small files, and already compressed files.
         let compressed = if size < 2048
-            || path.file_name().is_some_and(|s| s.ends_with("jpg"))
-            || path.file_name().is_some_and(|s| s.ends_with("webm"))
-            || path.file_name().is_some_and(|s| s.ends_with("ogg"))
-            || path.file_name().is_some_and(|s| s.ends_with("png"))
+            || path.extension() == Some("jpg")
+            || path.extension() == Some("webm")
+            || path.extension() == Some("ogg")
+            || path.extension() == Some("png")
         {
             tracing::trace!("Not compressing {path:?}");
             // Skip compression for already compressed files and small files

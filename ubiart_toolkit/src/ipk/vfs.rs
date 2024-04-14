@@ -13,7 +13,7 @@ use tracing::instrument;
 use yoke::Yoke;
 
 use super::Bundle;
-use crate::utils::{path_id, PathId};
+use crate::utils::PathId;
 
 pub struct IpkFilesystem<'fs> {
     bundle: Yoke<Bundle<'static>, VirtualFile<'fs>>,
@@ -54,7 +54,7 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
         reason = "Guard is needed in the entire match"
     )]
     #[instrument(skip(self))]
-    fn open<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<VirtualFile<'rf>> {
+    fn open(&self, path: &VirtualPath) -> std::io::Result<VirtualFile> {
         let mut path = path.clean();
         if path.as_str().starts_with('/') {
             let mut string = path.into_string();
@@ -62,7 +62,7 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
             path = VirtualPathBuf::from(string);
         }
         tracing::trace!("cleaned: {path:?}");
-        let path_id = path_id(&path);
+        let path_id = PathId::from(&path);
         tracing::trace!("path id: {path_id:?}");
         let file = self.bundle.get().files.get(&path_id).ok_or_else(|| {
             std::io::Error::new(
@@ -115,7 +115,7 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
             string.remove(0);
             path = VirtualPathBuf::from(string);
         }
-        let path_id = path_id(&path);
+        let path_id = PathId::from(&path);
         let file = self.bundle.get().files.get(&path_id);
         match file {
             Some(file) => Ok(VirtualMetadata {
@@ -162,6 +162,6 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
             string.remove(0);
             path = VirtualPathBuf::from(string);
         }
-        self.bundle.get().files.contains_key(&path_id(path))
+        self.bundle.get().files.contains_key(&PathId::from(path))
     }
 }

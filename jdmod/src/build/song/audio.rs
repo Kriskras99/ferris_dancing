@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{
-    testing::test_eq,
+    testing::test,
     vfs::{VirtualFileSystem, VirtualPathBuf},
 };
 use ubiart_toolkit::{cooked, json_types};
@@ -30,11 +30,8 @@ pub fn build(
         .ok_or_else(|| anyhow!("Invalid extension! {from:?}"))?;
     let (to, extension) = match extension {
         "ckd" => {
-            test_eq(
-                &from.file_name().is_some_and(|s| s.ends_with("wav.ckd")),
-                &true,
-            )
-            .with_context(|| format!("{from:?}"))?;
+            test(from.file_name().is_some_and(|s| s.ends_with("wav.ckd")))
+                .with_context(|| format!("{from:?}"))?;
             (
                 VirtualPathBuf::from(cook_path(
                     audio_dir.join(format!("{lower_map_name}.wav")).as_ref(),

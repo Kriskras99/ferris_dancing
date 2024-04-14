@@ -7,7 +7,7 @@ use std::{borrow::Cow, collections::HashMap, fs::File, io::Write, sync::OnceLock
 
 use anyhow::{anyhow, Context, Error};
 use dotstar_toolkit_utils::{
-    testing::test_eq,
+    testing::{test_eq, test_not},
     vfs::{VirtualFile, VirtualPath},
 };
 use ubiart_toolkit::{
@@ -74,7 +74,7 @@ fn save_images(
 
     // Save decooked image
     let image_path = mtg.files[0].to_string();
-    test_eq(&image_path.is_empty(), &false)?;
+    test_not(image_path.is_empty())?;
     let cooked_image_path = cook_path(&image_path, is.ugi.platform)?;
     let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?, is.ugi)
         .with_context(|| format!("Failed to decode {cooked_image_path}!"))?;

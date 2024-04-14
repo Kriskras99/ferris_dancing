@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
     },
-    testing::{test_eq, test_le, test_not},
+    testing::{test_eq, test_le, test_ne},
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
@@ -35,7 +35,7 @@ impl BinaryDeserialize<'_> for SecureFat {
 
             // Read how many bundles this path is in
             let bundle_count = usize::try_from(reader.read_at::<u32be>(position)?)?;
-            test_not(&bundle_count, &0).context("Bundle count is zero!")?;
+            test_ne(&bundle_count, &0).context("Bundle count is zero!")?;
 
             // Read the bundle ids
             let mut bundle_ids = Vec::with_capacity(bundle_count);

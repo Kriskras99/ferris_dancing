@@ -5,14 +5,13 @@ use std::{collections::HashMap, io::ErrorKind};
 
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
-    vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, WalkFs},
+    vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs},
 };
-use dotstar_toolkit_utils::vfs::VirtualPathBuf;
 
 use super::{BundleId, SecureFat};
 use crate::{
     ipk::vfs::IpkFilesystem,
-    utils::{path_id, UniqueGameId},
+    utils::{PathId, UniqueGameId},
 };
 
 pub struct SfatFilesystem<'f> {
@@ -102,7 +101,7 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
             string.remove(0);
             path = VirtualPathBuf::from(string);
         }
-        let path_id = path_id(&path);
+        let path_id = PathId::from(&path);
         if let Some(file) = self.patch.as_ref().and_then(|p| p.open(&path).ok()) {
             Ok(file)
         } else {
@@ -132,7 +131,7 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
             string.remove(0);
             path = VirtualPathBuf::from(string);
         }
-        let path_id = path_id(&path);
+        let path_id = PathId::from(&path);
         if let Some(metadata) = self.patch.as_ref().and_then(|p| p.metadata(&path).ok()) {
             Ok(metadata)
         } else {
@@ -174,7 +173,7 @@ impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
             string.remove(0);
             path = VirtualPathBuf::from(string);
         }
-        let path_id = path_id(&path);
+        let path_id = PathId::from(&path);
         Some(true) == self.patch.as_ref().map(|p| p.exists(&path))
             || Some(true)
                 == self.sfat.get_bundle_ids(&path_id).map(|bids| {

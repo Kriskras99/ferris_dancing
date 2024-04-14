@@ -1,5 +1,7 @@
 //! Contains the parser implementation
 
+#[cfg(not(feature = "fuzz"))]
+use dotstar_toolkit_utils::testing::test_not;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
@@ -85,7 +87,7 @@ pub fn parse<'de>(
     let tpl = reader.read_at::<SplitPath>(position)?;
     #[cfg(not(feature = "fuzz"))]
     {
-        test_eq(&tpl.is_empty(), &false)?;
+        test_not(tpl.is_empty())?;
     }
     let unk9 = reader.read_at::<u32be>(position)?.into();
     test_eq(&unk9, &0u32)?;

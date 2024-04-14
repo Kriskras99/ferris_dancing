@@ -155,12 +155,8 @@ pub fn bundle(
                         || path
                             .file_name()
                             .is_some_and(|s| s.ends_with("_cover_online.tga.ckd"))
-                        || path
-                            .file_name()
-                            .is_some_and(|s| s.ends_with("/songdesc.act.ckd"))
-                        || path
-                            .file_name()
-                            .is_some_and(|s| s.ends_with("/songdesc.tpl.ckd"))))
+                        || path.file_name() == Some("songdesc.act.ckd")
+                        || path.file_name() == Some("songdesc.tpl.ckd")))
             {
                 // Add the file to the main bundle
                 main_bundle_size += file_size;

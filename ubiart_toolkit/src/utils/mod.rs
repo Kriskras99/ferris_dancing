@@ -206,6 +206,7 @@ impl<'a> TryFrom<&'a str> for SplitPath<'a> {
             Some(pos) => value.split_at(pos + 1),
             None => ("", value),
         };
+        let path = path.strip_prefix('/').unwrap_or(path);
         Ok(SplitPath::new(
             Cow::Borrowed(path),
             Cow::Borrowed(filename),
@@ -218,14 +219,7 @@ impl<'a> TryFrom<&'a VirtualPath> for SplitPath<'a> {
 
     fn try_from(value: &'a VirtualPath) -> Result<Self, Self::Error> {
         let value = value.as_str();
-        let (path, filename) = match value.rfind('/') {
-            Some(pos) => value.split_at(pos + 1),
-            None => ("", value),
-        };
-        Ok(SplitPath::new(
-            Cow::Borrowed(path),
-            Cow::Borrowed(filename),
-        )?)
+        Self::try_from(value)
     }
 }
 
@@ -247,14 +241,29 @@ impl PathId {
 }
 
 impl From<&str> for PathId {
-    fn from(value: &str) -> Self {
+    fn from(mut value: &str) -> Self {
+        if value.starts_with('/') {
+            value = &value[1..];
+        }
         Self(string_id(value))
     }
 }
 
 impl From<&VirtualPath> for PathId {
     fn from(value: &VirtualPath) -> Self {
-        Self(string_id(value.as_str()))
+        Self::from(value.as_str())
+    }
+}
+
+impl From<&VirtualPathBuf> for PathId {
+    fn from(value: &VirtualPathBuf) -> Self {
+        Self::from(value.as_str())
+    }
+}
+
+impl From<VirtualPathBuf> for PathId {
+    fn from(value: VirtualPathBuf) -> Self {
+        Self::from(value.as_str())
     }
 }
 
@@ -294,10 +303,6 @@ impl BinarySerialize for PathId {
     ) -> Result<(), WriteError> {
         writer.write_at(position, &u32be::from(self.0))
     }
-}
-
-pub fn path_id<P: AsRef<str>>(path: P) -> PathId {
-    PathId::from(path.as_ref())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -664,13 +669,13 @@ mod tests {
     #[test]
     fn test_splitpath_starts_with() {
         let split_path = SplitPath::new(
-            Cow::Borrowed("/cache/itf_cooked/nx/"),
+            Cow::Borrowed("cache/itf_cooked/nx/"),
             Cow::Borrowed("atlascontainer.ckd"),
         )
         .unwrap();
-        assert!(split_path.starts_with("/cache"));
-        assert!(split_path.starts_with("/cache/itf_cooked/nx/"));
-        assert!(split_path.starts_with("/cache/itf_cooked/nx/atlas"));
-        assert!(split_path.starts_with("/cache/itf_cooked/nx/atlascontainer.ckd"));
+        assert!(split_path.starts_with("cache"));
+        assert!(split_path.starts_with("cache/itf_cooked/nx/"));
+        assert!(split_path.starts_with("cache/itf_cooked/nx/atlas"));
+        assert!(split_path.starts_with("cache/itf_cooked/nx/atlascontainer.ckd"));
     }
 }

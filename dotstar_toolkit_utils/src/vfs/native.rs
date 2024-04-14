@@ -64,14 +64,22 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if it cannot read the error or files escape outside the root
-    fn recursive_file_list(root: &Path, current: &Path, list: &mut Vec<VirtualPathBuf>) -> std::io::Result<()> {
+    fn recursive_file_list(
+        root: &Path,
+        current: &Path,
+        list: &mut Vec<VirtualPathBuf>,
+    ) -> std::io::Result<()> {
         for entry in current.read_dir()?.flatten() {
             let path = entry.path();
             if path.is_dir() {
                 Self::recursive_file_list(root, &path, list)?;
             } else if path.is_file() {
-                let path = path.strip_prefix(root).map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
-                let path = VirtualPathBuf::try_from(path).map_err(|e| std::io::Error::new(ErrorKind::Other, e))?.clean();
+                let path = path
+                    .strip_prefix(root)
+                    .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
+                let path = VirtualPathBuf::try_from(path)
+                    .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?
+                    .clean();
                 list.push(path);
             }
         }
@@ -133,12 +141,10 @@ impl VirtualFileSystem for NativeFs {
         })?;
 
         let paths = if path == "/" {
-            list.iter()
-                .map(VirtualPathBuf::as_path)
-                .collect()
+            list.iter().map(VirtualPathBuf::as_path).collect()
         } else {
             list.iter()
-                .filter(|p| p.starts_with(&path))
+                .filter(|p| p.starts_with(path))
                 .map(VirtualPathBuf::as_path)
                 .collect()
         };

@@ -263,12 +263,25 @@ impl TestError {
     }
 }
 
-/// Test if `one` == `two` returning a descriptive error if they're not the same.
+/// Test if `value` is true.
 ///
 /// # Errors
-/// Will return an error if the two inputs are not the same, with a description of the values.
+/// Will return an error if the input is not true.
 pub fn test(value: bool) -> TestResult {
     if value {
+        TestResult::Ok
+    } else {
+        TestResult::Err(TestError::not_equal(&false, &true))
+    }
+}
+
+/// Test if `value` is false.
+///
+/// # Errors
+/// Will return an error if the input is not false.
+#[allow(clippy::if_not_else, reason = "Much clearer this way")]
+pub fn test_not(value: bool) -> TestResult {
+    if !value {
         TestResult::Ok
     } else {
         TestResult::Err(TestError::not_equal(&false, &true))
@@ -280,18 +293,6 @@ pub fn test(value: bool) -> TestResult {
 /// # Errors
 /// Will return an error if the two inputs are not the same, with a description of the values.
 pub fn test_eq<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
-    if left == right {
-        TestResult::Ok
-    } else {
-        TestResult::Err(TestError::not_equal(left, right))
-    }
-}
-
-/// Test if `one` != `two` returning a descriptive error if they're not the same.
-///
-/// # Errors
-/// Will return an error if the two inputs are not the same, with a description of the values.
-pub fn test_ne<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
     if left == right {
         TestResult::Ok
     } else {
@@ -316,7 +317,7 @@ pub fn test_any<T: PartialEq + Debug>(left: &T, right: &[T]) -> TestResult {
 /// # Errors
 /// Will return an error if the two inputs are the same, with a description of the values.
 #[allow(clippy::if_not_else, reason = "Much clearer this way")]
-pub fn test_not<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
+pub fn test_ne<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
     if left != right {
         TestResult::Ok
     } else {

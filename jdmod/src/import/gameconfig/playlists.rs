@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Context, Error};
-use dotstar_toolkit_utils::testing::test_eq;
+use dotstar_toolkit_utils::testing::test_not;
 use ubiart_toolkit::cooked::{self, act::Component};
 
 use crate::{
@@ -46,7 +46,7 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
             .find(|t| matches!(t, Component::MaterialGraphicComponent(_)))
             .ok_or_else(|| anyhow!("No MaterialGraphicComponent in actor!"))?;
         let tga_path = template.material_graphic_component()?.files[0].to_string();
-        test_eq(&tga_path.is_empty(), &false)?;
+        test_not(tga_path.is_empty())?;
 
         // Open the cover and save it to the mod directory
         let cooked_tga_path = cook_path(&tga_path, is.ugi.platform)?;

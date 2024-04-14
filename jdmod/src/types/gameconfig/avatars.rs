@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::{test, test_any, test_not, TestResult};
+use dotstar_toolkit_utils::testing::{test, test_any, test_ne, TestResult};
 use serde::{Deserialize, Serialize};
 
 /// For serde to set a value to default to `false`
@@ -95,7 +95,7 @@ impl<'a> UnlockType<'a> {
     pub fn from_unlock_type(n: u8, quest: Option<&Cow<'a, str>>) -> Result<Self, Error> {
         TestResult::or(
             TestResult::and(test(quest.is_some()), test_any(&n, &[0, 21])),
-            TestResult::and(test(quest.is_none()), test_not(&n, &21)),
+            TestResult::and(test(quest.is_none()), test_ne(&n, &21)),
         )?;
         match n {
             0 => match quest {

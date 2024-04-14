@@ -29,7 +29,7 @@ use dotstar_toolkit_utils::{
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
         write::{BinarySerialize, WriteAt, WriteError},
     },
-    testing::{test_any, test_eq},
+    testing::{test_any, test_eq, test_not},
 };
 
 use crate::utils::SplitPath;
@@ -160,7 +160,7 @@ impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
             for alias in lazy_aliases {
                 let alias = alias?;
                 let exists = aliases.insert(alias.alias.clone(), alias).is_some();
-                test_eq(&exists, &false)?;
+                test_not(exists)?;
             }
             Alias8 { aliases }
         };
