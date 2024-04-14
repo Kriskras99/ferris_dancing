@@ -67,6 +67,7 @@ pub fn unlock(mod_path: &Path) -> Result<(), Error> {
     let mut avatars: HashMap<String, Avatar> = serde_json::from_reader(File::open(&avatars_path)?)?;
     for avatar in avatars.values_mut() {
         avatar.unlock_type = UnlockType::Unlocked;
+        avatar.status = 3;
     }
     serde_json::to_writer_pretty(File::create(avatars_path)?, &avatars)?;
 
