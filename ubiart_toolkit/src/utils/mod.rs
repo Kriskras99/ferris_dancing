@@ -312,6 +312,44 @@ pub struct UniqueGameId {
     pub id: u32,
 }
 
+impl UniqueGameId {
+    pub const NX2017: Self = Self {
+        game: Game::JustDance2017,
+        platform: Platform::Nx,
+        id: 0x32F3_512A,
+    };
+    pub const NX2018: Self = Self {
+        game: Game::JustDance2018,
+        platform: Platform::Nx,
+        id: 0x032E_71C5,
+    };
+    pub const NX2019: Self = Self {
+        game: Game::JustDance2019,
+        platform: Platform::Nx,
+        id: 0x57A7_053C,
+    };
+    pub const NX2020: Self = Self {
+        game: Game::JustDance2020,
+        platform: Platform::Nx,
+        id: 0x217A_94CE,
+    };
+    pub const NX_CHINA: Self = Self {
+        game: Game::JustDanceChina,
+        platform: Platform::Nx,
+        id: 0xA155_8F87,
+    };
+    pub const NX2021: Self = Self {
+        game: Game::JustDance2021,
+        platform: Platform::Nx,
+        id: 0xA4F0_18EE,
+    };
+    pub const NX2022: Self = Self {
+        game: Game::JustDance2022,
+        platform: Platform::Nx,
+        id: 0x1DDB_2268,
+    };
+}
+
 impl Display for UniqueGameId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::write!(f, "{} for {}", self.game, self.platform)

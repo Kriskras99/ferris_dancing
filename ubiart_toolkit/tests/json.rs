@@ -3,21 +3,17 @@ use std::path::Path;
 use dotstar_toolkit_utils::bytes::read_to_vec;
 use ubiart_toolkit::cooked::json;
 
-// fn json_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
-//     json::open(
-//         &input, Game::JustDance2017
-//     )
-//     .unwrap();
-//     Ok(())
-// }
+fn json_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
+    let data = read_to_vec(input)?;
+    let _ = json::parse_v17(&data, false)?;
+    Ok(())
+}
 
-// fn json_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
-//     json::open(
-//         &input, Game::JustDance2018
-//     )
-//     .unwrap();
-//     Ok(())
-// }
+fn json_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
+    let data = read_to_vec(input)?;
+    let _ = json::parse_v18(&data, false)?;
+    Ok(())
+}
 
 fn json_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
@@ -37,12 +33,6 @@ fn json_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
     Ok(())
 }
 
-fn json_parse_nx2020_japan(input: &Path) -> datatest_stable::Result<()> {
-    let data = read_to_vec(input)?;
-    let _ = json::parse_v20(&data, false)?;
-    Ok(())
-}
-
 fn json_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
     let _ = json::parse_v21(&data, false)?;
@@ -56,28 +46,25 @@ fn json_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
 }
 
 datatest_stable::harness!(
-    // json_parse_nx2017,
-    // "tests/json/files/nx2017",
-    // r".*\.json\.ckd",
-    // json_parse_nx2018,
-    // "tests/json/files/nx2018",
-    // r".*\.json\.ckd",
+    json_parse_nx2017,
+    "files/2017",
+    r".*/json.ckd/.*",
+    json_parse_nx2018,
+    "files/2018",
+    r".*/json.ckd/.*",
     json_parse_nx2019,
-    "tests/json/files/nx2019",
-    r".*\.json\.ckd",
+    "files/2019",
+    r".*/json.ckd/.*",
     json_parse_nx2020,
-    "tests/json/files/nx2020",
-    r".*\.json\.ckd",
+    "files/2020",
+    r".*/json.ckd/.*",
     json_parse_nx2020_china,
-    "tests/json/files/nx2020_china",
-    r".*\.json\.ckd",
-    json_parse_nx2020_japan,
-    "tests/json/files/nx2020_japan",
-    r".*\.json\.ckd",
+    "files/China",
+    r".*/json.ckd/.*",
     json_parse_nx2021,
-    "tests/json/files/nx2021",
-    r".*\.json\.ckd",
+    "files/2021",
+    r".*/json.ckd/.*",
     json_parse_nx2022,
-    "tests/json/files/nx2022",
-    r".*\.json\.ckd"
+    "files/2022",
+    r".*/json.ckd/.*"
 );
