@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{
     bytes::read::ZeroCopyReadAtExt,
-    vfs::{native::NativeFs, VirtualFileSystem, VirtualPath},
+    vfs::{VirtualFileSystem, VirtualPath},
 };
 use image::{imageops, EncodableLayout, RgbaImage};
 use regex::Regex;
@@ -153,12 +153,13 @@ pub fn decode_texture(
 ///
 /// # Errors
 /// Will return an error if any IO or parsing fails
+#[tracing::instrument(skip(vfs, image_path))]
 pub fn encode_texture(
-    native_vfs: &NativeFs,
+    vfs: &impl VirtualFileSystem,
     image_path: &VirtualPath,
 ) -> Result<Png<'static>, Error> {
     // let mipmaps = false;
-    let img_file = native_vfs.open(image_path)?;
+    let img_file = vfs.open(image_path)?;
     let img = image::load_from_memory(&img_file)?;
     let img = img.into_rgba8();
 
@@ -192,6 +193,11 @@ pub fn encode_texture(
                 weigh_colour_by_alpha: false,
             },
             &mut data,
+        );
+
+        tracing::trace!(
+            "width: {width}, height: {height}, format: DXT1, data_size: {}",
+            data.len()
         );
 
         let width = u32::from(width);

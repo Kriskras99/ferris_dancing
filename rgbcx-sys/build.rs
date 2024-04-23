@@ -1,5 +1,4 @@
-use std::env;
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 fn main() {
     // This is the directory where the `c` library is located.
@@ -34,7 +33,7 @@ fn main() {
         .arg("-c")
         .arg("-o")
         .arg(&obj_path)
-        .arg(libdir_path.join("rgbcx.hpp"))
+        .arg(libdir_path.join("rgbcx.cpp"))
         .output()
         .expect("could not spawn `clang`")
         .status
@@ -61,6 +60,7 @@ fn main() {
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=rgbcx/rgbcx.hpp");
+    println!("cargo:rerun-if-changed=rgbcx/rgbcx.cpp");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -73,6 +73,7 @@ fn main() {
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .allowlist_function(".*encode.*")
+        .allowlist_function(".*unpack.*")
         .allowlist_function(".*init")
         .allowlist_item(".*AdvancedSettings.*")
         .allowlist_item(".*ORDERINGS.*")

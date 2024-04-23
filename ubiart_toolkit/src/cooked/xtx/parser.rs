@@ -213,12 +213,16 @@ fn parse_tex_header_block<'de>(
 }
 
 /// Retrieve the data the [`TextureHeader`] points at and create a [`Image`]
+#[tracing::instrument(skip(hdr, data))]
 fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, ReadError> {
     test_eq(&hdr.depth, &1)?;
     let bpp = hdr.format.get_bpp();
     let is_bcn = hdr.format.is_bcn();
 
     let mut deswizzled_data = Vec::with_capacity(usize::try_from(hdr.mipmaps)?);
+    tracing::trace!("Data size: {}", data.len());
+    tracing::trace!("Data mipmaps: {}", hdr.mipmaps);
+    tracing::trace!("Data offsets: {:?}", hdr.mipmap_offsets);
     for level in 0..hdr.mipmaps {
         let size = if is_bcn {
             usize::try_from(
@@ -231,6 +235,10 @@ fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, 
         };
 
         let mipmap_offset = usize::try_from(hdr.mipmap_offsets[usize::try_from(level)?])?;
+
+        let width = 1.max(hdr.width >> level);
+        let height = 1.max(hdr.height >> level);
+        tracing::trace!("Level: {level}, width: {width}, height: {height}, format: {:?}, offset: {mipmap_offset}, size: {size}", hdr.format);
 
         let data = deswizzle(
             1.max(hdr.width >> level),

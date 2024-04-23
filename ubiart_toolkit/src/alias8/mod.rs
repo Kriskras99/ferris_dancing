@@ -17,7 +17,7 @@
 //! | ... | `len_alias2` | `String`    | `alias2`     | The second alias                                   |
 //! | ... | ...          | `SplitPath` | `path`       | The path the aliases point to                      |
 //! | ... | 2            | `u16be`     | `unk2`       | Always 0xFFFF                                      |
-//! | ... | 2            | `u16be`     | `unk3`       | Probably flags, possible values in [`Alias::UNK3`] |
+//! | ... | 2            | `u16be`     | `unk3`       | Probably flags, possible values in [`Unk3`] |
 #![deny(clippy::missing_docs_in_private_items)]
 
 use std::{borrow::Cow, collections::HashMap};

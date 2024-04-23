@@ -11,26 +11,12 @@
 
 use std::process::ExitCode;
 
-use bundle::Bundle;
-// use check::Check;
-use clap::{Parser, Subcommand, ValueEnum};
-use export::Build;
-use extract::Extract;
-use import::Import;
-use new::New;
+// use jdmod::check::Check;
+use clap::{Parser, Subcommand};
+use jdmod::{
+    bundle::Bundle, export::Build, extract::Extract, import::Import, new::New, unlock::Unlock,
+};
 use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
-use unlock::Unlock;
-
-mod build;
-mod bundle;
-// mod check;
-mod export;
-mod extract;
-mod import;
-mod new;
-mod types;
-mod unlock;
-mod utils;
 
 /// The command line interface generated with Clap derive
 #[derive(Parser)]
@@ -60,17 +46,6 @@ enum Commands {
     Unlock(Unlock),
 }
 
-/// Strategies for resolving file conflicts
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum FileConflictStrategy {
-    /// Overwrite the file
-    OverwriteSilent,
-    /// Overwrite the file and print a warning
-    OverwriteWithWarning,
-    /// Do not overwrite the file and return an error
-    Error,
-}
-
 fn main() -> ExitCode {
     // take_hook() returns the default hook in case when a custom one is not set
     let orig_hook = std::panic::take_hook();
@@ -98,13 +73,13 @@ fn main() -> ExitCode {
         .init();
 
     let result = match cli.commands {
-        Commands::New(data) => new::main(&data),
-        Commands::Import(data) => import::main(&data),
-        Commands::Extract(data) => extract::main(data),
-        Commands::Export(data) => export::main(&data),
-        // Commands::Check(data) => check::main(&data),
-        Commands::Bundle(data) => bundle::main(&data),
-        Commands::Unlock(data) => unlock::main(&data),
+        Commands::New(data) => jdmod::new::main(&data),
+        Commands::Import(data) => jdmod::import::main(&data),
+        Commands::Extract(data) => jdmod::extract::main(data),
+        Commands::Export(data) => jdmod::export::main(&data),
+        // Commands::Check(data) => jdmod::check::main(&data),
+        Commands::Bundle(data) => jdmod::bundle::main(&data),
+        Commands::Unlock(data) => jdmod::unlock::main(&data),
     };
 
     match result {

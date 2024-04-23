@@ -6,6 +6,7 @@ use dotstar_toolkit_utils::bytes::write::WriteError;
 use super::{count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Format, Xtx};
 
 /// Writes the XTX texture to the file
+#[tracing::instrument(skip(src, xtx))]
 pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriteError> {
     src.write_u32::<LittleEndian>(0x4E76_4644)?;
     src.write_u32::<LittleEndian>(0x10)?;
@@ -55,13 +56,19 @@ pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriteError> {
         }
 
         for level in 0..image.header.mipmaps {
+            let data = &image.data[usize::try_from(level)?];
             let swizzled = swizzle(
                 1.max(image.header.width >> level),
                 1.max(image.header.height >> level),
                 image.header.format,
-                &image.data[usize::try_from(level)?],
+                data,
             )?;
             src.write_all(&swizzled)?;
+            tracing::trace!(
+                "Data size: {}, swizzled size: {}",
+                data.len(),
+                swizzled.len()
+            );
         }
         id += 1;
     }

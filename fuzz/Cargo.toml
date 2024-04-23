@@ -11,6 +11,9 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 ubiart_toolkit = { path = "../ubiart_toolkit", features = ["fuzz"] }
 dotstar_toolkit_utils = { path = "../dotstar_toolkit_utils" }
+rgbcx = { path = "../rgbcx" }
+rgbcx-rs = { path = "../rgbcx-rs" }
+image = { version = "0.25.1", default-features = false }
 
 # Prevent this from interfering with workspaces
 [workspace]
@@ -28,6 +31,20 @@ doc = false
 [[bin]]
 name = "xtx_write_and_parse"
 path = "fuzz_targets/xtx_write_and_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rgbcx_unpack_bc1"
+path = "fuzz_targets/rgbcx_unpack_bc1.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rgbcx_unpack_bc3"
+path = "fuzz_targets/rgbcx_unpack_bc3.rs"
 test = false
 doc = false
 bench = false

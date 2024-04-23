@@ -34,11 +34,11 @@ use std::{ffi::c_void, sync::OnceLock};
 
 use bitflags::bitflags;
 
-/// The encoder has some global state that is shared between all instances
+/// There can only be one instance of the encoder, but it's safe to share across threads
 pub static RGBCX: OnceLock<Rgbcx> = OnceLock::new();
 /// Get an instance of the encoder
 pub fn get_rgbcx() -> &'static Rgbcx {
-    RGBCX.get_or_init(Rgbcx::default)
+    RGBCX.get_or_init(Rgbcx::new)
 }
 /// Get an instance of the encoder with the specified approximation mode.
 ///
@@ -77,12 +77,6 @@ pub const MAX_LEVEL: u8 = rgbcx_sys::rgbcx_MAX_LEVEL as u8;
 pub struct Rgbcx {
     /// The approximation mode the encoder is set to
     approx_mode: Bc1ApproxMode,
-}
-
-impl Default for Rgbcx {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl Rgbcx {
@@ -298,6 +292,32 @@ impl Rgbcx {
         unsafe {
             rgbcx_sys::rgbcx_encode_bc31(buf_cvoid, pixels, flags, total_orderings_to_try);
         }
+    }
+
+    /// Unpack a BC1 block to a 4x4 block of RGBA pixels.
+    ///
+    /// Returns true if the block uses 3 color punchthrough alpha mode.
+    pub fn unpack_bc1_mut(
+        &self,
+        encoded: &[u8; 8],
+        pixels: &mut [u8; 64],
+        set_alpha: Option<bool>,
+    ) -> bool {
+        let set_alpha = set_alpha.unwrap_or(true);
+        let mode = self.approx_mode;
+        let encoded = encoded.as_ptr().cast::<c_void>();
+        let pixels = pixels.as_mut_ptr().cast::<c_void>();
+        unsafe { rgbcx_sys::rgbcx_unpack_bc1(encoded, pixels, set_alpha, mode.into()) }
+    }
+
+    /// Unpack a BC3 block to a 4x4 block of RGBA pixels.
+    ///
+    /// Returns true if the block uses 3 color punchthrough alpha mode.
+    pub fn unpack_bc3_mut(&self, encoded: &[u8; 16], pixels: &mut [u8; 64]) -> bool {
+        let mode = self.approx_mode;
+        let encoded = encoded.as_ptr().cast::<c_void>();
+        let pixels = pixels.as_mut_ptr().cast::<c_void>();
+        unsafe { rgbcx_sys::rgbcx_unpack_bc3(encoded, pixels, mode.into()) }
     }
 }
 

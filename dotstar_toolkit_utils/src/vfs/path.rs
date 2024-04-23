@@ -1589,13 +1589,6 @@ impl VirtualPath {
     /// assert_eq!(Some(".foo"), VirtualPath::new(".foo").file_stem());
     /// assert_eq!(Some(".foo"), VirtualPath::new(".foo.rs").file_stem());
     /// ```
-    ///
-    /// # See Also
-    /// This method is similar to [`VirtualPath::file_prefix`], which extracts the portion of the file name
-    /// before the *first* `.`
-    ///
-    /// [`Path::file_prefix`]: VirtualPath::file_prefix
-    ///
     #[must_use]
     pub fn file_stem(&self) -> Option<&str> {
         self.file_name()
@@ -1629,11 +1622,11 @@ impl VirtualPath {
             .and_then(|(before, after)| before.and(after))
     }
 
-    /// Creates an owned [`PathBuf`] with `path` adjoined to `self`.
+    /// Creates an owned [`VirtualPathBuf`] with `path` adjoined to `self`.
     ///
     /// If `path` is absolute, it replaces the current path.
     ///
-    /// See [`PathBuf::push`] for more details on what it means to adjoin a path.
+    /// See [`VirtualPathBuf::push`] for more details on what it means to adjoin a path.
     ///
     /// # Examples
     ///
@@ -1744,30 +1737,19 @@ impl VirtualPath {
     /// * Repeated separators are ignored, so `a/b` and `a//b` both have
     ///   `a` and `b` as components.
     ///
-    /// * Occurrences of `.` are normalized away, except if they are at the
-    ///   beginning of the path. For example, `a/./b`, `a/b/`, `a/b/.` and
-    ///   `a/b` all have `a` and `b` as components, but `./a/b` starts with
-    ///   an additional [`CurDir`] component.
-    ///
     /// * A trailing slash is normalized away, `/a/b` and `/a/b/` are equivalent.
-    ///
-    /// Note that no other normalization takes place; in particular, `a/c`
-    /// and `a/b/../c` are distinct, to account for the possibility that `b`
-    /// is a symbolic link (so its parent isn't `a`).
     ///
     /// # Examples
     ///
     /// ```
     /// use dotstar_toolkit_utils::vfs::{VirtualPath, Component};
     ///
-    /// let mut components = VirtualPath::new("tmp/foo.txt").components();
+    /// let mut components = VirtualPath::new("tmp//foo.txt/").components();
     ///
     /// assert_eq!(components.next().map(Component::as_str), Some("tmp"));
     /// assert_eq!(components.next().map(Component::as_str), Some("foo.txt"));
     /// assert_eq!(components.next().map(Component::as_str), None)
     /// ```
-    ///
-    /// [`CurDir`]: Component::CurDir
     pub fn components(&self) -> Components<'_> {
         Components {
             path: self.as_str(),

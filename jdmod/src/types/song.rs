@@ -1815,7 +1815,7 @@ pub enum CurveFloat {
 }
 
 impl CurveFloat {
-    /// Convert a [`json_types::tape::Curve`] into a Option<CurveFloat>
+    /// Convert a [`json_types::tape::Curve`] into a `Option<CurveFloat>`
     pub fn from_curve(value: &json_types::tape::Curve<'_>) -> Option<Self> {
         let json_types::tape::Curve::BezierCurveFloat(value) = value;
         match &value.value {
