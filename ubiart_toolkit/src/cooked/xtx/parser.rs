@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::{u32le, u64le},
         read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
     },
-    testing::{test_any, test_eq, test_le},
+    testing::{test_eq, test_le},
 };
 
 use super::{
@@ -105,13 +105,13 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
         test_eq(&header_size, &0x24)?;
         let data_size = usize::try_from(reader.read_at::<u64le>(position)?)?;
         let data_offset = reader.read_at::<u64le>(position)?.into();
-        let typed = reader.read_at::<u32le>(position)?.into();
+        let block_type = reader.read_at::<u32le>(position)?.into();
         let id = reader.read_at::<u32le>(position)?.into();
         let type_idx = reader.read_at::<u32le>(position)?.into();
         test_eq(&type_idx, &0x0u32)?;
 
         let pos = *position;
-        let block_data = match typed {
+        let block_data = match block_type {
             TEX_HEAD_BLK_TYPE => {
                 test_eq(&data_size, &0x78)?;
                 test_eq(&data_offset, &0x24)?;
@@ -134,7 +134,7 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
                 Ok(BlockData::Three(data))
             }
             _ => Err(ReadError::custom(format!(
-                "Unknown block type found: {typed:x}"
+                "Unknown block type found: {block_type:x}"
             ))),
         }?;
 
@@ -173,29 +173,18 @@ fn parse_tex_header_block<'de>(
     let depth = reader.read_at::<u32le>(position)?.into();
     let target = reader.read_at::<u32le>(position)?.into();
     let format = reader.read_at::<Format>(position)?;
-    let mipmaps = reader.read_at::<u32le>(position)?.into();
-    test_le(&mipmaps, &17)?;
+    let mip_count = reader.read_at::<u32le>(position)?.into();
+    test_le(&mip_count, &17)?;
     let slice_size = reader.read_at::<u32le>(position)?.into();
 
-    let mut mipmap_offsets = [0; 0x10];
+    let mut mipmap_offsets = [0; 17];
     for i in &mut mipmap_offsets {
         *i = reader.read_at::<u32le>(position)?.into();
     }
 
-    let unk1 = reader.read_at::<u64le>(position)?.into();
-    test_any(
-        &unk1,
-        &[
-            0x4_0000_0000,
-            0x3_0000_0000,
-            0x2_0000_0000,
-            0x1_0000_0000,
-            0x0,
-        ],
-    )?;
-
-    let unk2 = reader.read_at::<u64le>(position)?.into();
-    test_eq(&unk2, &0x7)?;
+    let texture_layout_1 = reader.read_at::<u32le>(position)?.into();
+    let texture_layout_2 = reader.read_at::<u32le>(position)?.into();
+    let boolean = reader.read_at::<u32le>(position)?.into();
 
     Ok(BlockData::TextureHeader(TextureHeader {
         image_size,
@@ -205,10 +194,12 @@ fn parse_tex_header_block<'de>(
         depth,
         target,
         format,
-        mipmaps,
+        mipmaps: mip_count,
         slice_size,
         mipmap_offsets,
-        unk1,
+        texture_layout_1,
+        texture_layout_2,
+        boolean,
     }))
 }
 

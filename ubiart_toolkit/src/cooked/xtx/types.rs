@@ -17,8 +17,10 @@ pub struct TextureHeader {
     pub format: Format,
     pub mipmaps: u32,
     pub slice_size: u32,
-    pub mipmap_offsets: [u32; 0x10],
-    pub unk1: u64,
+    pub mipmap_offsets: [u32; 17],
+    pub texture_layout_1: u32,
+    pub texture_layout_2: u32,
+    pub boolean: u32,
 }
 
 impl Default for TextureHeader {
@@ -34,7 +36,9 @@ impl Default for TextureHeader {
             mipmaps: 1,
             slice_size: Default::default(),
             mipmap_offsets: Default::default(),
-            unk1: 0x4_0000_0000,
+            texture_layout_1: todo!(),
+            texture_layout_2: todo!(),
+            boolean: todo!(),
         }
     }
 }

@@ -58,17 +58,19 @@ fn main() {
         for (i, image) in xtx.images.iter().enumerate() {
             println!("XTX Image {i}: {{");
             let data = image.header;
-            println!("  Image size:     0x{:x}", data.image_size);
-            println!("  Alignment:      0x{:x}", data.alignment);
-            println!("  Width:          0x{:x}", data.width);
-            println!("  Height:         0x{:x}", data.height);
-            println!("  Depth:          0x{:x}", data.depth);
-            println!("  Target:         0x{:x}", data.target);
-            println!("  Format:         {:?}", data.format);
-            println!("  Mipmaps:        {:x}", data.mipmaps);
-            println!("  Slice size:     0x{:x}", data.slice_size);
-            println!("  Mipmap offsets: 0x{:x?}", data.mipmap_offsets);
-            println!("  Unk1:           0x{:x}", data.unk1);
+            println!("  Image size:       0x{:x}", data.image_size);
+            println!("  Alignment:        0x{:x}", data.alignment);
+            println!("  Width:            0x{:x}", data.width);
+            println!("  Height:           0x{:x}", data.height);
+            println!("  Depth:            0x{:x}", data.depth);
+            println!("  Target:           0x{:x}", data.target);
+            println!("  Format:           {:?}", data.format);
+            println!("  Mipmaps:          0x{:x}", data.mipmaps);
+            println!("  Slice size:       0x{:x}", data.slice_size);
+            println!("  Mipmap offsets:   0x{:x?}", data.mipmap_offsets);
+            println!("  Texture Layout 1: 0x{:x}", data.texture_layout_1);
+            println!("  Texture Layout 2: 0x{:x}", data.texture_layout_2);
+            println!("  Boolean:          0x{:x}", data.boolean);
             println!("}}");
         }
     }
@@ -206,8 +208,10 @@ pub struct XtxImageMetadata {
     pub format: Format,
     pub mipmaps: u32,
     pub slice_size: u32,
-    pub mipmap_offsets: [u32; 0x10],
-    pub unk1: u64,
+    pub mipmap_offsets: [u32; 17],
+    pub texture_layout_1: u32,
+    pub texture_layout_2: u32,
+    pub boolean: u32,
     pub data: Vec<usize>,
 }
 
@@ -224,7 +228,9 @@ impl From<&Image> for XtxImageMetadata {
             mipmaps: value.header.mipmaps,
             slice_size: value.header.slice_size,
             mipmap_offsets: value.header.mipmap_offsets,
-            unk1: value.header.unk1,
+            texture_layout_1: value.header.texture_layout_1,
+            texture_layout_2: value.header.texture_layout_1,
+            boolean: value.header.boolean,
             data: value.data.iter().map(Vec::len).collect(),
         }
     }

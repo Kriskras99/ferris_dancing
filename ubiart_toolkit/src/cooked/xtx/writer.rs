@@ -34,8 +34,9 @@ pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriteError> {
         for mipmap in image.header.mipmap_offsets {
             src.write_u32::<LittleEndian>(mipmap)?;
         }
-        src.write_u64::<LittleEndian>(image.header.unk1)?;
-        src.write_u64::<LittleEndian>(0x7)?;
+        src.write_u32::<LittleEndian>(image.header.texture_layout_1)?;
+        src.write_u32::<LittleEndian>(image.header.texture_layout_2)?;
+        src.write_u32::<LittleEndian>(image.header.boolean)?;
 
         id += 1;
 
