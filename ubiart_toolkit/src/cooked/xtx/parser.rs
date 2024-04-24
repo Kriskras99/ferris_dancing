@@ -197,7 +197,7 @@ fn parse_tex_header_block<'de>(
     test_eq(&boolean, &0u32)?;
 
     let block_height_log2 =
-        u8::try_from(texture_layout_1 & 0xB111).unwrap_or_else(|_| unreachable!());
+        u8::try_from(texture_layout_1 & 0b111).unwrap_or_else(|_| unreachable!());
 
     Ok(BlockData::TextureHeader(TextureHeader {
         image_size,
@@ -217,12 +217,11 @@ fn parse_tex_header_block<'de>(
 /// Retrieve the data the [`TextureHeader`] points at and create a [`Image`]
 #[tracing::instrument(skip(hdr, data))]
 fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, ReadError> {
-    test_eq(&hdr.depth, &1)?;
     let bpp = usize::try_from(hdr.format.get_bpp())?;
     let is_bcn = hdr.format.is_bcn();
     let width = usize::try_from(hdr.width)?;
     let height = usize::try_from(hdr.height)?;
-    let depth = usize::try_from(hdr.depth).unwrap_or_else(|_| unreachable!());
+    let depth = usize::try_from(hdr.depth)?;
     let mipmap_count = usize::try_from(hdr.mipmaps)?;
 
     let block_dim = if is_bcn {
