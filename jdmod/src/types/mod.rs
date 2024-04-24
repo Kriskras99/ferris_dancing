@@ -66,6 +66,7 @@ impl DirectoryTree {
     /// Create a new directory tree from root.
     ///
     /// This does not create directories or check if they exists!
+    #[must_use]
     pub fn new(dir_root: &Path) -> Self {
         let dir_root = dir_root.clean();
         let dir_root_mod = dir_root.join(".mod");
@@ -106,6 +107,7 @@ impl DirectoryTree {
     }
 
     /// Check if the directory tree exists.
+    #[must_use]
     pub fn exists(&self) -> bool {
         self.dir_root.exists()
             && self.dir_root_mod.exists()
@@ -119,46 +121,55 @@ impl DirectoryTree {
     }
 
     /// The root of the mod directory.
+    #[must_use]
     pub fn root(&self) -> &Path {
         &self.dir_root
     }
 
     /// .mod directory, used for storing data the user is not expected to change.
+    #[must_use]
     pub fn dot_mod(&self) -> &Path {
         &self.dir_root_mod
     }
 
     /// Used to store (some of) the .ipk files of the base game.
+    #[must_use]
     pub fn base(&self) -> &Path {
         &self.dir_root_mod_base
     }
 
     /// Used to store all the parsed songs.
+    #[must_use]
     pub fn songs(&self) -> &Path {
         &self.dir_root_songs
     }
 
     /// Used to store the translations.
+    #[must_use]
     pub fn translations(&self) -> &Path {
         &self.dir_root_translations
     }
 
     /// Used to store everything that doesn't need it owns directory but does need to be user changeable.
+    #[must_use]
     pub fn config(&self) -> &Path {
         &self.dir_root_config
     }
 
     /// Used to store the playlists and their covers
+    #[must_use]
     pub fn playlists(&self) -> &Path {
         &self.dir_root_playlists
     }
 
     /// Used to store the avatars
+    #[must_use]
     pub fn avatars(&self) -> &Path {
         &self.dir_root_avatars
     }
 
     /// Used to store the portraitborders
+    #[must_use]
     pub fn portraitborders(&self) -> &Path {
         &self.dir_root_portraitborders
     }
@@ -184,10 +195,17 @@ pub struct RelativeDirectoryTree {
     dir_root_portraitborders: VirtualPathBuf,
 }
 
+impl Default for RelativeDirectoryTree {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RelativeDirectoryTree {
     /// Create a new relative directory tree.
     ///
     /// This does not create directories or check if they exists!
+    #[must_use]
     pub fn new() -> Self {
         let dir_root = VirtualPathBuf::from("/");
         let dir_root_mod = dir_root.join(".mod");
@@ -211,41 +229,49 @@ impl RelativeDirectoryTree {
     }
 
     /// .mod directory, used for storing data the user is not expected to change.
+    #[must_use]
     pub fn dot_mod(&self) -> &VirtualPath {
         &self.dir_root_mod
     }
 
     /// Used to store (some of) the .ipk files of the base game.
+    #[must_use]
     pub fn base(&self) -> &VirtualPath {
         &self.dir_root_mod_base
     }
 
     /// Used to store all the parsed songs.
+    #[must_use]
     pub fn songs(&self) -> &VirtualPath {
         &self.dir_root_songs
     }
 
     /// Used to store the translations.
+    #[must_use]
     pub fn translations(&self) -> &VirtualPath {
         &self.dir_root_translations
     }
 
     /// Used to store everything that doesn't need it owns directory but does need to be user changeable.
+    #[must_use]
     pub fn config(&self) -> &VirtualPath {
         &self.dir_root_config
     }
 
     /// Used to store the playlists and their covers
+    #[must_use]
     pub fn playlists(&self) -> &VirtualPath {
         &self.dir_root_playlists
     }
 
     /// Used to store the avatars
+    #[must_use]
     pub fn avatars(&self) -> &VirtualPath {
         &self.dir_root_avatars
     }
 
     /// Used to store the portraitborders
+    #[must_use]
     pub fn portraitborders(&self) -> &VirtualPath {
         &self.dir_root_portraitborders
     }

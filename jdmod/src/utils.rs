@@ -12,7 +12,7 @@ use texpresso::Format;
 use ubiart_toolkit::{
     cooked::{
         png::{self, Png, Texture},
-        xtx::{self, Image, TextureHeader},
+        xtx::{self, Image, Index, TextureHeader},
     },
     utils::{Platform, UniqueGameId},
 };
@@ -99,7 +99,6 @@ pub fn decode_texture(
 
             let big_image = &xtx.images[0];
             let header = &big_image.header;
-            let data_compressed = &big_image.data[0];
             let width = usize::try_from(header.width)?;
             let height = usize::try_from(header.height)?;
 
@@ -107,22 +106,22 @@ pub fn decode_texture(
                 xtx::Format::DXT1 => {
                     // TODO: Replace with Vec::with_capacity
                     let mut data_decompressed = vec![0xFF; width * height * 4];
-                    Format::Bc1.decompress(data_compressed, width, height, &mut data_decompressed);
+                    Format::Bc1.decompress(&big_image.data, width, height, &mut data_decompressed);
                     data_decompressed
                 }
                 xtx::Format::DXT3 => {
                     // TODO: Replace with Vec::with_capacity
                     let mut data_decompressed = vec![0xFF; width * height * 4];
-                    Format::Bc2.decompress(data_compressed, width, height, &mut data_decompressed);
+                    Format::Bc2.decompress(&big_image.data, width, height, &mut data_decompressed);
                     data_decompressed
                 }
                 xtx::Format::DXT5 => {
                     // TODO: Replace with Vec::with_capacity
                     let mut data_decompressed = vec![0xFF; width * height * 4];
-                    Format::Bc3.decompress(data_compressed, width, height, &mut data_decompressed);
+                    Format::Bc3.decompress(&big_image.data, width, height, &mut data_decompressed);
                     data_decompressed
                 }
-                xtx::Format::NvnFormatRGBA8 => data_compressed.clone(),
+                xtx::Format::NvnFormatRGBA8 => big_image.data.clone(),
                 _ => unimplemented!("{:?}", header.format),
             };
 
@@ -199,28 +198,29 @@ pub fn encode_texture(
             "width: {width}, height: {height}, format: DXT1, data_size: {}",
             data.len()
         );
-
-        let width = u32::from(width);
-        let height = u32::from(height);
-
+        let indexes = vec![Index {
+            width: usize::from(width),
+            height: usize::from(height),
+            offset: 0,
+            size: data.len(),
+        }];
         let image = Image {
             header: TextureHeader {
                 // TODO! Check these values!
                 image_size: u64::try_from(data.len())?,
                 alignment: 0x200,
-                width,
-                height,
+                width: u32::from(width),
+                height: u32::from(height),
                 depth: 1,
                 target: 1,
                 format: xtx::Format::DXT1,
                 mipmaps: 1,
                 slice_size: u32::try_from(data.len())?,
                 mipmap_offsets: [0; 17],
-                texture_layout_1: todo!(),
-                texture_layout_2: todo!(),
-                boolean: todo!(),
+                block_height_log2: 0,
             },
-            data: vec![data],
+            data,
+            indexes,
         };
         // if mipmaps {
         //     image.data.reserve_exact(0xf);
@@ -268,6 +268,12 @@ pub fn encode_texture(
             &mut data,
         );
 
+        let indexes = vec![Index {
+            width: usize::from(width),
+            height: usize::from(height),
+            offset: 0,
+            size: data.len(),
+        }];
         let image = Image {
             header: TextureHeader {
                 // TODO! Check these values!
@@ -281,11 +287,10 @@ pub fn encode_texture(
                 mipmaps: 1,
                 slice_size: u32::try_from(data.len())?,
                 mipmap_offsets: [0; 17],
-                texture_layout_1: todo!(),
-                texture_layout_2: todo!(),
-                boolean: todo!(),
+                block_height_log2: 0,
             },
-            data: vec![data],
+            data,
+            indexes,
         };
 
         new_picto.texture = Texture::Xtx(xtx::Xtx {

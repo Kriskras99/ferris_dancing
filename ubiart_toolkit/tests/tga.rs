@@ -5,43 +5,43 @@ use ubiart_toolkit::{cooked::png, utils::UniqueGameId};
 
 fn tga_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
-    let _ = png::parse(&data, UniqueGameId::NX2017);
+    png::parse(&data, UniqueGameId::NX2017)?;
     Ok(())
 }
 
 fn tga_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
-    let _ = png::parse(&data, UniqueGameId::NX2018);
+    png::parse(&data, UniqueGameId::NX2018)?;
     Ok(())
 }
 
 fn tga_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
-    let _ = png::parse(&data, UniqueGameId::NX2019);
+    png::parse(&data, UniqueGameId::NX2019)?;
     Ok(())
 }
 
 fn tga_parse_nx2020(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
-    let _ = png::parse(&data, UniqueGameId::NX2020);
+    png::parse(&data, UniqueGameId::NX2020)?;
     Ok(())
 }
 
 fn tga_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
-    let _ = png::parse(&data, UniqueGameId::NX_CHINA);
+    png::parse(&data, UniqueGameId::NX_CHINA)?;
     Ok(())
 }
 
 fn tga_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
-    let _ = png::parse(&data, UniqueGameId::NX2021);
+    png::parse(&data, UniqueGameId::NX2021)?;
     Ok(())
 }
 
 fn tga_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
     let data = read_to_vec(input)?;
-    let _ = png::parse(&data, UniqueGameId::NX2022);
+    png::parse(&data, UniqueGameId::NX2022)?;
     Ok(())
 }
 

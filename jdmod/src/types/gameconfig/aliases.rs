@@ -94,6 +94,7 @@ pub struct Alias<'a> {
 
 impl<'c> Alias<'c> {
     /// Convert from UbiArt representation
+    #[must_use]
     pub fn from_unlockable_alias_descriptor<'a: 'c, 'b: 'c>(
         descriptor: UnlockableAliasDescriptor<'a>,
         aliasesobjectives: &HashMap<u16, Cow<'b, str>>,

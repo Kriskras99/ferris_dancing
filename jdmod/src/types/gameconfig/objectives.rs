@@ -105,6 +105,7 @@ impl Hash for Objective<'_> {
 
 impl Objective<'_> {
     /// Generate a name for this objective
+    #[must_use]
     pub fn generate_name(&self) -> String {
         // TODO: Generate a nicer name, preferably matching existing naming convention
         let sd = if self.is_static { "Static" } else { "Dynamic" };
@@ -137,6 +138,7 @@ impl<'a> Objective<'a> {
     }
 
     /// Convert from the old UbiArt represntation
+    #[must_use]
     pub fn from_old_descriptor(
         descriptor: &json_types::v1819::ObjectiveDesc1819<'a>,
         unlimited_only: bool,
@@ -575,6 +577,7 @@ impl<'a> ObjectiveType<'a> {
     }
 
     /// Convert from the old UbiArt representation
+    #[must_use]
     pub fn from_old_descriptor(
         descriptor: &json_types::v1819::ObjectiveDesc1819<'a>,
         unlimited_only: bool,

@@ -7,11 +7,12 @@ use std::{
 use clap::Parser;
 use image::{imageops, ImageBuffer, ImageFormat, Rgba};
 use serde::Serialize;
+use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 use ubiart_toolkit::{
     cooked::{
         self,
         png::Png,
-        xtx::{Format, Image, Xtx},
+        xtx::{Format, Image, Index, Xtx},
     },
     utils::{Game, Platform, UniqueGameId},
 };
@@ -29,8 +30,24 @@ struct Cli {
     output: Option<PathBuf>,
 }
 
+#[tracing::instrument]
 fn main() {
     let cli = Cli::parse();
+
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        // Display source code file paths
+        .with_file(false)
+        // Display source code line numbers
+        .with_line_number(false)
+        // Display the thread ID an event was recorded on
+        .with_thread_ids(true)
+        // Don't display the event's target (module path)
+        .with_target(true)
+        .without_time();
+    tracing_subscriber::registry()
+        .with(fmt_layer)
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
 
     let file = File::open(&cli.source).unwrap();
     let png = cooked::png::parse(
@@ -46,6 +63,7 @@ fn main() {
     if cli.info {
         println!("Width:            0x{:x}", png.width);
         println!("Height:           0x{:x}", png.height);
+        println!("Unk2:             0x{:x}", png.unk2);
         println!("Unk5:             0x{:x}", png.unk5);
         println!("Unk8:             0x{:x}", png.unk8);
         println!("Unk9:             0x{:x}", png.unk9);
@@ -68,9 +86,8 @@ fn main() {
             println!("  Mipmaps:          0x{:x}", data.mipmaps);
             println!("  Slice size:       0x{:x}", data.slice_size);
             println!("  Mipmap offsets:   0x{:x?}", data.mipmap_offsets);
-            println!("  Texture Layout 1: 0x{:x}", data.texture_layout_1);
-            println!("  Texture Layout 2: 0x{:x}", data.texture_layout_2);
-            println!("  Boolean:          0x{:x}", data.boolean);
+            println!("  Texture Layout 1: 0x{:x}", data.block_height_log2);
+            println!("  Indexes:          0x{:x?}", image.indexes);
             println!("}}");
         }
     }
@@ -89,48 +106,57 @@ fn main() {
             .unwrap();
 
         let big_image = xtx.images.first().unwrap();
-        if big_image.data.len() > 1 {
-            println!("Warning! Not extracting mipmaps, only original image!");
-        }
         let hdr = &big_image.header;
-        let data_compressed = big_image.data.first().unwrap();
-        let mut data_decompressed =
-            vec![0xFF; usize::try_from(hdr.width * hdr.height * 4).unwrap()];
-        match hdr.format {
-            cooked::xtx::Format::DXT5 => {
-                texpresso::Format::Bc3.decompress(
-                    data_compressed,
-                    usize::try_from(hdr.width).unwrap(),
-                    usize::try_from(hdr.height).unwrap(),
-                    &mut data_decompressed,
+
+        tracing::trace!("Data size: {}", big_image.data.len());
+
+        let mut offset = 0;
+
+        for (level, index) in big_image.indexes.iter().enumerate() {
+            let width = index.width;
+            let height = index.height;
+            // let offset = index.offset;
+            let comp_size = index.size;
+            let uncomp_size = width * height * 4;
+            tracing::trace!("Level: {level}, width: {width}, height: {height}, offset: {offset}, comp_size: {comp_size}, uncomp_size: {uncomp_size}");
+            let mut data_decompressed = vec![0xFF; uncomp_size];
+            let data = &big_image.data[offset..offset + comp_size];
+            match hdr.format {
+                cooked::xtx::Format::DXT5 => {
+                    texpresso::Format::Bc3.decompress(data, width, height, &mut data_decompressed);
+                }
+                cooked::xtx::Format::DXT1 => {
+                    texpresso::Format::Bc1.decompress(data, width, height, &mut data_decompressed);
+                }
+                _ => panic!("Format {:?} not yet implemented!", hdr.format),
+            };
+
+            let mut buffer: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_vec(
+                u32::try_from(width).unwrap(),
+                u32::try_from(height).unwrap(),
+                data_decompressed,
+            )
+            .unwrap();
+            tracing::trace!("width: {width}, height: {height}");
+
+            // Todo: also shift png.width/height by level
+            if width != usize::from(1.max(png.width >> level))
+                || height != usize::from(1.max(png.height >> level))
+            {
+                buffer = imageops::resize(
+                    &buffer,
+                    u32::from(png.width),
+                    u32::from(png.height),
+                    imageops::FilterType::Lanczos3,
                 );
             }
-            cooked::xtx::Format::DXT1 => {
-                texpresso::Format::Bc1.decompress(
-                    data_compressed,
-                    usize::try_from(hdr.width).unwrap(),
-                    usize::try_from(hdr.height).unwrap(),
-                    &mut data_decompressed,
-                );
-            }
-            _ => panic!("Format {:?} not yet implemented!", hdr.format),
-        };
 
-        let mut buffer: ImageBuffer<Rgba<u8>, Vec<u8>> =
-            ImageBuffer::from_vec(hdr.width, hdr.height, data_decompressed).unwrap();
+            let path = savepath.join(format!("{stem}.{level}.png"));
+            let mut fout = File::create(path).unwrap();
+            buffer.write_to(&mut fout, ImageFormat::Png).unwrap();
 
-        if hdr.width != u32::from(png.width) || hdr.height != u32::from(png.height) {
-            buffer = imageops::resize(
-                &buffer,
-                u32::from(png.width),
-                u32::from(png.height),
-                imageops::FilterType::Lanczos3,
-            );
+            offset += comp_size;
         }
-
-        let path = savepath.join(format!("{stem}.png"));
-        let mut fout = File::create(path).unwrap();
-        buffer.write_to(&mut fout, ImageFormat::Png).unwrap();
     }
 
     if let Some(json_path) = cli.json {
@@ -209,10 +235,8 @@ pub struct XtxImageMetadata {
     pub mipmaps: u32,
     pub slice_size: u32,
     pub mipmap_offsets: [u32; 17],
-    pub texture_layout_1: u32,
-    pub texture_layout_2: u32,
-    pub boolean: u32,
-    pub data: Vec<usize>,
+    pub block_height_log2: u8,
+    pub indexes: Vec<Index>,
 }
 
 impl From<&Image> for XtxImageMetadata {
@@ -228,10 +252,8 @@ impl From<&Image> for XtxImageMetadata {
             mipmaps: value.header.mipmaps,
             slice_size: value.header.slice_size,
             mipmap_offsets: value.header.mipmap_offsets,
-            texture_layout_1: value.header.texture_layout_1,
-            texture_layout_2: value.header.texture_layout_1,
-            boolean: value.header.boolean,
-            data: value.data.iter().map(Vec::len).collect(),
+            block_height_log2: value.header.block_height_log2,
+            indexes: value.indexes.clone(),
         }
     }
 }

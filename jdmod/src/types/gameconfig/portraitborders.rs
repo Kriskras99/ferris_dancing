@@ -120,6 +120,7 @@ impl<'a> PortraitBorder<'a> {
     }
 
     /// Convert to the UbiArt representation
+    #[must_use]
     pub fn to_portrait_border_desc(&self, name: &'a str) -> PortraitBorderDesc<'a> {
         let id = generate_gacha_id();
         PortraitBorderDesc {

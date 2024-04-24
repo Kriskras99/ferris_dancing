@@ -18,9 +18,8 @@ pub struct TextureHeader {
     pub mipmaps: u32,
     pub slice_size: u32,
     pub mipmap_offsets: [u32; 17],
-    pub texture_layout_1: u32,
-    pub texture_layout_2: u32,
-    pub boolean: u32,
+    /// Set to zero when creating this struct
+    pub block_height_log2: u8,
 }
 
 impl Default for TextureHeader {
@@ -36,9 +35,7 @@ impl Default for TextureHeader {
             mipmaps: 1,
             slice_size: Default::default(),
             mipmap_offsets: Default::default(),
-            texture_layout_1: todo!(),
-            texture_layout_2: todo!(),
-            boolean: todo!(),
+            block_height_log2: 0,
         }
     }
 }
@@ -88,8 +85,11 @@ pub enum Format {
     NvnFormatRGBA4 = 0x39,
     NvnFormatR8 = 0x01,
     NvnFormatRG8 = 0x0D,
+    /// Also known as BC1
     DXT1 = 0x42,
+    /// Also known as BC2
     DXT3 = 0x43,
+    /// Also known as BC3
     DXT5 = 0x44,
     BC4U = 0x49,
     BC4S = 0x4A,
@@ -134,6 +134,7 @@ impl From<Format> for u32 {
 
 impl Format {
     #[must_use]
+    /// Get the amount of bytes per pixel/texel
     pub const fn get_bpp(&self) -> u32 {
         match self {
             Self::NvnFormatR8 => 1,
@@ -176,22 +177,24 @@ pub struct Block<'a> {
 #[derive(PartialEq, Eq)]
 pub struct Image {
     pub header: TextureHeader,
-    pub data: Vec<Vec<u8>>,
+    pub data: Vec<u8>,
+    pub indexes: Vec<Index>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct Index {
+    pub width: usize,
+    pub height: usize,
+    pub offset: usize,
+    pub size: usize,
 }
 
 impl std::fmt::Debug for Image {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // []
-        let mut string = String::new();
-        string.push('[');
-        for vec in &self.data {
-            string.push_str(&format!("{}, ", vec.len()));
-        }
-        string.push(']');
-
         f.debug_struct("Image")
             .field("header", &self.header)
-            .field("data", &string)
+            .field("data", &format!("[u8; {}]", self.data.len()))
+            .field("indexes", &self.indexes)
             .finish()
     }
 }

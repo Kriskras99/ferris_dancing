@@ -121,6 +121,7 @@ impl<'a> UnlockType<'a> {
     }
 
     /// Normalize the unlock type to [`UnlockType::Quest`] or [`UnlockType::Unlocked`]
+    #[must_use]
     pub fn normalize(self) -> Self {
         match self {
             Self::GiftMachine => Self::GiftMachine,

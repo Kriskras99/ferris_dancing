@@ -18,6 +18,7 @@ pub struct SearchLabel<'a> {
 
 impl<'a> SearchLabel<'a> {
     /// Convert the UbiArt representation to the mod representation
+    #[must_use]
     pub fn from_song_search_tag(jd_tag: SongSearchTag<'a>, locale_id_map: &LocaleIdMap) -> Self {
         Self {
             description: locale_id_map.get(jd_tag.tag_loc_id).unwrap_or_default(),

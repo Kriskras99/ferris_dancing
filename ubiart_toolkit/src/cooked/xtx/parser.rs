@@ -7,11 +7,13 @@ use dotstar_toolkit_utils::{
     },
     testing::{test_eq, test_le},
 };
-
-use super::{
-    count_zeros, get_addr, is_pow_2, pow_2_roundup, round_size, Block, BlockData, Format, Image,
-    TextureHeader, Xtx,
+use tegra_swizzle::{
+    surface::{deswizzle_surface, BlockDim},
+    BlockHeight,
 };
+
+use super::{Block, BlockData, Format, Image, TextureHeader, Xtx};
+use crate::cooked::xtx::Index;
 
 const TEX_HEAD_BLK_TYPE: u32 = 0x2;
 const DATA_BLK_TYPE: u32 = 0x3;
@@ -168,23 +170,34 @@ fn parse_tex_header_block<'de>(
 ) -> Result<BlockData<'de>, ReadError> {
     let image_size = reader.read_at::<u64le>(position)?.into();
     let alignment = reader.read_at::<u32le>(position)?.into();
+    test_eq(&alignment, &0x200)?;
     let width = reader.read_at::<u32le>(position)?.into();
     let height = reader.read_at::<u32le>(position)?.into();
     let depth = reader.read_at::<u32le>(position)?.into();
+    test_eq(&depth, &1)?;
     let target = reader.read_at::<u32le>(position)?.into();
+    test_eq(&target, &1)?;
     let format = reader.read_at::<Format>(position)?;
     let mip_count = reader.read_at::<u32le>(position)?.into();
     test_le(&mip_count, &17)?;
     let slice_size = reader.read_at::<u32le>(position)?.into();
+
+    test_eq(&image_size, &u64::from(slice_size))?;
 
     let mut mipmap_offsets = [0; 17];
     for i in &mut mipmap_offsets {
         *i = reader.read_at::<u32le>(position)?.into();
     }
 
-    let texture_layout_1 = reader.read_at::<u32le>(position)?.into();
+    let texture_layout_1: u32 = reader.read_at::<u32le>(position)?.into();
+    test_eq(&(texture_layout_1 & !0b111), &0)?;
     let texture_layout_2 = reader.read_at::<u32le>(position)?.into();
+    test_eq(&texture_layout_2, &7u32)?;
     let boolean = reader.read_at::<u32le>(position)?.into();
+    test_eq(&boolean, &0u32)?;
+
+    let block_height_log2 =
+        u8::try_from(texture_layout_1 & 0xB111).unwrap_or_else(|_| unreachable!());
 
     Ok(BlockData::TextureHeader(TextureHeader {
         image_size,
@@ -197,9 +210,7 @@ fn parse_tex_header_block<'de>(
         mipmaps: mip_count,
         slice_size,
         mipmap_offsets,
-        texture_layout_1,
-        texture_layout_2,
-        boolean,
+        block_height_log2,
     }))
 }
 
@@ -207,114 +218,86 @@ fn parse_tex_header_block<'de>(
 #[tracing::instrument(skip(hdr, data))]
 fn parse_data_block_to_image(hdr: &TextureHeader, data: &[u8]) -> Result<Image, ReadError> {
     test_eq(&hdr.depth, &1)?;
-    let bpp = hdr.format.get_bpp();
+    let bpp = usize::try_from(hdr.format.get_bpp())?;
     let is_bcn = hdr.format.is_bcn();
+    let width = usize::try_from(hdr.width)?;
+    let height = usize::try_from(hdr.height)?;
+    let depth = usize::try_from(hdr.depth).unwrap_or_else(|_| unreachable!());
+    let mipmap_count = usize::try_from(hdr.mipmaps)?;
 
-    let mut deswizzled_data = Vec::with_capacity(usize::try_from(hdr.mipmaps)?);
-    tracing::trace!("Data size: {}", data.len());
-    tracing::trace!("Data mipmaps: {}", hdr.mipmaps);
-    tracing::trace!("Data offsets: {:?}", hdr.mipmap_offsets);
-    for level in 0..hdr.mipmaps {
+    let block_dim = if is_bcn {
+        BlockDim::block_4x4()
+    } else {
+        BlockDim::uncompressed()
+    };
+
+    let block_height_log2 = u32::from(hdr.block_height_log2);
+    let block_height = BlockHeight::new(2usize.pow(block_height_log2))
+        .ok_or_else(|| ReadError::custom(format!("Invalid block height: 2^{block_height_log2}")))?;
+
+    tracing::trace!("format: {:?}, width: {width}, height: {height}, depth: {depth}, data: {}, block_dim: {block_dim:?}, block_height: {block_height:?}, bpp: {bpp}, mipmap_count: {mipmap_count}", hdr.format, data.len());
+
+    let deswizzled = deswizzle_surface(
+        width,
+        height,
+        depth,
+        data,
+        block_dim,
+        Some(block_height),
+        bpp,
+        mipmap_count,
+        1,
+    )
+    .map_err(|e| ReadError::custom(format!("{e:?}")))?;
+
+    tracing::trace!("deswizzled: {}", deswizzled.len());
+
+    let mut indexes = Vec::with_capacity(mipmap_count);
+    tracing::trace!("Mipmap offsets: {:?}", hdr.mipmap_offsets);
+    for level in 0..mipmap_count {
+        let width = 1.max(width >> level);
+        let height = 1.max(height >> level);
         let size = if is_bcn {
-            usize::try_from(
-                ((1.max(hdr.width >> level) + 3) >> 2)
-                    * ((1.max(hdr.height >> level) + 3) >> 2)
-                    * bpp,
-            )?
+            // BCn formats have 4x4 pixels per texel
+            (round_up(width, 4) / 4) * (round_up(height, 4) / 4) * bpp
         } else {
-            usize::try_from(1.max(hdr.width >> level) * 1.max(hdr.height >> level) * bpp)?
+            width * height * bpp
         };
 
-        let mipmap_offset = usize::try_from(hdr.mipmap_offsets[usize::try_from(level)?])?;
+        let mipmap_offset = usize::try_from(hdr.mipmap_offsets[level])?;
 
-        let width = 1.max(hdr.width >> level);
-        let height = 1.max(hdr.height >> level);
-        tracing::trace!("Level: {level}, width: {width}, height: {height}, format: {:?}, offset: {mipmap_offset}, size: {size}", hdr.format);
+        indexes.push(Index {
+            width,
+            height,
+            offset: mipmap_offset,
+            size,
+        });
 
-        let data = deswizzle(
-            1.max(hdr.width >> level),
-            1.max(hdr.height >> level),
-            hdr.format,
-            &data[mipmap_offset..mipmap_offset + size],
-        )?;
-
-        deswizzled_data.push(data);
+        tracing::trace!("Level: {level}, width: {width}, height: {height}, offset: {mipmap_offset}, size: {size}");
     }
 
-    // TODO: After level 4 this goes wrong and the image size does not add up
-    // test(
-    //     &usize::try_from(hdr.image_size).ok(),
-    //     &deswizzled_data
-    //         .iter()
-    //         .map(Vec::len)
-    //         .reduce(|acc, e| acc + e),
-    // )?;
+    let alignment = usize::try_from(hdr.alignment)?;
+    let image_size = usize::try_from(hdr.image_size)?;
+    let actual_size = indexes
+        .iter()
+        .map(|i| i.size)
+        .map(|i| round_up(i, alignment))
+        .reduce(|acc, e| acc + e)
+        .ok_or_else(|| ReadError::custom("No image in data??".into()))?;
+
+    if image_size != actual_size {
+        println!("Image size does not match: 0x{image_size:x} 0x{actual_size:x}");
+    }
 
     Ok(Image {
         header: *hdr,
-        data: deswizzled_data,
+        data: deswizzled,
+        indexes,
     })
 }
 
-/// Deswizzle the image in `data`
-fn deswizzle(width: u32, height: u32, format: Format, data: &[u8]) -> Result<Vec<u8>, ReadError> {
-    let (origin_width, origin_height) = if format.is_bcn() {
-        ((width + 3) / 4, (height + 3) / 4)
-    } else {
-        (width, height)
-    };
-
-    let xb = count_zeros(pow_2_roundup(origin_width));
-    let mut yb = count_zeros(pow_2_roundup(origin_height));
-
-    let hh = pow_2_roundup(origin_height) >> 1;
-
-    if !is_pow_2(origin_height) && origin_height <= hh + (hh / 3) && yb > 3 {
-        yb -= 1;
-    }
-
-    let pad = match format.get_bpp() {
-        1 => Ok(64),
-        2 => Ok(32),
-        4 => Ok(16),
-        8 => Ok(8),
-        16 => Ok(4),
-        _ => Err(ReadError::custom(format!(
-            "BPP is not 1, 2, 4, 8, or 16: {}",
-            format.get_bpp()
-        ))),
-    }?;
-
-    let rounded_width = round_size(origin_width, pad);
-
-    let mut result = data.to_vec();
-
-    let x_base = match format.get_bpp() {
-        1 => Ok(4),
-        2 => Ok(3),
-        4 => Ok(2),
-        8 => Ok(1),
-        16 => Ok(0),
-        _ => Err(ReadError::custom(format!(
-            "BPP is not 1, 2, 4, 8, or 16: {}",
-            format.get_bpp()
-        ))),
-    }?;
-
-    let mut pos_ = 0;
-    let bpp = usize::try_from(format.get_bpp())?;
-
-    for y in 0..origin_height {
-        for x in 0..origin_width {
-            let pos = get_addr(x, y, xb, yb, rounded_width, x_base)? * bpp;
-
-            if pos + bpp < data.len() && pos_ + bpp < data.len() {
-                result[pos_..pos_ + bpp].copy_from_slice(&data[pos..pos + bpp]);
-            }
-
-            pos_ += bpp;
-        }
-    }
-
-    Ok(result)
+#[tracing::instrument]
+fn round_up(n: usize, m: usize) -> usize {
+    assert_ne!(m, 0, "Can't round up to zero!");
+    (n + m - 1) & !(m - 1)
 }

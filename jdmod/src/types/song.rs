@@ -40,6 +40,7 @@ impl SongDirectoryTree {
     /// Create a new directory tree from root.
     ///
     /// This does not create directories or check if they exists!
+    #[must_use]
     pub fn new(dir_song: &Path) -> Self {
         let dir_song = dir_song.clean();
         let dir_song_moves = dir_song.join("moves");
@@ -68,6 +69,7 @@ impl SongDirectoryTree {
     }
 
     /// Check if the directory tree exists.
+    #[must_use]
     pub fn exists(&self) -> bool {
         self.dir_song.exists()
             && self.dir_song_moves.exists()
@@ -77,26 +79,31 @@ impl SongDirectoryTree {
     }
 
     /// The root of the song directory.
+    #[must_use]
     pub fn song(&self) -> &Path {
         &self.dir_song
     }
 
     /// Used to store the MovementSpace files.
+    #[must_use]
     pub fn moves(&self) -> &Path {
         &self.dir_song_moves
     }
 
     /// Used to store the pictos.
+    #[must_use]
     pub fn pictos(&self) -> &Path {
         &self.dir_song_pictos
     }
 
     /// Used to store the pictos.
+    #[must_use]
     pub fn menuart(&self) -> &Path {
         &self.dir_song_menuart
     }
 
     /// Used to store the pictos.
+    #[must_use]
     pub fn audio(&self) -> &Path {
         &self.dir_song_audio
     }
@@ -120,6 +127,7 @@ impl RelativeSongDirectoryTree {
     /// Create a new directory tree from root.
     ///
     /// This does not create directories or check if they exists!
+    #[must_use]
     pub fn new(dir_song: &VirtualPath) -> Self {
         let dir_song = dir_song.to_owned();
         let dir_song_moves = dir_song.join("moves");
@@ -136,26 +144,31 @@ impl RelativeSongDirectoryTree {
     }
 
     /// The root of the song directory.
+    #[must_use]
     pub fn song(&self) -> &VirtualPath {
         &self.dir_song
     }
 
     /// Used to store the MovementSpace files.
+    #[must_use]
     pub fn moves(&self) -> &VirtualPath {
         &self.dir_song_moves
     }
 
     /// Used to store the pictos.
+    #[must_use]
     pub fn pictos(&self) -> &VirtualPath {
         &self.dir_song_pictos
     }
 
     /// Used to store the pictos.
+    #[must_use]
     pub fn menuart(&self) -> &VirtualPath {
         &self.dir_song_menuart
     }
 
     /// Used to store the pictos.
+    #[must_use]
     pub fn audio(&self) -> &VirtualPath {
         &self.dir_song_audio
     }
@@ -209,6 +222,7 @@ pub enum Tag {
 impl Tag {
     // TODO: Add normalisation?
     /// Convert the tag to a static str
+    #[must_use]
     pub const fn to_cow(self) -> Cow<'static, str> {
         match self {
             Self::Main => Cow::Borrowed("main"),
@@ -600,6 +614,7 @@ impl From<MapStatus> for u8 {
 
 impl MapStatus {
     /// Normalize the map status to those used by JD2022
+    #[must_use]
     pub const fn normalize(self) -> Self {
         match self {
             Self::Quest => Self::Quest,
@@ -914,6 +929,7 @@ impl<'a> Clip<'a> {
     }
 
     /// The start time of a clip
+    #[must_use]
     pub const fn start_time(&self) -> i32 {
         match self {
             Clip::Alpha(data) => data.start_time,
@@ -934,6 +950,7 @@ impl<'a> Clip<'a> {
     }
 
     /// The duration of a clip
+    #[must_use]
     pub const fn duration(&self) -> u32 {
         match self {
             Clip::Alpha(data) => data.duration,
@@ -1409,6 +1426,7 @@ pub struct MotionClip<'a> {
 
 impl MotionClip<'_> {
     /// Convert this clip to the UbiArt representation
+    #[must_use]
     pub fn to_tape(&self, song: &Song) -> json_types::tape::MotionClip<'static> {
         let mut hasher = Murmur3Hasher::default();
         self.hash(&mut hasher);
@@ -1490,6 +1508,7 @@ pub struct PictogramClip<'a> {
 
 impl PictogramClip<'_> {
     /// Convert this clip to the UbiArt representation
+    #[must_use]
     pub fn to_tape(&self, song: &Song) -> json_types::tape::PictogramClip<'static> {
         let mut hasher = Murmur3Hasher::default();
         self.hash(&mut hasher);
@@ -1670,6 +1689,7 @@ pub struct SoundSetClip<'a> {
 
 impl SoundSetClip<'_> {
     /// Convert the SoundSetClip to the UbiArt representation with `sound_set_path`
+    #[must_use]
     pub fn to_tape<'a>(&self, sound_set_path: Cow<'a, str>) -> json_types::tape::SoundSetClip<'a> {
         let mut hasher = Murmur3Hasher::default();
         self.hash(&mut hasher);
@@ -1816,6 +1836,7 @@ pub enum CurveFloat {
 
 impl CurveFloat {
     /// Convert a [`json_types::tape::Curve`] into a `Option<CurveFloat>`
+    #[must_use]
     pub fn from_curve(value: &json_types::tape::Curve<'_>) -> Option<Self> {
         let json_types::tape::Curve::BezierCurveFloat(value) = value;
         match &value.value {

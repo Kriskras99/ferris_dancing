@@ -162,6 +162,7 @@ impl Localisation<'_> {
     }
 
     /// Check if there are any translations
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.translations.is_empty()
     }
@@ -243,6 +244,7 @@ impl<'a> Localisation<'a> {
     /// Initialize Localisation from the game locale.
     ///
     /// This is used when creating a new mod which has no translations saved yet.
+    #[must_use]
     pub fn from_game_locale(translations: HashMap<LocaleId, Translation<'a>>) -> Self {
         let reverse: HashMap<Translation<'_>, LocaleId> =
             translations.iter().map(|(k, v)| (v.clone(), *k)).collect();
@@ -273,11 +275,13 @@ pub struct Translation<'a> {
 
 impl Translation<'_> {
     /// Check if all localisations of this translation are empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.not_empty.not_any()
     }
 
     /// Check if the translations overlap, excluding empty translations
+    #[must_use]
     pub fn empty_or_equals(&self, other: &Self) -> bool {
         if self.is_empty() && other.is_empty() {
             // Both are empty
@@ -301,6 +305,7 @@ impl Translation<'_> {
 
     /// Get the translation for a `language`
     #[allow(clippy::missing_panics_doc)]
+    #[must_use]
     pub fn get(&self, language: Language) -> &'_ str {
         let index =
             usize::try_from(u32::from(language)).expect("Don't run this on a 16-bit machine!");

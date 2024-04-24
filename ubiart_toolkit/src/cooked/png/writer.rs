@@ -36,7 +36,7 @@ pub fn create_vec(png: &Png) -> Result<Vec<u8>, WriteError> {
             .xtx()?
             .images
             .iter()
-            .map(|i| 452 + i.data.iter().map(Vec::len).sum::<usize>())
+            .map(|image| 452 + image.data.len())
             .sum::<usize>();
     let mut vec = Vec::with_capacity(capacity);
     let cursor = Cursor::new(&mut vec);

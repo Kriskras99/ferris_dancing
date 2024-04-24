@@ -106,13 +106,19 @@ pub fn unpack_bc1_mut(texel: &[u8; 8], pixels: &mut [Rgba<u8>; 16], set_alpha: b
     used_punchthrough
 }
 
-pub fn unpack_bc3_mut(texel: &[u8; 16], pixels: &mut [Rgba<u8>; 16]) -> Result<(), ()> {
+#[derive(Debug)]
+pub struct UnexpectedPunchthrough;
+
+pub fn unpack_bc3_mut(
+    texel: &[u8; 16],
+    pixels: &mut [Rgba<u8>; 16],
+) -> Result<(), UnexpectedPunchthrough> {
     let (alpha_texel, rgb_texel) = texel.as_slice().split_at(8);
     let alpha_texel: &[u8; 8] = alpha_texel.try_into().unwrap_or_else(|_| unreachable!());
     let rgb_texel: &[u8; 8] = rgb_texel.try_into().unwrap_or_else(|_| unreachable!());
 
     if unpack_bc1_mut(rgb_texel, pixels, false) {
-        return Err(());
+        return Err(UnexpectedPunchthrough);
     }
 
     let low_alpha = alpha_texel[0];
@@ -157,10 +163,10 @@ pub fn unpack_bc3_mut(texel: &[u8; 16], pixels: &mut [Rgba<u8>; 16]) -> Result<(
         u32::from_le_bytes([alpha_texel[5], alpha_texel[6], alpha_texel[7], 0]),
     ];
 
-    for row in 0..2 {
+    for (row, sel) in sels.iter().enumerate() {
         for column in 0..8 {
             let bit_index = column;
-            let bits = (sels[row] >> (bit_index * 3)) & 0b111;
+            let bits = (sel >> (bit_index * 3)) & 0b111;
             let index = (row * 8) + column;
             pixels[index].0[3] = alphas[usize::try_from(bits).unwrap_or_else(|_| unreachable!())];
         }
