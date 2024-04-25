@@ -1,6 +1,9 @@
 //! # Export
 //! Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
-use std::path::{Path, PathBuf};
+use std::{
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{bail, Error};
 use clap::Args;
@@ -25,9 +28,11 @@ pub struct Build {
     source: PathBuf,
     /// Directory to put the bundles
     destination: PathBuf,
-    /// Create a patch file instead of a bundle file
-    #[arg(long, default_value_t = false)]
-    patch: bool,
+    /// Use n threads
+    ///
+    /// Note: 3 threads is the minimum, any number below that will be ignored
+    #[arg(long)]
+    threads: Option<NonZeroUsize>,
 }
 
 /// Files that need to be added to bundle
@@ -40,7 +45,7 @@ pub enum FilesToAdd<'a> {
 
 /// Wrapper around [`export`]
 pub fn main(cli: &Build) -> Result<(), anyhow::Error> {
-    export(&cli.source, &cli.destination)
+    export(&cli.source, &cli.destination, cli.threads)
 }
 
 /// Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
@@ -48,7 +53,11 @@ pub fn main(cli: &Build) -> Result<(), anyhow::Error> {
 /// # Panics
 /// Will panic if any of the threads it creates return an error
 #[instrument]
-pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
+pub fn export(
+    source: &Path,
+    destination: &Path,
+    n_threads: Option<NonZeroUsize>,
+) -> Result<(), Error> {
     // Check the directory structure
     let dir_tree = DirectoryTree::new(source);
     if !dir_tree.exists() {
@@ -111,8 +120,11 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
     // Sort them, so we go through them alphabetically. This way the user can see how far we are in building the songs.
     paths.sort();
 
-    let ncpus = usize::from(std::thread::available_parallelism()?);
-    // let ncpus: usize = 1;
+    let n_threads = if let Some(n_threads) = n_threads {
+        usize::from(n_threads)
+    } else {
+        usize::from(std::thread::available_parallelism()?)
+    };
 
     let (tx_name, rx_name) = crossbeam::channel::unbounded();
     let (tx_job, rx_job) = crossbeam::channel::unbounded();
@@ -267,7 +279,7 @@ pub fn export(source: &Path, destination: &Path) -> Result<(), Error> {
         }
 
         // Only start as many threads as there are cpus (excluding the main thread, which will be waiting and doing nothing the entire time)
-        for i in 0..ncpus.saturating_sub(3) {
+        for i in 0..n_threads.saturating_sub(3) {
             let tx_name = tx_name.clone();
             let rx_job = rx_job.clone();
             let tx_files = tx_files.clone();

@@ -86,7 +86,7 @@ fn main() {
             println!("  Mipmaps:          0x{:x}", data.mipmaps);
             println!("  Slice size:       0x{:x}", data.slice_size);
             println!("  Mipmap offsets:   0x{:x?}", data.mipmap_offsets);
-            println!("  Texture Layout 1: 0x{:x}", data.block_height_log2);
+            println!("  Block Height:     2^{}", data.block_height_log2);
             println!("  Indexes:          0x{:x?}", image.indexes);
             println!("}}");
         }

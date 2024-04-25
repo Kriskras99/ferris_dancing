@@ -20,10 +20,12 @@ const DATA_BLK_TYPE: u32 = 0x3;
 const UNKNOWN_BLK_TYPE_THREE: u32 = 0x5;
 
 impl BinaryDeserialize<'_> for Xtx {
+    #[tracing::instrument(skip(reader))]
     fn deserialize_at(
         reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, dotstar_toolkit_utils::bytes::read::ReadError> {
+        let start = *position;
         let magic = reader.read_at::<u32le>(position)?.into();
         test_eq(&magic, &0x4E76_4644u32)?;
 
@@ -51,6 +53,7 @@ impl BinaryDeserialize<'_> for Xtx {
                 }) => break,
                 Err(error) => return Err(error),
             }
+            tracing::trace!("Block start: {}", *position - start);
             let block = reader.read_at::<Block>(position)?;
             blocks.push(block);
         }

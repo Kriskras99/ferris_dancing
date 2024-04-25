@@ -62,6 +62,7 @@ impl BinaryDeserialize<'_> for GfdHeader {
         let magic = reader.read_at::<u32be>(position)?.into();
         test_eq(&magic, &Self::MAGIC)?;
         let size = reader.read_at::<u32be>(position)?.into();
+        test_eq(&size, &0x20u32)?;
         let major_version = reader.read_at::<u32be>(position)?.into();
         test_eq(&major_version, &7u32)?;
         let minor_version = reader.read_at::<u32be>(position)?.into();
@@ -73,7 +74,6 @@ impl BinaryDeserialize<'_> for GfdHeader {
         test_eq(&reserved1, &0u32)?;
         let reserved2 = reader.read_at::<u32be>(position)?.into();
         test_eq(&reserved2, &0u32)?;
-        test_eq(&(*position - start), &size)?;
 
         Ok(Self { align_mode })
     }

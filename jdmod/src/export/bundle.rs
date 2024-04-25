@@ -31,6 +31,9 @@ use crate::{build::BuildFiles, types::Config};
 const MAX_BUNDLE_SIZE_FAT32: u64 = 4_294_967_295;
 
 /// Receives files in `rx` and bundles them into .ipk files at `destination`
+///
+/// # Panics
+/// Will panic if the lock is poisoned
 pub fn bundle<'fs: 'bf, 'bf>(
     bundle_vfs: &IpkFilesystem<'_>,
     patch_vfs: &IpkFilesystem<'_>,
@@ -196,6 +199,9 @@ pub fn bundle<'fs: 'bf, 'bf>(
 static BUNDLE_N: AtomicU8 = AtomicU8::new(0);
 
 /// Create the nth bundle file with songs
+///
+/// # Panics
+/// Will panic if the lock is poisoned
 pub fn save_songs_bundle(
     sfat: &Arc<Mutex<SecureFat>>,
     bundle_files: &BuildFiles,

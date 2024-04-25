@@ -33,6 +33,7 @@ pub fn parse_at<'de>(
     let header_size = reader.read_at::<u32be>(position)?.into();
     test_eq(&header_size, &0x2Cu32)?;
 
+    // For XTX textures with one mipmap, this is the data size + 0x80
     let unk2 = reader.read_at::<u32be>(position)?.into();
 
     let width = reader.read_at::<u16be>(position)?.into();
