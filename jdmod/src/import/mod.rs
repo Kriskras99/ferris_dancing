@@ -1,12 +1,14 @@
 //! # Import
 //! The main code for importing games and songs
-use std::path::{Path, PathBuf};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
-    testing::test,
     vfs::{native::NativeFs, VirtualFileSystem, VirtualPath, VirtualPathBuf},
 };
 use ubiart_toolkit::{
@@ -22,13 +24,15 @@ use crate::{
 };
 
 mod gameconfig;
+#[cfg(feature = "experimental")]
+mod jdnow;
 mod localisation;
 mod song;
 
 /// Import <game_path> into mod at <mod_path>
 #[derive(Args, Clone)]
 pub struct Import {
-    /// Path of the game to import (either secure_fat.gf or raw extracted game)
+    /// Path of the game to import (secure_fat.gf or a JD Now json file)
     game_path: PathBuf,
     /// Mod directory
     mod_path: PathBuf,
@@ -59,6 +63,7 @@ pub fn main(cli: &Import) -> Result<(), Error> {
 }
 
 /// Import a game at `game_path` into the mod at `dir_root`
+#[tracing::instrument]
 pub fn import(
     game_path: &Path,
     dir_root: &Path,
@@ -89,7 +94,7 @@ pub fn import(
         let unique_game_id = sfat_vfs.unique_game_id();
 
         // Import songs and other content from the game
-        import_vfs(&sfat_vfs, dir_root, unique_game_id, lax, songs_only)?;
+        import_vfs(&sfat_vfs, dir_tree, unique_game_id, lax, songs_only)?;
     } else if game_path.is_dir() {
         let native_vfs = NativeFs::new(game_path)?;
 
@@ -113,9 +118,28 @@ pub fn import(
             id: 0,
         };
 
-        import_vfs(&native_vfs, dir_root, unique_game_id, lax, songs_only)?;
+        import_vfs(&native_vfs, dir_tree, unique_game_id, lax, songs_only)?;
+    } else if game_path.extension() == Some(OsStr::new("json")) {
+        #[cfg(feature = "experimental")]
+        {
+            let parent = game_path
+                .parent()
+                .ok_or_else(|| anyhow!("File has no parent directory!"))?;
+            let filename = game_path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .ok_or_else(|| anyhow!("Filename is invalid!"))?;
+            let native_vfs = NativeFs::new(parent)?;
+            let path = VirtualPath::new(filename);
+            tracing::trace!("Parent: {parent:?}, filename: {filename}, path: {path}");
+            jdnow::import(&native_vfs, path, &dir_tree)?;
+        }
+        #[cfg(not(feature = "experimental"))]
+        {
+            panic!("This feature is still in development!");
+        }
     } else {
-        return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf and raw import are supported!"));
+        return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf, JD Now .json files, and raw import are supported!"));
     }
 
     Ok(())
@@ -124,7 +148,7 @@ pub fn import(
 /// Import a game represented as a virtual filesystem
 pub fn import_vfs(
     vfs: &dyn VirtualFileSystem,
-    dir_root: &Path,
+    dirs: DirectoryTree,
     ugi: UniqueGameId,
     lax: bool,
     songs_only: bool,
@@ -137,10 +161,6 @@ pub fn import_vfs(
             ugi.game, ugi.platform, ugi.id
         );
     }
-
-    // Make sure the directory tree is intact
-    let dirs = DirectoryTree::new(dir_root);
-    test(dirs.exists())?;
 
     // Load localisations
     let locale_id_map = localisation::import(vfs, &dirs)?;

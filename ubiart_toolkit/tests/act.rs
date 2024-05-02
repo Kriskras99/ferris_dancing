@@ -1,107 +1,70 @@
-use std::{fs::File, path::Path};
+use std::path::Path;
 
-use ubiart_toolkit::{
-    cooked::act,
-    utils::{Game, Platform, UniqueGameId},
-};
+use ubiart_toolkit::{cooked::act, utils::UniqueGameId};
 
-fn act_parse_nx2017(input: &Path) -> datatest_stable::Result<()> {
-    let file = File::open(input)?;
-    let gp = UniqueGameId {
-        game: Game::JustDance2017,
-        platform: Platform::Nx,
-        id: 0,
-    };
-    act::parse(&file, &mut 0, gp)?;
+fn act_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::NX2017)?;
     Ok(())
 }
 
-fn act_parse_nx2018(input: &Path) -> datatest_stable::Result<()> {
-    let file = File::open(input)?;
-    let gp = UniqueGameId {
-        game: Game::JustDance2018,
-        platform: Platform::Nx,
-        id: 0,
-    };
-    act::parse(&file, &mut 0, gp)?;
+fn act_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::WIIU2017)?;
     Ok(())
 }
 
-fn act_parse_nx2019(input: &Path) -> datatest_stable::Result<()> {
-    let file = File::open(input)?;
-    let gp = UniqueGameId {
-        game: Game::JustDance2019,
-        platform: Platform::Nx,
-        id: 0,
-    };
-    act::parse(&file, &mut 0, gp)?;
+fn act_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::NX2018)?;
     Ok(())
 }
 
-fn act_parse_nx2020(input: &Path) -> datatest_stable::Result<()> {
-    let file = File::open(input)?;
-    let gp = UniqueGameId {
-        game: Game::JustDance2020,
-        platform: Platform::Nx,
-        id: 0,
-    };
-    act::parse(&file, &mut 0, gp)?;
+fn act_parse_nx2019(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::NX2019)?;
     Ok(())
 }
 
-fn act_parse_nx2020_china(input: &Path) -> datatest_stable::Result<()> {
-    let file = File::open(input)?;
-    let gp = UniqueGameId {
-        game: Game::JustDanceChina,
-        platform: Platform::Nx,
-        id: 0,
-    };
-    act::parse(&file, &mut 0, gp)?;
+fn act_parse_nx2020(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::NX2020)?;
     Ok(())
 }
 
-fn act_parse_nx2021(input: &Path) -> datatest_stable::Result<()> {
-    let file = File::open(input)?;
-    let gp = UniqueGameId {
-        game: Game::JustDance2021,
-        platform: Platform::Nx,
-        id: 0,
-    };
-    act::parse(&file, &mut 0, gp)?;
+fn act_parse_nx2020_china(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::NX_CHINA)?;
     Ok(())
 }
 
-fn act_parse_nx2022(input: &Path) -> datatest_stable::Result<()> {
-    let file = File::open(input)?;
-    let gp = UniqueGameId {
-        game: Game::JustDance2022,
-        platform: Platform::Nx,
-        id: 0,
-    };
-    act::parse(&file, &mut 0, gp)?;
+fn act_parse_nx2021(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::NX2021)?;
+    Ok(())
+}
+
+fn act_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    act::parse(&data, &mut 0, UniqueGameId::NX2022)?;
     Ok(())
 }
 
 datatest_stable::harness!(
     act_parse_nx2017,
-    "files/2017",
+    "files/nx2017",
+    r".*/act.ckd/.*",
+    act_parse_wiiu2017,
+    "files/wiiu2017",
     r".*/act.ckd/.*",
     act_parse_nx2018,
-    "files/2018",
+    "files/nx2018",
     r".*/act.ckd/.*",
     act_parse_nx2019,
-    "files/2019",
+    "files/nx2019",
     r".*/act.ckd/.*",
     act_parse_nx2020,
-    "files/2020",
+    "files/nx2020",
     r".*/act.ckd/.*",
     act_parse_nx2020_china,
-    "files/China",
+    "files/nxChina",
     r".*/act.ckd/.*",
     act_parse_nx2021,
-    "files/2021",
+    "files/nx2021",
     r".*/act.ckd/.*",
     act_parse_nx2022,
-    "files/2022",
+    "files/nx2022",
     r".*/act.ckd/.*"
 );

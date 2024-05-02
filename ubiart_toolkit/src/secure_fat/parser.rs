@@ -3,7 +3,7 @@
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::u32be,
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
     testing::{test_eq, test_le, test_ne},
 };
@@ -14,7 +14,7 @@ use crate::utils::{PathId, UniqueGameId};
 
 impl BinaryDeserialize<'_> for SecureFat {
     fn deserialize_at(
-        reader: &(impl ZeroCopyReadAtExt + ?Sized),
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         // Read the header

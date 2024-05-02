@@ -4,7 +4,7 @@ use std::{marker::PhantomData, num::TryFromIntError};
 
 use super::{
     endian::{BigEndian, Endianness, LittleEndian},
-    read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
     write::{BinarySerialize, WriteAt, WriteError},
     Len,
 };
@@ -110,7 +110,7 @@ macro_rules! create_uint {
         impl<'de, E: Endianness> BinaryDeserialize<'de> for $name<E> {
             #[inline(always)]
             fn deserialize_at(
-                reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+                reader: &'de (impl ReadAtExt + ?Sized),
                 position: &mut u64,
             ) -> Result<Self, ReadError> {
                 let mut bytes = reader.read_fixed_slice_at(position)?;

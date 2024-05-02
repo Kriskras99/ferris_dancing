@@ -3,7 +3,7 @@
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
     testing::{test_any, test_eq, TestResult},
 };
@@ -17,7 +17,7 @@ use crate::utils::{self, string_id_2, Game, PathId, SplitPath, UniqueGameId};
 
 impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         // Read the header
@@ -144,7 +144,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
 
 impl BinaryDeserialize<'_> for Platform {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         match u32::from(reader.read_at::<u32be>(position)?) {

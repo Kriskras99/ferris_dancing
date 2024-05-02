@@ -26,7 +26,7 @@ use bitflags::bitflags;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u16be, u32be},
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
         write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::{test_any, test_eq, test_not},
@@ -74,13 +74,13 @@ impl Alias<'_> {
     const UNK3: &'static [u16] = &[
         0x8001, 0x8002, 0x8008, 0x8100, 0x83D6, 0x8400, 0x8800, 0x9000, 0xA000, 0xC000, 0xE001,
         0xE002, 0xE008, 0xE100, 0xE400, 0xE800, 0xEFDF, 0xF000, 0xF001, 0xF002, 0xF008, 0xF100,
-        0xF400, 0xF800, 0xFC08, 0xFD19, 0xFFDF, 0xFFFF,
+        0xF400, 0xF800, 0xF801, 0xFC08, 0xFD19, 0xFFDF, 0xFFFF,
     ];
 }
 
 impl<'de> BinaryDeserialize<'de> for Alias<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
@@ -145,7 +145,7 @@ impl<'a> Alias8<'a> {
 
 impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;

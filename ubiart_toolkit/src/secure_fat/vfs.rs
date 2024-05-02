@@ -71,14 +71,14 @@ impl<'f> SfatFilesystem<'f> {
             .parent()
             .ok_or_else(|| std::io::Error::from(ErrorKind::InvalidData))?;
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
-            let filename = super::bundle_name_to_filename(name, sfat.game_platform().platform);
+            let filename = super::bundle_name_to_filename(name, sfat.game_platform());
             let path = parent.with_file_name(&filename);
             let ipk = IpkFilesystem::new(fs, &path).map_err(|error| {
                 std::io::Error::other(format!("Failed to parse {path:?}: {error:?}"))
             })?;
             bundles.insert(*bundle_id, ipk);
         }
-        let filename = super::bundle_name_to_filename("patch", sfat.game_platform().platform);
+        let filename = super::bundle_name_to_filename("patch", sfat.game_platform());
         let path = parent.with_file_name(filename);
         let patch = IpkFilesystem::new(fs, &path).ok();
         if patch.is_none() {

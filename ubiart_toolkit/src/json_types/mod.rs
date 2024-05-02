@@ -10,6 +10,8 @@ pub mod just_dance;
 #[cfg(feature = "full_json_types")]
 pub mod msh;
 pub mod tape;
+#[cfg(feature = "full_json_types")]
+pub mod tfn;
 pub mod tpl;
 pub mod v1819;
 

@@ -7,7 +7,7 @@ use anyhow::{anyhow, Error};
 use cipher::{block_padding::NoPadding, generic_array::GenericArray, BlockDecryptMut, KeyIvInit};
 use dotstar_toolkit_utils::bytes::{
     primitives::{u16be, u32be},
-    read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 
 /// Describes which variant of WAD this is
@@ -24,7 +24,7 @@ pub enum WadType {
 
 impl BinaryDeserialize<'_> for WadType {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value: u16 = reader.read_at::<u16be>(position)?.into();
@@ -66,7 +66,7 @@ pub enum ContentType {
 
 impl BinaryDeserialize<'_> for ContentType {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value: u16 = reader.read_at::<u16be>(position)?.into();
@@ -114,7 +114,7 @@ pub enum TitleType {
 
 impl BinaryDeserialize<'_> for TitleType {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value: u32 = reader.read_at::<u32be>(position)?.into();
@@ -156,7 +156,7 @@ pub enum Region {
 
 impl BinaryDeserialize<'_> for Region {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value: u16 = reader.read_at::<u16be>(position)?.into();
@@ -198,7 +198,7 @@ pub enum AccessRights {
 
 impl BinaryDeserialize<'_> for AccessRights {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value: u16 = reader.read_at::<u16be>(position)?.into();

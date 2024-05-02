@@ -3,7 +3,7 @@
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::u32be,
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
     testing::{test_eq, test_le},
 };
@@ -12,7 +12,7 @@ use super::MovementSpaceMove;
 
 impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         // Check the magic

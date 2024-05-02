@@ -9,7 +9,7 @@ use clap::ValueEnum;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::u32be,
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
         write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::{test, test_eq, TestError},
@@ -31,7 +31,7 @@ pub struct LocaleId(u32);
 
 impl BinaryDeserialize<'_> for LocaleId {
     fn deserialize_at(
-        reader: &(impl ZeroCopyReadAtExt + ?Sized),
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         Ok(Self(reader.read_at::<u32be>(position)?.into()))
@@ -149,7 +149,7 @@ impl<'a> SplitPath<'a> {
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
@@ -288,7 +288,7 @@ impl Deref for PathId {
 
 impl BinaryDeserialize<'_> for PathId {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         Ok(Self(reader.read_at::<u32be>(position)?.into()))
@@ -441,7 +441,7 @@ impl TryFrom<u32> for UniqueGameId {
 
 impl BinaryDeserialize<'_> for UniqueGameId {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value = u32::from(reader.read_at::<u32be>(position)?);

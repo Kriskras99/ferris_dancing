@@ -48,6 +48,9 @@ pub enum Clip<'a> {
     #[serde(borrow, rename = "KaraokeClip")]
     Karaoke(KaraokeClip<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "MaterialGraphicAlphaThresholdClip")]
+    MaterialGraphicAlphaThreshold(MaterialGraphicDiffuseAlphaClip<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "MaterialGraphicDiffuseAlphaClip")]
     MaterialGraphicDiffuseAlpha(MaterialGraphicDiffuseAlphaClip<'a>),
     #[cfg(feature = "full_json_types")]
@@ -84,11 +87,17 @@ pub enum Clip<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "SizeClip")]
     Size(SizeClip<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "SlotClip")]
+    Slot(SlotClip<'a>),
     #[serde(borrow, rename = "SoundSetClip")]
     SoundSet(SoundSetClip<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "SoundwichClip")]
     Soundwich(SoundwichClip<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "SoundwichClipWithId")]
+    SoundwichWithId(SoundwichClipWithId<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "TapeLauncherClip")]
     TapeLauncher(TapeLauncherClip<'a>),
@@ -161,6 +170,25 @@ pub struct SoundwichClip<'a> {
     pub soundwich_event: Option<Cow<'a, str>>,
 }
 
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SoundwichClipWithId<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    /// Not present in nx2017
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub soundwich_event: Option<Cow<'a, str>>,
+    pub soundwich_id: i32,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct GameplayEventClip<'a> {
@@ -192,6 +220,24 @@ pub struct SizeClip<'a> {
     pub actor_indices: Vec<u8>,
     pub curve_x: Curve<'a>,
     pub curve_y: Curve<'a>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SlotClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub bpm: f32,
+    pub signature: Cow<'a, str>,
+    pub guid: Cow<'a, str>,
 }
 
 #[cfg(feature = "full_json_types")]

@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use nohash_hasher::{BuildNoHashHasher, IntMap, IsEnabled};
 
-use crate::utils::{PathId, Platform, UniqueGameId};
+use crate::utils::{Game, PathId, Platform, UniqueGameId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BundleId(u8);
@@ -154,15 +154,23 @@ impl SecureFat {
 
 /// Convert a bundle name to a filename based on the platform
 #[must_use]
-pub fn bundle_name_to_filename(name: &str, platform: Platform) -> String {
-    match platform {
-        Platform::Nx => {
+pub fn bundle_name_to_filename(name: &str, ugi: UniqueGameId) -> String {
+    match ugi {
+        UniqueGameId {
+            platform: Platform::Nx,
+            game: _,
+            id: _,
+        } => {
             let mut result = String::with_capacity(name.len() + 7);
             result.push_str(name);
             result.push_str("_nx.ipk");
             result
         }
-        Platform::Wii => {
+        UniqueGameId {
+            platform: Platform::Wii,
+            game: _,
+            id: _,
+        } => {
             let mut result = String::with_capacity(name.len() + 8);
             result.push_str(name);
             if let Some(index) = result.find("bundle") {
@@ -180,7 +188,21 @@ pub fn bundle_name_to_filename(name: &str, platform: Platform) -> String {
             result.push_str("_WII.ipk");
             result
         }
-        Platform::WiiU => {
+        UniqueGameId {
+            platform: Platform::WiiU,
+            game: Game::JustDance2019 | Game::JustDance2018 | Game::JustDance2017,
+            id: _,
+        } => {
+            let mut result = String::with_capacity(name.len() + 9);
+            result.push_str(name);
+            result.push_str("_wiiu.ipk");
+            result
+        }
+        UniqueGameId {
+            platform: Platform::WiiU,
+            game: _,
+            id: _,
+        } => {
             let mut result = String::with_capacity(name.len() + 9);
             result.push_str(name);
             if let Some(index) = result.find("bundle") {
@@ -198,6 +220,6 @@ pub fn bundle_name_to_filename(name: &str, platform: Platform) -> String {
             result.push_str("_WIIU.ipk");
             result
         }
-        _ => todo!("Unsupported platform: {platform}"),
+        _ => todo!("Unsupported platform: {ugi}"),
     }
 }

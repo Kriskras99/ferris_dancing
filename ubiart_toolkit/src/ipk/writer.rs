@@ -7,7 +7,8 @@ use std::{
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
-        write::{BinarySerialize, CursorAt, WriteAt, WriteError},
+        write::{BinarySerialize, WriteAt, WriteError},
+        CursorAt,
     },
     testing::test_eq,
     vfs::{VirtualFileSystem, VirtualPath},
@@ -100,7 +101,7 @@ pub fn create(
 /// Create an .ipk file with the specified files.
 #[instrument(skip(writer, vfs, files))]
 pub fn write(
-    writer: &mut (impl WriteAt + ?Sized),
+    mut writer: &mut (impl WriteAt + ?Sized),
     position: &mut u64,
     options: Options,
     vfs: &impl VirtualFileSystem,
@@ -186,10 +187,10 @@ pub fn write(
                 }
                 CompressionEffort::Best => {
                     // Compress with flate2
-                    let cursor = CursorAt::new(writer, position);
+                    let cursor = CursorAt::new(writer, *position);
                     let mut encoder = ZlibEncoder::new(cursor, Compression::best());
                     encoder.write_all(&file)?;
-                    encoder.finish()?;
+                    (writer, *position) = encoder.finish()?.into_inner();
                     // Return compressed size
                     *position - raw_offset
                 }

@@ -3,7 +3,7 @@
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u16be, u32be, u64be},
-        read::{ReadError, ZeroCopyReadAtExt},
+        read::{ReadAtExt, ReadError},
     },
     testing::{test_any, test_eq},
 };
@@ -14,17 +14,14 @@ use crate::{
     utils::{Platform, UniqueGameId},
 };
 
-pub fn parse(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
-    ugi: UniqueGameId,
-) -> Result<Png<'_>, ReadError> {
+pub fn parse(reader: &(impl ReadAtExt + ?Sized), ugi: UniqueGameId) -> Result<Png, ReadError> {
     parse_at(reader, &mut 0, ugi)
 }
-pub fn parse_at<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+pub fn parse_at(
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
     ugi: UniqueGameId,
-) -> Result<Png<'de>, ReadError> {
+) -> Result<Png, ReadError> {
     let start_position = *position;
 
     let magic = reader.read_at::<u64be>(position)?.into();

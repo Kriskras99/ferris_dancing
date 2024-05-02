@@ -62,7 +62,7 @@ pub struct MaterialLayer<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     class: Option<&'a str>,
     pub enabled: u32,
-    pub alpha_threshold: i32,
+    pub alpha_threshold: f32,
     pub tex_adressing_mode_u: u32,
     pub tex_adressing_mode_v: u32,
     pub filtering: u32,

@@ -5,7 +5,7 @@ use std::collections::{hash_map::Entry, HashMap};
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::u32be,
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
     testing::test_any,
 };
@@ -15,7 +15,7 @@ use crate::{loc8::types::Language, utils::LocaleId};
 
 impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let unk1 = reader.read_at::<u32be>(position)?.into();
@@ -47,9 +47,12 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
             let _unk2 = reader.read_at::<u32be>(position)?;
         }
 
-        let footer: [u8; 100] = reader.read_fixed_slice_at(position)?;
-        if test_any(&footer, Loc8::FOOTERS).is_err() {
-            println!("Warning! Unexpected footer in loc8 file: {footer:x?}",);
+        if let Ok(footer) = reader.read_fixed_slice_at::<100>(position) {
+            if test_any(&footer, Loc8::FOOTERS).is_err() {
+                println!("Warning! Unexpected footer in loc8 file: {footer:x?}",);
+            }
+        } else {
+            println!("Footer is too small!");
         }
 
         Ok(Loc8 { language, strings })
@@ -58,7 +61,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
 
 impl BinaryDeserialize<'_> for Language {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value: u32 = reader.read_at::<u32be>(position)?.into();

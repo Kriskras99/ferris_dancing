@@ -4,7 +4,7 @@ use cipher::{generic_array::GenericArray, BlockDecryptMut, KeyIvInit};
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u16be, u32be, u64be},
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
     testing::test_eq,
 };
@@ -26,7 +26,7 @@ fn aes_128_cbc_decrypt_inplace(data: &mut [u8], iv: &[u8], key: &[u8]) {
 
 impl<'de> BinaryDeserialize<'de> for WadArchive<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let size: u32 = reader.read_at::<u32be>(position)?.into();
@@ -45,7 +45,7 @@ impl<'de> BinaryDeserialize<'de> for WadArchive<'de> {
 /// Will error if `src` is not large enough
 /// Will error if there is incorrect data
 fn parse_installable<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
     wad_type: WadType,
 ) -> Result<WadArchive<'de>, ReadError> {
@@ -105,7 +105,7 @@ const COMMON_KEY: [u8; 0x10] = [
 /// Will error if `src` is not large enough
 /// Will error if there is incorrect data
 fn parse_ticket(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<TicketMetadata, ReadError> {
     // skip signature, padding, issuer and ECDH data
@@ -175,7 +175,7 @@ fn parse_ticket(
 /// Will error if the `src` is not large enough
 /// Will error if there is incorrect data
 fn parse_tmd(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<TitleMetadata, ReadError> {
     let signature_type = reader.read_at::<u32be>(position)?.into();
@@ -260,7 +260,7 @@ fn parse_tmd(
 /// # Errors
 /// Will error if the various contents are too large
 fn parse_content<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
     ticket: &TicketMetadata,
     title: &TitleMetadata,

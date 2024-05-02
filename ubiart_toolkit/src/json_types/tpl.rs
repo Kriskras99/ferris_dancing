@@ -28,7 +28,7 @@ pub struct SingleInstanceMesh3DComponent<'a> {
     pub use_shadow: u32,
     pub use_root_bone: u32,
     pub shadow_size: (f32, f32),
-    pub shadow_material: GFXMaterialSerializable<'a>,
+    pub shadow_material: Box<GFXMaterialSerializable<'a>>,
     pub shadow_attenuation: u32,
     pub shadow_dist: u32,
     pub shadow_offset_pos: (u32, u32, u32),
@@ -292,7 +292,7 @@ pub struct ItfParticleGenerator<'a> {
     pub animname: Cow<'a, str>,
     #[serde(rename = "AnimUVfreq")]
     pub anim_uv_freq: u32,
-    pub params: ParticleGeneratorParameters<'a>,
+    pub params: Box<ParticleGeneratorParameters<'a>>,
     pub z_sort_mode: u32,
 }
 
@@ -310,7 +310,7 @@ pub struct ParticleGeneratorParameters<'a> {
     pub die_fade_time: i32,
     pub emitter_max_life_time: f32,
     pub pos: (i32, i32, i32),
-    pub pivot: (u32, u32),
+    pub pivot: (f32, f32),
     pub vel_norm: u32,
     pub vel_angle: u32,
     pub vel_angle_delta: u32,
@@ -452,7 +452,7 @@ pub struct Spline<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     class: Option<&'a str>,
     pub time_loop_mode: u32,
-    pub time_loop: u32,
+    pub time_loop: f32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub points: Vec<SplinePoint<'a>>,
 }
@@ -617,7 +617,9 @@ pub struct PleoComponent<'a> {
     pub channel_id: Cow<'a, str>,
     pub adaptive: u32,
     pub auto_stop_at_the_end: u32,
-    pub auto_discard_after_stop: u32,
+    // Not in WiiU version
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auto_discard_after_stop: Option<u32>,
     #[serde(rename = "dashMPD")]
     pub dash_mpd: Cow<'a, str>,
     pub audio_bus: Cow<'a, str>,
@@ -740,12 +742,12 @@ pub struct TextureGraphicComponent<'a> {
     pub use_shadow: u32,
     pub use_root_bone: u32,
     pub shadow_size: (f32, f32),
-    pub shadow_material: GFXMaterialSerializable<'a>,
+    pub shadow_material: Box<GFXMaterialSerializable<'a>>,
     pub shadow_attenuation: u32,
     pub shadow_dist: u32,
     pub shadow_offset_pos: (u32, u32, u32),
     pub angle_limit: u32,
-    pub material: GFXMaterialSerializable<'a>,
+    pub material: Box<GFXMaterialSerializable<'a>>,
     pub default_color: Color,
     pub angle_x: u32,
     pub angle_y: u32,
@@ -753,7 +755,7 @@ pub struct TextureGraphicComponent<'a> {
     pub speed_rot_x: u32,
     pub speed_rot_y: u32,
     pub speed_rot_z: u32,
-    pub size: (u32, u32),
+    pub size: (f32, f32),
     pub z_offset: u32,
 }
 
@@ -779,12 +781,12 @@ pub struct PleoTextureGraphicComponent<'a> {
     pub use_shadow: u32,
     pub use_root_bone: u32,
     pub shadow_size: (f32, f32),
-    pub shadow_material: GFXMaterialSerializable<'a>,
+    pub shadow_material: Box<GFXMaterialSerializable<'a>>,
     pub shadow_attenuation: u32,
     pub shadow_dist: u32,
     pub shadow_offset_pos: (u32, u32, u32),
     pub angle_limit: u32,
-    pub material: GFXMaterialSerializable<'a>,
+    pub material: Box<GFXMaterialSerializable<'a>>,
     pub default_color: Color,
     pub z_offset: u32,
     #[serde(rename = "channelID")]
@@ -1052,4 +1054,14 @@ impl Default for SoundParams<'_> {
             transition_sample_offset: 0,
         }
     }
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ModeType<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    class: Option<&'a str>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_type: Option<i32>,
 }

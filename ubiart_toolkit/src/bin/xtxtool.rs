@@ -172,7 +172,7 @@ pub struct Metadata {
     pub xtx: XtxMetadata,
 }
 
-impl From<&Png<'_>> for Metadata {
+impl From<&Png> for Metadata {
     fn from(value: &Png) -> Self {
         Self {
             png: PngMetadata::from(value),
@@ -192,8 +192,8 @@ pub struct PngMetadata {
     pub unk10: u16,
 }
 
-impl From<&Png<'_>> for PngMetadata {
-    fn from(value: &Png<'_>) -> Self {
+impl From<&Png> for PngMetadata {
+    fn from(value: &Png) -> Self {
         Self {
             width: value.width,
             height: value.height,

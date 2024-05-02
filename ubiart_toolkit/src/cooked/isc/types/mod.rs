@@ -753,6 +753,36 @@ pub struct UIWidgetGroupHUDLyrics<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
+pub struct UIWidgetGroupHUDPauseIcon<'a> {
+    #[serde(rename = "@text")]
+    pub text: Cow<'a, str>,
+    #[serde(rename = "@locId")]
+    pub loc_id: u32,
+    #[serde(rename = "@modelName")]
+    pub model_name: Cow<'a, str>,
+    #[serde(rename = "@flag")]
+    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "Elements")]
+    pub elements: Vec<WrappedUIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct UIWidgetGroupHUD<'a> {
+    #[serde(rename = "@text")]
+    pub text: Cow<'a, str>,
+    #[serde(rename = "@locId")]
+    pub loc_id: u32,
+    #[serde(rename = "@modelName")]
+    pub model_name: Cow<'a, str>,
+    #[serde(rename = "@flag")]
+    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "Elements")]
+    pub elements: Vec<WrappedUIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct WrappedUIWidgetElementDesc<'a> {
     #[serde(borrow, rename = "JD_UIWidgetElementDesc")]
     pub ui_widget_element_desc: UIWidgetElementDesc<'a>,
@@ -2996,10 +3026,14 @@ mod wrapped_component {
         UIUploadIcon(WrappedUIUploadIcon),
         #[serde(rename = "JD_UIHudRacelineDM")]
         UIHudRacelineDM(WrappedUIHudRacelineDM),
+        #[serde(rename = "JD_UIWidgetGroupHUD")]
+        UIWidgetGroupHUD(WrappedUIWidgetGroupHUD<'a>),
         #[serde(rename = "JD_UIWidgetGroupHUD_AutodanceRecorder")]
         UIWidgetGroupHUDAutodanceRecorder(WrappedUIWidgetGroupHUDAutodanceRecorder<'a>),
         #[serde(rename = "JD_UIWidgetGroupHUD_Lyrics")]
         UIWidgetGroupHUDLyrics(WrappedUIWidgetGroupHUDLyrics<'a>),
+        #[serde(rename = "JD_UIWidgetGroupHUD_PauseIcon")]
+        UIWidgetGroupHUDPauseIcon(WrappedUIWidgetGroupHUDPauseIcon<'a>),
         #[serde(rename = "JD_UIHudVersusPlayerComponent")]
         UIHudVersusPlayer(WrappedUIHudVersusPlayerComponent<'a>),
         #[serde(rename = "ViewportUIComponent")]
@@ -3685,6 +3719,20 @@ mod wrapped_component {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     #[serde(rename_all = "PascalCase", deny_unknown_fields)]
     #[repr(transparent)]
+    pub struct WrappedUIWidgetGroupHUD<'a> {
+        #[serde(borrow, rename = "JD_UIWidgetGroupHUD")]
+        ui_widget_group_hud: UIWidgetGroupHUD<'a>,
+    }
+
+    impl<'a> AsRef<UIWidgetGroupHUD<'a>> for WrappedUIWidgetGroupHUD<'a> {
+        fn as_ref(&self) -> &UIWidgetGroupHUD<'a> {
+            &self.ui_widget_group_hud
+        }
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[serde(rename_all = "PascalCase", deny_unknown_fields)]
+    #[repr(transparent)]
     pub struct WrappedUIWidgetGroupHUDAutodanceRecorder<'a> {
         #[serde(borrow, rename = "JD_UIWidgetGroupHUD_AutodanceRecorder")]
         ui_widget_group_hud_autodance_recorder: UIWidgetGroupHUDAutodanceRecorder<'a>,
@@ -3709,6 +3757,20 @@ mod wrapped_component {
     impl<'a> AsRef<UIWidgetGroupHUDLyrics<'a>> for WrappedUIWidgetGroupHUDLyrics<'a> {
         fn as_ref(&self) -> &UIWidgetGroupHUDLyrics<'a> {
             &self.ui_widget_group_hud_lyrics
+        }
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[serde(rename_all = "PascalCase", deny_unknown_fields)]
+    #[repr(transparent)]
+    pub struct WrappedUIWidgetGroupHUDPauseIcon<'a> {
+        #[serde(borrow, rename = "JD_UIWidgetGroupHUD_PauseIcon")]
+        ui_widget_group_hud_pause_icon: UIWidgetGroupHUDPauseIcon<'a>,
+    }
+
+    impl<'a> AsRef<UIWidgetGroupHUDPauseIcon<'a>> for WrappedUIWidgetGroupHUDPauseIcon<'a> {
+        fn as_ref(&self) -> &UIWidgetGroupHUDPauseIcon<'a> {
+            &self.ui_widget_group_hud_pause_icon
         }
     }
 
@@ -3880,8 +3942,10 @@ mod wrapped_component {
         ("JD_UISaveWidget" => UISaveWidget),
         ("JD_UIScheduledQuestComponent" => UIScheduledQuest),
         ("JD_UIUploadIcon" => UIUploadIcon(WrappedUIUploadIcon)),
+        ("JD_UIWidgetGroupHUD" => UIWidgetGroupHUD(WrappedUIWidgetGroupHUD)),
         ("JD_UIWidgetGroupHUD_AutodanceRecorder" => UIWidgetGroupHUDAutodanceRecorder(WrappedUIWidgetGroupHUDAutodanceRecorder)),
         ("JD_UIWidgetGroupHUD_Lyrics" => UIWidgetGroupHUDLyrics(WrappedUIWidgetGroupHUDLyrics)),
+        ("JD_UIWidgetGroupHUD_PauseIcon" => UIWidgetGroupHUDPauseIcon(WrappedUIWidgetGroupHUDPauseIcon)),
         ("JD_WDFBossSpawnerComponent" => WDFBossSpawner(WrappedWDFBossSpawnerComponent)),
         ("JD_WDFTeamBattlePresentationComponent" => WDFTeamBattlePresentation(WrappedWDFTeamBattlePresentationComponent)),
         ("JD_WDFThemePresentationComponent" => WDFThemePresentation(WrappedWDFThemePresentationComponent)),

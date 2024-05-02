@@ -2,7 +2,7 @@
 use std::{
     backtrace::Backtrace,
     fs::File,
-    io::{BufWriter, Cursor, ErrorKind, Seek, SeekFrom, Write},
+    io::{BufWriter, Cursor, Seek, SeekFrom, Write},
     num::TryFromIntError,
 };
 
@@ -323,30 +323,8 @@ impl<T: Write + Seek> WriteAt for BufWriter<T> {
     }
 }
 
-/// Provides a wrapper around a `WriteAt` item so it can be used with `Write`-based interfaces
-pub struct CursorAt<'a, W: WriteAt + ?Sized> {
-    /// The writer that is wrapped
-    writer: &'a mut W,
-    /// The current position in the writer
-    position: &'a mut u64,
-}
-
-impl<'a, W: WriteAt + ?Sized> CursorAt<'a, W> {
-    /// Create a new `CursorAt` that will start writing at `position`
-    pub fn new(writer: &'a mut W, position: &'a mut u64) -> Self {
-        Self { writer, position }
-    }
-}
-
-impl<'a, W: WriteAt + ?Sized> Write for CursorAt<'a, W> {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.writer
-            .write_slice_at(self.position, buf)
-            .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
+impl<T: WriteAt + ?Sized> WriteAt for &mut T {
+    fn write_slice_at(&mut self, position: &mut u64, buf: &[u8]) -> Result<(), WriteError> {
+        (*self).write_slice_at(position, buf)
     }
 }

@@ -85,8 +85,13 @@ pub struct BehaviourTypeSpecificCarrouselItem<'a> {
     pub item_index_list: Vec<u32>,
     #[serde(rename = "BackEveryNCalls")]
     pub back_every_n_calls: u32,
-    #[serde(rename = "ProfileEveryNCalls")]
-    pub profile_every_n_calls: u32,
+    // Not on WiiU
+    #[serde(
+        rename = "ProfileEveryNCalls",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub profile_every_n_calls: Option<u32>,
 }
 
 #[cfg(feature = "full_json_types")]
@@ -582,14 +587,34 @@ pub struct PathCreationFormat<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     class: Option<&'a str>,
     pub timeline: Cow<'a, str>,
+    // In WiiU version
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cine_mashup: Option<Cow<'a, str>>,
+    // Only in 2018
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub videowebm: Option<Cow<'a, str>>,
     pub cine: Cow<'a, str>,
     pub graph: Cow<'a, str>,
+    // In WiiU version
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mainscene: Option<Cow<'a, str>>,
     pub video: Cow<'a, str>,
     pub videoalpha: Cow<'a, str>,
-    pub videompd: Cow<'a, str>,
-    pub videomappreview: Cow<'a, str>,
+    // Not in WiiU version
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub videompd: Option<Cow<'a, str>>,
+    // Not in WiiU version
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub videomappreview: Option<Cow<'a, str>>,
+    // In WiiU version
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cine_partymaster: Option<Cow<'a, str>>,
     pub audio: Cow<'a, str>,
+    // Can be all caps on WiiU
+    #[serde(alias = "FX")]
     pub fx: Cow<'a, str>,
+    // Can be all caps on WiiU
+    #[serde(alias = "AUTODANCE")]
     pub autodance: Cow<'a, str>,
 }
 

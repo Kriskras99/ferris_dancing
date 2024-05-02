@@ -30,6 +30,7 @@ texpresso = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+wiiu_swizzle = { workspace = true }
 yoke = { workspace = true }
 zopfli = { workspace = true, optional = true }
 
@@ -60,6 +61,10 @@ harness = false
 
 [[test]]
 name = "frt"
+harness = false
+
+[[test]]
+name = "gf"
 harness = false
 
 [[test]]
@@ -99,11 +104,19 @@ name = "sgs"
 harness = false
 
 [[test]]
+name = "sgscontainer"
+harness = false
+
+[[test]]
 name = "stape"
 harness = false
 
 [[test]]
 name = "tape"
+harness = false
+
+[[test]]
+name = "tfn"
 harness = false
 
 [[test]]

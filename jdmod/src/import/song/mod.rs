@@ -47,8 +47,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
 
     let map_name = &songdesc.map_name;
     let lower_map_name = map_name.to_lowercase();
-    let song_path = is.dirs.songs().join(map_name.as_ref());
-    let dirs = SongDirectoryTree::new(&song_path);
+    let dirs = SongDirectoryTree::new(is.dirs.songs(), map_name);
     if dirs.exists() {
         println!("Skipping {map_name}, song already imported!");
         return Ok(());
@@ -68,7 +67,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         return Ok(());
     }
 
-    dirs.create_all()?;
+    dirs.create_dir_all()?;
 
     let sis = SongImportState {
         vfs: is.vfs,
@@ -165,8 +164,6 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         (Err(error), false) => return Err(error.into()),
     }
 
-    let song_path = sis.dirs.song().join("song.json");
-
     let song = Song {
         map_name: songdesc.map_name,
         original_jd_version: songdesc.original_jd_version,
@@ -192,7 +189,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         videofile: Cow::Borrowed(videofile),
     };
 
-    let song_file = File::create(song_path)?;
+    let song_file = File::create(sis.dirs.song_file())?;
     serde_json::to_writer_pretty(song_file, &song)?;
 
     Ok(())

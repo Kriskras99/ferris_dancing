@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::bytes::write::WriteError;
 use crate::cooked::{gtx::Gtx, xtx::Xtx};
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Png<'a> {
+pub struct Png {
     pub width: u16,
     pub height: u16,
     pub unk2: u32,
@@ -13,26 +13,33 @@ pub struct Png<'a> {
     pub unk8: u32,
     pub unk9: u32,
     pub unk10: u16,
-    pub texture: Texture<'a>,
+    pub texture: Texture,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum Texture<'a> {
+pub enum Texture {
     Xtx(Xtx),
-    Gtx(Gtx<'a>),
+    Gtx(Gtx),
     None,
 }
 
-impl Texture<'_> {
+impl Texture {
     pub fn xtx(&self) -> Result<&Xtx, WriteError> {
         match self {
-            Texture::Xtx(xtx) => Ok(xtx),
+            Self::Xtx(xtx) => Ok(xtx),
             _ => Err(WriteError::custom(format!("Texture is not xtx!: {self:?}"))),
+        }
+    }
+
+    pub fn gtx(&self) -> Result<&Gtx, WriteError> {
+        match self {
+            Self::Gtx(gtx) => Ok(gtx),
+            _ => Err(WriteError::custom(format!("Texture is not gtx!: {self:?}"))),
         }
     }
 }
 
-impl Default for Png<'_> {
+impl Default for Png {
     /// Creates a Png with default values for a picto
     fn default() -> Self {
         Self {

@@ -371,8 +371,8 @@ pub struct PopupConfigList<'a> {
     // Only used in nx2017
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub renew_cross: Option<PopupConfig<'a>>,
-    // Only used in nx2017
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    // Only used in nx2017, all caps on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "DEFAULT")]
     pub default: Option<PopupConfig<'a>>,
     // Only used in nx2017
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1009,7 +1009,9 @@ pub struct CountryEntry<'a> {
     pub name: Cow<'a, str>,
     pub loc_id: u32,
     pub code: Cow<'a, str>,
-    pub region: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub region: Option<Cow<'a, str>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1795,10 +1797,34 @@ pub struct CarouselDesc<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, tag = "__class")]
 pub enum CarouselElementDesc<'a> {
+    #[serde(borrow, rename = "CarouselElementDesc_Base")]
+    CarouselElementDescBase(CarouselElementDescBase<'a>),
+    #[serde(borrow, rename = "CarouselElementDesc_Carousel")]
+    CarouselElementDescCarousel(CarouselElementDescCarousel<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc")]
+    Base(JdCarouselElementDesc<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action")]
     Action(JdCarouselElementDescAction<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_ActivateConnection")]
     ActionActivateConnection(JdCarouselElementDescActionActivateConnection<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_Age")]
+    ActionAge(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_Amiibo")]
+    ActionAmiibo(JdCarouselElementDescActionBase<'a>),
+    #[serde(
+        borrow,
+        rename = "JD_CarouselElementDesc_Action_ChangeCluster_InstallCheck"
+    )]
+    ActionChangeClusterInstallCheck(JdCarouselElementDescActionChangeCluster<'a>),
+    #[serde(
+        borrow,
+        rename = "JD_CarouselElementDesc_Action_ChangeCluster_VideoChallenge"
+    )]
+    ActionChangeClusterVideoChallenge(JdCarouselElementDescActionChangeCluster<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_ChangeCluster_WDF")]
+    ActionChangeClusterWDF(JdCarouselElementDescActionChangeCluster<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_ChangeCluster")]
+    ActionChangeCluster(JdCarouselElementDescActionChangeCluster<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_ChangePage")]
     ActionChangePage(JdCarouselElementDescActionChangePage<'a>),
     #[serde(
@@ -1810,13 +1836,13 @@ pub enum CarouselElementDesc<'a> {
     ActionChangePageWithContext(JdCarouselElementDescActionChangePageWithContext<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_CheckBox")]
     ActionCheckBox(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_DeviceSelection")]
+    ActionDeviceSelection(JdCarouselElementDescActionBase<'a>),
     #[serde(
         borrow,
         rename = "JD_CarouselElementDesc_Action_EditFocusedDancerCardNickname"
     )]
-    EditFocusedDancerCardNickname(JdCarouselElementDescActionBase<'a>),
-    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_DeviceSelection")]
-    ActionDeviceSelection(JdCarouselElementDescActionBase<'a>),
+    ActionEditFocusedDancerCardNickname(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_EnterGameMode")]
     ActionEnterGameMode(JdCarouselElementDescActionEnterGameMode<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_EquipAlias")]
@@ -1829,6 +1855,8 @@ pub enum CarouselElementDesc<'a> {
     ActionGachaCancel(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_Gacha_Play")]
     ActionGachaPlay(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_Gender")]
+    ActionGender(JdCarouselElementDescActionBase<'a>),
     #[serde(
         borrow,
         rename = "JD_CarouselElementDesc_Action_Goto_DancerCardCreation"
@@ -1846,28 +1874,38 @@ pub enum CarouselElementDesc<'a> {
     ActionLaunchWDF(JdCarouselElementDescActionGoto<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_OpenHomeArticle")]
     ActionOpenHomeArticle(JdCarouselElementDescActionBase<'a>),
-    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_OpenUplay")]
-    ActionOpenUplay(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_OpenKeyboard")]
     ActionOpenKeyboard(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_OpenUplay")]
+    ActionOpenUplay(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_PlaySong")]
     ActionPlaySong(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_PlaySongBanner")]
     ActionPlaySongBanner(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_PostcardFullscreen")]
     ActionPostcardFullscreen(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_QuestDifficulty")]
+    ActionQuestDifficulty(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_RematchChallenge")]
+    ActionRematchChallenge(JdCarouselElementDescActionRematchChallenge<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_ReportChallengeVideo")]
+    ActionReportChallengeVideo(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_SavePlaylist")]
+    ActionSavePlaylist(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_SelectChallengeMode")]
+    ActionSelectChallengeMode(JdCarouselElementDescActionSelectChallengeMode<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_SendTauntMessage")]
+    ActionSendTauntMessage(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_StartPlaylist")]
     ActionStartPlaylist(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_StartQuickplay")]
     ActionStartQuickplay(JdCarouselElementDescActionBase<'a>),
-    #[serde(borrow, rename = "CarouselElementDesc_Base")]
-    CarouselElementDescBase(CarouselElementDescBase<'a>),
-    #[serde(borrow, rename = "JD_CarouselElementDesc")]
-    Base(JdCarouselElementDesc<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_SweatHome")]
+    ActionSweatHome(JdCarouselElementDescActionBase<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDesc_Action_WDF_VoteChoice")]
+    ActionWDFVoteChoice(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_TabItem")]
     TabItem(JdCarouselElementDescTabItem<'a>),
-    #[serde(borrow, rename = "CarouselElementDesc_Carousel")]
-    CarouselElementDescCarousel(CarouselElementDescCarousel<'a>),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1886,7 +1924,9 @@ pub struct JdCarouselElementDescActionBase<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1905,7 +1945,9 @@ pub struct JdCarouselElementDescAction<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub components: Vec<CarouselElementDescComponent<'a>>,
 }
@@ -1926,7 +1968,9 @@ pub struct JdCarouselElementDescActionActivateConnection<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub connection: Cow<'a, str>,
 }
 
@@ -1946,7 +1990,57 @@ pub struct JdCarouselElementDescActionChangePage<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
+    pub destination: Cow<'a, str>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub components: Vec<CarouselElementDescComponent<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescActionSelectChallengeMode<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    // Not used in nx2019 and before
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autotest_friendly_name: Option<Cow<'a, str>>,
+    pub item_object: Cow<'a, str>,
+    pub item_logic: Cow<'a, str>,
+    pub enabled: u32,
+    pub title: Cow<'a, str>,
+    #[serde(rename = "locID")]
+    pub loc_id: u32,
+    pub banner_setup: BannerSetup<'a>,
+    pub tag: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
+    pub destination: Cow<'a, str>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub components: Vec<CarouselElementDescComponent<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescActionRematchChallenge<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    // Not used in nx2019 and before
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autotest_friendly_name: Option<Cow<'a, str>>,
+    pub item_object: Cow<'a, str>,
+    pub item_logic: Cow<'a, str>,
+    pub enabled: u32,
+    pub title: Cow<'a, str>,
+    #[serde(rename = "locID")]
+    pub loc_id: u32,
+    pub banner_setup: BannerSetup<'a>,
+    pub tag: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub destination: Cow<'a, str>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub components: Vec<CarouselElementDescComponent<'a>>,
@@ -1968,7 +2062,9 @@ pub struct JdCarouselElementDescActionChangePageFromHomeTile<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub destination: Cow<'a, str>,
     // Not present in nx2019 and before
     #[serde(
@@ -2001,9 +2097,35 @@ pub struct JdCarouselElementDescActionChangePageWithContext<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub destination: Cow<'a, str>,
     pub context: Cow<'a, str>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescActionChangeCluster<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    // Not used in nx2019 and before
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autotest_friendly_name: Option<Cow<'a, str>>,
+    pub item_object: Cow<'a, str>,
+    pub item_logic: Cow<'a, str>,
+    pub enabled: u32,
+    pub title: Cow<'a, str>,
+    #[serde(rename = "locID")]
+    pub loc_id: u32,
+    pub banner_setup: BannerSetup<'a>,
+    pub tag: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
+    pub destination: Cow<'a, str>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub components: Vec<CarouselElementDescComponent<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -2022,7 +2144,9 @@ pub struct JdCarouselElementDescActionEnterGameMode<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub destination: Cow<'a, str>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub components: Vec<CarouselElementDescComponent<'a>>,
@@ -2044,7 +2168,9 @@ pub struct JdCarouselElementDescActionGotoGacha<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub destination: Cow<'a, str>,
     pub gacha_mode: u32,
 }
@@ -2065,7 +2191,9 @@ pub struct JdCarouselElementDescActionGoto<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub destination: Cow<'a, str>,
 }
 
@@ -2085,7 +2213,9 @@ pub struct JdCarouselElementDescActionLaunchJDTV<'a> {
     pub loc_id: u32,
     pub banner_setup: BannerSetup<'a>,
     pub tag: Cow<'a, str>,
-    pub sound_context: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
     pub destination: Cow<'a, str>,
     pub context: Cow<'a, str>,
 }
@@ -2205,6 +2335,85 @@ pub enum CarouselElementDescComponent<'a> {
     StickerAlbumCompletionDisplay(JdCarouselElementDescComponentCompletionDisplay<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDescComponent_WDF_VoteChoice")]
     WDFVoteChoice(JdCarouselElementDescComponentWDFVoteChoice<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_Age")]
+    Age(JdCarouselElementDescComponentAge<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_Amiibo")]
+    Amiibo(JdCarouselElementDescComponentAmiibo<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_Cluster")]
+    Cluster(JdCarouselElementDescComponentCluster<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_Gender")]
+    Gender(JdCarouselElementDescComponentGender<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_Rival_Mode")]
+    RivalMode(Empty<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_Coop_Mode")]
+    CoopMode(Empty<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_SweatMode")]
+    SweatMode(JdCarouselElementDescComponentSweatMode<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_QuestDifficulty")]
+    QuestDifficulty(JdCarouselElementDescComponentQuestDifficulty<'a>),
+    #[serde(borrow, rename = "JD_CarouselElementDescComponent_TauntCategory")]
+    TauntCategory(JdCarouselElementDescComponentTauntCategory<'a>),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescComponentAge<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub catage: u32,
+    pub phone_image_path: Cow<'a, str>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescComponentAmiibo<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub avatar_id: u32,
+    pub character_id: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescComponentCluster<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub context: Cow<'a, str>,
+    pub transition: Cow<'a, str>,
+    pub news_placement: Cow<'a, str>,
+    pub availability_check: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescComponentGender<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub gender: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescComponentSweatMode<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub sweat_mode: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescComponentQuestDifficulty<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub difficulty: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JdCarouselElementDescComponentTauntCategory<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub messages: Vec<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -2256,8 +2465,21 @@ pub struct JdCarouselElementDescComponentWDFVoteChoice<'a> {
 pub struct JdCarouselElementDescComponentSoundNotification<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub sound_context: Cow<'a, str>,
-    pub sound_notification_prefix: Cow<'a, str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_context: Option<Cow<'a, str>>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sound_notification_prefix: Option<Cow<'a, str>>,
+    // Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub module_name: Option<Cow<'a, str>>,
+    // Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item_name: Option<Cow<'a, str>>,
+    // Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub focus_notification: Option<Cow<'a, str>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -2338,7 +2560,9 @@ pub struct CarouselRules<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub action_lists: HashMap<Cow<'a, str>, ActionList<'a>>,
-    pub song_item_lists: HashMap<Cow<'a, str>, SongItemList<'a>>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub song_item_lists: Option<HashMap<Cow<'a, str>, SongItemList<'a>>>,
     pub rules: HashMap<Cow<'a, str>, CarouselRule<'a>>,
 }
 
@@ -2438,6 +2662,14 @@ pub enum CarouselRequestDesc<'a> {
     LatestChallenges(Empty<'a>),
     #[serde(borrow, rename = "JD_CarouselFriendChallengesRequestDesc")]
     FriendChallenges(Empty<'a>),
+    #[serde(borrow, rename = "JD_CarouselPhotoRequestDesc")]
+    PhotoRequest(CarouselPhotoRequestDesc<'a>),
+    #[serde(borrow, rename = "JD_CarouselQuestRequestDesc")]
+    QuestRequest(CarouselQuestRequestDesc<'a>),
+    #[serde(borrow, rename = "JD_CarouselMapSearchRequestDesc")]
+    MapSearch(Empty<'a>),
+    #[serde(borrow, rename = "JD_CarouselSearchRequestDesc")]
+    Search(Empty<'a>),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -2445,7 +2677,7 @@ pub enum CarouselRequestDesc<'a> {
 pub struct CarouselCustomizableItemRequestDesc<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub jdversion: u32,
+    pub jdversion: i32,
     pub lock_type: u32,
     pub sort_by: u32,
     pub item_type: u32,
@@ -2503,6 +2735,9 @@ pub struct CarouselDancerCardRequestDesc<'a> {
     pub action_list_name: Cow<'a, str>,
     pub main: bool,
     pub create: bool,
+    // Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_save_item: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -2510,6 +2745,8 @@ pub struct CarouselDancerCardRequestDesc<'a> {
 pub struct CarouselItemRequestDesc<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
+    // Not on WiiU
+    #[serde(default)]
     pub item_list: Cow<'a, str>,
 }
 
@@ -2536,6 +2773,23 @@ impl Default for CarouselPlaylistsRequestDesc<'static> {
             playlist_id: Cow::Borrowed(""),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct CarouselPhotoRequestDesc<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub action_list_name: Cow<'a, str>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct CarouselQuestRequestDesc<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub start_action: Cow<'a, str>,
+    pub offline: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -3515,7 +3769,9 @@ pub struct SoundConfig<'a> {
     pub bus_fade_list: Vec<EventBusFade<'a>>,
     pub soundwich_synth: Cow<'a, str>,
     pub soundwich_modules: Vec<Cow<'a, str>>,
-    pub project_fade_curves: Vec<ProjectFadeCurve<'a>>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_fade_curves: Option<Vec<ProjectFadeCurve<'a>>>,
 }
 
 #[cfg(feature = "full_json_types")]
@@ -3554,7 +3810,9 @@ pub struct BusMix<'a> {
     pub duration: f32,
     pub fade_in: f32,
     pub fade_out: f32,
-    pub main_mix: u32,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub main_mix: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bus_defs: Vec<BusDef<'a>>,
 }
@@ -3622,8 +3880,15 @@ pub struct ProjectFadeCurve<'a> {
 pub struct UITextManager<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub text_icons: HashMap<Cow<'a, str>, TextIcon<'a>>,
+    // Not on WiiU
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub text_icons_phone: HashMap<Cow<'a, str>, Cow<'a, str>>,
+    // Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actor_icons: Option<Vec<ActorIcon<'a>>>,
 }
 
 #[cfg(feature = "full_json_types")]
@@ -3661,6 +3926,17 @@ pub struct IconActorData<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub path: Cow<'a, str>,
+    pub font_size: u32,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct ActorIcon<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub icon_name: Cow<'a, str>,
+    pub icon_path: Cow<'a, str>,
     pub font_size: u32,
 }
 
@@ -3756,4 +4032,108 @@ pub struct AnthologyConfig<'a> {
     pub outro_video_path: Cow<'a, str>,
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub opus_textures_paths: HashMap<u32, Cow<'a, str>>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct StatsContainer<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub stats_events: Vec<StatsEvent<'a>>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct StatsEvent<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub stats_event_name: Cow<'a, str>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stats_event_parameters: Vec<StatParameter<'a>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stats_event_user_stats: Vec<UserStat<'a>>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct StatParameter<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub parameter_name: Cow<'a, str>,
+    pub parameter_type: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parameter_value: Vec<VarType<'a>>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct UserStat<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub user_stat_name: Cow<'a, str>,
+    pub user_stat_behaviour: u32,
+    pub user_stat_used_on_xbox_one: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub user_stat_parameters: Vec<StatParameter<'a>>,
+    pub parameter_used_to_update_value: Cow<'a, str>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct RewardContainer<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub rewards: Vec<RewardDetail<'a>>,
+    pub is_silent: u32,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct RewardDetail<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: Cow<'a, str>,
+    pub name: Cow<'a, str>,
+    pub platform_id: u32,
+    pub event_trigger: Cow<'a, str>,
+    pub has_to_be_checked_in_game: u32,
+    pub uplay_id: i32,
+    pub uplay_tag: u32,
+    #[serde(rename = "uplayXP")]
+    pub uplay_xp: u32,
+    pub uplay_points_value: u32,
+    #[serde(rename = "uplayLocID")]
+    pub uplay_loc_id: u32,
+    pub has_no_reward: u32,
+    #[serde(rename = "REWARD_TRIGGER")]
+    pub reward_trigger: Vec<RewardTriggerSum<'a>>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct RewardTriggerSum<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub user_stat_name: Cow<'a, str>,
+    pub amount_to_get: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub values_to_check: Vec<StatParameter<'a>>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct VarType<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    #[serde(rename = "type")]
+    pub type_it: u32,
+    pub var: u32,
 }

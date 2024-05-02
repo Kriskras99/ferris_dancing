@@ -25,15 +25,19 @@ use crate::{regex, utils::cow_regex_single_capture};
 /// Directory structure of a song
 pub struct SongDirectoryTree {
     /// Root song dir
-    dir_song: PathBuf,
+    dir_root: PathBuf,
     /// Contains the msm files
-    dir_song_moves: PathBuf,
+    dir_moves: PathBuf,
     /// Contains the pictos
-    dir_song_pictos: PathBuf,
+    dir_pictos: PathBuf,
     /// Contains the menuart
-    dir_song_menuart: PathBuf,
+    dir_menuart: PathBuf,
     /// Contains the audio clips
-    dir_song_audio: PathBuf,
+    dir_audio: PathBuf,
+    /// File container most metadata
+    file_song: PathBuf,
+    /// Song name (capitalized)
+    song_name: String,
 }
 
 impl SongDirectoryTree {
@@ -41,18 +45,20 @@ impl SongDirectoryTree {
     ///
     /// This does not create directories or check if they exists!
     #[must_use]
-    pub fn new(dir_song: &Path) -> Self {
-        let dir_song = dir_song.clean();
-        let dir_song_moves = dir_song.join("moves");
-        let dir_song_pictos = dir_song.join("pictos");
-        let dir_song_menuart = dir_song.join("menuart");
-        let dir_song_audio = dir_song.join("audio");
+    pub fn new(dir_song: &Path, song_name: &str) -> Self {
+        let dir_root = dir_song.join(song_name).clean();
+        let dir_moves = dir_root.join("moves");
+        let dir_pictos = dir_root.join("pictos");
+        let dir_menuart = dir_root.join("menuart");
+        let dir_audio = dir_root.join("audio");
         Self {
-            dir_song,
-            dir_song_moves,
-            dir_song_pictos,
-            dir_song_menuart,
-            dir_song_audio,
+            dir_moves,
+            dir_pictos,
+            dir_menuart,
+            dir_audio,
+            file_song: dir_root.join("song.json"),
+            song_name: song_name.to_owned(),
+            dir_root,
         }
     }
 
@@ -60,52 +66,58 @@ impl SongDirectoryTree {
     ///
     /// # Errors
     /// Will error if it fails to create any directory
-    pub fn create_all(&self) -> std::io::Result<()> {
-        std::fs::create_dir(&self.dir_song)
-            .and_then(|()| std::fs::create_dir(&self.dir_song_moves))
-            .and_then(|()| std::fs::create_dir(&self.dir_song_pictos))
-            .and_then(|()| std::fs::create_dir(&self.dir_song_menuart))
-            .and_then(|()| std::fs::create_dir(&self.dir_song_audio))
+    pub fn create_dir_all(&self) -> std::io::Result<()> {
+        std::fs::create_dir_all(&self.dir_root)
+            .and_then(|()| std::fs::create_dir_all(&self.dir_moves))
+            .and_then(|()| std::fs::create_dir_all(&self.dir_pictos))
+            .and_then(|()| std::fs::create_dir_all(&self.dir_menuart))
+            .and_then(|()| std::fs::create_dir_all(&self.dir_audio))
     }
 
     /// Check if the directory tree exists.
     #[must_use]
     pub fn exists(&self) -> bool {
-        self.dir_song.exists()
-            && self.dir_song_moves.exists()
-            && self.dir_song_pictos.exists()
-            && self.dir_song_menuart.exists()
-            && self.dir_song_audio.exists()
+        self.dir_root.exists()
+            && self.dir_moves.exists()
+            && self.dir_pictos.exists()
+            && self.dir_menuart.exists()
+            && self.dir_audio.exists()
     }
 
     /// The root of the song directory.
     #[must_use]
     pub fn song(&self) -> &Path {
-        &self.dir_song
+        &self.dir_root
+    }
+
+    /// The main metadata file
+    #[must_use]
+    pub fn song_file(&self) -> &Path {
+        &self.file_song
     }
 
     /// Used to store the MovementSpace files.
     #[must_use]
     pub fn moves(&self) -> &Path {
-        &self.dir_song_moves
+        &self.dir_moves
     }
 
     /// Used to store the pictos.
     #[must_use]
     pub fn pictos(&self) -> &Path {
-        &self.dir_song_pictos
+        &self.dir_pictos
     }
 
     /// Used to store the pictos.
     #[must_use]
     pub fn menuart(&self) -> &Path {
-        &self.dir_song_menuart
+        &self.dir_menuart
     }
 
     /// Used to store the pictos.
     #[must_use]
     pub fn audio(&self) -> &Path {
-        &self.dir_song_audio
+        &self.dir_audio
     }
 }
 
@@ -1466,7 +1478,7 @@ impl MotionClip<'_> {
         let mut classifier_path = String::with_capacity(classifier_path.len() + 5);
         classifier_path.push_str(left);
         match platform {
-            Platform::Nx => classifier_path.push_str("/wiiu"),
+            Platform::Nx | Platform::WiiU => classifier_path.push_str("/wiiu"),
             _ => unimplemented!("Not implemented for {}", platform),
         }
         classifier_path.push_str(right);

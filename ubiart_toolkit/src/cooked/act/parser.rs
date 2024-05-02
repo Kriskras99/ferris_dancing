@@ -5,9 +5,9 @@ use dotstar_toolkit_utils::testing::test_not;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::{test_any, test_eq},
+    testing::{test_any, test_eq, test_ge, test_le},
 };
 
 use super::{
@@ -16,7 +16,7 @@ use super::{
 use crate::utils::{Game, SplitPath, UniqueGameId};
 
 pub fn parse<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
     gp: UniqueGameId,
 ) -> Result<Actor<'de>, ReadError> {
@@ -32,16 +32,22 @@ pub fn parse<'de>(
             0x3F66_6C4C,
             0x3F80_0000,
             0x4000_0000,
+            0x4040_0000,
         ],
     )?;
     let unk2 = reader.read_at::<u32be>(position)?.into();
     test_any(
         &unk2,
         &[
+            0x3EE7_720D,
             0x3F00_0000,
+            0x3F4C_CCCD,
             0x3F80_0000,
             0x4240_0000,
+            0x42F0_0000,
             0x4320_0000,
+            0x43AF_0000,
+            0x43C8_0000,
             0x4420_0000,
             0x4422_8000,
         ],
@@ -50,10 +56,15 @@ pub fn parse<'de>(
     test_any(
         &unk2_5,
         &[
+            0x3EE7_720D,
             0x3F00_0000,
+            0x3F4C_CCCD,
             0x3F80_0000,
             0x4120_0000,
+            0x4180_0000,
             0x4240_0000,
+            0x42F0_0000,
+            0x4316_0000,
             0x4320_0000,
         ],
     )?;
@@ -109,7 +120,7 @@ pub fn parse<'de>(
 }
 
 pub fn parse_component<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
     gp: UniqueGameId,
 ) -> Result<Component<'de>, ReadError> {
@@ -120,16 +131,16 @@ pub fn parse_component<'de>(
         // JD_AutoDanceComponent
         0x67B8_BB77 => Component::AutodanceComponent,
         // JD_BeatPulseComponent
-        0x7184_37A8 => todo!(),
+        0x7184_37A8 => todo!("BeatPulseComponent"),
         // BoxInterpolatorComponent
         0xF513_60DA => {
             parse_box_interpolator_component(reader, position)?;
             Component::BoxInterpolatorComponent
         }
         // CameraGraphicComponent
-        0xC760_4FA1 => todo!(),
+        0xC760_4FA1 => todo!("CameraGraphicComponent"),
         // ClearColorComponent
-        0xAEBB_218B => todo!(),
+        0xAEBB_218B => todo!("ClearColorComponent"),
         // ConvertedTmlTape_Component
         0xCD07_BB76 => {
             parse_converted_tml_tape(reader, position)?;
@@ -154,7 +165,7 @@ pub fn parse_component<'de>(
             reader, position, gp, false,
         )?),
         // JD_Carousel
-        0x27E4_80C0 => todo!(),
+        0x27E4_80C0 => todo!("Carousel"),
         // JD_PictoComponent
         0xC316_BF34 => Component::PictoComponent,
         // PleoComponent
@@ -174,27 +185,27 @@ pub fn parse_component<'de>(
             Component::RegistrationComponent
         }
         // SingleInstanceMesh3DComponent
-        0x53E3_2AF7 => todo!(),
+        0x53E3_2AF7 => todo!("SingleInstanceMesh3DComponent"),
         // JD_SongDatabaseComponent
         0x4055_79FB => Component::SongDatabaseComponent,
         // JD_SongDescComponent
         0xE07F_CC3F => Component::SongDescComponent,
         // SoundComponent
-        0x7DD8_643C => todo!(),
+        0x7DD8_643C => todo!("SoundComponent"),
         // TapeCase_Component
         0x231F_27DE => Component::TapeCaseComponent,
         // TextureGraphicComponent
-        0x7B48_A9AE => todo!(),
+        0x7B48_A9AE => todo!("TextureGraphicComponent"),
         // UICarousel
-        0x8782_FE60 => todo!(),
+        0x8782_FE60 => todo!("UICarousel"),
         // UITextBox
         0xD10C_BEED => Component::UITextBox(parse_ui_text_box(reader, position, gp)?),
         // JD_UIWidgetGroupHUD_AutodanceRecorder
-        0x9F87_350C => todo!(),
+        0x9F87_350C => todo!("UIWidgetGroupHUDAutodanceRecorder"),
         // JD_UIWidgetGroupHUD_Lyrics
-        0xF22C_9426 => todo!(),
+        0xF22C_9426 => todo!("UIWidgetGroupHUDLyrics"),
         // ViewportUIComponent
-        0x6990_834C => todo!(),
+        0x6990_834C => todo!("ViewportUIComponent"),
         // JD_AvatarDescComponent
         0x1759_E29D => Component::AvatarDescComponent,
         // JD_SkinDescComponent
@@ -215,9 +226,10 @@ pub fn parse_component<'de>(
             Component::AFXPostProcessComponent
         }
         _ => {
+            // 0x1528_D94A, 0x4866_6BB2, 0xA976_34C7
             return Err(ReadError::custom(format!(
                 "Unknown component type: {component_type:x}!"
-            )))
+            )));
         }
     };
 
@@ -225,7 +237,7 @@ pub fn parse_component<'de>(
 }
 
 pub fn parse_credits_component<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
     gp: UniqueGameId,
 ) -> Result<CreditsComponent<'de>, ReadError> {
@@ -265,7 +277,7 @@ pub fn parse_credits_component<'de>(
 
 /// Parse the registration component of an actor
 fn parse_registration_component(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
@@ -277,7 +289,7 @@ fn parse_registration_component(
 
 /// Parse the box interpolator component of an actor
 fn parse_box_interpolator_component(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     for _ in 0..2 {
@@ -301,7 +313,7 @@ fn parse_box_interpolator_component(
 
 /// Parse the AFX post process component of an actor
 fn parse_afx_post_process_component(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk16 = reader.read_at::<u64be>(position)?.into();
@@ -313,7 +325,7 @@ fn parse_afx_post_process_component(
 
 /// Parse the converted tml tape component of an actor
 fn parse_converted_tml_tape(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
@@ -323,7 +335,7 @@ fn parse_converted_tml_tape(
 
 /// Parse the fixed camera component of an actor
 fn parse_fixed_camera_component(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u32be>(position)?.into();
@@ -339,7 +351,7 @@ fn parse_fixed_camera_component(
 
 /// Parse the fx controller component of an actor
 fn parse_fx_controller(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk11 = reader.read_at::<u64be>(position)?.into();
@@ -349,7 +361,7 @@ fn parse_fx_controller(
 
 /// Parse the fx bank component of an actor
 fn parse_fx_bank_component(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     for _ in 0..4 {
@@ -369,7 +381,7 @@ fn parse_fx_bank_component(
 
 /// Parse the bezier tree component of an actor
 fn parse_bezier_tree_component(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<(), ReadError> {
     let unk18 = reader.read_at::<u32be>(position)?.into();
@@ -407,7 +419,7 @@ fn parse_bezier_tree_component(
 
 /// Parse the material graphic component of an actor
 fn parse_material_graphic_component<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
     gp: UniqueGameId,
     is_pleo: bool,
@@ -429,7 +441,7 @@ fn parse_material_graphic_component<'de>(
 
     // <ENUM NAME="anchor" SEL="[0-9]" /> ?
     let unk14 = reader.read_at::<u64be>(position)?.into();
-    test_any(&unk14, &[0x1u64, 0x2, 0x3, 0x6, 0x9])?;
+    test_ge(&unk14, &0u64).and(test_le(&unk14, &0x9u64))?;
 
     let unk15 = reader.read_at::<u64be>(position)?.into();
     test_any(
@@ -603,7 +615,7 @@ fn parse_material_graphic_component<'de>(
 
 impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let video = reader.read_at::<SplitPath>(position)?;
@@ -624,7 +636,7 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
 
 /// Parse the property patcher component of an actor
 fn parse_property_patcher(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     position: &mut u64,
     gp: UniqueGameId,
 ) -> Result<(), ReadError> {
@@ -641,20 +653,22 @@ fn parse_property_patcher(
 
 /// Parse the ui textbox component of an actor
 fn parse_ui_text_box<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
     gp: UniqueGameId,
 ) -> Result<UITextBox<'de>, ReadError> {
     let game = gp.game;
     let unk11 = reader.read_at::<u32be>(position)?.into();
-    test_any(&unk11, &[0x0u32, 0x2, 0x3])?;
+    test_any(&unk11, &[0x0u32, 0x1, 0x2, 0x3])?;
     let unk12 = reader.read_at::<u32be>(position)?.into();
     test_any(
         &unk12,
         &[
             0xBF80_0000u32,
             0x41A0_0000,
+            0x41F0_0000,
             0x4200_0000,
+            0x4248_0000,
             0x428C_0000,
             0x42C8_0000,
             0x4316_0000,
@@ -670,10 +684,13 @@ fn parse_ui_text_box<'de>(
     }
     for _ in 0..2 {
         let unk17 = reader.read_at::<u32be>(position)?.into();
-        test_any(&unk17, &[0x4496_0000u32, 0xBF80_0000])?;
+        test_any(&unk17, &[0x4348_0000, 0x4496_0000u32, 0xBF80_0000])?;
     }
     let unk18 = reader.read_at::<u32be>(position)?.into();
-    test_any(&unk18, &[0xBF80_0000u32, 0x443B_8000, 0x458C_A000])?;
+    test_any(
+        &unk18,
+        &[0x4348_0000u32, 0x443B_8000, 0x458C_A000, 0xBF80_0000],
+    )?;
     let unk19 = reader.read_at::<u32be>(position)?.into();
     test_eq(&unk19, &0xBF80_0000u32)?;
     let string1 = reader.read_len_string_at::<u32be>(position)?;
@@ -687,7 +704,7 @@ fn parse_ui_text_box<'de>(
     let unk21 = reader.read_at::<u32be>(position)?.into();
     test_eq(&unk21, &1u32)?;
     let unk22 = reader.read_at::<u32be>(position)?.into();
-    test_any(&unk22, &[0xFFFF_FFFFu32, 0x317A, 0x3B])?;
+    test_any(&unk22, &[0xFFFF_FFFFu32, 0x317A, 0x1B7C, 0x3B])?;
     let unk23_1 = reader.read_at::<u32be>(position)?.into();
     test_any(&unk23_1, &[0x0u32, 0x4140_0000, 0xC170_0000, 0xC120_0000])?;
     let unk23_2 = reader.read_at::<u32be>(position)?.into();

@@ -3,7 +3,7 @@
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32le, u64le},
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
     testing::{test_eq, test_le},
 };
@@ -22,7 +22,7 @@ const UNKNOWN_BLK_TYPE_THREE: u32 = 0x5;
 impl BinaryDeserialize<'_> for Xtx {
     #[tracing::instrument(skip(reader))]
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, dotstar_toolkit_utils::bytes::read::ReadError> {
         let start = *position;
@@ -100,7 +100,7 @@ impl BinaryDeserialize<'_> for Xtx {
 
 impl<'de> BinaryDeserialize<'de> for Block<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let start = *position;
@@ -158,7 +158,7 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
 
 impl BinaryDeserialize<'_> for Format {
     fn deserialize_at(
-        reader: &'_ (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let value = u32::from(reader.read_at::<u32le>(position)?);
@@ -168,7 +168,7 @@ impl BinaryDeserialize<'_> for Format {
 
 /// Parse some data at `position` as a [`BlockData::TextureHeader`]
 fn parse_tex_header_block<'de>(
-    reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+    reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<BlockData<'de>, ReadError> {
     let image_size = reader.read_at::<u64le>(position)?.into();

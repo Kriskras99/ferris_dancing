@@ -15,8 +15,9 @@ use super::{
         AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
     },
     msh::GFXMaterialShader1718,
+    tfn::FontTemplate,
     tpl::{
-        BezierTreeComponent, FxBankComponent, FxControllerComponent, PleoComponent,
+        BezierTreeComponent, FxBankComponent, FxControllerComponent, ModeType, PleoComponent,
         PleoTextureGraphicComponent, SingleInstanceMesh3DComponent, TextureGraphicComponent,
         UITextBox,
     },
@@ -47,9 +48,41 @@ use crate::utils::errors::ParserError;
 pub enum Template18<'a> {
     #[serde(borrow, rename = "Actor_Template")]
     Actor(Actor18<'a>),
+    #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
+    AutodanceComponent(AutodanceComponent<'a>),
+    #[serde(borrow, rename = "JD_AvatarDescTemplate")]
+    AvatarDescription(AvatarDescription1819<'a>),
+    #[serde(borrow, rename = "JD_GameManagerConfig_Template")]
+    GameManagerConfig(Box<GameManagerConfig18<'a>>),
+    #[serde(borrow, rename = "JD_SongDatabaseTemplate")]
+    SongDatabase(SongDatabase<'a>),
+    #[serde(borrow, rename = "MasterTape_Template")]
+    MasterTape(MasterTape<'a>),
+    #[serde(borrow, rename = "MaterialGraphicComponent_Template")]
+    MaterialGraphicComponent(MaterialGraphicComponent<'a>),
+    #[serde(borrow, rename = "MusicTrackComponent_Template")]
+    MusicTrackComponent(MusicTrackComponent<'a>),
+    #[serde(borrow, rename = "SoundComponent_Template")]
+    SoundComponent(SoundComponent<'a>),
+    #[serde(borrow, rename = "Tape")]
+    Tape(Tape<'a>),
+    #[serde(borrow, rename = "TapeCase_Template")]
+    TapeCase(MasterTape<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "BezierTreeComponent_Template")]
     BezierTreeComponent(BezierTreeComponent<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "CameraGraphicComponent_Template")]
+    CameraGraphicComponent(MaterialGraphicComponent<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "CameraShakeConfig_Template")]
+    CameraShakeConfig(CameraShakeConfig<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "CarouselManager_Template")]
+    CarouselManager(CarouselManager<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "ClearColorComponent_Template")]
+    ClearColorComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "ConvertedTmlTape_Template")]
     ConvertedTmlTape(Empty<'a>),
@@ -57,18 +90,32 @@ pub enum Template18<'a> {
     #[serde(borrow, rename = "DynamicMusicTrackComponent_Template")]
     DynamicMusicTrackComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "FeedbackFXManager_Template")]
+    FeedbackFXManager(FeedbackFXManager<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "FontEffectList_Template")]
+    FontEffectList(FontEffectList<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "FontTemplate")]
+    FontTemplate(FontTemplate<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "FxBankComponent_Template")]
     FxBankComponent(FxBankComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "FXControllerComponent_Template")]
     FxControllerComponent(FxControllerComponent<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "GFXMaterialShader_Template")]
+    GFXMaterialShader(GFXMaterialShader1718<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_AgingBot_BehaviourAllTrees")]
     AgingBotBehaviourAllTrees(AgingBotBehaviourAllTrees<'a>),
-    #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
-    AutodanceComponent(AutodanceComponent<'a>),
-    #[serde(borrow, rename = "JD_AvatarDescTemplate")]
-    AvatarDescription(AvatarDescription1819<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_CarouselRules")]
+    CarouselRules(CarouselRules<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_CMU_GenericStage_Component_Template")]
+    CMUGenericStageComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_CreditsComponent_Template")]
     CreditsComponent(Empty<'a>),
@@ -80,15 +127,19 @@ pub enum Template18<'a> {
     GachaComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_GoldMoveComponent_Template")]
-    GoldMoveComponent(Empty<'a>),
+    GoldMoveComponent(ModeType<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_PleoInfoComponent_Template")]
+    PleoInfoComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_RegistrationComponent_Template")]
+    RegistrationComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_SceneSpawnerComponent_Template")]
     SceneSpawnerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_SkinDescTemplate")]
     SkinDescription(SkinDescription<'a>),
-    #[serde(borrow, rename = "JD_SongDatabaseTemplate")]
-    SongDatabase(SongDatabase<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_SongDescTemplate")]
     SongDescription(SongDescription<'a>),
@@ -98,6 +149,15 @@ pub enum Template18<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIAvatarUnlockWidget_Template")]
     UIAvatarUnlockWidget(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudCamerafeedComponent_Template")]
+    UIHudCamerafeedComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudCommunityDancerCardComponent_Template")]
+    UIHudCommunityDancerCardComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudDoubleScoringPlayerComponent_Template")]
+    UIHudDoubleScoringPlayerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudLyricsComponent_Template")]
     UIHudLyricsComponent(Empty<'a>),
@@ -111,14 +171,32 @@ pub enum Template18<'a> {
     #[serde(borrow, rename = "JD_UIHudPlayerComponent_Template")]
     UIHudPlayerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudProgressComponent_Template")]
+    UIHudProgressComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudRacelineDM_Template")]
+    UIHudRacelineDM(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudRacelineRivalBarComponent_Template")]
+    UIHudRacelineRivalBarComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudRacelineRivalComponent_Template")]
+    UIHudRacelineRivalComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudRacelineWDFBossComponent_Template")]
     UIHudRacelineWDFBossComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudRacelineWDFRankComponent_Template")]
     UIHudRacelineWDFRankComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudRacelineWDFSpotlightComponent_Template")]
+    UIHudRacelineWDFSpotlightComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudRacelineWDFTeamBattleComponent_Template")]
     UIHudRacelineWDFTeamBattleComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudSpotlightPlayerComponent_Template")]
+    UIHudSpotlightPlayerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudStarvingComponent_Template")]
     UIHudStarvingComponent(Empty<'a>),
@@ -129,11 +207,20 @@ pub enum Template18<'a> {
     #[serde(borrow, rename = "JD_UIHudSweatTimer_Template")]
     UIHudSweatTimer(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIHudVersusPlayerComponent_Template")]
+    UIHudVersusPlayerComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudWDFIngameNotificationComponent_Template")]
     UIHudWDFIngameNotificationComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIJDRankWidget_Template")]
+    UIJDRankWidget(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIMojoWidget_Template")]
     UIMojoWidget(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIProfileStatWidget_Template")]
+    UIProfileStatWidget(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UISaveWidget_Template")]
     UISaveWidget(Empty<'a>),
@@ -141,20 +228,38 @@ pub enum Template18<'a> {
     #[serde(borrow, rename = "JD_UIScheduledQuestComponent_Template")]
     UIScheduledQuestComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UISkinUnlockWidget_Template")]
+    UISkinUnlockWidget(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIUplayNotification_Template")]
+    UIUplayNotification(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIUploadIcon_Template")]
     UIUploadIcon(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIWidgetGroupHUD_AutodanceRecorder_Template")]
+    UIWidgetGroupHUDAutodanceRecorder(ModeType<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_WDFBossSpawnerComponent_Template")]
     WDFBossSpawnerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_WDFOnlineRankTransitionComponent_Template")]
+    WDFOnlineRankTransitionComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_WDFTeamBattleTransitionComponent_Template")]
+    WDFTeamBattleTransitionComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_WDFTransitionComponent_Template")]
+    WDFTransitionComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_WDFUnlimitedFeedbackComponent_Template")]
     WDFUnlimitedFeedbackComponent(Empty<'a>),
-    #[serde(borrow, rename = "MasterTape_Template")]
-    MasterTape(MasterTape<'a>),
-    #[serde(borrow, rename = "MaterialGraphicComponent_Template")]
-    MaterialGraphicComponent(MaterialGraphicComponent<'a>),
-    #[serde(borrow, rename = "MusicTrackComponent_Template")]
-    MusicTrackComponent(MusicTrackComponent<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "Mesh3DComponent_Template")]
+    Mesh3DComponent(SingleInstanceMesh3DComponent<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "PadRumbleManager_Template")]
+    PadRumbleManager(PadRumbleManager<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "PleoComponent_Template")]
     PleoComponent(PleoComponent<'a>),
@@ -167,16 +272,24 @@ pub enum Template18<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "SingleInstanceMesh3DComponent_Template")]
     SingleInstanceMesh3DComponent(SingleInstanceMesh3DComponent<'a>),
-    #[serde(borrow, rename = "SoundComponent_Template")]
-    SoundComponent(SoundComponent<'a>),
-    #[serde(borrow, rename = "TapeCase_Template")]
-    TapeCase(MasterTape<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "SoundConfig_Template")]
+    SoundConfig(SoundConfig<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "TextureGraphicComponent_Template")]
     TextureGraphicComponent(TextureGraphicComponent<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "TexturePatcherComponent_Template")]
+    TexturePatcherComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "TRCLocalisation_Template")]
+    TRCLocalisation(TRCLocalisation<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UIAnchor_Template")]
     UIAnchor(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "UICarousel_Template")]
+    UICarousel(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UIChangePage_Template")]
     UIChangePage(Empty<'a>),
@@ -190,6 +303,12 @@ pub enum Template18<'a> {
     #[serde(borrow, rename = "UICountdown_Template")]
     UICountdown(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "UIItemSlot_Template")]
+    UIItemSlot(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "UIItemTextField_Template")]
+    UIItemTextField(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UIPhoneData_Template")]
     UIPhoneData(Empty<'a>),
     #[cfg(feature = "full_json_types")]
@@ -202,45 +321,17 @@ pub enum Template18<'a> {
     #[serde(borrow, rename = "UITextBox_Template")]
     UITextBox(UITextBox<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "CameraShakeConfig_Template")]
-    CameraShakeConfig(CameraShakeConfig<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "CarouselManager_Template")]
-    CarouselManager(CarouselManager<'a>),
-    #[serde(borrow, rename = "JD_GameManagerConfig_Template")]
-    GameManagerConfig(Box<GameManagerConfig18<'a>>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "FontEffectList_Template")]
-    FontEffectList(FontEffectList<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_CarouselRules")]
-    CarouselRules(CarouselRules<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "TRCLocalisation_Template")]
-    TRCLocalisation(TRCLocalisation<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "PadRumbleManager_Template")]
-    PadRumbleManager(PadRumbleManager<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "SoundConfig_Template")]
-    SoundConfig(SoundConfig<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UITextManager_Template")]
     UITextManager(UITextManager<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "ViewportUIComponent_Template")]
+    ViewportUIComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "ZInputConfig_Template")]
     ZInputConfig(ZInputConfig<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "ZInputManager_Template")]
     ZInputManager(ZInputManager<'a>),
-    #[serde(borrow, rename = "Tape")]
-    Tape(Tape<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "FeedbackFXManager_Template")]
-    FeedbackFXManager(FeedbackFXManager<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "GFXMaterialShader_Template")]
-    GFXMaterialShader(GFXMaterialShader1718<'a>),
 }
 
 impl<'a> Template18<'a> {

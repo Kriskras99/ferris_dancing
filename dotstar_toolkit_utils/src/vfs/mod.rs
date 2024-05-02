@@ -6,13 +6,14 @@ use memmap2::Mmap;
 use stable_deref_trait::StableDeref;
 use yoke::Yokeable;
 
-use crate::bytes::read::{ReadError, TrivialClone, ZeroCopyReadAt};
+use crate::bytes::read::{ReadAt, ReadError, TrivialClone};
 
 pub mod layeredfs;
 pub mod native;
 pub mod path;
 pub mod symlinkfs;
 pub mod vecfs;
+pub mod zipfs;
 
 pub use path::{Component, VirtualPath, VirtualPathBuf};
 
@@ -132,7 +133,7 @@ impl Deref for VirtualFile<'_> {
     }
 }
 
-impl<'vf> ZeroCopyReadAt for VirtualFile<'vf> {
+impl<'vf> ReadAt for VirtualFile<'vf> {
     fn read_null_terminated_string_at<'de>(
         &'de self,
         position: &mut u64,

@@ -8,7 +8,7 @@ use std::{
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u24be, u32be},
-        read::{BinaryDeserialize, ReadError, ZeroCopyReadAtExt},
+        read::{BinaryDeserialize, ReadAtExt, ReadError},
         write::{BinarySerialize, WriteAt, WriteError},
     },
     testing::test_eq,
@@ -41,7 +41,7 @@ impl UnparsedNode {
 
 impl<'de> BinaryDeserialize<'de> for UnparsedNode {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
@@ -134,7 +134,7 @@ impl U8Archive<'_> {
 
 impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
     fn deserialize_at(
-        reader: &'de (impl ZeroCopyReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self, ReadError> {
         let old_position = *position;

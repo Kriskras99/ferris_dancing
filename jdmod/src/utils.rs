@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{
-    bytes::read::ZeroCopyReadAtExt,
+    bytes::read::ReadAtExt,
     vfs::{VirtualFileSystem, VirtualPath},
 };
 use image::{imageops, EncodableLayout, RgbaImage};
@@ -11,6 +11,7 @@ use regex::Regex;
 use texpresso::Format;
 use ubiart_toolkit::{
     cooked::{
+        gtx,
         png::{self, Png, Texture},
         xtx::{self, Image, Index, TextureHeader},
     },
@@ -36,6 +37,7 @@ pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
 
     match platform {
         Platform::Nx => cooked.push_str("nx/"),
+        Platform::WiiU => cooked.push_str("wiiu/"),
         _ => Err(anyhow!("Not yet implemented for {path}"))?,
     };
 
@@ -82,7 +84,7 @@ macro_rules! regex {
 /// # Panics
 /// Will panic if there is more than one image in the texture
 pub fn decode_texture(
-    reader: &(impl ZeroCopyReadAtExt + ?Sized),
+    reader: &(impl ReadAtExt + ?Sized),
     ugi: UniqueGameId,
 ) -> Result<RgbaImage, Error> {
     let png = png::parse(reader, ugi)?;
@@ -128,7 +130,46 @@ pub fn decode_texture(
             RgbaImage::from_vec(header.width, header.height, data_decompressed)
                 .ok_or_else(|| anyhow!("Failure decoding!"))?
         }
-        _ => todo!(),
+        png::Texture::Gtx(gtx) => {
+            assert!(
+                gtx.images.len() == 1,
+                "More than one image in texture, not supported!"
+            );
+
+            let big_image = &gtx.images[0];
+            let header = &big_image.surface;
+            let width = usize::try_from(header.width)?;
+            let height = usize::try_from(header.height)?;
+
+            let data_decompressed = match header.format {
+                gtx::Format::TBc1Srgb | gtx::Format::TBc1Unorm => {
+                    // TODO: Replace with Vec::with_capacity
+                    let mut data_decompressed = vec![0xFF; width * height * 4];
+                    Format::Bc1.decompress(&big_image.data, width, height, &mut data_decompressed);
+                    data_decompressed
+                }
+                gtx::Format::TBc2Srgb | gtx::Format::TBc2Unorm => {
+                    // TODO: Replace with Vec::with_capacity
+                    let mut data_decompressed = vec![0xFF; width * height * 4];
+                    Format::Bc2.decompress(&big_image.data, width, height, &mut data_decompressed);
+                    data_decompressed
+                }
+                gtx::Format::TBc3Srgb | gtx::Format::TBc3Unorm => {
+                    // TODO: Replace with Vec::with_capacity
+                    let mut data_decompressed = vec![0xFF; width * height * 4];
+                    Format::Bc3.decompress(&big_image.data, width, height, &mut data_decompressed);
+                    data_decompressed
+                }
+                gtx::Format::TcsR8G8B8A8Srgb | gtx::Format::TcsR8G8B8A8Unorm => {
+                    big_image.data.clone()
+                }
+                _ => unimplemented!("{:?}", header.format),
+            };
+
+            RgbaImage::from_vec(header.width, header.height, data_decompressed)
+                .ok_or_else(|| anyhow!("Failure decoding!"))?
+        }
+        png::Texture::None => unreachable!("Should not exist!"),
     };
 
     if png_width != buffer.width() || png_height != buffer.height() {
@@ -156,7 +197,7 @@ pub fn decode_texture(
 pub fn encode_texture(
     vfs: &impl VirtualFileSystem,
     image_path: &VirtualPath,
-) -> Result<Png<'static>, Error> {
+) -> Result<Png, Error> {
     // let mipmaps = false;
     let img_file = vfs.open(image_path)?;
     let img = image::load_from_memory(&img_file)?;

@@ -116,7 +116,7 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
     }
 
     // Import songs and other content from the game
-    import::import_vfs(&sfat_vfs, dir_root, sfat_vfs.unique_game_id(), false, false)?;
+    import::import_vfs(&sfat_vfs, dir_tree, sfat_vfs.unique_game_id(), false, false)?;
 
     Ok(())
 }

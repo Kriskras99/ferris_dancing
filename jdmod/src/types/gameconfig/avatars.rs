@@ -57,6 +57,8 @@ pub enum UnlockType<'a> {
     Unknown9,
     /// only in 2017-2018 so maybe Dance Quest?
     Unknown11,
+    /// only on WiiU
+    Unknown16,
     /// Gacha machine
     GiftMachine,
     /// Have a save file from a previous Just Dance
@@ -78,6 +80,7 @@ impl From<&UnlockType<'_>> for u8 {
             UnlockType::Unknown6 => 6,
             UnlockType::Unknown9 => 9,
             UnlockType::Unknown11 => 11,
+            UnlockType::Unknown16 => 16,
             UnlockType::GiftMachine => 18,
             UnlockType::PlayPreviousJD => 19,
             UnlockType::Unlocked => 20,
@@ -107,6 +110,7 @@ impl<'a> UnlockType<'a> {
             6 => Ok(Self::Unknown6),
             9 => Ok(Self::Unknown9),
             11 => Ok(Self::Unknown11),
+            16 => Ok(Self::Unknown16),
             18 => Ok(Self::GiftMachine),
             19 => Ok(Self::PlayPreviousJD),
             20 => Ok(Self::Unlocked),
@@ -133,7 +137,8 @@ impl<'a> UnlockType<'a> {
             | Self::Unknown3
             | Self::Unknown6
             | Self::Unknown9
-            | Self::Unknown11 => Self::Unlocked,
+            | Self::Unknown11
+            | Self::Unknown16 => Self::Unlocked,
             Self::Quest(s) => Self::Quest(s),
         }
     }
