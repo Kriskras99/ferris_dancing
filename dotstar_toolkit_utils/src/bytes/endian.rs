@@ -21,11 +21,13 @@ pub trait Endianness: Sealed + Clone + Copy + std::fmt::Debug + PartialEq {
     fn from_native(bytes: &mut [u8]) {
         Self::to_native(bytes);
     }
+
+    fn sized() -> impl Endianness;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// The least significant byte is at the smallest address
-pub enum LittleEndian {}
+pub struct LittleEndian;
 
 impl Sealed for LittleEndian {}
 impl Endianness for LittleEndian {
@@ -38,11 +40,16 @@ impl Endianness for LittleEndian {
     #[cfg(target_endian = "little")]
     #[inline(always)]
     fn to_native(_bytes: &mut [u8]) {}
+
+    #[expect(refining_impl_trait, reason = "It's better")]
+    fn sized() -> Self {
+        Self
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// The most siginficant byte is at the smallest address
-pub enum BigEndian {}
+pub struct BigEndian;
 /// The endianness used for network communication
 pub type NetworkEndian = BigEndian;
 
@@ -57,6 +64,11 @@ impl Endianness for BigEndian {
     #[cfg(target_endian = "big")]
     #[inline(always)]
     fn to_native(_bytes: &mut [u8]) {}
+
+    #[expect(refining_impl_trait, reason = "It's better")]
+    fn sized() -> Self {
+        Self
+    }
 }
 
 #[cfg(target_endian = "big")]

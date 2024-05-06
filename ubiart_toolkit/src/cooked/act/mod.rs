@@ -28,6 +28,5 @@ mod parser;
 mod types;
 mod writer;
 
-pub use parser::parse;
 pub use types::*;
 pub use writer::*;

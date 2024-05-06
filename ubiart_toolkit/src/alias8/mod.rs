@@ -25,7 +25,8 @@ use std::{borrow::Cow, collections::HashMap};
 use bitflags::bitflags;
 use dotstar_toolkit_utils::{
     bytes::{
-        primitives::{u16be, u32be},
+        endian::BigEndian,
+        len::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
         write::{BinarySerialize, WriteAt, WriteError},
     },
@@ -79,9 +80,10 @@ impl Alias<'_> {
 }
 
 impl<'de> BinaryDeserialize<'de> for Alias<'de> {
-    fn deserialize_at(
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: &(),
     ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -92,8 +94,8 @@ impl<'de> BinaryDeserialize<'de> for Alias<'de> {
             let path = reader.read_at(position)?;
 
             // Read the unknown values and check them
-            let unk2 = reader.read_at::<u16be>(position)?.into();
-            let unk3 = reader.read_at::<u16be>(position)?.into();
+            let unk2 = reader.read_at_with_ctx(position, &BigEndian)?;
+            let unk3 = reader.read_at_with_ctx(position, &BigEndian)?;
             test_eq(&unk2, &Self::UNK2)?;
             test_any(&unk3, Self::UNK3)?;
 
@@ -107,16 +109,17 @@ impl<'de> BinaryDeserialize<'de> for Alias<'de> {
 }
 
 impl BinarySerialize for Alias<'_> {
-    fn serialize_at(
+    fn serialize_at_with_ctx(
         &self,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        _ctx: &(),
     ) -> Result<(), WriteError> {
         writer.write_len_string_at::<u32be>(position, &self.alias)?;
         writer.write_len_string_at::<u32be>(position, &self.alias)?;
         writer.write_at(position, &self.path)?;
-        writer.write_at(position, &u16be::from(Self::UNK2))?;
-        writer.write_at(position, &u16be::from(self.unk3))?;
+        writer.write_at_with_ctx(position, &Self::UNK2, &BigEndian)?;
+        writer.write_at_with_ctx(position, &self.unk3, &BigEndian)?;
         Ok(())
     }
 }
@@ -144,14 +147,15 @@ impl<'a> Alias8<'a> {
 }
 
 impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
-    fn deserialize_at(
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: &(),
     ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
             // Read the unknown value at the beginning and check it's correct
-            let unk1 = reader.read_at::<u32be>(position)?.into();
+            let unk1 = reader.read_at_with_ctx(position, &BigEndian)?;
             test_eq(&unk1, &Self::UNK1)?;
 
             // Read the aliases
@@ -172,12 +176,13 @@ impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
 }
 
 impl BinarySerialize for Alias8<'_> {
-    fn serialize_at(
+    fn serialize_at_with_ctx(
         &self,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        _ctx: &(),
     ) -> Result<(), WriteError> {
-        writer.write_at(position, &u32be::from(Self::UNK1))?;
+        writer.write_at_with_ctx(position, &Self::UNK1, &BigEndian)?;
         writer.write_len_type_at::<u32be>(position, &mut self.aliases.values())?;
         Ok(())
     }

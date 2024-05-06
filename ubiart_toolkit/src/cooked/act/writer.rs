@@ -1,34 +1,32 @@
 use std::borrow::Cow;
 
-use dotstar_toolkit_utils::bytes::{
-    primitives::{u32be, u64be},
-    write::{BinarySerialize, WriteAt, WriteError},
-};
+use dotstar_toolkit_utils::bytes::{endian::BigEndian, write::{BinarySerialize, WriteAt, WriteError}};
 
 use super::{Actor, Component, MaterialGraphicComponent, PleoComponent};
 
 impl BinarySerialize for Actor<'_> {
-    fn serialize_at(
+    fn serialize_at_with_ctx(
         &self,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        _ctx: &()
     ) -> Result<(), WriteError> {
-        writer.write_at(position, &u32be::from(1))?; // unk0
-        writer.write_at(position, &u32be::from(self.unk1))?;
-        writer.write_at(position, &u32be::from(self.unk2))?;
-        writer.write_at(position, &u32be::from(self.unk2_5))?;
-        writer.write_at(position, &u64be::from(0))?; // unk3
-        writer.write_at(position, &u32be::from(0))?; // unk3_5
-        writer.write_at(position, &u64be::from(0x1_0000_0000))?; // unk4
-        writer.write_at(position, &u32be::from(0))?; // unk5
-        writer.write_at(position, &u64be::from(0))?; // unk6
-        writer.write_at(position, &u64be::from(0xFFFF_FFFF))?; // unk7
-        writer.write_at(position, &u32be::from(0))?; // unk8
+        writer.write_at_with_ctx(position, &1u32, &BigEndian)?; // unk0
+        writer.write_at_with_ctx(position, &self.unk1, &BigEndian)?;
+        writer.write_at_with_ctx(position, &self.unk2, &BigEndian)?;
+        writer.write_at_with_ctx(position, &self.unk2_5, &BigEndian)?;
+        writer.write_at_with_ctx(position, &0u64, &BigEndian)?; // unk3
+        writer.write_at_with_ctx(position, &0u32, &BigEndian)?; // unk3_5
+        writer.write_at_with_ctx(position, &0x1_0000_0000u64, &BigEndian)?; // unk4
+        writer.write_at_with_ctx(position, &0u32, &BigEndian)?; // unk5
+        writer.write_at_with_ctx(position, &064, &BigEndian)?; // unk6
+        writer.write_at_with_ctx(position, &0xFFFF_FFFFu64, &BigEndian)?; // unk7
+        writer.write_at_with_ctx(position, &0u32, &BigEndian)?; // unk8
         writer.write_at(position, &self.tpl)?;
-        writer.write_at(position, &u32be::from(0))?; // unk9
-        writer.write_at(position, &u32be::try_from(self.components.len())?)?;
+        writer.write_at_with_ctx(position, &0u32, &BigEndian)?; // unk9
+        writer.write_at_with_ctx(position, &u32::try_from(self.components.len())?, &BigEndian)?;
         for component in &self.components {
-            writer.write_at(position, &u32be::from(component.to_id()))?;
+            writer.write_at(position, &component.to_id()))?;
             match component {
                 Component::AutodanceComponent
                 | Component::MasterTape
@@ -68,40 +66,40 @@ fn write_material_graphic_component(
     is_pleo: bool,
 ) -> Result<(), WriteError> {
     for _ in 0..3 {
-        writer.write_at(position, &u32be::from(0x3F80_0000))?; // unk11
+        writer.write_at(position, &0x3F80_0000))?; // unk11
     }
-    writer.write_at(position, &u32be::from(mgc.unk11_5))?;
+    writer.write_at(position, &mgc.unk11_5))?;
     for _ in 0..2 {
         if is_pleo {
-            writer.write_at(position, &u64be::from(0xFFFF_FFFF))?; // unk12
+            writer.write_at(position, &0xFFFF_FFFF))?; // unk12
         } else {
-            writer.write_at(position, &u64be::from(0x0))?; // unk12
+            writer.write_at(position, &0x0))?; // unk12
         }
     }
-    writer.write_at(position, &u32be::from(mgc.unk13))?;
-    writer.write_at(position, &u64be::from(mgc.unk14))?;
-    writer.write_at(position, &u64be::from(mgc.unk15))?;
+    writer.write_at(position, &mgc.unk13))?;
+    writer.write_at(position, &mgc.unk14))?;
+    writer.write_at(position, &mgc.unk15))?;
     for item in mgc.files.iter().take(9) {
         writer.write_at(position, item)?;
     }
-    writer.write_at(position, &u32be::from(0))?;
+    writer.write_at(position, &0))?;
     for item in mgc.files.iter().skip(9) {
         writer.write_at(position, item)?;
     }
     for _ in 0..4 {
-        writer.write_at(position, &u64be::from(0))?;
+        writer.write_at(position, &0))?;
     }
-    writer.write_at(position, &u32be::from(0))?;
-    writer.write_at(position, &u32be::from(0x3F80_0000))?;
-    writer.write_at(position, &u64be::from(0xFFFF_FFFF_FFFF_FFFF))?;
+    writer.write_at(position, &0))?;
+    writer.write_at(position, &0x3F80_0000))?;
+    writer.write_at(position, &0xFFFF_FFFF_FFFF_FFFF))?;
     for _ in 0..3 {
-        writer.write_at(position, &u32be::from(0))?;
+        writer.write_at(position, &0))?;
     }
-    writer.write_at(position, &u32be::from(0x3F80_0000))?;
-    writer.write_at(position, &u64be::from(0))?;
-    writer.write_at(position, &u32be::from(mgc.unk26))?;
+    writer.write_at(position, &0x3F80_0000))?;
+    writer.write_at(position, &0))?;
+    writer.write_at(position, &mgc.unk26))?;
     if is_pleo {
-        writer.write_at(position, &u32be::from(0))?;
+        writer.write_at(position, &0))?;
     }
     Ok(())
 }

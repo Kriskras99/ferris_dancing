@@ -6,7 +6,7 @@ use memmap2::Mmap;
 use stable_deref_trait::StableDeref;
 use yoke::Yokeable;
 
-use crate::bytes::read::{ReadAt, ReadError, TrivialClone};
+use crate::bytes::read::{ReadAt, ReadError};
 
 pub mod layeredfs;
 pub mod native;
@@ -119,8 +119,6 @@ pub enum VirtualFile<'f> {
 
 unsafe impl StableDeref for VirtualFile<'_> {}
 
-impl TrivialClone for VirtualFile<'_> {}
-
 impl Deref for VirtualFile<'_> {
     type Target = [u8];
 
@@ -154,6 +152,14 @@ impl<'vf> ReadAt for VirtualFile<'vf> {
             VirtualFile::Slice(data) => data.read_slice_at(position, len),
             VirtualFile::Vec(data) => data.deref().read_slice_at(position, len),
             VirtualFile::Mmap(data) => data.deref().read_slice_at(position, len),
+        }
+    }
+
+    fn len(&self) -> Result<u64, ReadError> {
+        match self {
+            VirtualFile::Slice(data) => Ok(u64::try_from(data.len())?),
+            VirtualFile::Vec(data) => data.len(),
+            VirtualFile::Mmap(data) => Ok(u64::try_from(data.len())?),
         }
     }
 }
