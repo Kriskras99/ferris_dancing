@@ -6,4 +6,5 @@ pub mod isc;
 pub mod json;
 pub mod png;
 pub mod sgs;
+pub mod wav;
 pub mod xtx;

@@ -218,7 +218,7 @@ pub enum TestError {
 
 impl TestError {
     /// Create the [`TestError::NotEqual`] error
-    fn not_equal<T: Debug>(left: &T, right: &T) -> Self {
+    fn not_equal<T: Debug>(left: T, right: T) -> Self {
         Self::NotEqual {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
@@ -227,7 +227,7 @@ impl TestError {
     }
 
     /// Create the [`TestError::Equal`] error
-    fn equal<T: Debug>(left: &T, right: &T) -> Self {
+    fn equal<T: Debug>(left: T, right: T) -> Self {
         Self::Equal {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
@@ -245,7 +245,7 @@ impl TestError {
     }
 
     /// Create the [`TestError::GreaterThan`] error
-    fn greater_than<T: Debug>(left: &T, right: &T) -> Self {
+    fn greater_than<T: Debug>(left: T, right: T) -> Self {
         Self::GreaterThan {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
@@ -254,7 +254,7 @@ impl TestError {
     }
 
     /// Create the [`TestError::SmallerThan`] error
-    fn smaller_than<T: Debug>(left: &T, right: &T) -> Self {
+    fn smaller_than<T: Debug>(left: T, right: T) -> Self {
         Self::GreaterThan {
             left: format!("{left:?}"),
             right: format!("{right:?}"),
@@ -292,7 +292,7 @@ pub fn test_not(value: bool) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if the two inputs are not the same, with a description of the values.
-pub fn test_eq<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
+pub fn test_eq<T: PartialEq + Debug>(left: T, right: T) -> TestResult {
     if left == right {
         TestResult::Ok
     } else {
@@ -317,7 +317,7 @@ pub fn test_any<T: PartialEq + Debug>(left: &T, right: &[T]) -> TestResult {
 /// # Errors
 /// Will return an error if the two inputs are the same, with a description of the values.
 #[allow(clippy::if_not_else, reason = "Much clearer this way")]
-pub fn test_ne<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
+pub fn test_ne<T: PartialEq + Debug>(left: T, right: T) -> TestResult {
     if left != right {
         TestResult::Ok
     } else {
@@ -329,7 +329,7 @@ pub fn test_ne<T: PartialEq + Debug>(left: &T, right: &T) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if `one` is bigger than `two`, with a description of the values.
-pub fn test_le<T: PartialOrd + Debug>(left: &T, right: &T) -> TestResult {
+pub fn test_le<T: PartialOrd + Debug>(left: T, right: T) -> TestResult {
     if left <= right {
         TestResult::Ok
     } else {
@@ -341,7 +341,7 @@ pub fn test_le<T: PartialOrd + Debug>(left: &T, right: &T) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if `one` is smaller than `two`, with a description of the values.
-pub fn test_ge<T: PartialOrd + Debug>(left: &T, right: &T) -> TestResult {
+pub fn test_ge<T: PartialOrd + Debug>(left: T, right: T) -> TestResult {
     if left >= right {
         TestResult::Ok
     } else {

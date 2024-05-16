@@ -79,7 +79,7 @@ pub trait Endianness: Sealed + Clone + Copy + std::fmt::Debug + PartialEq {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// The least significant byte is at the smallest address
-pub enum LittleEndian {}
+pub struct LittleEndian;
 
 impl Sealed for LittleEndian {}
 impl Endianness for LittleEndian {
@@ -96,7 +96,7 @@ impl Endianness for LittleEndian {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// The most siginficant byte is at the smallest address
-pub enum BigEndian {}
+pub struct BigEndian;
 /// The endianness used for network communication
 pub type NetworkEndian = BigEndian;
 
