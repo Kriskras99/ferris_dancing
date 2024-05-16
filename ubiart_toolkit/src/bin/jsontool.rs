@@ -1,3 +1,5 @@
+#![allow(clippy::missing_panics_doc)]
+
 use std::path::PathBuf;
 
 use clap::Parser;

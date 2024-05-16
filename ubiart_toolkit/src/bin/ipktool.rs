@@ -1,5 +1,5 @@
-#![allow(clippy::missing_panics_doc)]
-#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc, clippy::missing_errors_doc)]
+
 use std::{
     collections::HashSet,
     fs::{create_dir_all, File},

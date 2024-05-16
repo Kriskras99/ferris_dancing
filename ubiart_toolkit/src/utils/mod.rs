@@ -719,6 +719,7 @@ const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
     (a, b, c)
 }
 
+#[allow(clippy::missing_panics_doc)]
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;

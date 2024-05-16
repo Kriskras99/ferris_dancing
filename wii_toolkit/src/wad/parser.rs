@@ -302,6 +302,7 @@ fn round_to_boundary_u64(n: u64) -> u64 {
         .expect("Overflow occurred!")
 }
 
+#[allow(clippy::missing_panics_doc, reason = "They're tests")]
 #[cfg(test)]
 mod tests {
     use super::round_to_boundary_u64;

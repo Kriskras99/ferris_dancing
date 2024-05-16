@@ -194,6 +194,7 @@ pub const fn unpack_color(color: u16) -> Color {
     }
 }
 
+#[allow(clippy::missing_panics_doc)]
 #[cfg(test)]
 mod tests {
     use super::*;
