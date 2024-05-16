@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::{bytes::read::BinaryDeserialize, vfs::VirtualFileSystem};
+use dotstar_toolkit_utils::{bytes::read::BinaryDeserializeExt as _, vfs::VirtualFileSystem};
 use ubiart_toolkit::loc8::Loc8;
 
 use crate::types::{

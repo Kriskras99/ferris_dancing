@@ -14,21 +14,25 @@ use super::types::Loc8;
 use crate::{loc8::types::Language, utils::LocaleId};
 
 impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
-        let unk1 = reader.read_at::<u32be>(position)?.into();
+        let unk1 = reader.read_at::<u32be>(position)?;
         let language = reader.read_at::<Language>(position)?;
 
         // When unk1 == 2 there's a second version of strings
         // However these alternative strings seem to be riddled with typos, so just use the first one
-        test_any(&unk1, &[1u32, 2])?;
+        test_any(&unk1, &[1, 2])?;
 
         let mut strings = HashMap::new();
 
         for i in 0..unk1 {
-            let string_count: u32 = reader.read_at::<u32be>(position)?.into();
+            let string_count = reader.read_at::<u32be>(position)?;
 
             for _ in 0..string_count {
                 let id = reader.read_at::<LocaleId>(position)?;
@@ -47,7 +51,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
             let _unk2 = reader.read_at::<u32be>(position)?;
         }
 
-        if let Ok(footer) = reader.read_fixed_slice_at::<100>(position) {
+        if let Ok(footer) = reader.read_at::<[u8; 100]>(position) {
             if test_any(&footer, Loc8::FOOTERS).is_err() {
                 println!("Warning! Unexpected footer in loc8 file: {footer:x?}",);
             }
@@ -60,11 +64,15 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
 }
 
 impl BinaryDeserialize<'_> for Language {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
-        let value: u32 = reader.read_at::<u32be>(position)?.into();
+        let value: u32 = reader.read_at::<u32be>(position)?;
         match value {
             0x0 => Ok(Self::English),
             0x1 => Ok(Self::French),

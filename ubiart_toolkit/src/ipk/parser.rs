@@ -10,33 +10,37 @@ use dotstar_toolkit_utils::{
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use super::{
-    types::Platform, Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR,
-    UNK1, UNK2, UNK3, UNK6,
+    types::IpkPlatform, Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC,
+    SEPARATOR, UNK1, UNK2, UNK3, UNK6,
 };
-use crate::utils::{self, string_id_2, Game, PathId, SplitPath, UniqueGameId};
+use crate::utils::{self, Game, PathId, SplitPath, UniqueGameId};
 
 impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
         // Read the header
-        let magic = reader.read_at::<u32be>(position)?.into();
+        let magic = reader.read_at::<u32be>(position)?;
         test_eq(&magic, &MAGIC)?;
-        let version = reader.read_at::<u32be>(position)?.into();
-        let platform = reader.read_at::<Platform>(position)?;
+        let version = reader.read_at::<u32be>(position)?;
+        let platform = reader.read_at::<IpkPlatform>(position)?;
         let base_offset = u64::from(reader.read_at::<u32be>(position)?);
         let num_files = u32::from(reader.read_at::<u32be>(position)?);
-        let unk1 = reader.read_at::<u32be>(position)?.into();
+        let unk1 = reader.read_at::<u32be>(position)?;
         test_any(&unk1, UNK1)?;
-        let unk2 = reader.read_at::<u32be>(position)?.into();
+        let unk2 = reader.read_at::<u32be>(position)?;
         test_any(&unk2, UNK2)?;
-        let unk3 = reader.read_at::<u32be>(position)?.into();
+        let unk3 = reader.read_at::<u32be>(position)?;
         test_any(&unk3, UNK3)?;
-        let unk4 = reader.read_at::<u32be>(position)?.into();
+        let unk4 = reader.read_at::<u32be>(position)?;
         let game_platform = reader.read_at::<UniqueGameId>(position)?;
-        let engine_version = reader.read_at::<u32be>(position)?.into();
-        let num_files_2 = reader.read_at::<u32be>(position)?.into();
+        let engine_version = reader.read_at::<u32be>(position)?;
+        let num_files_2 = reader.read_at::<u32be>(position)?;
 
         // Sanity check
         test_eq(&num_files, &num_files_2)?;
@@ -51,17 +55,17 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         );
         for _ in 0..num_files {
             // Read the file information
-            let unk6 = reader.read_at::<u32be>(position)?.into();
+            let unk6 = reader.read_at::<u32be>(position)?;
             test_eq(&unk6, &UNK6)?;
             let size = usize::try_from(reader.read_at::<u32be>(position)?)?;
             let compressed_size = usize::try_from(reader.read_at::<u32be>(position)?)?;
-            let timestamp = reader.read_at::<u64be>(position)?.into();
-            let offset = reader.read_at::<u64be>(position)?.into();
+            let timestamp = reader.read_at::<u64be>(position)?;
+            let offset = reader.read_at::<u64be>(position)?;
             // Can't use read_at::<SplitPath> as the filename and path are swapped on JD2014 for the Wii
             let mut filename = reader.read_len_string_at::<u32be>(position)?;
             let mut path = reader.read_len_string_at::<u32be>(position)?;
             let path_id = reader.read_at::<PathId>(position)?;
-            let is_cooked_u32 = reader.read_at::<u32be>(position)?.into();
+            let is_cooked_u32 = reader.read_at::<u32be>(position)?;
             test_any(&is_cooked_u32, IS_COOKED)?;
 
             // This is swapped for one game
@@ -74,8 +78,9 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
                 (filename, path) = (path, filename);
             }
 
-            let path_id_calculated = string_id_2(path.as_ref(), filename.as_ref());
-            test_eq(&*path_id, &path_id_calculated).with_context(|| format!("Path ID of {path}{filename} is {path_id_calculated}, but does not match what is in the file: {path_id:?}"))?;
+            // Construct the path and check the PathId
+            let full_path = SplitPath::new(path, filename)?;
+            test_eq(&path_id, &full_path.id())?;
 
             // Derive info from file information
             let is_cooked = is_cooked_u32 == 0x2;
@@ -100,7 +105,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             };
             let file = IpkFile {
                 timestamp,
-                path: SplitPath::new(path, filename)?,
+                path: full_path,
                 is_cooked,
                 data,
             };
@@ -120,7 +125,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             // Make sure the separator is here
             match test_eq(&(header_end + 0x4), &base_offset) {
                 TestResult::Ok => {
-                    let separator = reader.read_at::<u32be>(position)?.into();
+                    let separator = reader.read_at::<u32be>(position)?;
                     test_eq(&separator, &SEPARATOR)?;
                 }
                 result @ TestResult::Err(_) => result?,
@@ -142,12 +147,16 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     }
 }
 
-impl BinaryDeserialize<'_> for Platform {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+impl BinaryDeserialize<'_> for IpkPlatform {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
-        match u32::from(reader.read_at::<u32be>(position)?) {
+        match reader.read_at::<u32be>(position)? {
             0x1 => Ok(Self::X360),
             0x3 => Ok(Self::Ps4),
             0x5 => Ok(Self::Wii),

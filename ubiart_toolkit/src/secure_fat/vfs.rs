@@ -4,7 +4,7 @@
 use std::{collections::HashMap, io::ErrorKind};
 
 use dotstar_toolkit_utils::{
-    bytes::read::BinaryDeserialize,
+    bytes::read::BinaryDeserializeExt as _,
     vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs},
 };
 

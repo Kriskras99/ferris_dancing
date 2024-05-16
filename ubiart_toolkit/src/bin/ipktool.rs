@@ -9,7 +9,7 @@ use std::{
 
 use clap::Parser;
 use dotstar_toolkit_utils::{
-    bytes::read::BinaryDeserialize,
+    bytes::read::BinaryDeserializeExt as _,
     vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
 };
 use ubiart_toolkit::{

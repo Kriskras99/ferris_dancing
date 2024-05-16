@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{
-    bytes::read::ReadAtExt,
+    bytes::read::{BinaryDeserialize, ReadAtExt},
     vfs::{VirtualFileSystem, VirtualPath},
 };
 use image::{imageops, EncodableLayout, RgbaImage};
@@ -87,7 +87,7 @@ pub fn decode_texture(
     reader: &(impl ReadAtExt + ?Sized),
     ugi: UniqueGameId,
 ) -> Result<RgbaImage, Error> {
-    let png = png::parse(reader, ugi)?;
+    let png = Png::deserialize_with_ctx(reader, ugi)?;
 
     let png_height = u32::from(png.height);
     let png_width = u32::from(png.width);

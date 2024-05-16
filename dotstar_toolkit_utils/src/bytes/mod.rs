@@ -15,6 +15,8 @@ use std::{
     path::Path,
 };
 
+pub use primitives2 as primitives;
+
 use self::{read::ReadAt, write::WriteAt};
 
 /// Read the file at path into a `Vec`

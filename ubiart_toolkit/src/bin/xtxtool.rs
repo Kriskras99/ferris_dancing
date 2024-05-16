@@ -5,15 +5,11 @@ use std::{
 };
 
 use clap::Parser;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use image::{imageops, ImageBuffer, ImageFormat, Rgba};
-use serde::Serialize;
 use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 use ubiart_toolkit::{
-    cooked::{
-        self,
-        png::Png,
-        xtx::{Format, Image, Index, Xtx},
-    },
+    cooked::{png::Png, xtx},
     utils::{Game, Platform, UniqueGameId},
 };
 
@@ -25,8 +21,6 @@ struct Cli {
     info: bool,
     #[arg(short, long, default_value_t = false)]
     xtx_info: bool,
-    #[arg(long)]
-    json: Option<PathBuf>,
     output: Option<PathBuf>,
 }
 
@@ -50,7 +44,7 @@ fn main() {
         .init();
 
     let file = File::open(&cli.source).unwrap();
-    let png = cooked::png::parse(
+    let png = Png::deserialize_with_ctx(
         &file,
         UniqueGameId {
             game: Game::JustDance2022,
@@ -122,10 +116,10 @@ fn main() {
             let mut data_decompressed = vec![0xFF; uncomp_size];
             let data = &big_image.data[offset..offset + comp_size];
             match hdr.format {
-                cooked::xtx::Format::DXT5 => {
+                xtx::Format::DXT5 => {
                     texpresso::Format::Bc3.decompress(data, width, height, &mut data_decompressed);
                 }
-                cooked::xtx::Format::DXT1 => {
+                xtx::Format::DXT1 => {
                     texpresso::Format::Bc1.decompress(data, width, height, &mut data_decompressed);
                 }
                 _ => panic!("Format {:?} not yet implemented!", hdr.format),
@@ -156,104 +150,6 @@ fn main() {
             buffer.write_to(&mut fout, ImageFormat::Png).unwrap();
 
             offset += comp_size;
-        }
-    }
-
-    if let Some(json_path) = cli.json {
-        let metadata = Metadata::from(&png);
-        let file = File::create(json_path).unwrap();
-        serde_json::to_writer_pretty(file, &metadata).unwrap();
-    }
-}
-
-#[derive(Serialize)]
-pub struct Metadata {
-    pub png: PngMetadata,
-    pub xtx: XtxMetadata,
-}
-
-impl From<&Png> for Metadata {
-    fn from(value: &Png) -> Self {
-        Self {
-            png: PngMetadata::from(value),
-            xtx: XtxMetadata::from(value.texture.xtx().unwrap_or_else(|_| unreachable!())),
-        }
-    }
-}
-
-#[derive(Serialize)]
-pub struct PngMetadata {
-    pub width: u16,
-    pub height: u16,
-    pub unk2: u32,
-    pub unk5: u16,
-    pub unk8: u32,
-    pub unk9: u32,
-    pub unk10: u16,
-}
-
-impl From<&Png> for PngMetadata {
-    fn from(value: &Png) -> Self {
-        Self {
-            width: value.width,
-            height: value.height,
-            unk2: value.unk2,
-            unk5: value.unk5,
-            unk8: value.unk8,
-            unk9: value.unk9,
-            unk10: value.unk10,
-        }
-    }
-}
-
-#[derive(Serialize)]
-pub struct XtxMetadata {
-    pub major_version: u32,
-    pub minor_version: u32,
-    pub images: Vec<XtxImageMetadata>,
-}
-
-impl From<&Xtx> for XtxMetadata {
-    fn from(value: &Xtx) -> Self {
-        Self {
-            major_version: value.major_version,
-            minor_version: value.minor_version,
-            images: value.images.iter().map(XtxImageMetadata::from).collect(),
-        }
-    }
-}
-
-#[derive(Serialize)]
-pub struct XtxImageMetadata {
-    pub image_size: u64,
-    pub alignment: u32,
-    pub width: u32,
-    pub height: u32,
-    pub depth: u32,
-    pub target: u32,
-    pub format: Format,
-    pub mipmaps: u32,
-    pub slice_size: u32,
-    pub mipmap_offsets: [u32; 17],
-    pub block_height_log2: u8,
-    pub indexes: Vec<Index>,
-}
-
-impl From<&Image> for XtxImageMetadata {
-    fn from(value: &Image) -> Self {
-        Self {
-            image_size: value.header.image_size,
-            alignment: value.header.alignment,
-            width: value.header.width,
-            height: value.header.height,
-            depth: value.header.depth,
-            target: value.header.target,
-            format: value.header.format,
-            mipmaps: value.header.mipmaps,
-            slice_size: value.header.slice_size,
-            mipmap_offsets: value.header.mipmap_offsets,
-            block_height_log2: value.header.block_height_log2,
-            indexes: value.indexes.clone(),
         }
     }
 }

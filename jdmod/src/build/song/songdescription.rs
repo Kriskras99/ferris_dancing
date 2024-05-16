@@ -90,7 +90,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     };
 
     let song_desc_tpl_vec = cooked::json::create_vec(&song_desc_tpl)?;
-    let song_desc_act_vec = cooked::act::create_vec(&song_desc_act)?;
+    let song_desc_act_vec = cooked::act::create_vec(song_desc_act)?;
 
     bf.generated_files
         .add_file(cache_map_path.join("songdesc.tpl.ckd"), song_desc_tpl_vec)?;

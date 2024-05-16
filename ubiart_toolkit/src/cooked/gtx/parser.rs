@@ -18,10 +18,14 @@ use crate::cooked::gtx::Image;
 const COMP_SEL: &[char] = &['R', 'G', 'B', 'A', '0', '1'];
 
 impl BinaryDeserialize<'_> for Gtx {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
         let gfd = reader.read_at::<GfdHeader>(position)?;
 
         let mut blocks = Vec::new();
@@ -89,55 +93,63 @@ impl BinaryDeserialize<'_> for Gtx {
 }
 
 impl BinaryDeserialize<'_> for GfdHeader {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
         let start = *position;
-        let magic = reader.read_at::<u32be>(position)?.into();
+        let magic = reader.read_at::<u32be>(position)?;
         test_eq(&magic, &Self::MAGIC)?;
-        let size = reader.read_at::<u32be>(position)?.into();
-        test_eq(&size, &0x20u32)?;
-        let major_version = reader.read_at::<u32be>(position)?.into();
-        test_eq(&major_version, &7u32)?;
-        let minor_version = reader.read_at::<u32be>(position)?.into();
-        test_eq(&minor_version, &1u32)?;
-        let gpu_version = reader.read_at::<u32be>(position)?.into();
+        let size = reader.read_at::<u32be>(position)?;
+        test_eq(&size, &0x20)?;
+        let major_version = reader.read_at::<u32be>(position)?;
+        test_eq(&major_version, &7)?;
+        let minor_version = reader.read_at::<u32be>(position)?;
+        test_eq(&minor_version, &1)?;
+        let gpu_version = reader.read_at::<u32be>(position)?;
         test_eq(&gpu_version, &Self::GPU_VERSION)?;
-        let align_mode = reader.read_at::<u32be>(position)?.into();
-        let reserved1 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&reserved1, &0u32)?;
-        let reserved2 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&reserved2, &0u32)?;
+        let align_mode = reader.read_at::<u32be>(position)?;
+        let reserved1 = reader.read_at::<u32be>(position)?;
+        test_eq(&reserved1, &0)?;
+        let reserved2 = reader.read_at::<u32be>(position)?;
+        test_eq(&reserved2, &0)?;
 
         Ok(Self { align_mode })
     }
 }
 
 impl<'de> BinaryDeserialize<'de> for Block<'de> {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
         let start = *position;
-        let magic = reader.read_at::<u32be>(position)?.into();
+        let magic = reader.read_at::<u32be>(position)?;
         test_eq(&magic, &Self::MAGIC)?;
         let size = u32::from(reader.read_at::<u32be>(position)?);
-        let major_version = reader.read_at::<u32be>(position)?.into();
-        test_eq(&major_version, &1u32)?;
-        let minor_version = reader.read_at::<u32be>(position)?.into();
-        test_eq(&minor_version, &0u32)?;
-        let type_it = reader.read_at::<u32be>(position)?.into();
+        let major_version = reader.read_at::<u32be>(position)?;
+        test_eq(&major_version, &1)?;
+        let minor_version = reader.read_at::<u32be>(position)?;
+        test_eq(&minor_version, &0)?;
+        let type_it = reader.read_at::<u32be>(position)?;
         let data_size = u32::from(reader.read_at::<u32be>(position)?);
-        let id = reader.read_at::<u32be>(position)?.into();
-        test_eq(&id, &0u32)?;
-        let type_idx = reader.read_at::<u32be>(position)?.into();
-        test_eq(&type_idx, &0u32)?;
+        let id = reader.read_at::<u32be>(position)?;
+        test_eq(&id, &0)?;
+        let type_idx = reader.read_at::<u32be>(position)?;
+        test_eq(&type_idx, &0)?;
         test_eq(&(*position - start), &u64::from(size))?;
 
         let block = match type_it {
             // Surf
-            0x0Bu32 => Block::Surface(reader.read_at(position)?),
+            0x0Bu32 => Block::Surface(reader.read_at::<Gx2Surface>(position)?),
             // Data
             0x0C => Block::Data(reader.read_slice_at(position, usize::try_from(data_size)?)?),
             // Mip
@@ -153,41 +165,38 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
 }
 
 impl BinaryDeserialize<'_> for Gx2Surface {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let dim = reader.read_at::<u32be>(position)?.into();
-        let width = reader.read_at::<u32be>(position)?.into();
-        let height = reader.read_at::<u32be>(position)?.into();
-        let depth = reader.read_at::<u32be>(position)?.into();
-        let num_mips = reader.read_at::<u32be>(position)?.into();
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let dim = reader.read_at::<u32be>(position)?;
+        let width = reader.read_at::<u32be>(position)?;
+        let height = reader.read_at::<u32be>(position)?;
+        let depth = reader.read_at::<u32be>(position)?;
+        let num_mips = reader.read_at::<u32be>(position)?;
         test_le(&num_mips, &13)?;
         let format = reader.read_at::<Format>(position)?;
-        let aa = reader.read_at::<u32be>(position)?.into();
-        test_eq(&aa, &0u32)?;
-        let use_it = reader.read_at::<u32be>(position)?.into();
-        let image_size = reader.read_at::<u32be>(position)?.into();
-        let image_ptr = reader.read_at::<u32be>(position)?.into();
-        let mip_size = reader.read_at::<u32be>(position)?.into();
-        let mip_ptr = reader.read_at::<u32be>(position)?.into();
-        let tile_mode = reader.read_at::<u32be>(position)?.into();
+        let aa = reader.read_at::<u32be>(position)?;
+        test_eq(&aa, &0)?;
+        let use_it = reader.read_at::<u32be>(position)?;
+        let image_size = reader.read_at::<u32be>(position)?;
+        let image_ptr = reader.read_at::<u32be>(position)?;
+        let mip_size = reader.read_at::<u32be>(position)?;
+        let mip_ptr = reader.read_at::<u32be>(position)?;
+        let tile_mode = reader.read_at::<u32be>(position)?;
         test_ge(&tile_mode, &0).and(test_le(&tile_mode, &19))?;
         let tile_mode = addr_tile_mode(tile_mode);
-        let swizzle = reader.read_at::<u32be>(position)?.into();
-        let alignment = reader.read_at::<u32be>(position)?.into();
-        let pitch = reader.read_at::<u32be>(position)?.into();
-
-        let mut mip_offsets = [0u32; 13];
-        for i in &mut mip_offsets {
-            *i = reader.read_at::<u32be>(position)?.into();
-        }
-
-        let slice = reader.read_slice_at(position, 16)?;
-
-        let _comp_sel: [u8; 4] = reader.read_fixed_slice_at(position)?;
-
-        let slice = reader.read_slice_at(position, 20)?;
+        let swizzle = reader.read_at::<u32be>(position)?;
+        let alignment = reader.read_at::<u32be>(position)?;
+        let pitch = reader.read_at::<u32be>(position)?;
+        let mip_offsets = reader.read_at::<[u32be; 13]>(position)?;
+        let _slice = reader.read_slice_at(position, 16)?;
+        let _comp_sel: [u8; 4] = reader.read_at::<[u8; 4]>(position)?;
+        let _slice = reader.read_slice_at(position, 20)?;
 
         let bpp = format.get_bpp();
 
@@ -221,12 +230,15 @@ impl BinaryDeserialize<'_> for Gx2Surface {
 }
 
 impl BinaryDeserialize<'_> for Format {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let value: u32 = reader.read_at::<u32be>(position)?.into();
-        Self::try_from(value)
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        Self::try_from(reader.read_at::<u32be>(position)?)
     }
 }
 

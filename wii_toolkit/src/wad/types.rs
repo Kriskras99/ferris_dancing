@@ -23,11 +23,15 @@ pub enum WadType {
 }
 
 impl BinaryDeserialize<'_> for WadType {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let value = reader.read_at::<u16be>(position)?;
         match value {
             0x4962 => Ok(Self::Bootable),
             0x4973 => Ok(Self::Installable),
@@ -65,11 +69,15 @@ pub enum ContentType {
 }
 
 impl BinaryDeserialize<'_> for ContentType {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let value = reader.read_at::<u16be>(position)?;
         match value {
             0x0001 => Ok(Self::Normal),
             0x4001 => Ok(Self::DLC),
@@ -113,11 +121,15 @@ pub enum TitleType {
 }
 
 impl BinaryDeserialize<'_> for TitleType {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let value: u32 = reader.read_at::<u32be>(position)?.into();
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let value = reader.read_at::<u32be>(position)?;
         match value {
             0x19 => Ok(Self::Something),
             _ => Err(ReadError::custom(format!(
@@ -155,11 +167,15 @@ pub enum Region {
 }
 
 impl BinaryDeserialize<'_> for Region {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let value = reader.read_at::<u16be>(position)?;
         match value {
             0x0 => Ok(Self::Japan),
             0x1 => Ok(Self::UnitedStates),
@@ -197,11 +213,15 @@ pub enum AccessRights {
 }
 
 impl BinaryDeserialize<'_> for AccessRights {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        let value: u16 = reader.read_at::<u16be>(position)?.into();
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let value = reader.read_at::<u16be>(position)?;
         match value {
             0x0 => Ok(Self::None),
             _ => Err(ReadError::custom(format!(

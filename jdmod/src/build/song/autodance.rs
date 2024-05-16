@@ -76,7 +76,7 @@ fn autodance_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         components: vec![cooked::act::Component::AutodanceComponent],
     };
 
-    Ok(cooked::act::create_vec(&actor)?)
+    Ok(cooked::act::create_vec(actor)?)
 }
 
 /// Build the autodance scene

@@ -164,7 +164,7 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
         )],
     };
 
-    Ok(cooked::act::create_vec(&actor)?)
+    Ok(cooked::act::create_vec(actor)?)
 }
 
 /// Build the MaterialGraphicComponent scene

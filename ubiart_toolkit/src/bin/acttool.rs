@@ -1,8 +1,9 @@
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit::{
-    cooked::act,
+    cooked::act::Actor,
     utils::{Game, Platform, UniqueGameId},
 };
 
@@ -36,7 +37,7 @@ fn main() {
     };
 
     let data = File::open(&cli.source).unwrap();
-    let actors = act::parse(&data, &mut 0, gp).unwrap();
+    let actors = Actor::deserialize_with_ctx(&data, gp).unwrap();
 
     for component in &actors.components {
         println!("{component:#?}");

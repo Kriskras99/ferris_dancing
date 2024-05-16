@@ -11,15 +11,19 @@ use dotstar_toolkit_utils::{
 use super::MovementSpaceMove;
 
 impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
         // Check the magic
-        let unk1 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&unk1, &0x1u32)?;
-        let unk2 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&unk2, &0x7u32)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq(&unk1, &0x1)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq(&unk2, &0x7)?;
 
         // There are always 64 bytes for the string, so we read untill the null byte.
         // If the null byte is past 64 bytes there's something wrong and we error.
@@ -46,31 +50,31 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
 
         test_eq(&device.as_ref(), &"Acc_Dev_Dir_NP")?;
 
-        let unk3 = reader.read_at::<u32be>(position)?.into();
-        let unk4 = reader.read_at::<u32be>(position)?.into();
-        let unk5 = reader.read_at::<u32be>(position)?.into();
-        let unk6 = reader.read_at::<u32be>(position)?.into();
-        let unk7 = reader.read_at::<u32be>(position)?.into();
+        let unk3 = reader.read_at::<u32be>(position)?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        let unk7 = reader.read_at::<u32be>(position)?;
 
-        let unk8 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&unk8, &0x211C_0000u32)?;
-        let unk9 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&unk9, &0x0u32)?;
-        let unk10 = reader.read_at::<u32be>(position)?.into();
-        test_le(&unk10, &0x3u32)?;
-        let points = reader.read_at::<u32be>(position)?.into();
-        let unk12 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&unk12, &0x2u32)?;
-        let unk13 = reader.read_at::<u32be>(position)?.into();
-        test_eq(&unk13, &0x0u32)?;
+        let unk8 = reader.read_at::<u32be>(position)?;
+        test_eq(&unk8, &0x211C_0000)?;
+        let unk9 = reader.read_at::<u32be>(position)?;
+        test_eq(&unk9, &0x0)?;
+        let unk10 = reader.read_at::<u32be>(position)?;
+        test_le(&unk10, &0x3)?;
+        let points = reader.read_at::<u32be>(position)?;
+        let unk12 = reader.read_at::<u32be>(position)?;
+        test_eq(&unk12, &0x2)?;
+        let unk13 = reader.read_at::<u32be>(position)?;
+        test_eq(&unk13, &0x0)?;
 
-        let unk14 = reader.read_at::<u32be>(position)?.into();
-        let unk15 = reader.read_at::<u32be>(position)?.into();
+        let unk14 = reader.read_at::<u32be>(position)?;
+        let unk15 = reader.read_at::<u32be>(position)?;
 
         let mut data = Vec::with_capacity(usize::try_from(points)?);
         for _ in 0..points {
-            let x = reader.read_at::<u32be>(position)?.into();
-            let y = reader.read_at::<u32be>(position)?.into();
+            let x = reader.read_at::<u32be>(position)?;
+            let y = reader.read_at::<u32be>(position)?;
             data.push((x, y));
         }
 

@@ -107,7 +107,7 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         )],
     };
 
-    Ok(cooked::act::create_vec(&actor)?)
+    Ok(cooked::act::create_vec(actor)?)
 }
 
 /// Build the video scene

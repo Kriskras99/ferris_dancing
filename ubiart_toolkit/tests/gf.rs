@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt as _;
 use ubiart_toolkit::secure_fat::SecureFat;
 
 fn secure_fat_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {

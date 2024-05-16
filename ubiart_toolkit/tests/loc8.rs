@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt as _;
 use ubiart_toolkit::loc8::Loc8;
 
 fn loc8_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {

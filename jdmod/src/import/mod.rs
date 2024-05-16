@@ -8,7 +8,7 @@ use std::{
 use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::{
-    bytes::read::BinaryDeserialize,
+    bytes::read::BinaryDeserializeExt as _,
     vfs::{native::NativeFs, VirtualFileSystem, VirtualPath, VirtualPathBuf},
 };
 use ubiart_toolkit::{

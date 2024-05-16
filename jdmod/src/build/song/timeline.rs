@@ -319,7 +319,7 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
         components: vec![cooked::act::Component::TapeCaseComponent],
     };
 
-    Ok(cooked::act::create_vec(&actor)?)
+    Ok(cooked::act::create_vec(actor)?)
 }
 
 /// Build a tml template

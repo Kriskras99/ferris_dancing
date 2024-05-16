@@ -176,7 +176,7 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
         ],
     };
 
-    Ok(cooked::act::create_vec(&actor)?)
+    Ok(cooked::act::create_vec(actor)?)
 }
 
 /// Build the description scene

@@ -69,7 +69,7 @@ fn mainsequence_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         components: vec![cooked::act::Component::MasterTape],
     };
 
-    Ok(cooked::act::create_vec(&actor)?)
+    Ok(cooked::act::create_vec(actor)?)
 }
 
 /// Build the cine scene

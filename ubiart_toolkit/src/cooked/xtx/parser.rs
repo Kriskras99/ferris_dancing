@@ -20,22 +20,26 @@ const DATA_BLK_TYPE: u32 = 0x3;
 const UNKNOWN_BLK_TYPE_THREE: u32 = 0x5;
 
 impl BinaryDeserialize<'_> for Xtx {
+    type Ctx = ();
+    type Output = Self;
+
     #[tracing::instrument(skip(reader))]
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, dotstar_toolkit_utils::bytes::read::ReadError> {
+        _ctx: (),
+    ) -> Result<Self, ReadError> {
         let start = *position;
-        let magic = reader.read_at::<u32le>(position)?.into();
-        test_eq(&magic, &0x4E76_4644u32)?;
+        let magic = reader.read_at::<u32le>(position)?;
+        test_eq(&magic, &0x4E76_4644)?;
 
-        let size = reader.read_at::<u32le>(position)?.into();
-        test_eq(&size, &0x10u32)?;
+        let size = reader.read_at::<u32le>(position)?;
+        test_eq(&size, &0x10)?;
 
-        let major_version = reader.read_at::<u32le>(position)?.into();
+        let major_version = reader.read_at::<u32le>(position)?;
         test_eq(&major_version, &0x1)?;
 
-        let minor_version = reader.read_at::<u32le>(position)?.into();
+        let minor_version = reader.read_at::<u32le>(position)?;
 
         let mut blocks = Vec::new();
 
@@ -74,7 +78,7 @@ impl BinaryDeserialize<'_> for Xtx {
                         None => Err(ReadError::custom("Found header without data".to_string())),
                     }?;
 
-                    images.push(parse_data_block_to_image(hdr, data)?);
+                    images.push(parse_data_block_to_image(hdr, &data)?);
 
                     index += 2;
 
@@ -99,21 +103,25 @@ impl BinaryDeserialize<'_> for Xtx {
 }
 
 impl<'de> BinaryDeserialize<'de> for Block<'de> {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
         let start = *position;
-        let magic = reader.read_at::<u32le>(position)?.into();
-        test_eq(&magic, &0x4E76_4248u32)?;
-        let header_size = reader.read_at::<u32le>(position)?.into();
+        let magic = reader.read_at::<u32le>(position)?;
+        test_eq(&magic, &0x4E76_4248)?;
+        let header_size = u64::from(reader.read_at::<u32le>(position)?);
         test_eq(&header_size, &0x24)?;
         let data_size = usize::try_from(reader.read_at::<u64le>(position)?)?;
-        let data_offset = reader.read_at::<u64le>(position)?.into();
-        let block_type = reader.read_at::<u32le>(position)?.into();
-        let id = reader.read_at::<u32le>(position)?.into();
-        let type_idx = reader.read_at::<u32le>(position)?.into();
-        test_eq(&type_idx, &0x0u32)?;
+        let data_offset = reader.read_at::<u64le>(position)?;
+        let block_type = reader.read_at::<u32le>(position)?;
+        let id = reader.read_at::<u32le>(position)?;
+        let type_idx = reader.read_at::<u32le>(position)?;
+        test_eq(&type_idx, &0x0)?;
 
         let pos = *position;
         let block_data = match block_type {
@@ -157,11 +165,15 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
 }
 
 impl BinaryDeserialize<'_> for Format {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
-        let value = u32::from(reader.read_at::<u32le>(position)?);
+        let value = reader.read_at::<u32le>(position)?;
         Self::try_from(value).map_err(|_| ReadError::custom(format!("Unknown format: {value:x}")))
     }
 }
@@ -171,32 +183,32 @@ fn parse_tex_header_block<'de>(
     reader: &'de (impl ReadAtExt + ?Sized),
     position: &mut u64,
 ) -> Result<BlockData<'de>, ReadError> {
-    let image_size = reader.read_at::<u64le>(position)?.into();
-    let alignment = reader.read_at::<u32le>(position)?.into();
+    let image_size = reader.read_at::<u64le>(position)?;
+    let alignment = reader.read_at::<u32le>(position)?;
     test_eq(&alignment, &0x200)?;
-    let width = reader.read_at::<u32le>(position)?.into();
-    let height = reader.read_at::<u32le>(position)?.into();
-    let depth = reader.read_at::<u32le>(position)?.into();
+    let width = reader.read_at::<u32le>(position)?;
+    let height = reader.read_at::<u32le>(position)?;
+    let depth = reader.read_at::<u32le>(position)?;
     test_eq(&depth, &1)?;
-    let target = reader.read_at::<u32le>(position)?.into();
+    let target = reader.read_at::<u32le>(position)?;
     test_eq(&target, &1)?;
     let format = reader.read_at::<Format>(position)?;
-    let mip_count = reader.read_at::<u32le>(position)?.into();
+    let mip_count = reader.read_at::<u32le>(position)?;
     test_le(&mip_count, &17)?;
-    let slice_size = reader.read_at::<u32le>(position)?.into();
+    let slice_size = reader.read_at::<u32le>(position)?;
 
     test_eq(&image_size, &u64::from(slice_size))?;
 
     let mut mipmap_offsets = [0; 17];
     for i in &mut mipmap_offsets {
-        *i = reader.read_at::<u32le>(position)?.into();
+        *i = reader.read_at::<u32le>(position)?;
     }
 
-    let texture_layout_1: u32 = reader.read_at::<u32le>(position)?.into();
+    let texture_layout_1: u32 = reader.read_at::<u32le>(position)?;
     test_eq(&(texture_layout_1 & !0b111), &0)?;
-    let texture_layout_2 = reader.read_at::<u32le>(position)?.into();
+    let texture_layout_2 = reader.read_at::<u32le>(position)?;
     test_eq(&texture_layout_2, &7u32)?;
-    let boolean = reader.read_at::<u32le>(position)?.into();
+    let boolean = reader.read_at::<u32le>(position)?;
     test_eq(&boolean, &0u32)?;
 
     let block_height_log2 =

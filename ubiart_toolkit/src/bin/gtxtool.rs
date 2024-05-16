@@ -5,10 +5,11 @@ use std::{
 };
 
 use clap::Parser;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize as _;
 use image::{imageops, ImageBuffer, ImageFormat, Rgba};
 use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 use ubiart_toolkit::{
-    cooked,
+    cooked::{self, png::Png},
     utils::{Game, Platform, UniqueGameId},
 };
 
@@ -45,7 +46,7 @@ fn main() {
         .init();
 
     let file = File::open(&cli.source).unwrap();
-    let png = cooked::png::parse(
+    let png = Png::deserialize_with_ctx(
         &file,
         UniqueGameId {
             game: Game::JustDance2016,

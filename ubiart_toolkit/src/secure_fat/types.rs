@@ -2,6 +2,7 @@
 
 use std::ops::Deref;
 
+use dotstar_toolkit_utils::bytes::read::{BinaryDeserialize, ReadAtExt, ReadError};
 use nohash_hasher::{BuildNoHashHasher, IntMap, IsEnabled};
 
 use crate::utils::{Game, PathId, Platform, UniqueGameId};
@@ -41,10 +42,24 @@ impl From<BundleId> for u8 {
 }
 impl IsEnabled for BundleId {}
 
+impl BinaryDeserialize<'_> for BundleId {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        Ok(BundleId(reader.read_at::<u8>(position)?))
+    }
+}
+
 /// Representation of secure_fat.gf
 pub struct SecureFat {
     pub(super) game_platform: UniqueGameId,
     pub(super) path_id_to_bundle_ids: IntMap<PathId, Vec<BundleId>>,
+    // TODO: Replace String with Cow, prerequisite: IntoOwned trait&derive
     pub(super) bundle_id_to_bundle_name: IntMap<BundleId, String>,
 }
 

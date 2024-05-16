@@ -1,7 +1,7 @@
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt as _;
 use ubiart_toolkit::msm::MovementSpaceMove;
 
 #[derive(Parser)]

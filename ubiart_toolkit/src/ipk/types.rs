@@ -13,7 +13,7 @@ use crate::utils::{self, errors::ParserError, PathId, SplitPath, UniqueGameId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
-pub enum Platform {
+pub enum IpkPlatform {
     X360 = 0x1,
     Ps4 = 0x3,
     Wii = 0x5,
@@ -21,7 +21,7 @@ pub enum Platform {
     Nx = 0xB,
 }
 
-impl TryFrom<u32> for Platform {
+impl TryFrom<u32> for IpkPlatform {
     type Error = ParserError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
@@ -36,17 +36,17 @@ impl TryFrom<u32> for Platform {
     }
 }
 
-impl From<Platform> for u32 {
+impl From<IpkPlatform> for u32 {
     #[allow(
         clippy::as_conversions,
         reason = "Platform is repr(u32) thus this is always safe"
     )]
-    fn from(value: Platform) -> Self {
+    fn from(value: IpkPlatform) -> Self {
         value as Self
     }
 }
 
-impl Platform {
+impl IpkPlatform {
     #[must_use]
     pub fn matches_game_platform(&self, gp: UniqueGameId) -> bool {
         match self {
@@ -62,7 +62,7 @@ impl Platform {
 #[derive(Clone, Yokeable)]
 pub struct Bundle<'a> {
     pub version: u32,
-    pub platform: Platform,
+    pub platform: IpkPlatform,
     pub unk4: u32,
     pub engine_version: u32,
     pub game_platform: UniqueGameId,

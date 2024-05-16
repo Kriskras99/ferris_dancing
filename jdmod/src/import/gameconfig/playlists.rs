@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Context, Error};
-use dotstar_toolkit_utils::testing::test_not;
+use dotstar_toolkit_utils::{bytes::read::BinaryDeserialize, testing::test_not};
 use ubiart_toolkit::cooked::{self, act::Component};
 
 use crate::{
@@ -39,7 +39,7 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
         let act_file = is
             .vfs
             .open(cook_path(&playlist.cover_path, is.ugi.platform)?.as_ref())?;
-        let actor = cooked::act::parse(&act_file, &mut 0, is.ugi)?;
+        let actor = cooked::act::Actor::deserialize_with_ctx(&act_file, is.ugi)?;
         let template = actor
             .components
             .iter()

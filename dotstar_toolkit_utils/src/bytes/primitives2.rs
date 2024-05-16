@@ -1,4 +1,4 @@
-#![expect(
+#![allow(
     non_camel_case_types,
     reason = "The type aliases need to look like primary types"
 )]
@@ -14,6 +14,8 @@ use super::{
 impl BinaryDeserialize<'_> for u8 {
     type Ctx = ();
     type Output = Self;
+
+    #[inline(always)]
     fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -27,6 +29,7 @@ impl BinarySerialize for u8 {
     type Ctx = ();
     type Input = Self;
 
+    #[inline(always)]
     fn serialize_at_with_ctx(
         input: Self::Input,
         writer: &mut (impl super::write::WriteAt + ?Sized),
@@ -45,6 +48,8 @@ pub type u16le = U16<LittleEndian>;
 impl<Endian: Endianness> BinaryDeserialize<'_> for U16<Endian> {
     type Ctx = ();
     type Output = u16;
+
+    #[inline(always)]
     fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -60,6 +65,7 @@ impl<Endian: Endianness> BinarySerialize for U16<Endian> {
     type Ctx = ();
     type Input = u16;
 
+    #[inline(always)]
     fn serialize_at_with_ctx(
         input: Self::Input,
         writer: &mut (impl super::write::WriteAt + ?Sized),
@@ -80,6 +86,8 @@ pub type u24le = U24<LittleEndian>;
 impl<Endian: Endianness> BinaryDeserialize<'_> for U24<Endian> {
     type Ctx = ();
     type Output = u32;
+
+    #[inline(always)]
     fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -96,6 +104,7 @@ impl<Endian: Endianness> BinarySerialize for U24<Endian> {
     type Ctx = ();
     type Input = u32;
 
+    #[inline(always)]
     fn serialize_at_with_ctx(
         input: Self::Input,
         writer: &mut (impl super::write::WriteAt + ?Sized),
@@ -117,6 +126,8 @@ pub type u32le = U32<LittleEndian>;
 impl<Endian: Endianness> BinaryDeserialize<'_> for U32<Endian> {
     type Ctx = ();
     type Output = u32;
+
+    #[inline(always)]
     fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -132,6 +143,7 @@ impl<Endian: Endianness> BinarySerialize for U32<Endian> {
     type Ctx = ();
     type Input = u32;
 
+    #[inline(always)]
     fn serialize_at_with_ctx(
         input: Self::Input,
         writer: &mut (impl super::write::WriteAt + ?Sized),
@@ -152,6 +164,8 @@ pub type u64le = U64<LittleEndian>;
 impl<Endian: Endianness> BinaryDeserialize<'_> for U64<Endian> {
     type Ctx = ();
     type Output = u64;
+
+    #[inline(always)]
     fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -167,6 +181,7 @@ impl<Endian: Endianness> BinarySerialize for U64<Endian> {
     type Ctx = ();
     type Input = u64;
 
+    #[inline(always)]
     fn serialize_at_with_ctx(
         input: Self::Input,
         writer: &mut (impl super::write::WriteAt + ?Sized),

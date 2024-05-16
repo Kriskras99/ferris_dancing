@@ -16,7 +16,7 @@ use dotstar_toolkit_utils::{
 use flate2::{write::ZlibEncoder, Compression};
 use tracing::instrument;
 
-use super::{Platform, MAGIC};
+use super::{IpkPlatform, MAGIC};
 use crate::utils::{self, Game, SplitPath, UniqueGameId};
 
 #[derive(Clone, Copy, Debug)]
@@ -131,18 +131,18 @@ pub fn write(
     }
 
     // Start writing the header
-    writer.write_at(position, &u32be::from(MAGIC))?;
-    writer.write_at(position, &u32be::from(0x5))?; // version
-    writer.write_at(position, &Platform::from(options.game_platform.platform))?;
-    writer.write_at(position, &u32be::try_from(base_offset)?)?;
-    writer.write_at(position, &u32be::try_from(files.len())?)?;
-    writer.write_at(position, &u32be::from(0x0))?; // unk1
-    writer.write_at(position, &u32be::from(0x0))?; // unk2
-    writer.write_at(position, &u32be::from(0x0))?; // unk3
-    writer.write_at(position, &u32be::from(options.unk4))?;
-    writer.write_at(position, &options.game_platform)?;
-    writer.write_at(position, &u32be::from(options.engine_version))?;
-    writer.write_at(position, &u32be::try_from(files.len())?)?;
+    writer.write_at::<u32be>(position, MAGIC)?;
+    writer.write_at::<u32be>(position, 0x5)?; // version
+    writer.write_at::<IpkPlatform>(position, IpkPlatform::from(options.game_platform.platform))?;
+    writer.write_at::<u32be>(position, u32::try_from(base_offset)?)?;
+    writer.write_at::<u32be>(position, u32::try_from(files.len())?)?;
+    writer.write_at::<u32be>(position, 0x0)?; // unk1
+    writer.write_at::<u32be>(position, 0x0)?; // unk2
+    writer.write_at::<u32be>(position, 0x0)?; // unk3
+    writer.write_at::<u32be>(position, options.unk4)?;
+    writer.write_at::<UniqueGameId>(position, options.game_platform)?;
+    writer.write_at::<u32be>(position, options.engine_version)?;
+    writer.write_at::<u32be>(position, u32::try_from(files.len())?)?;
 
     // Skip the file metadata for now, as it depends on compression results
     let base_offset = u64::try_from(base_offset)?;
@@ -232,18 +232,18 @@ pub fn write(
         let path =
             SplitPath::try_from(metadata.path).map_err(|e| WriteError::custom(format!("{e:?}")))?;
         // Write the file metadata
-        writer.write_at(position, &u32be::from(0x1))?; // unk1
-        writer.write_at(position, &u32be::from(u32::try_from(metadata.size)?))?;
-        writer.write_at(position, &u32be::from(u32::try_from(metadata.compressed)?))?;
-        writer.write_at(position, &u64be::from(metadata.timestamp))?;
-        writer.write_at(position, &u64be::from(metadata.offset))?;
-        writer.write_at(position, &path)?;
+        writer.write_at::<u32be>(position, 0x1)?; // unk1
+        writer.write_at::<u32be>(position, u32::try_from(metadata.size)?)?;
+        writer.write_at::<u32be>(position, u32::try_from(metadata.compressed)?)?;
+        writer.write_at::<u64be>(position, metadata.timestamp)?;
+        writer.write_at::<u64be>(position, metadata.offset)?;
+        writer.write_at::<SplitPath>(position, path)?;
         // The SplitPath padding byte is reused as a cooked indicator
         *position -= 4;
-        if path.starts_with("cache/itf_cooked") {
-            writer.write_at(position, &u32be::from(0x2))?;
+        if metadata.path.starts_with("cache/itf_cooked") {
+            writer.write_at::<u32be>(position, 0x2)?;
         } else {
-            writer.write_at(position, &u32be::from(0))?;
+            writer.write_at::<u32be>(position, 0)?;
         }
     }
 
@@ -252,7 +252,7 @@ pub fn write(
             || options.game_platform.game == Game::JustDance2021
             || options.game_platform.game == Game::JustDance2022)
     {
-        writer.write_at(position, &u32be::from(0x0))?; // unknown seperator between metadata and data
+        writer.write_at::<u32be>(position, 0x0)?; // unknown seperator between metadata and data
     }
 
     test_eq(position, &base_offset)?;
@@ -260,14 +260,17 @@ pub fn write(
     Ok(())
 }
 
-impl BinarySerialize for Platform {
-    #[allow(clippy::as_conversions, reason = "Self is repr(u32)")]
-    fn serialize_at(
-        &self,
+impl BinarySerialize for IpkPlatform {
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<(), WriteError> {
-        writer.write_at(position, &u32be::from(*self as u32))?;
+        writer.write_at::<u32be>(position, u32::from(input))?;
         Ok(())
     }
 }

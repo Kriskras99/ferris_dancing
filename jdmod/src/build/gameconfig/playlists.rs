@@ -178,5 +178,5 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
         )],
     };
 
-    Ok(cooked::act::create_vec(&actor)?)
+    Ok(cooked::act::create_vec(actor)?)
 }

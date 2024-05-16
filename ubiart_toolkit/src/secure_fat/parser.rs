@@ -13,15 +13,19 @@ use super::{BundleId, SecureFat, MAGIC, UNK1};
 use crate::utils::{PathId, UniqueGameId};
 
 impl BinaryDeserialize<'_> for SecureFat {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
         // Read the header
-        let magic = reader.read_at::<u32be>(position)?.into();
+        let magic = reader.read_at::<u32be>(position)?;
         test_eq(&magic, &MAGIC)?;
         let game_platform = reader.read_at::<UniqueGameId>(position)?;
-        let unk1 = reader.read_at::<u32be>(position)?.into();
+        let unk1 = reader.read_at::<u32be>(position)?;
         test_eq(&unk1, &UNK1)?;
 
         // Read how many path IDs there are and prepare a map
@@ -40,7 +44,7 @@ impl BinaryDeserialize<'_> for SecureFat {
             // Read the bundle ids
             let mut bundle_ids = Vec::with_capacity(bundle_count);
             for _ in 0..bundle_count {
-                bundle_ids.push(BundleId::from(reader.read_at::<u8>(position)?));
+                bundle_ids.push(reader.read_at::<BundleId>(position)?);
             }
 
             // Add to the map

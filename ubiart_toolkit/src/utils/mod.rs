@@ -30,11 +30,15 @@ pub type Color = (f32, f32, f32, f32);
 pub struct LocaleId(u32);
 
 impl BinaryDeserialize<'_> for LocaleId {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
-        Ok(Self(reader.read_at::<u32be>(position)?.into()))
+        Ok(Self(reader.read_at::<u32be>(position)?))
     }
 }
 
@@ -148,9 +152,13 @@ impl<'a> SplitPath<'a> {
 }
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
-    fn deserialize_at(
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -171,15 +179,19 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
 }
 
 impl BinarySerialize for SplitPath<'_> {
-    fn serialize_at(
-        &self,
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<(), WriteError> {
-        writer.write_len_string_at::<u32be>(position, &self.filename)?;
-        writer.write_len_string_at::<u32be>(position, &self.path)?;
-        writer.write_at(position, &self.id())?;
-        writer.write_at(position, &u32be::from(Self::PADDING))?;
+        writer.write_len_string_at::<u32be>(position, &input.filename)?;
+        writer.write_len_string_at::<u32be>(position, &input.path)?;
+        writer.write_at::<PathId>(position, input.id())?;
+        writer.write_at::<u32be>(position, Self::PADDING)?;
 
         Ok(())
     }
@@ -287,21 +299,29 @@ impl Deref for PathId {
 }
 
 impl BinaryDeserialize<'_> for PathId {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
         Ok(Self(reader.read_at::<u32be>(position)?.into()))
     }
 }
 
 impl BinarySerialize for PathId {
-    fn serialize_at(
-        &self,
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<(), WriteError> {
-        writer.write_at(position, &u32be::from(self.0))
+        writer.write_at::<u32be>(position, input.0)
     }
 }
 
@@ -440,23 +460,31 @@ impl TryFrom<u32> for UniqueGameId {
 }
 
 impl BinaryDeserialize<'_> for UniqueGameId {
-    fn deserialize_at(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with_ctx(
+        reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<Self, ReadError> {
-        let value = u32::from(reader.read_at::<u32be>(position)?);
+        let value = reader.read_at::<u32be>(position)?;
         Self::try_from(value)
             .map_err(|_| ReadError::custom(format!("Unknown game platform: {value:x}")))
     }
 }
 
 impl BinarySerialize for UniqueGameId {
-    fn serialize_at(
-        &self,
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        _ctx: (),
     ) -> Result<(), WriteError> {
-        writer.write_at(position, &u32be::from(self.id))?;
+        writer.write_at::<u32be>(position, input.id)?;
         Ok(())
     }
 }
@@ -518,7 +546,7 @@ pub enum Platform {
     Nx,
 }
 
-impl From<Platform> for ipk::Platform {
+impl From<Platform> for ipk::IpkPlatform {
     fn from(value: Platform) -> Self {
         match value {
             Platform::X360 => Self::X360,

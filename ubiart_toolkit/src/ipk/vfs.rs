@@ -5,7 +5,7 @@ use std::{
 };
 
 use dotstar_toolkit_utils::{
-    bytes::read::BinaryDeserialize,
+    bytes::read::BinaryDeserializeExt as _,
     vfs::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs},
 };
 use nohash_hasher::IntMap;
