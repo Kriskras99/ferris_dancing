@@ -6,79 +6,24 @@ use std::{
 use positioned_io::WriteAt as PWrite;
 
 use super::{BinarySerialize, WriteAt, WriteError};
-use crate::bytes::endian::Endianness;
 
-impl BinarySerialize for u8 {
+impl<const N: usize, T> BinarySerialize for [T; N]
+where
+    T: BinarySerialize,
+    T::Ctx: Copy,
+{
+    type Input = [T::Input; N];
+    type Ctx = T::Ctx;
     fn serialize_at_with_ctx(
-        &self,
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
-        _ctx: &(),
+        ctx: T::Ctx,
     ) -> Result<(), WriteError> {
-        writer.write_slice_at(position, &[*self])
-    }
-}
-
-impl<const N: usize> BinarySerialize for [u8; N] {
-    fn serialize_at_with_ctx(
-        &self,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        _ctx: &(),
-    ) -> Result<(), WriteError> {
-        writer.write_slice_at(position, self.as_slice())
-    }
-}
-
-impl<Endian: Endianness> BinarySerialize<Endian> for u16 {
-    fn serialize_at_with_ctx(
-        &self,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        _ctx: &Endian,
-    ) -> Result<(), WriteError> {
-        let mut bytes = self.to_ne_bytes();
-        Endian::from_native(&mut bytes);
-        writer.write_slice_at(position, &bytes)
-    }
-}
-
-// impl<Endian: Endianness> BinarySerialize<'_, Endian> for u24 {
-//     fn serialize_at_with_ctx(
-//         &self,
-//         writer: &mut (impl WriteAt + ?Sized),
-//         position: &mut u64,
-//         _ctx: &Endian,
-//     ) -> Result<(), WriteError> {
-//         let mut bytes = self.to_ne_bytes();
-//         Endian::from_native(&mut bytes);
-//         writer.write_slice_at(position, &bytes)
-//     }
-// }
-
-impl<Endian: Endianness> BinarySerialize<Endian> for u32 {
-    fn serialize_at_with_ctx(
-        &self,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        _ctx: &Endian,
-    ) -> Result<(), WriteError> {
-        let mut bytes = self.to_ne_bytes();
-        Endian::from_native(&mut bytes);
-        writer.write_slice_at(position, &bytes)
-    }
-}
-
-impl<Endian: Endianness> BinarySerialize<Endian> for u64 {
-    fn serialize_at_with_ctx(
-        &self,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        _ctx: &Endian,
-    ) -> Result<(), WriteError> {
-        let mut bytes = self.to_ne_bytes();
-        Endian::from_native(&mut bytes);
-        writer.write_slice_at(position, &bytes)
+        for ty in input {
+            writer.write_at_with_ctx::<T>(position, ty, ctx)?;
+        }
+        Ok(())
     }
 }
 

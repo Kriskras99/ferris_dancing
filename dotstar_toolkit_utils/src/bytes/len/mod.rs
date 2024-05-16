@@ -1,15 +1,15 @@
 use super::{
-    read::{BinaryDeserializeExt, ReadAtExt, ReadError},
+    read::{BinaryDeserialize, BinaryDeserializeExt, ReadAtExt, ReadError},
     write::{BinarySerialize, WriteAt, WriteError},
 };
 
-mod impls;
-
-pub use impls::*;
-
 /// Represents the length of a string or slice to read from the reader
-pub trait Len<'a>:
-    BinaryDeserializeExt<'a> + BinarySerialize + Sized + TryFrom<usize> + TryInto<usize>
+pub trait Len<'a>: BinaryDeserializeExt<'a> + BinarySerialize
+where
+    <Self as BinaryDeserialize<'a>>::Ctx: Default,
+    <Self as BinarySerialize>::Ctx: Default,
+    Self::Output: TryInto<usize>,
+    Self::Input: TryFrom<usize>,
 {
     /// Read the length at `position`
     ///
@@ -44,8 +44,8 @@ pub trait Len<'a>:
         position: &mut u64,
         len: usize,
     ) -> Result<(), WriteError> {
-        let len = Self::try_from(len).unwrap_or_else(|_| todo!());
-        writer.write_at(position, &len)?;
+        let len = Self::Input::try_from(len).unwrap_or_else(|_| todo!());
+        writer.write_at::<Self>(position, len)?;
         Ok(())
     }
 }

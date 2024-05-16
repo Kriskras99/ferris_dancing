@@ -8,6 +8,60 @@ mod sealed {
     pub trait Sealed {}
 }
 
+/// Pad the byte array to a larger size, while keeping the endianness correct
+///
+/// # Panics
+/// Will panic if `N` is larger than `M`
+#[must_use]
+#[inline(always)]
+pub fn pad<const N: usize, const M: usize>(bytes: [u8; N]) -> [u8; M] {
+    assert!(N <= M, "Cannot pad to a smaller size!");
+    let mut new = [0; M];
+    #[cfg(target_endian = "big")]
+    {
+        // left pad with zeroes
+        let offset = M - N;
+        new[offset..].copy_from_slice(&bytes);
+    }
+    #[cfg(target_endian = "little")]
+    {
+        // right pad with zeroes
+        new[..N].copy_from_slice(&bytes);
+    }
+    new
+}
+
+/// Unpad the byte array, while keeping the endianness correct
+/// # Panics
+/// Will panic if `N` is smaller than `M`
+/// Will panic if the padding is not zero
+#[must_use]
+#[inline(always)]
+pub fn unpad<const N: usize, const M: usize>(bytes: [u8; N]) -> [u8; M] {
+    assert!(N >= M, "Cannot unpad to a bigger size!");
+    let mut new = [0; M];
+    #[cfg(target_endian = "big")]
+    {
+        // remove the zeroes on the left
+        let offset = N - M;
+        new.copy_from_slice(&bytes[offset..]);
+        assert!(
+            bytes.into_iter().take(offset).all(|b| b == 0),
+            "Padding is not zero!"
+        );
+    }
+    #[cfg(target_endian = "little")]
+    {
+        // remove the zeroes on the right
+        new.copy_from_slice(&bytes[..N]);
+        assert!(
+            bytes.into_iter().skip(N).all(|b| b == 0),
+            "Padding is not zero!"
+        );
+    }
+    new
+}
+
 /// The endianness of a type, for types that are able to be represented in both ways.
 ///
 /// This trait is sealed, it's only implementers are [`LittleEndian`] and [`BigEndian`].
@@ -21,13 +75,11 @@ pub trait Endianness: Sealed + Clone + Copy + std::fmt::Debug + PartialEq {
     fn from_native(bytes: &mut [u8]) {
         Self::to_native(bytes);
     }
-
-    fn sized() -> impl Endianness;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// The least significant byte is at the smallest address
-pub struct LittleEndian;
+pub enum LittleEndian {}
 
 impl Sealed for LittleEndian {}
 impl Endianness for LittleEndian {
@@ -40,16 +92,11 @@ impl Endianness for LittleEndian {
     #[cfg(target_endian = "little")]
     #[inline(always)]
     fn to_native(_bytes: &mut [u8]) {}
-
-    #[expect(refining_impl_trait, reason = "It's better")]
-    fn sized() -> Self {
-        Self
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// The most siginficant byte is at the smallest address
-pub struct BigEndian;
+pub enum BigEndian {}
 /// The endianness used for network communication
 pub type NetworkEndian = BigEndian;
 
@@ -64,11 +111,6 @@ impl Endianness for BigEndian {
     #[cfg(target_endian = "big")]
     #[inline(always)]
     fn to_native(_bytes: &mut [u8]) {}
-
-    #[expect(refining_impl_trait, reason = "It's better")]
-    fn sized() -> Self {
-        Self
-    }
 }
 
 #[cfg(target_endian = "big")]

@@ -2,8 +2,8 @@
 
 pub mod endian;
 // pub mod primitives;
-// pub mod primitives2;
 pub mod len;
+pub mod primitives2;
 pub mod read;
 pub mod write;
 

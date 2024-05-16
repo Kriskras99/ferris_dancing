@@ -3,65 +3,6 @@ use std::{borrow::Cow, fs::File, mem::MaybeUninit, ptr};
 use positioned_io::{RandomAccessFile, ReadAt as PRead, Size};
 
 use super::{BinaryDeserialize, ReadAt, ReadAtExt, ReadError};
-use crate::bytes::endian::Endianness;
-
-impl BinaryDeserialize<'_> for u8 {
-    fn deserialize_at_with_ctx(
-        reader: &(impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        _ctx: &(),
-    ) -> Result<Self, ReadError> {
-        Ok(reader.read_slice_at(position, 1)?[0])
-    }
-}
-
-impl<Endian: Endianness> BinaryDeserialize<'_, Endian> for u16 {
-    fn deserialize_at_with_ctx(
-        reader: &(impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        _ctx: &Endian,
-    ) -> Result<Self, ReadError> {
-        let mut bytes: [u8; 2] = reader.read_at(position)?;
-        Endian::to_native(&mut bytes);
-        Ok(Self::from_ne_bytes(bytes))
-    }
-}
-
-// impl<Endian: Endianness> BinaryDeserialize<'_, Endian> for u24 {
-//     fn deserialize_at_with_ctx(
-//         reader: &(impl ReadAtExt + ?Sized),
-//         position: &mut u64,
-//         _ctx: &Endian,
-//     ) -> Result<Self, ReadError> {
-//         let mut bytes: [u8; 3] = reader.read_at(position)?;
-//         Endian::to_native(&mut bytes);
-//         Ok(Self::from_le_bytes(bytes))
-//     }
-// }
-
-impl<Endian: Endianness> BinaryDeserialize<'_, Endian> for u32 {
-    fn deserialize_at_with_ctx(
-        reader: &(impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        _ctx: &Endian,
-    ) -> Result<Self, ReadError> {
-        let mut bytes: [u8; 4] = reader.read_at(position)?;
-        Endian::to_native(&mut bytes);
-        Ok(Self::from_ne_bytes(bytes))
-    }
-}
-
-impl<Endian: Endianness> BinaryDeserialize<'_, Endian> for u64 {
-    fn deserialize_at_with_ctx(
-        reader: &(impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        _ctx: &Endian,
-    ) -> Result<Self, ReadError> {
-        let mut bytes: [u8; 8] = reader.read_at(position)?;
-        Endian::to_native(&mut bytes);
-        Ok(Self::from_ne_bytes(bytes))
-    }
-}
 
 // Add when specialization works
 // impl<const N: usize> BinaryDeserialize<'_> for [u8; N] {
@@ -76,22 +17,27 @@ impl<Endian: Endianness> BinaryDeserialize<'_, Endian> for u64 {
 //     }
 // }
 
-impl<'de, T, Ctx, const N: usize> BinaryDeserialize<'de, Ctx> for [T; N]
+impl<'de, T, const N: usize> BinaryDeserialize<'de> for [T; N]
 where
-    T: BinaryDeserialize<'de, Ctx> + Copy,
+    T: BinaryDeserialize<'de>,
+    T::Output: Copy,
+    T::Ctx: Copy,
 {
+    type Ctx = T::Ctx;
+    type Output = [T::Output; N];
+
     fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: &Ctx,
-    ) -> Result<Self, ReadError> {
-        let mut array = [const { MaybeUninit::<T>::uninit() }; N];
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let mut array = [const { MaybeUninit::<T::Output>::uninit() }; N];
         let mut i = 0;
         let old_position = *position;
         let result: Result<_, ReadError> = try {
             #[expect(clippy::arithmetic_side_effects, reason = "It's checked by N")]
             while i < N {
-                let data: T = reader.read_at_with_ctx(position, ctx)?;
+                let data: T::Output = reader.read_at_with_ctx::<T>(position, ctx)?;
                 array[i] = MaybeUninit::new(data);
                 i += 1;
             }
@@ -100,8 +46,9 @@ where
             Ok(()) => {
                 // This would be better but the compiler can't proof that MaybeUninit<T> and T are the same size.
                 // let array = unsafe { std::mem::transmute::<_, [T; N]>(array) };
-                let array =
-                    unsafe { *ptr::from_ref::<[MaybeUninit<T>; N]>(&array).cast::<[T; N]>() };
+                let array = unsafe {
+                    *ptr::from_ref::<[MaybeUninit<T::Output>; N]>(&array).cast::<[T::Output; N]>()
+                };
                 Ok(array)
             }
             Err(err) => {
@@ -116,15 +63,17 @@ where
     }
 }
 
-impl<'de> BinaryDeserialize<'de, usize> for Cow<'de, str> {
+impl<'de> BinaryDeserialize<'de> for Cow<'de, str> {
+    type Ctx = usize;
+    type Output = Self;
     fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        len: &usize,
+        len: usize,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
-            match reader.read_slice_at(position, *len)? {
+            match reader.read_slice_at(position, len)? {
                 Cow::Borrowed(slice) => std::str::from_utf8(slice)
                     .map(Cow::Borrowed)
                     .map_err(ReadError::from)?,

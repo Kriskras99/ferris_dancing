@@ -4,22 +4,25 @@ mod impls;
 
 pub use error::*;
 
-use super::len::Len;
+use super::{len::Len, read::BinaryDeserialize};
 
 /// Represents a object that can be deserialized from a binary file
-pub trait BinarySerialize<Ctx: ?Sized = ()> {
+pub trait BinarySerialize {
+    type Ctx;
+    type Input: Sized;
     /// Serialize this type to the writer with `ctx`
     ///
     /// Note: Must restore position to the original value on error!
     ///
     /// # Errors
     /// This function will return an error when serializing fails.
+    #[inline(always)]
     fn serialize_with_ctx(
-        &self,
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
-        ctx: &Ctx,
+        ctx: Self::Ctx,
     ) -> Result<(), WriteError> {
-        self.serialize_at_with_ctx(writer, &mut 0, ctx)
+        Self::serialize_at_with_ctx(input, writer, &mut 0, ctx)
     }
 
     /// Serialize this type to the writer with `ctx` at `position`
@@ -29,22 +32,29 @@ pub trait BinarySerialize<Ctx: ?Sized = ()> {
     /// # Errors
     /// This function will return an error when serializing fails.
     fn serialize_at_with_ctx(
-        &self,
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
-        ctx: &Ctx,
+        ctx: Self::Ctx,
     ) -> Result<(), WriteError>;
 }
 
-pub trait BinarySerializeExt<Ctx: Default = ()>: BinarySerialize<Ctx> {
+pub trait BinarySerializeExt: BinarySerialize
+where
+    Self::Ctx: Default,
+{
     /// Serialize this type to the writer
     ///
     /// Note: Must restore position to the original value on error!
     ///
     /// # Errors
     /// This function will return an error when serializing fails.
-    fn serialize(&self, writer: &mut (impl WriteAt + ?Sized)) -> Result<(), WriteError> {
-        self.serialize_with_ctx(writer, &Ctx::default())
+    #[inline(always)]
+    fn serialize(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+    ) -> Result<(), WriteError> {
+        Self::serialize_with_ctx(input, writer, Self::Ctx::default())
     }
 
     /// Serialize this type to the writer at `position`
@@ -53,16 +63,17 @@ pub trait BinarySerializeExt<Ctx: Default = ()>: BinarySerialize<Ctx> {
     ///
     /// # Errors
     /// This function will return an error when serializing fails.
+    #[inline(always)]
     fn serialize_at(
-        &self,
+        input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
     ) -> Result<(), WriteError> {
-        self.serialize_at_with_ctx(writer, position, &Ctx::default())
+        Self::serialize_at_with_ctx(input, writer, position, Self::Ctx::default())
     }
 }
 
-impl<Ctx: Default, T: BinarySerialize<Ctx>> BinarySerializeExt<Ctx> for T {}
+impl<T: BinarySerialize + ?Sized> BinarySerializeExt for T where T::Ctx: Default {}
 
 /// Represents a byte source which uses Cow's to stay zerocopy
 pub trait WriteAt {
@@ -72,12 +83,15 @@ pub trait WriteAt {
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the writer.
-    fn write_at(
+    fn write_at<T: BinarySerializeExt + ?Sized>(
         &mut self,
         position: &mut u64,
-        ty: &impl BinarySerializeExt,
-    ) -> Result<(), WriteError> {
-        ty.serialize_at(self, position)
+        ty: T::Input,
+    ) -> Result<(), WriteError>
+    where
+        T::Ctx: Default,
+    {
+        T::serialize_at(ty, self, position)
     }
 
     /// Write a `T` at `position` with `ctx`
@@ -86,17 +100,16 @@ pub trait WriteAt {
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the writer.
-    fn write_at_with_ctx<T, Ctx>(
+    fn write_at_with_ctx<T>(
         &mut self,
         position: &mut u64,
-        ty: &T,
-        ctx: &Ctx,
+        ty: T::Input,
+        ctx: T::Ctx,
     ) -> Result<(), WriteError>
     where
-        Ctx: ?Sized,
-        T: BinarySerialize<Ctx>,
+        T: BinarySerialize + ?Sized,
     {
-        ty.serialize_at_with_ctx(self, position, ctx)
+        T::serialize_at_with_ctx(ty, self, position, ctx)
     }
 
     /// Write a `&[u8]` at `position`
@@ -122,6 +135,10 @@ pub trait WriteAt {
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
+        <L as BinaryDeserialize<'de>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
     {
         let slice = string.as_bytes();
         self.write_len_slice_at::<L>(position, slice)
@@ -142,6 +159,10 @@ pub trait WriteAt {
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
+        <L as BinaryDeserialize<'de>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
     {
         L::write_len_at(self, position, buf.len())?;
         self.write_slice_at(position, buf)?;
@@ -158,17 +179,23 @@ pub trait WriteAt {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the writer.
     #[inline(always)]
-    fn write_len_type_at<'de, 'a, L>(
+    fn write_len_type_at<'de, 'a, L, T>(
         &mut self,
         position: &mut u64,
-        tys: impl ExactSizeIterator<Item = &'a (impl BinarySerializeExt + 'a)>,
+        tys: impl ExactSizeIterator<Item = T::Input>,
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
+        <L as BinaryDeserialize<'de>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
+        T: BinarySerializeExt,
+        T::Ctx: Default,
     {
         L::write_len_at(self, position, tys.len())?;
         for ty in tys {
-            ty.serialize_at(self, position)?;
+            T::serialize_at(ty, self, position)?;
         }
         Ok(())
     }
@@ -183,18 +210,24 @@ pub trait WriteAt {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the writer.
     #[inline(always)]
-    fn write_len_type_at_with_ctx<'de, 'a, L, Ctx>(
+    fn write_len_type_at_with_ctx<'de, 'a, L, T>(
         &mut self,
         position: &mut u64,
-        tys: impl ExactSizeIterator<Item = &'a (impl BinarySerialize<Ctx> + 'a)>,
-        ctx: &Ctx,
+        tys: impl ExactSizeIterator<Item = T::Input>,
+        ctx: T::Ctx,
     ) -> Result<(), WriteError>
     where
         L: Len<'de>,
+        <L as BinaryDeserialize<'de>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
+        T: BinarySerialize,
+        T::Ctx: Copy,
     {
         L::write_len_at(self, position, tys.len())?;
         for ty in tys {
-            ty.serialize_at_with_ctx(self, position, ctx)?;
+            T::serialize_at_with_ctx(ty, self, position, ctx)?;
         }
         Ok(())
     }
@@ -213,7 +246,7 @@ pub trait WriteAt {
     ) -> Result<(), WriteError> {
         let slice = string.as_bytes();
         self.write_slice_at(position, slice)?;
-        self.write_at(position, &0u8)?;
+        self.write_at::<u8>(position, 0u8)?;
         Ok(())
     }
 }

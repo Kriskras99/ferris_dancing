@@ -7,19 +7,19 @@ mod impls;
 
 pub use error::*;
 
-use super::len::Len;
+use super::{len::Len, write::BinarySerialize};
 
 /// Represents a object that can be deserialized from a binary file
-pub trait BinaryDeserialize<'de, Ctx: ?Sized = ()>
-where
-    Self: Sized,
-{
+pub trait BinaryDeserialize<'de> {
+    type Ctx: Sized;
+    type Output: Sized;
+
     /// Deserialize the object from the start of the reader with `ctx`
     #[inline(always)]
     fn deserialize_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
-        ctx: &Ctx,
-    ) -> Result<Self, ReadError> {
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
         Self::deserialize_at_with_ctx(reader, &mut 0, ctx)
     }
 
@@ -29,16 +29,19 @@ where
     fn deserialize_at_with_ctx(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: &Ctx,
-    ) -> Result<Self, ReadError>;
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError>;
 }
 
 /// Wraps `BinaryDeserialize` to remove the `ctx` parameter when it can be `Default`ed
-pub trait BinaryDeserializeExt<'de, Ctx: Default = ()>: BinaryDeserialize<'de, Ctx> {
+pub trait BinaryDeserializeExt<'de>: BinaryDeserialize<'de>
+where
+    Self::Ctx: Default,
+{
     /// Deserialize the object from start of the reader
     #[inline(always)]
-    fn deserialize(reader: &'de (impl ReadAtExt + ?Sized)) -> Result<Self, ReadError> {
-        Self::deserialize_with_ctx(reader, &Ctx::default())
+    fn deserialize(reader: &'de (impl ReadAtExt + ?Sized)) -> Result<Self::Output, ReadError> {
+        Self::deserialize_with_ctx(reader, Self::Ctx::default())
     }
 
     /// Deserialize the object from the reader at `position`
@@ -48,12 +51,12 @@ pub trait BinaryDeserializeExt<'de, Ctx: Default = ()>: BinaryDeserialize<'de, C
     fn deserialize_at(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-    ) -> Result<Self, ReadError> {
-        Self::deserialize_at_with_ctx(reader, position, &Ctx::default())
+    ) -> Result<Self::Output, ReadError> {
+        Self::deserialize_at_with_ctx(reader, position, Self::Ctx::default())
     }
 }
 
-impl<'de, Ctx: Default, T: BinaryDeserialize<'de, Ctx>> BinaryDeserializeExt<'de, Ctx> for T {}
+impl<'de, T: BinaryDeserialize<'de>> BinaryDeserializeExt<'de> for T where T::Ctx: Default {}
 
 /// A byte source implementing
 #[expect(
@@ -132,10 +135,10 @@ pub trait ReadAtExt: ReadAt {
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the source.
-    fn read_at<'rf, T, Ctx>(&'rf self, position: &mut u64) -> Result<T, ReadError>
+    fn read_at<'rf, T>(&'rf self, position: &mut u64) -> Result<T::Output, ReadError>
     where
-        Ctx: Default,
-        T: BinaryDeserializeExt<'rf, Ctx>,
+        T::Ctx: Default,
+        T: BinaryDeserializeExt<'rf>,
     {
         T::deserialize_at(self, position)
     }
@@ -145,14 +148,13 @@ pub trait ReadAtExt: ReadAt {
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the source.
-    fn read_at_with_ctx<'rf, T, Ctx>(
+    fn read_at_with_ctx<'rf, T>(
         &'rf self,
         position: &mut u64,
-        ctx: &Ctx,
-    ) -> Result<T, ReadError>
+        ctx: T::Ctx,
+    ) -> Result<T::Output, ReadError>
     where
-        Ctx: ?Sized,
-        T: BinaryDeserialize<'rf, Ctx>,
+        T: BinaryDeserialize<'rf>,
     {
         T::deserialize_at_with_ctx(self, position, ctx)
     }
@@ -169,6 +171,10 @@ pub trait ReadAtExt: ReadAt {
     fn read_len_string_at<'rf, L>(&'rf self, position: &mut u64) -> Result<Cow<'rf, str>, ReadError>
     where
         L: Len<'rf>,
+        <L as BinaryDeserialize<'rf>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -200,6 +206,10 @@ pub trait ReadAtExt: ReadAt {
     fn read_len_slice_at<'rf, L>(&'rf self, position: &mut u64) -> Result<Cow<'rf, [u8]>, ReadError>
     where
         L: Len<'rf>,
+        <L as BinaryDeserialize<'rf>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -226,19 +236,25 @@ pub trait ReadAtExt: ReadAt {
     fn read_len_type_at<'rf, L, T>(
         &'rf self,
         position: &mut u64,
-    ) -> Result<impl Iterator<Item = Result<T, ReadError>>, ReadError>
+    ) -> Result<impl Iterator<Item = Result<T::Output, ReadError>>, ReadError>
     where
         L: Len<'rf>,
+        <L as BinaryDeserialize<'rf>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
+        T::Ctx: Default + Copy,
         T: BinaryDeserializeExt<'rf>,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
             let len = L::read_len_at(self, position)?;
-            LenTypeIterator {
+            LenTypeIteratorWithCtx {
                 remaining: len,
                 position: *position,
                 _type: PhantomData::<T>,
                 reader: self,
+                ctx: T::Ctx::default(),
             }
         };
         if result.is_err() {
@@ -258,14 +274,19 @@ pub trait ReadAtExt: ReadAt {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline(always)]
-    fn read_len_type_at_with_ctx<'rf, 'ctx, L, T, Ctx>(
+    fn read_len_type_at_with_ctx<'rf, L, T>(
         &'rf self,
         position: &mut u64,
-        ctx: &'ctx Ctx,
-    ) -> Result<impl Iterator<Item = Result<T, ReadError>>, ReadError>
+        ctx: T::Ctx,
+    ) -> Result<impl Iterator<Item = Result<T::Output, ReadError>>, ReadError>
     where
         L: Len<'rf>,
-        T: BinaryDeserialize<'rf, Ctx>,
+        <L as BinaryDeserialize<'rf>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
+        T: BinaryDeserialize<'rf>,
+        T::Ctx: Copy,
     {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -287,12 +308,12 @@ pub trait ReadAtExt: ReadAt {
 
 impl<T> ReadAtExt for T where T: ReadAt + ?Sized {}
 
-/// Iterator that reads `T` from a source for `Len` times
-pub struct LenTypeIteratorWithCtx<'rf, 'ctx, Ctx, T, R>
+/// Iterator that reads `T::Output` from a source for `Len` times
+pub struct LenTypeIteratorWithCtx<'rf, T, R>
 where
-    Ctx: ?Sized,
-    T: BinaryDeserialize<'rf, Ctx>,
+    T: BinaryDeserialize<'rf>,
     R: ReadAtExt + ?Sized,
+    T::Ctx: Copy,
 {
     /// Remaining items to read from the iterator
     remaining: usize,
@@ -303,14 +324,14 @@ where
     /// The reader
     reader: &'rf R,
     /// The context for deserializing the type
-    ctx: &'ctx Ctx,
+    ctx: T::Ctx,
 }
 
-impl<'rf, 'ctx, T, R, Ctx> LenTypeIteratorWithCtx<'rf, 'ctx, Ctx, T, R>
+impl<'rf, T, R> LenTypeIteratorWithCtx<'rf, T, R>
 where
-    Ctx: ?Sized,
-    T: BinaryDeserialize<'rf, Ctx>,
+    T: BinaryDeserialize<'rf>,
     R: ReadAtExt + ?Sized,
+    T::Ctx: Copy,
 {
     #[must_use]
     /// The current position of the iterator
@@ -321,75 +342,17 @@ where
     }
 }
 
-impl<'rf, 'ctx, T, R, Ctx> Iterator for LenTypeIteratorWithCtx<'rf, 'ctx, Ctx, T, R>
+impl<'rf, T, R> Iterator for LenTypeIteratorWithCtx<'rf, T, R>
 where
-    Ctx: ?Sized,
-    T: BinaryDeserialize<'rf, Ctx>,
+    T: BinaryDeserialize<'rf>,
     R: ReadAtExt + ?Sized,
+    T::Ctx: Copy,
 {
-    type Item = Result<T, ReadError>;
+    type Item = Result<T::Output, ReadError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.remaining > 0 {
             let res = T::deserialize_at_with_ctx(self.reader, &mut self.position, self.ctx);
-            #[allow(
-                clippy::arithmetic_side_effects,
-                reason = "It's checked that remaining is larger than 0"
-            )]
-            if res.is_ok() {
-                self.remaining -= 1;
-            }
-            Some(res)
-        } else {
-            None
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.remaining, Some(self.remaining))
-    }
-}
-
-/// Iterator that reads `T` from a source for `Len` times
-pub struct LenTypeIterator<'rf, T, R>
-where
-    T: BinaryDeserializeExt<'rf>,
-    R: ReadAtExt + ?Sized,
-{
-    /// Remaining items to read from the iterator
-    remaining: usize,
-    /// The current position in the reader
-    position: u64,
-    /// The type that is being read
-    _type: PhantomData<T>,
-    /// The reader
-    reader: &'rf R,
-}
-
-impl<'rf, T, R> LenTypeIterator<'rf, T, R>
-where
-    T: BinaryDeserializeExt<'rf>,
-    R: ReadAtExt + ?Sized,
-{
-    #[must_use]
-    /// The current position of the iterator
-    ///
-    /// This value might change after calling `next`
-    pub const fn current_position(&self) -> u64 {
-        self.position
-    }
-}
-
-impl<'rf, T, R> Iterator for LenTypeIterator<'rf, T, R>
-where
-    T: BinaryDeserializeExt<'rf>,
-    R: ReadAtExt + ?Sized,
-{
-    type Item = Result<T, ReadError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.remaining > 0 {
-            let res = T::deserialize_at(self.reader, &mut self.position);
             #[allow(
                 clippy::arithmetic_side_effects,
                 reason = "It's checked that remaining is larger than 0"
