@@ -51,7 +51,7 @@ impl BinaryDeserialize<'_> for BundleId {
         position: &mut u64,
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        Ok(BundleId(reader.read_at::<u8>(position)?))
+        Ok(Self(reader.read_at::<u8>(position)?))
     }
 }
 

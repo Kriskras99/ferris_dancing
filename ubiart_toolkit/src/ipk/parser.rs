@@ -30,7 +30,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         let version = reader.read_at::<u32be>(position)?;
         let platform = reader.read_at::<IpkPlatform>(position)?;
         let base_offset = u64::from(reader.read_at::<u32be>(position)?);
-        let num_files = u32::from(reader.read_at::<u32be>(position)?);
+        let num_files = reader.read_at::<u32be>(position)?;
         let unk1 = reader.read_at::<u32be>(position)?;
         test_any(&unk1, UNK1)?;
         let unk2 = reader.read_at::<u32be>(position)?;

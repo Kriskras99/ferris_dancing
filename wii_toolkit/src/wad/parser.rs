@@ -161,7 +161,7 @@ impl BinaryDeserialize<'_> for TicketMetadata {
         iv.resize(0x10, 0);
         aes_128_cbc_decrypt_inplace(&mut title_key, &iv, &COMMON_KEY);
 
-        Ok(TicketMetadata {
+        Ok(Self {
             title_key,
             ticket_id,
             console_id,
@@ -242,7 +242,7 @@ impl BinaryDeserialize<'_> for TitleMetadata {
             });
         }
 
-        Ok(TitleMetadata {
+        Ok(Self {
             ca_crl_version,
             signer_crl_version,
             is_vwii,

@@ -1,3 +1,5 @@
+#![allow(clippy::needless_pass_by_value)]
+
 use std::path::Path;
 
 use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;

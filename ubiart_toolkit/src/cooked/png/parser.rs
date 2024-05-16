@@ -75,7 +75,7 @@ impl BinaryDeserialize<'_> for Png {
             _ => todo!(),
         };
 
-        Ok(Png {
+        Ok(Self {
             width,
             height,
             unk2,

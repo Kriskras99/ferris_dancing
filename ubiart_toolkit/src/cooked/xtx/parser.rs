@@ -47,7 +47,7 @@ impl BinaryDeserialize<'_> for Xtx {
             match reader.read_at::<u32le>(position) {
                 Ok(magic) => {
                     *position -= 4;
-                    if u32::from(magic) != 0x4E76_4248 {
+                    if magic != 0x4E76_4248 {
                         break;
                     }
                 }
@@ -78,7 +78,7 @@ impl BinaryDeserialize<'_> for Xtx {
                         None => Err(ReadError::custom("Found header without data".to_string())),
                     }?;
 
-                    images.push(parse_data_block_to_image(hdr, &data)?);
+                    images.push(parse_data_block_to_image(hdr, data)?);
 
                     index += 2;
 

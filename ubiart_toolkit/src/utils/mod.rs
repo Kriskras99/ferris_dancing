@@ -167,7 +167,7 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
             let path_id = reader.read_at::<PathId>(position)?;
             let split_path = SplitPath::new(path, filename)?;
             test_eq(&path_id, &split_path.id())?;
-            let padding = reader.read_at::<u32be>(position)?.into();
+            let padding = reader.read_at::<u32be>(position)?;
             test_eq(&padding, &Self::PADDING)?;
             split_path
         };
@@ -307,7 +307,7 @@ impl BinaryDeserialize<'_> for PathId {
         position: &mut u64,
         _ctx: (),
     ) -> Result<Self, ReadError> {
-        Ok(Self(reader.read_at::<u32be>(position)?.into()))
+        Ok(Self(reader.read_at::<u32be>(position)?))
     }
 }
 

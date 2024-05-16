@@ -34,7 +34,7 @@ impl BinaryDeserialize<'_> for Gtx {
             match reader.read_at::<u32be>(position) {
                 Ok(magic) => {
                     *position -= 4;
-                    if u32::from(magic) != Block::MAGIC {
+                    if magic != Block::MAGIC {
                         break;
                     }
                 }
@@ -134,13 +134,13 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
         let start = *position;
         let magic = reader.read_at::<u32be>(position)?;
         test_eq(&magic, &Self::MAGIC)?;
-        let size = u32::from(reader.read_at::<u32be>(position)?);
+        let size = reader.read_at::<u32be>(position)?;
         let major_version = reader.read_at::<u32be>(position)?;
         test_eq(&major_version, &1)?;
         let minor_version = reader.read_at::<u32be>(position)?;
         test_eq(&minor_version, &0)?;
         let type_it = reader.read_at::<u32be>(position)?;
-        let data_size = u32::from(reader.read_at::<u32be>(position)?);
+        let data_size = reader.read_at::<u32be>(position)?;
         let id = reader.read_at::<u32be>(position)?;
         test_eq(&id, &0)?;
         let type_idx = reader.read_at::<u32be>(position)?;
