@@ -68,7 +68,7 @@ impl BinaryDeserialize<'_> for Gtx {
                         }
                     };
 
-                    images.push(parse_data_block_to_image(hdr, data));
+                    images.push(parse_data_block_to_image(hdr, data)?);
 
                     index += 2;
 
@@ -274,7 +274,7 @@ fn addr_tile_mode(tile_mode: u32) -> AddrTileMode {
 
 /// Retrieve the data the [`TextureHeader`] points at and create a [`Image`]
 #[tracing::instrument(skip(hdr, data))]
-fn parse_data_block_to_image(hdr: &Gx2Surface, data: &[u8]) -> Image {
+fn parse_data_block_to_image(hdr: &Gx2Surface, data: &[u8]) -> Result<Image, ReadError> {
     let bpp = hdr.format.get_bpp() / 8;
     let is_bcn = hdr.format.is_bcn();
     let (width, height) = if is_bcn {
@@ -289,12 +289,12 @@ fn parse_data_block_to_image(hdr: &Gx2Surface, data: &[u8]) -> Image {
 
     tracing::trace!("format: {:?}, width: {width}, height: {height}, depth: {depth}, data: {}, swizzle: {swizzle}, pitch: {pitch}, bpp: {bpp}, tile_mode: {tile_mode:?}", hdr.format, data.len());
 
-    let deswizzled = deswizzle_surface(width, height, depth, data, swizzle, pitch, tile_mode, bpp);
+    let deswizzled = deswizzle_surface(width, height, depth, data, swizzle, pitch, tile_mode, bpp).map_err(|e| ReadError::custom(format!("{e:?}")))?;
 
     tracing::trace!("deswizzled: {}", deswizzled.len());
 
-    Image {
+    Ok(Image {
         surface: *hdr,
         data: deswizzled,
-    }
+    })
 }

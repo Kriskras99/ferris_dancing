@@ -42,6 +42,7 @@ impl BinarySerialize for u8 {
 
 impl Len<'_> for u8 {}
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct U16<Endian: Endianness>(PhantomData<Endian>);
 pub type u16be = U16<BigEndian>;
 pub type u16le = U16<LittleEndian>;

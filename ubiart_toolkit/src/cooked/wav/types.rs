@@ -1,9 +1,13 @@
-use dotstar_toolkit_utils::bytes::{primitives::u32be, read::{BinaryDeserialize, ReadAtExt, ReadError}};
+use dotstar_toolkit_utils::bytes::{
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
+};
 
 pub struct Wav {}
 
 impl Wav {
     pub const MAGIC: u32 = u32::from_be_bytes(*b"RAKI");
+    pub const FMT_MAGIC: u32 = u32::from_be_bytes(*b"fmt ");
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -34,7 +38,7 @@ impl TryFrom<u32> for WavPlatform {
             b"Cafe" => Ok(Self::WiiU),
             b"Win " => Ok(Self::Windows),
             b"X360" => Ok(Self::X360),
-            _ => Err(ReadError::custom(format!("Unknown platform! {value:x}")))
+            _ => Err(ReadError::custom(format!("Unknown platform! {value:x}"))),
         }
     }
 }
@@ -52,14 +56,14 @@ impl BinaryDeserialize<'_> for WavPlatform {
     fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         Ok(Self::try_from(reader.read_at::<u32be>(position)?)?)
     }
 }
 
 /// The codec that is used
-/// 
+///
 /// Note: for `Adpc` this is meaningless without also knowing the [`WavPlatform`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -83,7 +87,7 @@ impl TryFrom<u32> for Codec {
             b"Nx  " => Ok(Self::Nx),
             b"pcm " => Ok(Self::PCM),
             b"xma2" => Ok(Self::Xma2),
-            _ => Err(ReadError::custom(format!("Unknown platform! {value:x}")))
+            _ => Err(ReadError::custom(format!("Unknown platform! {value:x}"))),
         }
     }
 }
@@ -101,9 +105,16 @@ impl BinaryDeserialize<'_> for Codec {
     fn deserialize_at_with_ctx(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         Ok(Self::try_from(reader.read_at::<u32be>(position)?)?)
     }
 }
 
+pub enum Chunk {
+    Fmt(Fmt)
+}
+
+pub struct Fmt {
+
+}
