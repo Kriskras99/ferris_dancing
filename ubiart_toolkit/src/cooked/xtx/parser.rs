@@ -24,7 +24,7 @@ impl BinaryDeserialize<'_> for Xtx {
     type Output = Self;
 
     #[tracing::instrument(skip(reader))]
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),
@@ -106,7 +106,7 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),
@@ -168,7 +168,7 @@ impl BinaryDeserialize<'_> for Format {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),

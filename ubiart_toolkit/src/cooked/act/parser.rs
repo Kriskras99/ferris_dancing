@@ -19,7 +19,7 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ugi: Self::Ctx,
@@ -111,7 +111,7 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         test_eq(&unk9, &0u32)?;
 
         let components = reader
-            .read_len_type_at_with_ctx::<u32be, Component>(position, ugi)?
+            .read_len_type_at_with::<u32be, Component>(position, ugi)?
             .collect::<Result<_, _>>()?;
 
         Ok(Actor {
@@ -128,7 +128,7 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ugi: Self::Ctx,
@@ -156,9 +156,9 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
                 Component::ConvertedTmlTapeComponent
             }
             // JD_CreditsComponent
-            0x342E_A4FC => Component::CreditsComponent(
-                reader.read_at_with_ctx::<CreditsComponent>(position, ugi)?,
-            ),
+            0x342E_A4FC => {
+                Component::CreditsComponent(reader.read_at_with::<CreditsComponent>(position, ugi)?)
+            }
             // JD_FixedCameraComponent
             0x3D5D_EBA2 => {
                 parse_fixed_camera_component(reader, position)?;
@@ -173,7 +173,7 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
             0x677B_269B => Component::MasterTape,
             // MaterialGraphicComponent
             0x72B6_1FC5 => Component::MaterialGraphicComponent(
-                reader.read_at_with_ctx::<MaterialGraphicComponent>(position, (ugi, false))?,
+                reader.read_at_with::<MaterialGraphicComponent>(position, (ugi, false))?,
             ),
             // JD_Carousel
             0x27E4_80C0 => todo!("Carousel"),
@@ -183,7 +183,7 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
             0x1263_DAD9 => Component::PleoComponent(reader.read_at::<PleoComponent>(position)?),
             // PleoTextureGraphicComponent
             0x0579_E81B => Component::PleoTextureGraphicComponent(
-                reader.read_at_with_ctx::<MaterialGraphicComponent>(position, (ugi, true))?,
+                reader.read_at_with::<MaterialGraphicComponent>(position, (ugi, true))?,
             ),
             // PropertyPatcher
             0xF719_B524 => {
@@ -210,9 +210,7 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
             // UICarousel
             0x8782_FE60 => todo!("UICarousel"),
             // UITextBox
-            0xD10C_BEED => {
-                Component::UITextBox(reader.read_at_with_ctx::<UITextBox>(position, ugi)?)
-            }
+            0xD10C_BEED => Component::UITextBox(reader.read_at_with::<UITextBox>(position, ugi)?),
             // JD_UIWidgetGroupHUD_AutodanceRecorder
             0x9F87_350C => todo!("UIWidgetGroupHUDAutodanceRecorder"),
             // JD_UIWidgetGroupHUD_Lyrics
@@ -254,7 +252,7 @@ impl<'de> BinaryDeserialize<'de> for CreditsComponent<'de> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ugi: Self::Ctx,
@@ -441,7 +439,7 @@ impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
     type Ctx = (UniqueGameId, bool);
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
@@ -572,7 +570,7 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -614,7 +612,7 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ugi: Self::Ctx,

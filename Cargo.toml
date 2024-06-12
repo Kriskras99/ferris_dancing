@@ -14,7 +14,7 @@ members = [
 resolver = "2"
 
 [profile.release]
-debug = "line-tables-only"
+debug = "limited"
 panic = "abort"
 
 [profile.dev]
@@ -93,5 +93,5 @@ tracing-subscriber = { version = "0.3.18", features = ["std", "fmt", "ansi", "lo
 ux = { version = "0.1.6", default-features = false, features = ["std"] }
 wiiu_swizzle = { version = "0.2.0", default-features = false, features = [] }
 yoke = { version = "0.7.4", default-features = false, features = ["alloc", "derive"] }
-zip = { version = "2.1.1", default-features = false, features = ["deflate-miniz"] }
+zip = { version = "2.1.2", default-features = false, features = ["deflate-miniz"] }
 zopfli = { version = "0.8.1", default-features = false, features = ["zlib", "std"] }

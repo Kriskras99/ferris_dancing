@@ -65,7 +65,7 @@ fn save_images(
     let alt_actor_file = is
         .vfs
         .open(cook_path(actor_path, is.ugi.platform)?.as_ref())?;
-    let alt_actor = cooked::act::Actor::deserialize_with_ctx(&alt_actor_file, is.ugi)?;
+    let alt_actor = cooked::act::Actor::deserialize_with(&alt_actor_file, is.ugi)?;
 
     let image_actor = alt_actor
         .components

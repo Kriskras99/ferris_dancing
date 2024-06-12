@@ -39,7 +39,7 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
         let act_file = is
             .vfs
             .open(cook_path(&playlist.cover_path, is.ugi.platform)?.as_ref())?;
-        let actor = cooked::act::Actor::deserialize_with_ctx(&act_file, is.ugi)?;
+        let actor = cooked::act::Actor::deserialize_with(&act_file, is.ugi)?;
         let template = actor
             .components
             .iter()

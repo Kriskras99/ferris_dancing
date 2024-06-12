@@ -46,7 +46,7 @@ impl BinaryDeserialize<'_> for BundleId {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,

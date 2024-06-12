@@ -26,7 +26,7 @@ where
     type Ctx = T::Ctx;
     type Output = [T::Output; N];
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
@@ -37,7 +37,7 @@ where
         let result: Result<_, ReadError> = try {
             #[expect(clippy::arithmetic_side_effects, reason = "It's checked by N")]
             while i < N {
-                let data: T::Output = reader.read_at_with_ctx::<T>(position, ctx)?;
+                let data: T::Output = reader.read_at_with::<T>(position, ctx)?;
                 array[i] = MaybeUninit::new(data);
                 i += 1;
             }
@@ -66,7 +66,7 @@ where
 impl<'de> BinaryDeserialize<'de> for Cow<'de, str> {
     type Ctx = usize;
     type Output = Self;
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         len: usize,

@@ -15,15 +15,15 @@
 ///
 /// Common options:
 /// - `level`: ranges from [`MIN_LEVEL`] to [`MAX_LEVEL`]. The higher the level, the slower the encoder goes, but the higher the average quality.
-/// levels [0,4] are fast and compete against stb_dxt (default and HIGHQUAL). The remaining levels compete against squish/NVTT/icbc and icbc HQ.
-/// If in doubt just use level 10, set `allow_3color` to true and `use_transparent_texels_for_black` to false, and adjust as needed.
+///     levels [0,4] are fast and compete against stb_dxt (default and HIGHQUAL). The remaining levels compete against squish/NVTT/icbc and icbc HQ.
+///     If in doubt just use level 10, set `allow_3color` to true and `use_transparent_texels_for_black` to false, and adjust as needed.
 ///
 /// - `allow_3color`: If true the encoder will use 3-color blocks. This flag is ignored unless level is >= 5 (because lower levels compete against stb_dxt and it doesn't support 3-color blocks).
-/// 3-color block usage slows down encoding.
+///     3-color block usage slows down encoding.
 ///
 /// - `use_transparent_texels_for_black`: If true the encoder will use 3-color block transparent black pixels to code very dark or black texels. Your engine/shader MUST ignore the sampled
-/// alpha value for textures encoded in this mode. This is how NVidia's classic "nvdxt" encoder (used by many original Xbox titles) used to work by default on DXT1C textures. It increases
-/// average quality substantially (because dark texels/black are very common) and is highly recommended.
+///     alpha value for textures encoded in this mode. This is how NVidia's classic "nvdxt" encoder (used by many original Xbox titles) used to work by default on DXT1C textures. It increases
+///     average quality substantially (because dark texels/black are very common) and is highly recommended.
 ///
 /// ## Approximation mode
 /// Important: BC1/3 textures encoded using non-ideal BC1 approximation modes should only be sampled on parts from that vendor.

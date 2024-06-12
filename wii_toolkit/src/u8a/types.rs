@@ -44,7 +44,7 @@ impl<'de> BinaryDeserialize<'de> for UnparsedNode {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -151,7 +151,7 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,

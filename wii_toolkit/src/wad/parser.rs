@@ -28,7 +28,7 @@ impl<'de> BinaryDeserialize<'de> for WadArchive<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -36,7 +36,7 @@ impl<'de> BinaryDeserialize<'de> for WadArchive<'de> {
         let size = reader.read_at::<u32be>(position)?;
         let wad_type = reader.read_at::<WadType>(position)?;
         match (size, wad_type) {
-            (0x20, WadType::Bootable | WadType::Installable) => Ok(WadArchive::Installable(reader.read_at_with_ctx::<InstallableArchive>(position, wad_type)?)),
+            (0x20, WadType::Bootable | WadType::Installable) => Ok(WadArchive::Installable(reader.read_at_with::<InstallableArchive>(position, wad_type)?)),
             (0x70, WadType::Backup) => Err(ReadError::custom("Backup WAD parsing not yet implemented!".to_string())),
             _ => Err(ReadError::custom(format!("Unknown WAD type found or file is not a WAD file! Metadata size: {size}, WAD type: {wad_type:?}"))),
         }
@@ -47,7 +47,7 @@ impl<'de> BinaryDeserialize<'de> for InstallableArchive<'de> {
     type Ctx = WadType;
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         wad_type: Self::Ctx,
@@ -107,7 +107,7 @@ impl BinaryDeserialize<'_> for TicketMetadata {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -178,7 +178,7 @@ impl BinaryDeserialize<'_> for TitleMetadata {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,

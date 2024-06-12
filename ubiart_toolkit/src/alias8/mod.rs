@@ -82,7 +82,7 @@ impl<'de> BinaryDeserialize<'de> for Alias<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),
@@ -155,7 +155,7 @@ impl<'de> BinaryDeserialize<'de> for Alias8<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),

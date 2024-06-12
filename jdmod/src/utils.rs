@@ -87,7 +87,7 @@ pub fn decode_texture(
     reader: &(impl ReadAtExt + ?Sized),
     ugi: UniqueGameId,
 ) -> Result<RgbaImage, Error> {
-    let png = Png::deserialize_with_ctx(reader, ugi)?;
+    let png = Png::deserialize_with(reader, ugi)?;
 
     let png_height = u32::from(png.height);
     let png_width = u32::from(png.width);

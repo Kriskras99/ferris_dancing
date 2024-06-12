@@ -18,7 +18,7 @@ impl BinaryDeserialize<'_> for Png {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         ugi: Self::Ctx,

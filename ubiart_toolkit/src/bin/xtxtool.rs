@@ -46,7 +46,7 @@ fn main() {
         .init();
 
     let file = File::open(&cli.source).unwrap();
-    let png = Png::deserialize_with_ctx(
+    let png = Png::deserialize_with(
         &file,
         UniqueGameId {
             game: Game::JustDance2022,

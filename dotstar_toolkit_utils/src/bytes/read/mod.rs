@@ -16,17 +16,17 @@ pub trait BinaryDeserialize<'de> {
 
     /// Deserialize the object from the start of the reader with `ctx`
     #[inline(always)]
-    fn deserialize_with_ctx(
+    fn deserialize_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        Self::deserialize_at_with_ctx(reader, &mut 0, ctx)
+        Self::deserialize_at_with(reader, &mut 0, ctx)
     }
 
     /// Deserialize the object from the reader at `position` with `ctx`
     ///
     /// Implementation note: Must restore position to the original value on error!
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
@@ -41,7 +41,7 @@ where
     /// Deserialize the object from start of the reader
     #[inline(always)]
     fn deserialize(reader: &'de (impl ReadAtExt + ?Sized)) -> Result<Self::Output, ReadError> {
-        Self::deserialize_with_ctx(reader, Self::Ctx::default())
+        Self::deserialize_with(reader, Self::Ctx::default())
     }
 
     /// Deserialize the object from the reader at `position`
@@ -52,7 +52,7 @@ where
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
     ) -> Result<Self::Output, ReadError> {
-        Self::deserialize_at_with_ctx(reader, position, Self::Ctx::default())
+        Self::deserialize_at_with(reader, position, Self::Ctx::default())
     }
 }
 
@@ -148,7 +148,7 @@ pub trait ReadAtExt: ReadAt {
     ///
     /// # Errors
     /// This function will return an error when the T would be (partially) outside the source.
-    fn read_at_with_ctx<'rf, T>(
+    fn read_at_with<'rf, T>(
         &'rf self,
         position: &mut u64,
         ctx: T::Ctx,
@@ -156,7 +156,7 @@ pub trait ReadAtExt: ReadAt {
     where
         T: BinaryDeserialize<'rf>,
     {
-        T::deserialize_at_with_ctx(self, position, ctx)
+        T::deserialize_at_with(self, position, ctx)
     }
 
     /// Read a string at `position`
@@ -274,7 +274,7 @@ pub trait ReadAtExt: ReadAt {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline(always)]
-    fn read_len_type_at_with_ctx<'rf, L, T>(
+    fn read_len_type_at_with<'rf, L, T>(
         &'rf self,
         position: &mut u64,
         ctx: T::Ctx,
@@ -352,7 +352,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.remaining > 0 {
-            let res = T::deserialize_at_with_ctx(self.reader, &mut self.position, self.ctx);
+            let res = T::deserialize_at_with(self.reader, &mut self.position, self.ctx);
             #[allow(
                 clippy::arithmetic_side_effects,
                 reason = "It's checked that remaining is larger than 0"

@@ -33,7 +33,7 @@ impl BinaryDeserialize<'_> for LocaleId {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),
@@ -155,7 +155,7 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),
@@ -302,7 +302,7 @@ impl BinaryDeserialize<'_> for PathId {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),
@@ -463,7 +463,7 @@ impl BinaryDeserialize<'_> for UniqueGameId {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),

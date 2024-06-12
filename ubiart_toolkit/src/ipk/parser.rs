@@ -19,7 +19,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),
@@ -151,7 +151,7 @@ impl BinaryDeserialize<'_> for IpkPlatform {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: (),

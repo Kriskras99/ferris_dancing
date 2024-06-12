@@ -26,7 +26,7 @@ impl BinaryDeserialize<'_> for WadType {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -72,7 +72,7 @@ impl BinaryDeserialize<'_> for ContentType {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -124,7 +124,7 @@ impl BinaryDeserialize<'_> for TitleType {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -170,7 +170,7 @@ impl BinaryDeserialize<'_> for Region {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -216,7 +216,7 @@ impl BinaryDeserialize<'_> for AccessRights {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,

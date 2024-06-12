@@ -21,7 +21,7 @@ impl BinaryDeserialize<'_> for Gtx {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -96,7 +96,7 @@ impl BinaryDeserialize<'_> for GfdHeader {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -126,7 +126,7 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -168,7 +168,7 @@ impl BinaryDeserialize<'_> for Gx2Surface {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -233,7 +233,7 @@ impl BinaryDeserialize<'_> for Format {
     type Ctx = ();
     type Output = Self;
 
-    fn deserialize_at_with_ctx(
+    fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
         _ctx: Self::Ctx,
@@ -289,7 +289,8 @@ fn parse_data_block_to_image(hdr: &Gx2Surface, data: &[u8]) -> Result<Image, Rea
 
     tracing::trace!("format: {:?}, width: {width}, height: {height}, depth: {depth}, data: {}, swizzle: {swizzle}, pitch: {pitch}, bpp: {bpp}, tile_mode: {tile_mode:?}", hdr.format, data.len());
 
-    let deswizzled = deswizzle_surface(width, height, depth, data, swizzle, pitch, tile_mode, bpp).map_err(|e| ReadError::custom(format!("{e:?}")))?;
+    let deswizzled = deswizzle_surface(width, height, depth, data, swizzle, pitch, tile_mode, bpp)
+        .map_err(|e| ReadError::custom(format!("{e:?}")))?;
 
     tracing::trace!("deswizzled: {}", deswizzled.len());
 

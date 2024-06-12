@@ -1,13 +1,5 @@
 //! Endianness types for reading and writing bytes in the right endianness
 
-use self::sealed::Sealed;
-
-/// Module to make the `Sealed` trait unimplementable
-mod sealed {
-    /// Trait that can't be implemented by anyone outside this crate
-    pub trait Sealed {}
-}
-
 /// Pad the byte array to a larger size, while keeping the endianness correct
 ///
 /// # Panics
@@ -62,29 +54,19 @@ pub fn unpad<const N: usize, const M: usize>(bytes: [u8; N]) -> [u8; M] {
     new
 }
 
-/// The endianness of a type, for types that are able to be represented in both ways.
-///
-/// This trait is sealed, it's only implementers are [`LittleEndian`] and [`BigEndian`].
-/// There are also two type aliases, [`NativeEndian`] and [`NetworkEndian`].
-pub trait Endianness: Sealed + Clone + Copy + std::fmt::Debug + Default + PartialEq + Eq + PartialOrd + Ord + std::hash::Hash {
-    /// Convert `bytes` to the native endianness
-    fn to_native(bytes: &mut [u8]);
-
-    #[inline(always)]
-    /// Convert `bytes` from the native endianness
-    fn from_native(bytes: &mut [u8]) {
-        Self::to_native(bytes);
-    }
-}
-
+/// The byte order of a slice of bytes
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Endian {
     Little,
     Big,
 }
 
 impl Endian {
+    /// Change the endianness of the bytes to match the host
+    ///
+    /// Assumes the byte slice is an n-byte integer
     #[inline(always)]
-    fn to_native(&self, bytes: &mut [u8]) {
+    pub fn to_native(&self, bytes: &mut [u8]) {
         #[cfg(target_endian = "little")]
         if matches!(self, Endian::Big) {
             bytes.reverse();
@@ -95,6 +77,9 @@ impl Endian {
         }
     }
 
+    /// Change the endianness of the bytes to match the target endian
+    ///
+    /// Assumes the byte slice is an n-byte integer
     #[inline(always)]
     pub fn from_native(&self, bytes: &mut [u8]) {
         self.to_native(bytes);
@@ -102,46 +87,4 @@ impl Endian {
 }
 
 pub const LE: Endian = Endian::Little;
-
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-/// The least significant byte is at the smallest address
-pub struct LittleEndian;
-
-impl Sealed for LittleEndian {}
-impl Endianness for LittleEndian {
-    #[cfg(target_endian = "big")]
-    #[inline(always)]
-    fn to_native(bytes: &mut [u8]) {
-        bytes.reverse();
-    }
-
-    #[cfg(target_endian = "little")]
-    #[inline(always)]
-    fn to_native(_bytes: &mut [u8]) {}
-}
-
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-/// The most siginficant byte is at the smallest address
-pub struct BigEndian;
-/// The endianness used for network communication
-pub type NetworkEndian = BigEndian;
-
-impl Sealed for BigEndian {}
-impl Endianness for BigEndian {
-    #[cfg(target_endian = "little")]
-    #[inline(always)]
-    fn to_native(bytes: &mut [u8]) {
-        bytes.reverse();
-    }
-
-    #[cfg(target_endian = "big")]
-    #[inline(always)]
-    fn to_native(_bytes: &mut [u8]) {}
-}
-
-#[cfg(target_endian = "big")]
-/// The endianness of the system the program is running on
-pub type NativeEndian = BigEndian;
-#[cfg(target_endian = "little")]
-/// The endianness of the system the program is running on
-pub type NativeEndian = LittleEndian;
+pub const BE: Endian = Endian::Big;
