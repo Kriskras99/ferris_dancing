@@ -1,5 +1,4 @@
 #![feature(try_blocks)]
-#![feature(lint_reasons)]
 // Everything should be documented
 #![deny(missing_docs)]
 #![deny(clippy::missing_docs_in_private_items)]

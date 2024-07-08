@@ -1,7 +1,7 @@
 use std::{borrow::Cow, fmt::Debug};
 
 use dotstar_toolkit_utils::bytes::read::ReadError;
-use wiiu_swizzle::AddrTileMode;
+use wiiu_swizzle::TileMode;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Gtx {
@@ -80,7 +80,7 @@ pub struct Gx2Surface {
     pub image_ptr: u32,
     pub mip_size: u32,
     pub mip_ptr: u32,
-    pub tile_mode: AddrTileMode,
+    pub tile_mode: TileMode,
     pub swizzle: u32,
     pub alignment: u32,
     pub pitch: u32,

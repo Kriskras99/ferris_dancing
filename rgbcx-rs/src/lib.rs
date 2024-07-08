@@ -1,5 +1,3 @@
-#![allow(clippy::inline_always)]
-
 use image::Rgba;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -11,13 +9,13 @@ pub struct Color {
 }
 
 impl Color {
-    #[inline(always)]
+    #[inline]
     #[must_use]
     pub fn rgba(self) -> Rgba<u8> {
         self.into()
     }
 
-    #[inline(always)]
+    #[inline]
     #[must_use]
     pub fn interpolate(&self, rhs: &Self) -> (Self, Self) {
         (
@@ -44,7 +42,7 @@ impl Color {
         )
     }
 
-    #[inline(always)]
+    #[inline]
     #[must_use]
     pub fn midpoint(&self, rhs: &Self) -> Self {
         Self {
@@ -61,7 +59,7 @@ impl Color {
 }
 
 impl From<Color> for Rgba<u8> {
-    #[inline(always)]
+    #[inline]
     fn from(value: Color) -> Self {
         Self([value.red, value.green, value.blue, value.alpha])
     }
@@ -175,8 +173,11 @@ pub fn unpack_bc3_mut(
     Ok(())
 }
 
-#[allow(clippy::as_conversions)]
-#[inline(always)]
+#[allow(
+    clippy::as_conversions,
+    reason = "This is safe because of the & operations"
+)]
+#[inline]
 #[must_use]
 pub const fn unpack_color(color: u16) -> Color {
     let red5 = ((color >> 11) & 31) as u8;

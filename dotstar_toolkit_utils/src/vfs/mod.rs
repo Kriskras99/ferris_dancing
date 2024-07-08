@@ -53,7 +53,7 @@ impl ExactSizeIterator for WalkFs<'_> {}
 impl<'a> WalkFs<'a> {
     /// Create a `WalkFs` that iterates over `paths`
     #[must_use]
-    pub fn new(paths: Vec<&'a VirtualPath>) -> Self {
+    pub const fn new(paths: Vec<&'a VirtualPath>) -> Self {
         Self { paths }
     }
 

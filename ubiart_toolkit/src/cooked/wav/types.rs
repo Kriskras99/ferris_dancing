@@ -119,7 +119,7 @@ impl BinaryDeserialize<'_> for Codec {
         position: &mut u64,
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        Ok(Self::try_from(reader.read_at::<u32be>(position)?)?)
+        Self::try_from(reader.read_at::<u32be>(position)?)
     }
 }
 
@@ -150,7 +150,8 @@ pub enum Chunk<'a> {
 
 impl Chunk<'_> {
     /// Get the magic of this chunk
-    pub fn magic(&self) -> u32 {
+    #[must_use]
+    pub const fn magic(&self) -> u32 {
         match self {
             Chunk::Fmt(_) => Fmt::MAGIC,
             Chunk::AdIn(_) => AdIn::MAGIC,
@@ -175,11 +176,13 @@ impl Chunk<'_> {
     }
 
     /// Extract this chunk as a `Data` chunk
-    /// 
+    ///
     /// Note: this work for `Chunk::Data`, `Chunk::DatS`, `Chunk::DatL`, and `Chunk::DatR`
     pub fn as_data(&self) -> Result<&Data, ReadError> {
         match self {
-            Chunk::Data(data) | Chunk::DatS(data) | Chunk::DatL(data) | Chunk::DatR(data) => Ok(data),
+            Chunk::Data(data) | Chunk::DatS(data) | Chunk::DatL(data) | Chunk::DatR(data) => {
+                Ok(data)
+            }
             _ => Err(ReadError::custom("Not a data chunk!".into())),
         }
     }
@@ -194,7 +197,7 @@ impl Chunk<'_> {
     }
 
     /// Extract this chunk as a `Dsp` chunk
-    /// 
+    ///
     /// Note: this work for `Chunk::DspL` and `Chunk::DspR`
     pub fn as_dsp(&self) -> Result<&Dsp, ReadError> {
         match self {
@@ -291,4 +294,3 @@ impl Dsp {
     pub const MAGIC_LEFT: u32 = u32::from_be_bytes(*b"dspL");
     pub const MAGIC_RIGHT: u32 = u32::from_be_bytes(*b"dspR");
 }
-

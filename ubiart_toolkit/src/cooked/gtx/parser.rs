@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
     },
     testing::{test_eq, test_ge, test_le},
 };
-use wiiu_swizzle::{deswizzle_surface, AddrTileMode};
+use wiiu_swizzle::{deswizzle_mipmap, TileMode};
 
 use super::{
     types::{GfdHeader, Gtx},
@@ -189,7 +189,8 @@ impl BinaryDeserialize<'_> for Gx2Surface {
         let mip_ptr = reader.read_at::<u32be>(position)?;
         let tile_mode = reader.read_at::<u32be>(position)?;
         test_ge(&tile_mode, &0).and(test_le(&tile_mode, &19))?;
-        let tile_mode = addr_tile_mode(tile_mode);
+        let tile_mode = TileMode::from_repr(tile_mode)
+            .ok_or_else(|| ReadError::custom("Tile mode is invalid!".into()))?;
         let swizzle = reader.read_at::<u32be>(position)?;
         let alignment = reader.read_at::<u32be>(position)?;
         let pitch = reader.read_at::<u32be>(position)?;
@@ -242,36 +243,6 @@ impl BinaryDeserialize<'_> for Format {
     }
 }
 
-/// Convert a u32 to a tile mode
-///
-/// # Panics
-/// Will panic if the tile mode is invalid
-fn addr_tile_mode(tile_mode: u32) -> AddrTileMode {
-    match tile_mode {
-        0 => AddrTileMode::ADDR_TM_LINEAR_GENERAL,
-        1 => AddrTileMode::ADDR_TM_LINEAR_ALIGNED,
-        2 => AddrTileMode::ADDR_TM_1D_TILED_THIN1,
-        3 => AddrTileMode::ADDR_TM_1D_TILED_THICK,
-        4 => AddrTileMode::ADDR_TM_2D_TILED_THIN1,
-        5 => AddrTileMode::ADDR_TM_2D_TILED_THIN2,
-        6 => AddrTileMode::ADDR_TM_2D_TILED_THIN4,
-        7 => AddrTileMode::ADDR_TM_2D_TILED_THICK,
-        8 => AddrTileMode::ADDR_TM_2B_TILED_THIN1,
-        9 => AddrTileMode::ADDR_TM_2B_TILED_THIN2,
-        10 => AddrTileMode::ADDR_TM_2B_TILED_THIN4,
-        11 => AddrTileMode::ADDR_TM_2B_TILED_THICK,
-        12 => AddrTileMode::ADDR_TM_3D_TILED_THIN1,
-        13 => AddrTileMode::ADDR_TM_3D_TILED_THICK,
-        14 => AddrTileMode::ADDR_TM_3B_TILED_THIN1,
-        15 => AddrTileMode::ADDR_TM_3B_TILED_THICK,
-        16 => AddrTileMode::ADDR_TM_2D_TILED_XTHICK,
-        17 => AddrTileMode::ADDR_TM_3D_TILED_XTHICK,
-        18 => AddrTileMode::ADDR_TM_POWER_SAVE,
-        19 => AddrTileMode::ADDR_TM_COUNT,
-        _ => panic!("Unknown address tile mode!"),
-    }
-}
-
 /// Retrieve the data the [`TextureHeader`] points at and create a [`Image`]
 #[tracing::instrument(skip(hdr, data))]
 fn parse_data_block_to_image(hdr: &Gx2Surface, data: &[u8]) -> Result<Image, ReadError> {
@@ -289,8 +260,18 @@ fn parse_data_block_to_image(hdr: &Gx2Surface, data: &[u8]) -> Result<Image, Rea
 
     tracing::trace!("format: {:?}, width: {width}, height: {height}, depth: {depth}, data: {}, swizzle: {swizzle}, pitch: {pitch}, bpp: {bpp}, tile_mode: {tile_mode:?}", hdr.format, data.len());
 
-    let deswizzled = deswizzle_surface(width, height, depth, data, swizzle, pitch, tile_mode, bpp)
-        .map_err(|e| ReadError::custom(format!("{e:?}")))?;
+    let deswizzled = deswizzle_mipmap(
+        width,
+        height,
+        depth,
+        data,
+        swizzle,
+        pitch,
+        tile_mode,
+        bpp,
+        wiiu_swizzle::AaMode::X1,
+    )
+    .map_err(|e| ReadError::custom(format!("{e:?}")))?;
 
     tracing::trace!("deswizzled: {}", deswizzled.len());
 

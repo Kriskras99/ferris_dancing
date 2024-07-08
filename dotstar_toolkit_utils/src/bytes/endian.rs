@@ -68,11 +68,11 @@ impl Endian {
     #[inline(always)]
     pub fn to_native(&self, bytes: &mut [u8]) {
         #[cfg(target_endian = "little")]
-        if matches!(self, Endian::Big) {
+        if matches!(self, Self::Big) {
             bytes.reverse();
         }
         #[cfg(target_endian = "big")]
-        if matches!(self, Endian::Little) {
+        if matches!(self, Self::Little) {
             bytes.reverse();
         }
     }

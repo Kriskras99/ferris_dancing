@@ -1,6 +1,5 @@
 #![feature(try_trait_v2)]
 #![feature(error_generic_member_access)]
-#![feature(lint_reasons)]
 #![feature(try_blocks)]
 #![feature(once_cell_try)]
 #![deny(

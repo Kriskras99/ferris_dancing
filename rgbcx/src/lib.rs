@@ -67,10 +67,18 @@ pub const DEFAULT_TOTAL_ORDERINGS_TO_TRY: u32 = rgbcx_sys::rgbcx_DEFAULT_TOTAL_O
 /// Default total orderings that will be tried for 3-color blocks
 pub const DEFAULT_TOTAL_ORDERINGS_TO_TRY3: u32 = rgbcx_sys::rgbcx_DEFAULT_TOTAL_ORDERINGS_TO_TRY3;
 /// The minimum level supported by the level-based functions
-#[allow(clippy::cast_possible_truncation, clippy::as_conversions)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::as_conversions,
+    reason = "Try from is not const yet, manually checked"
+)]
 pub const MIN_LEVEL: u8 = rgbcx_sys::rgbcx_MIN_LEVEL as u8;
 /// The maximum level supported by the level-based functions
-#[allow(clippy::cast_possible_truncation, clippy::as_conversions)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::as_conversions,
+    reason = "Try from is not const yet, manually checked"
+)]
 pub const MAX_LEVEL: u8 = rgbcx_sys::rgbcx_MAX_LEVEL as u8;
 
 /// The encoder with it's global state

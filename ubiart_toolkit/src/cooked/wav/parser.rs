@@ -10,7 +10,8 @@ use dotstar_toolkit_utils::{
 };
 
 use super::{
-    types::{Chunk, Fmt, Wav}, AdIn, Dsp, Mark, Strg
+    types::{Chunk, Fmt, Wav},
+    AdIn, Dsp, Mark, Strg,
 };
 use crate::cooked::wav::{
     types::{Codec, WavPlatform},
@@ -82,11 +83,11 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
         Ok(Wav {
             unk1,
             unk2,
-            chunks,
             platform,
             codec,
             header_size,
             start_offset,
+            chunks,
         })
     }
 }
@@ -166,7 +167,7 @@ impl BinaryDeserialize<'_> for Fmt {
         //     println!("Warning: incomplete parsing!");
         // }
 
-        Ok(Fmt {
+        Ok(Self {
             unk1,
             channel_count,
             sample_rate,
@@ -197,7 +198,7 @@ impl BinaryDeserialize<'_> for AdIn {
 
         test_eq(start + u64::from(offset) + u64::from(size), new_position)?;
 
-        Ok(AdIn { num_of_samples })
+        Ok(Self { num_of_samples })
     }
 }
 
@@ -215,7 +216,7 @@ impl BinaryDeserialize<'_> for Data {
         let offset = reader.read_at_with::<u32>(position, endian)?;
         let size = reader.read_at_with::<u32>(position, endian)?;
 
-        Ok(Data {
+        Ok(Self {
             position: start + u64::from(offset),
             size,
         })
@@ -277,11 +278,7 @@ impl<'de> BinaryDeserialize<'de> for Strg<'de> {
             println!("Warning! STRG broken!");
         }
 
-        Ok(Self {
-            unk1,
-            unk2,
-            data,
-        })
+        Ok(Self { unk1, unk2, data })
     }
 }
 
@@ -315,14 +312,20 @@ impl BinaryDeserialize<'_> for Dsp {
         let initial_sample_history_1 = reader.read_at_with::<i16>(&mut new_position, endian)?;
         let initial_sample_history_2 = reader.read_at_with::<i16>(&mut new_position, endian)?;
         let loop_context_predictor_scale = reader.read_at_with::<u16>(&mut new_position, endian)?;
-        let loop_context_sample_history_1 = reader.read_at_with::<i16>(&mut new_position, endian)?;
-        let loop_context_sample_history_2 = reader.read_at_with::<i16>(&mut new_position, endian)?;
+        let loop_context_sample_history_1 =
+            reader.read_at_with::<i16>(&mut new_position, endian)?;
+        let loop_context_sample_history_2 =
+            reader.read_at_with::<i16>(&mut new_position, endian)?;
         let reserved = reader.read_slice_at(&mut new_position, 22)?;
 
         let loop_flag = match loop_flag {
             0 => false,
             1 => true,
-            _ => return Err(ReadError::custom(format!("Invalid loop_flag, value is {loop_flag}"))),
+            _ => {
+                return Err(ReadError::custom(format!(
+                    "Invalid loop_flag, value is {loop_flag}"
+                )))
+            }
         };
 
         test_eq(format, 0)?;

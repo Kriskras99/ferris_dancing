@@ -1,4 +1,3 @@
-#![feature(lint_reasons)]
 #![feature(anonymous_lifetime_in_impl_trait)]
 #![feature(try_blocks)]
 #![feature(once_cell_try)]
