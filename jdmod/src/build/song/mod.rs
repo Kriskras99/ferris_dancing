@@ -181,7 +181,7 @@ fn graph_scene(
 }
 
 /// Build the main scene from all the subscenes
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, reason = "It's just easier this way")]
 fn main_scene<'a>(
     ses: &SongExportState<'a>,
     audio_scene: cooked::isc::WrappedScene<'a>,

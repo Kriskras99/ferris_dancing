@@ -1,4 +1,4 @@
-#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::missing_panics_doc, reason = "Tool not a library")]
 
 use std::{
     ffi::OsStr,

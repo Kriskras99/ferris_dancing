@@ -591,8 +591,7 @@ impl<'a> ObjectiveType<'a> {
             Vec::new()
         };
         match descriptor {
-            // The comments matter!
-            #[allow(clippy::match_same_arms)]
+            #[allow(clippy::match_same_arms, reason = "The comments matter")]
             json_types::v1819::ObjectiveDesc1819::Base(data) => match data.objective_type {
                 0 => {
                     components.push(Component {
@@ -1344,7 +1343,7 @@ pub enum MoveCategories {
 }
 
 impl From<MoveCategories> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: MoveCategories) -> Self {
         value as Self
     }
@@ -2017,7 +2016,7 @@ pub enum CustomisableItemType {
 }
 
 impl From<CustomisableItemType> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: CustomisableItemType) -> Self {
         value as Self
     }
@@ -2053,7 +2052,7 @@ pub enum GachaItemType {
 }
 
 impl From<GachaItemType> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: GachaItemType) -> Self {
         value as Self
     }
@@ -2196,7 +2195,7 @@ pub struct MapNameRequirement<'a> {
 }
 
 /// Require specific playmodes
-#[allow(clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools, reason = "Forced by engine")]
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
 pub struct MapPlaymodeRequirement {
     /// Normal mode
@@ -2259,7 +2258,7 @@ pub enum ScoringMode {
 }
 
 impl From<ScoringMode> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: ScoringMode) -> Self {
         value as Self
     }

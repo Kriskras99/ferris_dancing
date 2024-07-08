@@ -324,7 +324,7 @@ impl TryFrom<u8> for NumberOfCoaches {
 }
 
 impl From<NumberOfCoaches> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: NumberOfCoaches) -> Self {
         value as Self
     }
@@ -530,7 +530,8 @@ impl From<&ubiart_toolkit::utils::Color> for Color {
 #[allow(
     clippy::cast_sign_loss,
     clippy::cast_possible_truncation,
-    clippy::as_conversions
+    clippy::as_conversions,
+    reason = "Safe because of the maths"
 )]
 fn map_range_to_u8(mut value: f32, min: f32, max: f32) -> u8 {
     assert!(max >= min, "Range is not sane! {min} {max}");
@@ -548,7 +549,7 @@ fn map_range_to_u8(mut value: f32, min: f32, max: f32) -> u8 {
 }
 
 /// Theme colors of the song
-#[allow(clippy::module_name_repetitions)]
+#[allow(clippy::module_name_repetitions, reason = "It's a good name")]
 #[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq)]
 pub struct SongColors {
     /// Main theme
@@ -618,7 +619,7 @@ pub enum MapStatus {
 }
 
 impl From<MapStatus> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: MapStatus) -> Self {
         value as Self
     }
@@ -670,7 +671,7 @@ pub enum Difficulty {
 }
 
 impl From<Difficulty> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: Difficulty) -> Self {
         value as Self
     }
@@ -703,7 +704,7 @@ pub enum SweatDifficulty {
 }
 
 impl From<SweatDifficulty> for u8 {
-    #[allow(clippy::as_conversions)]
+    #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: SweatDifficulty) -> Self {
         value as Self
     }

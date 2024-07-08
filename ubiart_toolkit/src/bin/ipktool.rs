@@ -1,4 +1,8 @@
-#![allow(clippy::missing_panics_doc, clippy::missing_errors_doc)]
+#![allow(
+    clippy::missing_panics_doc,
+    clippy::missing_errors_doc,
+    reason = "Tool not a library"
+)]
 
 use std::{
     collections::HashSet,
@@ -22,7 +26,7 @@ use ubiart_toolkit::{
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-#[allow(clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools, reason = "CLI")]
 struct Cli {
     source: PathBuf,
     destination: Option<PathBuf>,

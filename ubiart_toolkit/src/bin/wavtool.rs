@@ -1,4 +1,4 @@
-#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::missing_panics_doc, reason = "Tool not a library")]
 
 use std::{
     fs::File,
@@ -39,9 +39,9 @@ fn main() {
 }
 
 fn decode_opus(file: &File, wav: &Wav) {
-    let fmt = wav.chunks.get(&Fmt::MAGIC).unwrap().as_fmt().unwrap();
-    let data = wav.chunks.get(&Data::MAGIC).unwrap().as_data().unwrap();
-    let adin = wav.chunks.get(&AdIn::MAGIC).unwrap().as_adin().unwrap();
+    let fmt = wav.chunks[&Fmt::MAGIC].as_fmt().unwrap();
+    let data = wav.chunks[&Data::MAGIC].as_data().unwrap();
+    let adin = wav.chunks[&AdIn::MAGIC].as_adin().unwrap();
 
     let num_of_samples = adin.num_of_samples;
 
@@ -91,8 +91,8 @@ fn decode_opus(file: &File, wav: &Wav) {
 }
 
 fn decode_pcm(file: &File, wav: &Wav, path: &Path) {
-    let fmt = wav.chunks.get(&Fmt::MAGIC).unwrap().as_fmt().unwrap();
-    let data = wav.chunks.get(&Data::MAGIC).unwrap().as_data().unwrap();
+    let fmt = wav.chunks[&Fmt::MAGIC].as_fmt().unwrap();
+    let data = wav.chunks[&Data::MAGIC].as_data().unwrap();
 
     let spec = hound::WavSpec {
         channels: fmt.channel_count,
@@ -115,7 +115,7 @@ fn decode_pcm(file: &File, wav: &Wav, path: &Path) {
 
 const SAMPLES_PER_FRAME: u32 = 14;
 fn decode_gc_dsp(file: &File, wav: &Wav, path: &Path) {
-    let fmt = wav.chunks.get(&Fmt::MAGIC).unwrap().as_fmt().unwrap();
+    let fmt = wav.chunks[&Fmt::MAGIC].as_fmt().unwrap();
 
     let spec = hound::WavSpec {
         channels: fmt.channel_count,
@@ -127,8 +127,8 @@ fn decode_gc_dsp(file: &File, wav: &Wav, path: &Path) {
 
     if let Some(data) = wav.chunks.get(&Data::MAGIC_STEREO) {
         let data = data.as_data().unwrap();
-        let dsp_left = wav.chunks.get(&Dsp::MAGIC_LEFT).unwrap().as_dsp().unwrap();
-        let dsp_right = wav.chunks.get(&Dsp::MAGIC_RIGHT).unwrap().as_dsp().unwrap();
+        let dsp_left = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp().unwrap();
+        let dsp_right = wav.chunks[&Dsp::MAGIC_RIGHT].as_dsp().unwrap();
         // interleaved per frame
 
         let mut position = data.position;
@@ -143,7 +143,10 @@ fn decode_gc_dsp(file: &File, wav: &Wav, path: &Path) {
             coefficients: dsp_left.coefficients,
         };
         let frame_count = dsp_left.sample_count.div_ceil(SAMPLES_PER_FRAME);
-        assert_eq!(dsp_left.sample_count, dsp_right.sample_count);
+        assert_eq!(
+            dsp_left.sample_count, dsp_right.sample_count,
+            "One channel has more samples than the other"
+        );
 
         for _ in 0..frame_count {
             let samples_left =
@@ -158,14 +161,9 @@ fn decode_gc_dsp(file: &File, wav: &Wav, path: &Path) {
         }
     } else if let Some(data_right) = wav.chunks.get(&Data::MAGIC_RIGHT) {
         let data_right = data_right.as_data().unwrap();
-        let data_left = wav
-            .chunks
-            .get(&Data::MAGIC_LEFT)
-            .unwrap()
-            .as_data()
-            .unwrap();
-        let dsp_right = wav.chunks.get(&Dsp::MAGIC_RIGHT).unwrap().as_dsp().unwrap();
-        let dsp_left = wav.chunks.get(&Dsp::MAGIC_LEFT).unwrap().as_dsp().unwrap();
+        let data_left = wav.chunks[&Data::MAGIC_LEFT].as_data().unwrap();
+        let dsp_right = wav.chunks[&Dsp::MAGIC_RIGHT].as_dsp().unwrap();
+        let dsp_left = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp().unwrap();
 
         let mut position_left = data_left.position;
         let mut decoder_left = gc_adpcm::Decoder {
@@ -179,7 +177,10 @@ fn decode_gc_dsp(file: &File, wav: &Wav, path: &Path) {
             hist2: dsp_right.initial_sample_history_2,
             coefficients: dsp_right.coefficients,
         };
-        assert_eq!(dsp_left.sample_count, dsp_right.sample_count);
+        assert_eq!(
+            dsp_left.sample_count, dsp_right.sample_count,
+            "One channel has more samples than the other"
+        );
         let frame_count = dsp_left.sample_count.div_ceil(SAMPLES_PER_FRAME);
 
         for _ in 0..frame_count {
@@ -197,7 +198,7 @@ fn decode_gc_dsp(file: &File, wav: &Wav, path: &Path) {
         // non interleaved stereo
     } else if let Some(data) = wav.chunks.get(&Data::MAGIC_LEFT) {
         let data = data.as_data().unwrap();
-        let dsp = wav.chunks.get(&Dsp::MAGIC_LEFT).unwrap().as_dsp().unwrap();
+        let dsp = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp().unwrap();
 
         let mut position = data.position;
 

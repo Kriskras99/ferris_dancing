@@ -56,7 +56,7 @@ impl TryFrom<u32> for WavPlatform {
 impl From<WavPlatform> for u32 {
     #[allow(clippy::as_conversions, reason = "It's repr(u32)")]
     fn from(value: WavPlatform) -> Self {
-        value as u32
+        value as Self
     }
 }
 
@@ -106,7 +106,7 @@ impl TryFrom<u32> for Codec {
 impl From<Codec> for u32 {
     #[allow(clippy::as_conversions, reason = "It's repr(u32)")]
     fn from(value: Codec) -> Self {
-        value as u32
+        value as Self
     }
 }
 

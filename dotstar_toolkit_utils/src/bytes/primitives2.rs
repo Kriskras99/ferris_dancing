@@ -113,7 +113,7 @@ impl BinaryDeserialize<'_> for u16 {
 
 impl BinarySerialize for u16 {
     type Ctx = Endian;
-    type Input = u16;
+    type Input = Self;
 
     #[inline(always)]
     fn serialize_at_with_ctx(
@@ -199,7 +199,7 @@ impl BinaryDeserialize<'_> for i16 {
 
 impl BinarySerialize for i16 {
     type Ctx = Endian;
-    type Input = i16;
+    type Input = Self;
 
     #[inline(always)]
     fn serialize_at_with_ctx(
@@ -353,7 +353,7 @@ impl BinaryDeserialize<'_> for u32 {
 
 impl BinarySerialize for u32 {
     type Ctx = Endian;
-    type Input = u32;
+    type Input = Self;
 
     #[inline(always)]
     fn serialize_at_with_ctx(
@@ -440,7 +440,7 @@ impl BinaryDeserialize<'_> for u64 {
 
 impl BinarySerialize for u64 {
     type Ctx = Endian;
-    type Input = u64;
+    type Input = Self;
 
     #[inline(always)]
     fn serialize_at_with_ctx(

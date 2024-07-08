@@ -304,7 +304,7 @@ impl Translation<'_> {
     }
 
     /// Get the translation for a `language`
-    #[allow(clippy::missing_panics_doc)]
+    #[allow(clippy::missing_panics_doc, reason = "Only panics on 16-bit machines")]
     #[must_use]
     pub fn get(&self, language: Language) -> &'_ str {
         let index =
