@@ -99,8 +99,12 @@ pub fn decode_texture(
                 "More than one image in texture, not supported!"
             );
 
-            let big_image = &xtx.images[0];
-            let header = &big_image.header;
+            let big_image = xtx
+                .images
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| unreachable!());
+            let header = big_image.header;
             let width = usize::try_from(header.width)?;
             let height = usize::try_from(header.height)?;
 
@@ -123,7 +127,7 @@ pub fn decode_texture(
                     Format::Bc3.decompress(&big_image.data, width, height, &mut data_decompressed);
                     data_decompressed
                 }
-                xtx::Format::NvnFormatRGBA8 => big_image.data.clone(),
+                xtx::Format::NvnFormatRGBA8 => big_image.data,
                 _ => unimplemented!("{:?}", header.format),
             };
 
@@ -136,8 +140,12 @@ pub fn decode_texture(
                 "More than one image in texture, not supported!"
             );
 
-            let big_image = &gtx.images[0];
-            let header = &big_image.surface;
+            let big_image = gtx
+                .images
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| unreachable!());
+            let header = big_image.surface;
             let width = usize::try_from(header.width)?;
             let height = usize::try_from(header.height)?;
 
@@ -160,9 +168,7 @@ pub fn decode_texture(
                     Format::Bc3.decompress(&big_image.data, width, height, &mut data_decompressed);
                     data_decompressed
                 }
-                gtx::Format::TcsR8G8B8A8Srgb | gtx::Format::TcsR8G8B8A8Unorm => {
-                    big_image.data.clone()
-                }
+                gtx::Format::TcsR8G8B8A8Srgb | gtx::Format::TcsR8G8B8A8Unorm => big_image.data,
                 _ => unimplemented!("{:?}", header.format),
             };
 
