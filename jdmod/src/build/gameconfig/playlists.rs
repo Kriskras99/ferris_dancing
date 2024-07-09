@@ -53,7 +53,7 @@ pub fn build(
 
         let cooked_cover =
             encode_texture(bs.native_vfs, &bs.rel_tree.playlists().join(cover.as_ref()))?;
-        let cooked_cover_vec = cooked::png::create_vec(&cooked_cover)?;
+        let cooked_cover_vec = cooked::png::create_vec(cooked_cover)?;
         bf.generated_files.add_file(
             cook_path(offline_playlist.cover_path.as_ref(), bs.platform)?.into(),
             cover_actor_vec,

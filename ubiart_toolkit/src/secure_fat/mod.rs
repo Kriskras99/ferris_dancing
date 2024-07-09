@@ -42,7 +42,6 @@ pub mod vfs;
 mod writer;
 
 pub use types::*;
-pub use writer::*;
 
 /// Probably short for UbiSoft FileTable
 const MAGIC: u32 = u32::from_be_bytes(*b"USFT");

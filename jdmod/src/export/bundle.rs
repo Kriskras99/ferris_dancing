@@ -12,6 +12,7 @@ use std::{
 use anyhow::{anyhow, Error};
 use crossbeam::channel::{Receiver, Sender};
 use dotstar_toolkit_utils::{
+    bytes::write::WriteAt,
     testing::test,
     vfs::{
         layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
@@ -20,7 +21,7 @@ use dotstar_toolkit_utils::{
 };
 use ubiart_toolkit::{
     ipk::{self, vfs::IpkFilesystem},
-    secure_fat::{self, SecureFat},
+    secure_fat::SecureFat,
     utils::PathId,
 };
 
@@ -190,7 +191,8 @@ pub fn bundle<'fs: 'bf, 'bf>(
 
     // Create secure_fat.gf
     println!("Creating secure_fat.gf");
-    secure_fat::create(destination.join("secure_fat.gf"), &sfat)?;
+    let mut file = File::open(destination.join("secure_fat.gf"))?;
+    file.write_at::<SecureFat>(&mut 0, sfat)?;
 
     Ok(())
 }

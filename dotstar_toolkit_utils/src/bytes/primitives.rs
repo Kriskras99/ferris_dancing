@@ -70,7 +70,7 @@ macro_rules! create_uint {
         impl<E: Endianness> TryFrom<$name<E>> for usize {
             type Error = TryFromIntError;
 
-            #[inline(always)]
+            #[inline]
             fn try_from(value: $name<E>) -> Result<Self, Self::Error> {
                 let value = $native::from(value);
                 let value = usize::try_from(value)?;
@@ -81,7 +81,7 @@ macro_rules! create_uint {
         impl<E: Endianness> TryFrom<usize> for $name<E> {
             type Error = TryFromIntError;
 
-            #[inline(always)]
+            #[inline]
             fn try_from(value: usize) -> Result<Self, Self::Error> {
                 let value = $native::try_from(value)?;
                 let value = Self::try_from(value)?;
@@ -90,7 +90,7 @@ macro_rules! create_uint {
         }
 
         impl<E: Endianness> From<$name<E>> for $native {
-            #[inline(always)]
+            #[inline]
             fn from(value: $name<E>) -> Self {
                 let mut new_bytes = [0; std::mem::size_of::<$native>()];
                 #[cfg(target_endian = "big")]
@@ -108,7 +108,7 @@ macro_rules! create_uint {
         impl<'de, E: Endianness> Len<'de> for $name<E> {}
 
         impl<'de, E: Endianness> BinaryDeserialize<'de> for $name<E> {
-            #[inline(always)]
+            #[inline]
             fn deserialize_at(
                 reader: &'de (impl ReadAtExt + ?Sized),
                 position: &mut u64,
@@ -123,7 +123,7 @@ macro_rules! create_uint {
         }
 
         impl<E: Endianness> BinarySerialize for $name<E> {
-            #[inline(always)]
+            #[inline]
             fn serialize_at(
                 &self,
                 writer: &mut (impl WriteAt + ?Sized),
@@ -150,7 +150,7 @@ create_uint!(U64, u64le, u64be, u64, 8);
 macro_rules! impl_pow2_uint {
     ( $name:ident, $native:ident) => {
         impl<E: Endianness> From<$native> for $name<E> {
-            #[inline(always)]
+            #[inline]
             fn from(value: $native) -> Self {
                 Self {
                     bytes: value.to_ne_bytes(),
@@ -182,7 +182,7 @@ macro_rules! impl_non_pow2_uint {
         impl<E: Endianness> TryFrom<$native> for $name<E> {
             type Error = TryFromIntError;
 
-            #[inline(always)]
+            #[inline]
             fn try_from(value: $native) -> Result<Self, Self::Error> {
                 if value > $max {
                     // Force TryFromIntError creation
@@ -260,7 +260,7 @@ impl_non_pow2_uint!(U56, u64, 7, 0x00FF_FFFF_FFFF_FFFF);
 macro_rules! impl_widening_pow2_uint {
     ( $name:ident, $native:ident, $n_bytes:literal ) => {
         impl<E: Endianness> From<$name<E>> for $native {
-            #[inline(always)]
+            #[inline]
             fn from(value: $name<E>) -> Self {
                 let mut new_bytes = [0; std::mem::size_of::<$native>()];
                 #[cfg(target_endian = "big")]

@@ -128,7 +128,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                     let from = ses.dirs.pictos().join(orig_clip.picto_filename.as_ref());
                     if ses.native_vfs.exists(&from) {
                         let encoded = encode_texture(ses.native_vfs, &from)?;
-                        let encoded_vec = cooked::png::create_vec(&encoded)?;
+                        let encoded_vec = cooked::png::create_vec(encoded)?;
 
                         bf.generated_files.add_file(to.into(), encoded_vec)?;
                     } else {

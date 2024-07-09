@@ -8,10 +8,13 @@ use std::{
 
 use anyhow::{anyhow, bail, Error};
 use clap::Args;
-use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem, VirtualPath};
+use dotstar_toolkit_utils::{
+    bytes::write::WriteAt,
+    vfs::{native::NativeFs, VirtualFileSystem, VirtualPath},
+};
 use ubiart_toolkit::{
     ipk,
-    secure_fat::{self, SecureFat},
+    secure_fat::SecureFat,
     utils::{PathId, UniqueGameId},
 };
 
@@ -310,7 +313,8 @@ pub fn bundle(
         )?;
 
         println!("Creating secure_fat.gf");
-        secure_fat::create(destination.join("secure_fat.gf"), &sfat)?;
+        let mut file = File::open(destination.join("secure_fat.gf"))?;
+        file.write_at::<SecureFat>(&mut 0, sfat)?;
     }
 
     Ok(())

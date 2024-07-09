@@ -42,7 +42,7 @@ pub fn build(
                 .portraitborders()
                 .join(pb.background_texture_path.as_ref()),
         )?;
-        let background_texture_vec = cooked::png::create_vec(&background_texture_encoded)?;
+        let background_texture_vec = cooked::png::create_vec(background_texture_encoded)?;
         bf.generated_files.add_file(
             cook_path(&desc.background_texture_path, bs.platform)?.into(),
             background_texture_vec,
@@ -55,7 +55,7 @@ pub fn build(
                     .portraitborders()
                     .join(foreground_texture_path.as_ref()),
             )?;
-            let foreground_texture_vec = cooked::png::create_vec(&foreground_texture_encoded)?;
+            let foreground_texture_vec = cooked::png::create_vec(foreground_texture_encoded)?;
             bf.generated_files.add_file(
                 cook_path(&desc.foreground_texture_path, bs.platform)?.into(),
                 foreground_texture_vec,

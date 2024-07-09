@@ -90,7 +90,7 @@ impl<'de> BinaryDeserialize<'de> for Cow<'de, str> {
 }
 
 impl ReadAt for File {
-    #[inline(always)]
+    #[inline]
     fn read_slice_at(
         &self,
         position: &mut u64,
@@ -106,7 +106,7 @@ impl ReadAt for File {
         Ok(Cow::Owned(buf))
     }
 
-    #[inline(always)]
+    #[inline]
     fn read_null_terminated_string_at(
         &self,
         position: &mut u64,
@@ -154,7 +154,7 @@ impl ReadAt for File {
 }
 
 impl ReadAt for RandomAccessFile {
-    #[inline(always)]
+    #[inline]
     fn read_slice_at(
         &self,
         position: &mut u64,
@@ -170,7 +170,7 @@ impl ReadAt for RandomAccessFile {
         Ok(Cow::Owned(buf))
     }
 
-    #[inline(always)]
+    #[inline]
     fn read_null_terminated_string_at(
         &self,
         position: &mut u64,
@@ -219,7 +219,7 @@ impl ReadAt for RandomAccessFile {
 }
 
 impl ReadAt for [u8] {
-    #[inline(always)]
+    #[inline]
     fn read_slice_at<'rf>(
         &'rf self,
         position: &mut u64,
@@ -238,7 +238,7 @@ impl ReadAt for [u8] {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn read_null_terminated_string_at<'rf>(
         &'rf self,
         position: &mut u64,

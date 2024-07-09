@@ -24,7 +24,7 @@ pub enum Texture {
 }
 
 impl Texture {
-    pub fn xtx(&self) -> Result<&Xtx, WriteError> {
+    pub fn xtx(self) -> Result<Xtx, WriteError> {
         match self {
             Self::Xtx(xtx) => Ok(xtx),
             _ => Err(WriteError::custom(format!("Texture is not xtx!: {self:?}"))),

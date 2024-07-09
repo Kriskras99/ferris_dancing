@@ -1,47 +1,43 @@
-use std::io::{Cursor, Write};
-
-use byteorder::{BigEndian, WriteBytesExt};
-use dotstar_toolkit_utils::bytes::write::WriteError;
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u16be, u32be, u64be},
+    write::{BinarySerialize, WriteAt, WriteError},
+};
 
 use super::Png;
-use crate::cooked::xtx;
+use crate::cooked::xtx::Xtx;
 
-/// Create the cooked PNG file in a newly allocated `Vec`
-pub fn create<W: Write>(mut src: W, png: &Png) -> Result<(), WriteError> {
-    src.write_u64::<BigEndian>(0x9_5445_5800)?;
-    src.write_u32::<BigEndian>(0x2C)?;
-    src.write_u32::<BigEndian>(png.unk2)?;
-    src.write_u16::<BigEndian>(png.width)?;
-    src.write_u16::<BigEndian>(png.height)?;
-    src.write_u16::<BigEndian>(0x1)?;
-    src.write_u16::<BigEndian>(png.unk5)?;
-    src.write_u32::<BigEndian>(png.unk2)?;
-    src.write_u32::<BigEndian>(0x0)?;
-    src.write_u32::<BigEndian>(png.unk8)?;
-    src.write_u32::<BigEndian>(png.unk9)?;
-    src.write_u16::<BigEndian>(png.unk10)?;
-    src.write_u16::<BigEndian>(0x0)?;
-    xtx::create(src, png.texture.xtx()?)?;
-    Ok(())
+impl BinarySerialize for Png {
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        png: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at::<u64be>(position, 0x9_5445_5800)?;
+        writer.write_at::<u32be>(position, 0x2C)?;
+        writer.write_at::<u32be>(position, png.unk2)?;
+        writer.write_at::<u16be>(position, png.width)?;
+        writer.write_at::<u16be>(position, png.height)?;
+        writer.write_at::<u16be>(position, 0x1)?;
+        writer.write_at::<u16be>(position, png.unk5)?;
+        writer.write_at::<u32be>(position, png.unk2)?;
+        writer.write_at::<u32be>(position, 0x0)?;
+        writer.write_at::<u32be>(position, png.unk8)?;
+        writer.write_at::<u32be>(position, png.unk9)?;
+        writer.write_at::<u16be>(position, png.unk10)?;
+        writer.write_at::<u16be>(position, 0x0)?;
+        writer.write_at::<Xtx>(position, png.texture.xtx()?)?;
+        Ok(())
+    }
 }
 
 /// Create the cooked PNG file in a newly allocated `Vec`
-pub fn create_vec(png: &Png) -> Result<Vec<u8>, WriteError> {
-    // Calculate required capacity: png header + xtx header/footer + per image(header size + data size)
-    // We can't use a static capacity as image sizes range from 66KB to 2MB
-    let capacity = 44
-        + 76
-        + png
-            .texture
-            .xtx()?
-            .images
-            .iter()
-            .map(|image| 452 + image.data.len())
-            .sum::<usize>();
-    let mut vec = Vec::with_capacity(capacity);
-    let cursor = Cursor::new(&mut vec);
-    create(cursor, png)?;
-    // Just in case our calculation is off
+pub fn create_vec(png: Png) -> Result<Vec<u8>, WriteError> {
+    let mut vec = Vec::new();
+    vec.write_at::<Png>(&mut 0, png)?;
     vec.shrink_to_fit();
     Ok(vec)
 }

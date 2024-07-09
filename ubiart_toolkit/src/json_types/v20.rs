@@ -2,7 +2,6 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
-use yoke::Yokeable;
 
 #[cfg(feature = "full_json_types")]
 use super::{
@@ -46,7 +45,7 @@ use super::{
 };
 use crate::utils::errors::ParserError;
 
-#[derive(Debug, Serialize, Deserialize, Yokeable)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]
 pub enum Template20<'a> {
     #[serde(borrow, rename = "Actor_Template")]

@@ -23,7 +23,7 @@ impl BinaryDeserialize<'_> for Xtx {
     type Ctx = ();
     type Output = Self;
 
-    #[tracing::instrument(skip(reader))]
+    #[tracing::instrument(skip(reader, _ctx))]
     fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,

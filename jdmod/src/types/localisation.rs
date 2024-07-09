@@ -167,6 +167,12 @@ impl Localisation<'_> {
         self.translations.is_empty()
     }
 
+    /// The amount of translations
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.translations.len()
+    }
+
     /// Get the next available locale id
     fn next_id(&mut self) -> LocaleId {
         let next_id = self.free_id;

@@ -63,7 +63,7 @@ pub fn build(
             &bs.rel_tree.avatars().join(avatar.image_path.as_ref()),
         )?;
         let to = cook_path(&format!("world/avatars/{id:04}/avatar.png"), bs.platform)?;
-        let cooked_image_vec = cooked::png::create_vec(&cooked_image)?;
+        let cooked_image_vec = cooked::png::create_vec(cooked_image)?;
 
         // Add the phone image for copying
         let phone_image = format!("world/avatars/{id:04}/avatar_phone.png");

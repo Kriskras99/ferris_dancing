@@ -50,7 +50,7 @@ pub fn build(
                 let encoded = encode_texture(ses.native_vfs, &from)?;
                 let to = textures_cache_dir.join(format!("{lower_map_name}_{lower_name}.tga.ckd"));
 
-                let encoded_vec = cooked::png::create_vec(&encoded)?;
+                let encoded_vec = cooked::png::create_vec(encoded)?;
 
                 bf.generated_files.add_file(
                     actors_cache_dir.join(format!("{lower_map_name}_{lower_name}.act.ckd")),

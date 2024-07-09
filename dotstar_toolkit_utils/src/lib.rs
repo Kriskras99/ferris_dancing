@@ -6,7 +6,6 @@
     clippy::arithmetic_side_effects,
     reason = "If an overflow or underflow occurs it's a good indication that something broke"
 )]
-#![allow(clippy::inline_always, reason = "It's useful here")]
 #![allow(clippy::explicit_deref_methods, reason = "It's clearer this way")]
 
 //! # .* Toolkit Utils

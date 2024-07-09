@@ -4,7 +4,7 @@
     clippy::arithmetic_side_effects,
     clippy::missing_safety_doc,
     clippy::as_conversions,
-    reason = "code is adapter from rust-lang including style"
+    reason = "code is adapted from rust-lang including style"
 )]
 //! Path manipulation for virtual filesystems.
 //!

@@ -15,7 +15,7 @@ pub trait BinaryDeserialize<'de> {
     type Output: Sized;
 
     /// Deserialize the object from the start of the reader with `ctx`
-    #[inline(always)]
+    #[inline]
     fn deserialize_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         ctx: Self::Ctx,
@@ -39,7 +39,7 @@ where
     Self::Ctx: Default,
 {
     /// Deserialize the object from start of the reader
-    #[inline(always)]
+    #[inline]
     fn deserialize(reader: &'de (impl ReadAtExt + ?Sized)) -> Result<Self::Output, ReadError> {
         Self::deserialize_with(reader, Self::Ctx::default())
     }
@@ -47,7 +47,7 @@ where
     /// Deserialize the object from the reader at `position`
     ///
     /// Implementation note: Must restore position to the original value on error!
-    #[inline(always)]
+    #[inline]
     fn deserialize_at(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -167,7 +167,7 @@ pub trait ReadAtExt: ReadAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
-    #[inline(always)]
+    #[inline]
     fn read_len_string_at<'rf, L>(&'rf self, position: &mut u64) -> Result<Cow<'rf, str>, ReadError>
     where
         L: Len<'rf>,
@@ -202,7 +202,7 @@ pub trait ReadAtExt: ReadAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
-    #[inline(always)]
+    #[inline]
     fn read_len_slice_at<'rf, L>(&'rf self, position: &mut u64) -> Result<Cow<'rf, [u8]>, ReadError>
     where
         L: Len<'rf>,
@@ -232,7 +232,7 @@ pub trait ReadAtExt: ReadAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
-    #[inline(always)]
+    #[inline]
     fn read_len_type_at<'rf, L, T>(
         &'rf self,
         position: &mut u64,
@@ -273,7 +273,7 @@ pub trait ReadAtExt: ReadAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
-    #[inline(always)]
+    #[inline]
     fn read_len_type_at_with<'rf, L, T>(
         &'rf self,
         position: &mut u64,

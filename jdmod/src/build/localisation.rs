@@ -2,12 +2,9 @@
 //! Build the localisations
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Error};
+use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualPathBuf;
-use ubiart_toolkit::{
-    loc8::{self, Language},
-    utils::LocaleId,
-};
+use ubiart_toolkit::loc8::{self, Language, Loc8};
 
 use super::{BuildFiles, BuildState};
 use crate::types::localisation::Localisation;
@@ -93,28 +90,34 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
     println!("Building localisations...");
     // Load localisations
     let localisations = Localisation::load_vfs(bs.native_vfs, &bs.rel_tree)?;
-    let mut map: HashMap<Language, HashMap<LocaleId, &str>> =
-        HashMap::with_capacity(LOC8_FILES.len());
+    let mut map: HashMap<Language, Loc8> = HashMap::with_capacity(LOC8_FILES.len());
+    let unique_ids = localisations.len();
 
     for (locale_id, translation) in localisations.entries() {
         for lang in Language::all().iter().copied() {
             map.entry(lang)
-                .or_default()
-                .insert(*locale_id, translation.get(lang));
+                .or_insert_with_key(|language| Loc8 {
+                    language: *language,
+                    strings: HashMap::with_capacity(unique_ids),
+                })
+                .strings
+                .insert(
+                    *locale_id,
+                    std::borrow::Cow::Borrowed(translation.get(lang)),
+                );
         }
     }
 
-    for (lang, file) in LOC8_FILES {
-        let loc8_vec = loc8::create_vec(
-            *lang,
-            map.get(lang)
-                .ok_or_else(|| anyhow!("Impossible! Did I forget a language?"))?
-                .iter()
-                .map(|(i, s)| (*i, *s)),
-        )?;
-
+    for (lang, loc8) in map {
+        let vec = loc8::create_vec(loc8)?;
+        // TODO: replace with phf map when it supports enums as keys
+        let path = LOC8_FILES
+            .iter()
+            .find(|(one, _)| *one == lang)
+            .unwrap_or_else(|| unreachable!())
+            .1;
         bf.generated_files
-            .add_file(VirtualPathBuf::from(*file), loc8_vec)?;
+            .add_file(VirtualPathBuf::from(path), vec)?;
     }
 
     Ok(())

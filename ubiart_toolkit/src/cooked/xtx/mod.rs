@@ -3,4 +3,3 @@ mod types;
 mod writer;
 
 pub use types::*;
-pub use writer::*;

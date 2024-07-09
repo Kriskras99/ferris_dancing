@@ -280,7 +280,7 @@ pub fn test(value: bool) -> TestResult {
 /// # Errors
 /// Will return an error if the input is not false.
 #[allow(clippy::if_not_else, reason = "Much clearer this way")]
-#[inline(always)]
+#[inline]
 pub fn test_not(value: bool) -> TestResult {
     if !value {
         TestResult::Ok
@@ -293,7 +293,7 @@ pub fn test_not(value: bool) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if the two inputs are not the same, with a description of the values.
-#[inline(always)]
+#[inline]
 pub fn test_eq<T: PartialEq + Debug>(left: T, right: T) -> TestResult {
     if left == right {
         TestResult::Ok
@@ -306,7 +306,7 @@ pub fn test_eq<T: PartialEq + Debug>(left: T, right: T) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if `two` does not contain `one`, with a description of the values.
-#[inline(always)]
+#[inline]
 pub fn test_any<T: PartialEq + Debug>(left: &T, right: &[T]) -> TestResult {
     if right.contains(left) {
         TestResult::Ok
@@ -320,7 +320,7 @@ pub fn test_any<T: PartialEq + Debug>(left: &T, right: &[T]) -> TestResult {
 /// # Errors
 /// Will return an error if the two inputs are the same, with a description of the values.
 #[allow(clippy::if_not_else, reason = "Much clearer this way")]
-#[inline(always)]
+#[inline]
 pub fn test_ne<T: PartialEq + Debug>(left: T, right: T) -> TestResult {
     if left != right {
         TestResult::Ok
@@ -333,7 +333,7 @@ pub fn test_ne<T: PartialEq + Debug>(left: T, right: T) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if `one` is bigger than `two`, with a description of the values.
-#[inline(always)]
+#[inline]
 pub fn test_le<T: PartialOrd + Debug>(left: T, right: T) -> TestResult {
     if left <= right {
         TestResult::Ok
@@ -346,7 +346,7 @@ pub fn test_le<T: PartialOrd + Debug>(left: T, right: T) -> TestResult {
 ///
 /// # Errors
 /// Will return an error if `one` is smaller than `two`, with a description of the values.
-#[inline(always)]
+#[inline]
 pub fn test_ge<T: PartialOrd + Debug>(left: T, right: T) -> TestResult {
     if left >= right {
         TestResult::Ok

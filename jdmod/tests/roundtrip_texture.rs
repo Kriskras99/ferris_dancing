@@ -34,7 +34,7 @@ fn tga_roundtrip(input: &Path) -> datatest_stable::Result<()> {
     fs.add_file("decoded.png".into(), content)?;
     tracing::trace!("Create new texture");
     let two = encode_texture(&fs, VirtualPath::new("decoded.png"))?;
-    let three = png::create_vec(&two)?;
+    let three = png::create_vec(two)?;
     tracing::trace!("Parse new texture");
     let _four = decode_texture(&three, UniqueGameId::NX2022)?;
     // if one != four {

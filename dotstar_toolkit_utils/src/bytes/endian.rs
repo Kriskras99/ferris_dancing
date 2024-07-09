@@ -5,7 +5,7 @@
 /// # Panics
 /// Will panic if `N` is larger than `M`
 #[must_use]
-#[inline(always)]
+#[inline]
 pub fn pad<const N: usize, const M: usize>(bytes: [u8; N]) -> [u8; M] {
     assert!(N <= M, "Cannot pad to a smaller size!");
     let mut new = [0; M];
@@ -28,7 +28,7 @@ pub fn pad<const N: usize, const M: usize>(bytes: [u8; N]) -> [u8; M] {
 /// Will panic if `N` is smaller than `M`
 /// Will panic if the padding is not zero
 #[must_use]
-#[inline(always)]
+#[inline]
 pub fn unpad<const N: usize, const M: usize>(bytes: [u8; N]) -> [u8; M] {
     assert!(N >= M, "Cannot unpad to a bigger size!");
     let mut new = [0; M];
@@ -65,7 +65,7 @@ impl Endian {
     /// Change the endianness of the bytes to match the host
     ///
     /// Assumes the byte slice is an n-byte integer
-    #[inline(always)]
+    #[inline]
     pub fn to_native(&self, bytes: &mut [u8]) {
         #[cfg(target_endian = "little")]
         if matches!(self, Self::Big) {
@@ -80,7 +80,7 @@ impl Endian {
     /// Change the endianness of the bytes to match the target endian
     ///
     /// Assumes the byte slice is an n-byte integer
-    #[inline(always)]
+    #[inline]
     pub fn from_native(&self, bytes: &mut [u8]) {
         self.to_native(bytes);
     }

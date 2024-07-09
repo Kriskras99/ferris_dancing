@@ -16,7 +16,7 @@ pub trait BinarySerialize {
     ///
     /// # Errors
     /// This function will return an error when serializing fails.
-    #[inline(always)]
+    #[inline]
     fn serialize_with_ctx(
         input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
@@ -67,7 +67,7 @@ where
     ///
     /// # Errors
     /// This function will return an error when serializing fails.
-    #[inline(always)]
+    #[inline]
     fn serialize(
         input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
@@ -81,7 +81,7 @@ where
     ///
     /// # Errors
     /// This function will return an error when serializing fails.
-    #[inline(always)]
+    #[inline]
     fn serialize_at(
         input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),
@@ -145,7 +145,7 @@ pub trait WriteAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the writer.
-    #[inline(always)]
+    #[inline]
     fn write_len_string_at<'de, L>(
         &mut self,
         position: &mut u64,
@@ -169,7 +169,7 @@ pub trait WriteAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the writer.
-    #[inline(always)]
+    #[inline]
     fn write_len_slice_at<'de, L>(
         &mut self,
         position: &mut u64,
@@ -196,7 +196,7 @@ pub trait WriteAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the writer.
-    #[inline(always)]
+    #[inline]
     fn write_len_type_at<'de, 'a, L, T>(
         &mut self,
         position: &mut u64,
@@ -227,7 +227,7 @@ pub trait WriteAt {
     ///
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the writer.
-    #[inline(always)]
+    #[inline]
     fn write_len_type_at_with_ctx<'de, 'a, L, T>(
         &mut self,
         position: &mut u64,

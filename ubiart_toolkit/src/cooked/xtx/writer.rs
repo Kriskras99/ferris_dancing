@@ -1,24 +1,69 @@
-use std::io::Write;
+use std::{
+    rc::Rc,
+    sync::atomic::{AtomicU32, Ordering::Relaxed},
+};
 
-use byteorder::{LittleEndian, WriteBytesExt};
-use dotstar_toolkit_utils::bytes::write::WriteError;
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u32le, u64le},
+    write::{BinarySerialize, WriteAt, WriteError},
+};
 use tegra_swizzle::{
     block_height_mip0, div_round_up,
     surface::{swizzle_surface, BlockDim},
     BlockHeight,
 };
 
-use super::Xtx;
+use super::{Image, Xtx};
 
-/// Writes the XTX texture to the file
-#[tracing::instrument(skip(src, xtx))]
-pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriteError> {
-    src.write_u32::<LittleEndian>(0x4E76_4644)?;
-    src.write_u32::<LittleEndian>(0x10)?;
-    src.write_u32::<LittleEndian>(xtx.major_version)?;
-    src.write_u32::<LittleEndian>(xtx.minor_version)?;
-    let mut id = 0;
-    for image in &xtx.images {
+impl BinarySerialize for Xtx {
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        xtx: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at::<u32le>(position, 0x4E76_4644)?;
+        writer.write_at::<u32le>(position, 0x10)?;
+        writer.write_at::<u32le>(position, xtx.major_version)?;
+        writer.write_at::<u32le>(position, xtx.minor_version)?;
+
+        // Hacky work around as associated types cannot have a free lifetime
+        let id = Rc::new(AtomicU32::new(0));
+        for image in xtx.images {
+            writer.write_at_with_ctx::<Image>(position, image, id.clone())?;
+        }
+        // Write unknown third header
+        writer.write_at::<u32le>(position, 0x4E76_4248)?;
+        writer.write_at::<u32le>(position, 0x24)?;
+        writer.write_at::<u64le>(position, 24)?;
+        writer.write_at::<u64le>(position, 0x24)?;
+        writer.write_at::<u32le>(position, 0x5)?;
+        writer.write_at::<u32le>(position, id.load(Relaxed))?;
+        writer.write_at::<u32le>(position, 0x0)?;
+        writer.write_slice_at(
+            position,
+            &[
+                0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ],
+        )?;
+        Ok(())
+    }
+}
+
+impl BinarySerialize for Image {
+    // Hacky work around as associated types cannot have a free lifetime
+    type Ctx = Rc<AtomicU32>;
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        image: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        id: Self::Ctx,
+    ) -> Result<(), WriteError> {
         let bpp = usize::try_from(image.header.format.get_bpp())?;
         let is_bcn = image.header.format.is_bcn();
         let width = usize::try_from(image.header.width)?;
@@ -57,59 +102,47 @@ pub fn create<W: Write>(mut src: W, xtx: &Xtx) -> Result<(), WriteError> {
             1,
         )
         .map_err(|e| WriteError::custom(format!("{e:?}")))?;
-        tracing::trace!("width: {width}, height: {height}, depth: {depth}, data: {}, block_dim: {block_dim:?}, block_height: {block_height:?}, bpp: {bpp}, mipmap_count: {mipmap_count}, swizzled: {}", image.data.len(), swizzled.len());
 
         // Write texture header
-        src.write_u32::<LittleEndian>(0x4E76_4248)?;
-        src.write_u32::<LittleEndian>(0x24)?;
-        src.write_u64::<LittleEndian>(0x78)?;
-        src.write_u64::<LittleEndian>(0x24)?;
-        src.write_u32::<LittleEndian>(0x2)?;
-        src.write_u32::<LittleEndian>(id)?;
-        src.write_u32::<LittleEndian>(0x0)?;
-        src.write_u64::<LittleEndian>(u64::try_from(swizzled.len())?)?;
-        src.write_u32::<LittleEndian>(image.header.alignment)?;
-        src.write_u32::<LittleEndian>(image.header.width)?;
-        src.write_u32::<LittleEndian>(image.header.height)?;
-        src.write_u32::<LittleEndian>(image.header.depth)?;
-        src.write_u32::<LittleEndian>(image.header.target)?;
-        src.write_u32::<LittleEndian>(image.header.format.into())?;
-        src.write_u32::<LittleEndian>(image.header.mipmaps)?;
-        src.write_u32::<LittleEndian>(u32::try_from(swizzled.len())?)?;
+        writer.write_at::<u32le>(position, 0x4E76_4248)?;
+        writer.write_at::<u32le>(position, 0x24)?;
+        writer.write_at::<u64le>(position, 0x78)?;
+        writer.write_at::<u64le>(position, 0x24)?;
+        writer.write_at::<u32le>(position, 0x2)?;
+        writer.write_at::<u32le>(position, id.load(Relaxed))?;
+        writer.write_at::<u32le>(position, 0x0)?;
+        writer.write_at::<u64le>(position, u64::try_from(swizzled.len())?)?;
+        writer.write_at::<u32le>(position, image.header.alignment)?;
+        writer.write_at::<u32le>(position, image.header.width)?;
+        writer.write_at::<u32le>(position, image.header.height)?;
+        writer.write_at::<u32le>(position, image.header.depth)?;
+        writer.write_at::<u32le>(position, image.header.target)?;
+        writer.write_at::<u32le>(position, image.header.format.into())?;
+        writer.write_at::<u32le>(position, image.header.mipmaps)?;
+        writer.write_at::<u32le>(position, u32::try_from(swizzled.len())?)?;
         for mipmap in image.header.mipmap_offsets {
-            src.write_u32::<LittleEndian>(mipmap)?;
+            writer.write_at::<u32le>(position, mipmap)?;
         }
 
-        src.write_u32::<LittleEndian>(block_height_log2)?;
-        src.write_u32::<LittleEndian>(0x7)?;
-        src.write_u32::<LittleEndian>(0x0)?;
+        writer.write_at::<u32le>(position, block_height_log2)?;
+        writer.write_at::<u32le>(position, 0x7)?;
+        writer.write_at::<u32le>(position, 0x0)?;
 
-        id += 1;
+        id.fetch_add(1, Relaxed);
 
         // Write texture data
-        src.write_u32::<LittleEndian>(0x4E76_4248)?;
-        src.write_u32::<LittleEndian>(0x24)?;
-        src.write_u64::<LittleEndian>(u64::try_from(swizzled.len())?)?;
-        src.write_u64::<LittleEndian>(0x154)?;
-        src.write_u32::<LittleEndian>(0x3)?;
-        src.write_u32::<LittleEndian>(id)?;
-        src.write_u32::<LittleEndian>(0x0)?;
+        writer.write_at::<u32le>(position, 0x4E76_4248)?;
+        writer.write_at::<u32le>(position, 0x24)?;
+        writer.write_at::<u64le>(position, u64::try_from(swizzled.len())?)?;
+        writer.write_at::<u64le>(position, 0x154)?;
+        writer.write_at::<u32le>(position, 0x3)?;
+        writer.write_at::<u32le>(position, id.load(Relaxed))?;
+        writer.write_at::<u32le>(position, 0x0)?;
         for _ in 0..0x130 {
-            src.write_u8(0x0)?;
+            writer.write_at::<u8>(position, 0)?;
         }
-        src.write_all(&swizzled)?;
-        id += 1;
+        writer.write_slice_at(position, &swizzled)?;
+        id.fetch_add(1, Relaxed);
+        Ok(())
     }
-    // Write unknown third header
-    src.write_u32::<LittleEndian>(0x4E76_4248)?;
-    src.write_u32::<LittleEndian>(0x24)?;
-    src.write_u64::<LittleEndian>(24)?;
-    src.write_u64::<LittleEndian>(0x24)?;
-    src.write_u32::<LittleEndian>(0x5)?;
-    src.write_u32::<LittleEndian>(id)?;
-    src.write_u32::<LittleEndian>(0x0)?;
-    src.write_all(&[
-        0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ])?;
-    Ok(())
 }
