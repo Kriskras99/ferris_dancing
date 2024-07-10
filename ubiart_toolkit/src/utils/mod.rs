@@ -1,14 +1,10 @@
-pub mod errors;
-
-use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref};
-
-pub mod bytes;
 pub mod plumbing;
+use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref};
 
 use clap::ValueEnum;
 use dotstar_toolkit_utils::{
     bytes::{
-        primitives::u32be,
+        primitives::{u32be, u32le},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
         write::{BinarySerialize, WriteAt, WriteError},
     },
@@ -17,70 +13,10 @@ use dotstar_toolkit_utils::{
 };
 use nohash_hasher::IsEnabled;
 use serde::{Deserialize, Serialize};
+use ubiart_toolkit_shared_types::errors::ParserError;
+pub use ubiart_toolkit_shared_types::{errors, Color, LocaleId};
 
-use self::errors::ParserError;
 use crate::ipk;
-
-/// A RGBA color encoded in f32 (0.0 is black, 1.0 is white)
-pub type Color = (f32, f32, f32, f32);
-
-/// Represents the id of a localised string
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[repr(transparent)]
-pub struct LocaleId(u32);
-
-impl BinaryDeserialize<'_> for LocaleId {
-    type Ctx = ();
-    type Output = Self;
-
-    fn deserialize_at_with(
-        reader: &(impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        _ctx: (),
-    ) -> Result<Self, ReadError> {
-        Ok(Self(reader.read_at::<u32be>(position)?))
-    }
-}
-
-impl Default for LocaleId {
-    fn default() -> Self {
-        Self(u32::MAX)
-    }
-}
-
-impl Display for LocaleId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{:x}", self.0))
-    }
-}
-
-impl LocaleId {
-    /// The empty/missing LocaleId
-    pub const EMPTY: Self = Self(u32::MAX);
-    /// The minimum value of a LocaleId
-    pub const MIN: Self = Self(0);
-
-    /// Increments the locale id and returns a new higher locale id
-    ///
-    /// # Panics
-    /// Will panic if the increment would cause an overflow
-    #[must_use]
-    pub fn increment(&self) -> Self {
-        Self(self.0.checked_add(1).unwrap())
-    }
-}
-
-impl From<u32> for LocaleId {
-    fn from(value: u32) -> Self {
-        Self(value)
-    }
-}
-
-impl From<LocaleId> for u32 {
-    fn from(value: LocaleId) -> Self {
-        value.0
-    }
-}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
@@ -634,13 +570,6 @@ pub fn string_id_2(one: &str, two: &str) -> u32 {
     ubi_crc(&upper)
 }
 
-#[inline]
-fn read_u32le(data: &[u8], pos: &mut usize) -> u32 {
-    let value = u32::from_le_bytes([data[*pos], data[*pos + 1], data[*pos + 2], data[*pos + 3]]);
-    *pos += 4;
-    value
-}
-
 #[must_use]
 /// Implementation of the UbiArt CRC function
 #[allow(
@@ -654,14 +583,15 @@ pub fn ubi_crc(data: &[u8]) -> u32 {
     let mut b: u32 = 0x9E37_79B9;
     let mut c: u32 = 0;
 
-    let mut pos = 0;
-    while pos + 12 <= length {
-        a = a.wrapping_add(read_u32le(data, &mut pos));
-        b = b.wrapping_add(read_u32le(data, &mut pos));
-        c = c.wrapping_add(read_u32le(data, &mut pos));
+    let mut pos = 0u64;
+    while (pos as usize) + 12 <= length {
+        a = a.wrapping_add(data.read_at::<u32le>(&mut pos).unwrap_or_else(|_| unreachable!()));
+        b = b.wrapping_add(data.read_at::<u32le>(&mut pos).unwrap_or_else(|_| unreachable!()));
+        c = c.wrapping_add(data.read_at::<u32le>(&mut pos).unwrap_or_else(|_| unreachable!()));
         (a, b, c) = shifter(a, b, c);
     }
 
+    let pos = pos as usize;
     c = c.wrapping_add(length as u32);
     let left = length - pos;
 

@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::Color;
+use ubiart_toolkit_shared_types::Color;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]

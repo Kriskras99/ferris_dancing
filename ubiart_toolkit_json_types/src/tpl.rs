@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "full_json_types")]
 use super::Empty;
-use crate::utils::Color;
+use ubiart_toolkit_shared_types::Color;
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize)]

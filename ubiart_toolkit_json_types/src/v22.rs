@@ -7,14 +7,11 @@ use serde_with::{serde_as, DisplayFromStr};
 use super::{
     frt::FeedbackFXManager,
     isg::{
-        AchievementsDatabase, CameraShakeConfig, CarouselManager, CarouselRules, FTUESteps,
-        FontEffectList, GachaContentDatabase, PadRumbleManager, QuickplayRules, SoundConfig,
-        TRCLocalisation, UITextManager, VibrationManager, WDFLinearRewards, ZInputConfig,
-        ZInputManager,
+        AchievementsDatabase, CameraShakeConfig, CarouselManager, FTUESteps, FontEffectList,
+        PadRumbleManager, QuickplayRules, SoundConfig, TRCLocalisation, UITextManager,
+        VibrationManager, WDFLinearRewards, ZInputConfig, ZInputManager,
     },
-    just_dance::{
-        AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
-    },
+    just_dance::{AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDatabase},
     msh::GFXMaterialShader,
     tfn::FontTemplate,
     tpl::{
@@ -27,36 +24,39 @@ use super::{
 };
 use super::{
     isg::{
-        AutoDanceEffectData, CarouselElementDesc, ClubRewardConfig, CollectibleAlbum, CountryEntry,
-        CustomizableItemConfig, GachaConfig, GridActorsToPreload, HomeDataConfig, HomeDataTipEntry,
-        ItemColorLookUp, LayoutTabbedGrids, LocalAliases, MenuAssetsCacheParams,
-        MenuMultiTrackItem, MenuMusicConfig, MenuMusicParams, ObjectivesDatabase,
-        OnFlyNotificationTypeParams, PlaylistDatabase, PopupConfigList, PortraitBordersDatabase,
-        RankDescriptor, RecapConfig, RemoteSoundParams, ScheduledQuestDatabase,
-        ScheduledQuestSetup, ScoringCameraParams, ScoringMovespaceParams, ScoringParams,
-        ShortcutDesc1719, SongsSearchTags, StickerEntry, TutorialContent, TutorialDesc,
+        AutoDanceEffectData, CarouselElementDesc, CarouselRules, ClubRewardConfig,
+        CollectibleAlbum, CountryEntry, CustomizableItemConfig, GachaConfig, GachaContentDatabase,
+        GridActorsToPreload, HomeDataConfig, HomeDataTipEntry, ItemColorLookUp, LayoutTabbedGrids,
+        LocalAliases, MenuAssetsCacheParams, MenuMultiTrackItem, MenuMusicConfig, MenuMusicParams,
+        ObjectivesDatabase, OnFlyNotificationTypeParams, PlaylistDatabase, PopupConfigList,
+        PortraitBordersDatabase, RankDescriptor, RecapConfig, RemoteSoundParams,
+        ScheduledQuestDatabase, ScheduledQuestSetup, ScoringCameraParams, ScoringMovespaceParams,
+        ScoringParams, ShortcutDesc1719, SongsSearchTags, TutorialContent, TutorialDesc,
         UnlimitedUpsellSongList, UnlimitedUpsellSubtitles, UplayReward, WDFBossEntry,
         WhatsNewConfigs,
     },
-    just_dance::{AutodanceComponent, SongDatabase},
+    just_dance::{AutodanceComponent, SongDescription},
     tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
-    v22::AvatarDescription2022,
     AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
 };
-use crate::utils::errors::ParserError;
+use ubiart_toolkit_shared_types::errors::ParserError;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]
-pub enum Template21<'a> {
+pub enum Template22<'a> {
     #[serde(borrow, rename = "Actor_Template")]
-    Actor(Actor21<'a>),
+    Actor(Actor22<'a>),
     #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
     AutodanceComponent(AutodanceComponent<'a>),
     #[serde(borrow, rename = "JD_AvatarDescTemplate")]
     AvatarDescription(AvatarDescription2022<'a>),
+    #[serde(borrow, rename = "JD_CarouselRules")]
+    CarouselRules(CarouselRules<'a>),
+    #[serde(borrow, rename = "JD_GachaContentDatabase_Template")]
+    GachaContentDatabase(GachaContentDatabase<'a>),
     #[serde(borrow, rename = "JD_GameManagerConfig_Template")]
-    GameManagerConfig(Box<GameManagerConfig21<'a>>),
+    GameManagerConfig(Box<GameManagerConfig22<'a>>),
     #[serde(borrow, rename = "JD_LocalAliases")]
     LocalAliases(LocalAliases<'a>),
     #[serde(borrow, rename = "JD_ObjectivesDatabase_Template")]
@@ -67,8 +67,8 @@ pub enum Template21<'a> {
     PortraitBordersDatabase(PortraitBordersDatabase<'a>),
     #[serde(borrow, rename = "JD_ScheduledQuestDatabase_Template")]
     ScheduledQuestDatabase(ScheduledQuestDatabase<'a>),
-    #[serde(borrow, rename = "JD_SongDatabaseTemplate")]
-    SongDatabase(SongDatabase<'a>),
+    #[serde(borrow, rename = "JD_SongDescTemplate")]
+    SongDescription(SongDescription<'a>),
     #[serde(borrow, rename = "MasterTape_Template")]
     MasterTape(MasterTape<'a>),
     #[serde(borrow, rename = "MaterialGraphicComponent_Template")]
@@ -130,9 +130,6 @@ pub enum Template21<'a> {
     #[serde(borrow, rename = "JD_Carousel_Template")]
     Carousel(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_CarouselRules")]
-    CarouselRules(CarouselRules<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_CreditsComponent_Template")]
     CreditsComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
@@ -144,9 +141,6 @@ pub enum Template21<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_GachaComponent_Template")]
     GachaComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_GachaContentDatabase_Template")]
-    GachaContentDatabase(GachaContentDatabase<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_GoldMoveComponent_Template")]
     GoldMoveComponent(ModeType<'a>),
@@ -181,8 +175,8 @@ pub enum Template21<'a> {
     #[serde(borrow, rename = "JD_SkinDescTemplate")]
     SkinDescription(SkinDescription<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_SongDescTemplate")]
-    SongDescription(SongDescription<'a>),
+    #[serde(borrow, rename = "JD_SongDatabaseTemplate")]
+    SongDatabase(SongDatabase<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_StickerGrid_Template")]
     StickerGrid(Empty<'a>),
@@ -338,10 +332,10 @@ pub enum Template21<'a> {
     ZInputManager(ZInputManager<'a>),
 }
 
-impl<'a> Template21<'a> {
-    /// Convert this template to a `GameManagerConfig21`.
-    pub fn into_game_manager_config(self) -> Result<GameManagerConfig21<'a>, ParserError> {
-        if let Template21::GameManagerConfig(gmc) = self {
+impl<'a> Template22<'a> {
+    /// Convert this template to a `GameManagerConfig22`.
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig22<'a>, ParserError> {
+        if let Template22::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
             Err(ParserError::custom(format!(
@@ -351,8 +345,8 @@ impl<'a> Template21<'a> {
     }
 
     /// Convert this template to a `ObjectivesDatabase`.
-    pub fn into_objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
-        if let Template21::ObjectivesDatabase(objs_db) = self {
+    pub fn into_objectives_database(self) -> Result<ObjectivesDatabase<'a>, ParserError> {
+        if let Template22::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
         } else {
             Err(ParserError::custom(format!(
@@ -362,10 +356,8 @@ impl<'a> Template21<'a> {
     }
 
     /// Convert this template to a `ScheduledQuestDatabase`.
-    pub fn into_scheduled_quests_database(
-        &'a self,
-    ) -> Result<&'a ScheduledQuestDatabase<'a>, ParserError> {
-        if let Template21::ScheduledQuestDatabase(sqst_db) = self {
+    pub fn into_scheduled_quests_database(self) -> Result<ScheduledQuestDatabase<'a>, ParserError> {
+        if let Template22::ScheduledQuestDatabase(sqst_db) = self {
             Ok(sqst_db)
         } else {
             Err(ParserError::custom(format!(
@@ -375,12 +367,146 @@ impl<'a> Template21<'a> {
     }
 
     /// Convert this template to a `PlaylistDatabase`.
-    pub fn into_playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
-        if let Template21::PlaylistDatabase(playlist_db) = self {
+    pub fn into_playlists_database(self) -> Result<PlaylistDatabase<'a>, ParserError> {
+        if let Template22::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {
             Err(ParserError::custom(format!(
                 "PlaylistDatabase not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `LocalAliases`.
+    pub fn into_local_aliases(self) -> Result<LocalAliases<'a>, ParserError> {
+        if let Template22::LocalAliases(local_aliases) = self {
+            Ok(local_aliases)
+        } else {
+            Err(ParserError::custom(format!(
+                "LocalAliases not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `PortraitBordersDatabase`.
+    pub fn into_portrait_borders_database(
+        self,
+    ) -> Result<PortraitBordersDatabase<'a>, ParserError> {
+        if let Template22::PortraitBordersDatabase(portrait_borders_database) = self {
+            Ok(portrait_borders_database)
+        } else {
+            Err(ParserError::custom(format!(
+                "PortraitBordersDatabase not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `Actor22`.
+    pub fn into_actor(self) -> Result<Actor22<'a>, ParserError> {
+        if let Template22::Actor(actor) = self {
+            Ok(actor)
+        } else {
+            Err(ParserError::custom(format!(
+                "Actor not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `AvatarDescription22`.
+    pub fn into_avatar_description(self) -> Result<AvatarDescription2022<'a>, ParserError> {
+        if let Template22::AvatarDescription(avatar_description) = self {
+            Ok(avatar_description)
+        } else {
+            Err(ParserError::custom(format!(
+                "AvatarDescription not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `SongDescription`.
+    pub fn into_song_description(self) -> Result<SongDescription<'a>, ParserError> {
+        if let Template22::SongDescription(song_description) = self {
+            Ok(song_description)
+        } else {
+            Err(ParserError::custom(format!(
+                "SongDescription not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `AutodanceComponent`.
+    pub fn into_autodance_component(self) -> Result<AutodanceComponent<'a>, ParserError> {
+        if let Template22::AutodanceComponent(autodance_component) = self {
+            Ok(autodance_component)
+        } else {
+            Err(ParserError::custom(format!(
+                "AutodanceComponent not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `MasterTape`.
+    pub fn into_master_tape(self) -> Result<MasterTape<'a>, ParserError> {
+        if let Template22::MasterTape(master_tape) = self {
+            Ok(master_tape)
+        } else {
+            Err(ParserError::custom(format!(
+                "MasterTape not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `MusicTrackComponent`.
+    pub fn into_tape_case_component(self) -> Result<MasterTape<'a>, ParserError> {
+        if let Template22::TapeCase(tape_case_component) = self {
+            Ok(tape_case_component)
+        } else {
+            Err(ParserError::custom(format!(
+                "TapeCase not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `CarouselRules`.
+    pub fn into_carousel_rules(self) -> Result<CarouselRules<'a>, ParserError> {
+        if let Template22::CarouselRules(carousel_rules) = self {
+            Ok(carousel_rules)
+        } else {
+            Err(ParserError::custom(format!(
+                "CarouselRules not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `Tape`.
+    pub fn into_tape(self) -> Result<Tape<'a>, ParserError> {
+        if let Template22::Tape(tape) = self {
+            Ok(tape)
+        } else {
+            Err(ParserError::custom(format!(
+                "Tape not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `SoundComponent`.
+    pub fn into_sound_component(&'a self) -> Result<&'a SoundComponent<'a>, ParserError> {
+        if let Template22::SoundComponent(sound_component) = self {
+            Ok(sound_component)
+        } else {
+            Err(ParserError::custom(format!(
+                "SoundComponent not found in template: {self:?}"
+            )))
+        }
+    }
+
+    /// Convert this template to a `MusicTrackComponent`.
+    pub fn into_musictrack_component(self) -> Result<MusicTrackComponent<'a>, ParserError> {
+        if let Template22::MusicTrackComponent(musictrack_component) = self {
+            Ok(musictrack_component)
+        } else {
+            Err(ParserError::custom(format!(
+                "MusicTrackComponent not found in template: {self:?}"
             )))
         }
     }
@@ -389,7 +515,7 @@ impl<'a> Template21<'a> {
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct GameManagerConfig21<'a> {
+pub struct GameManagerConfig22<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub game_text_file_path: Cow<'a, str>,
@@ -429,7 +555,7 @@ pub struct GameManagerConfig21<'a> {
     #[serde(rename = "flagdb_scene")]
     pub flagdb_scene: Cow<'a, str>,
     pub wdf_player_name_prefix_on_xbox_one: Cow<'a, str>,
-    pub wdf_player_name_prefix_on_stadia: Option<Cow<'a, str>>,
+    pub wdf_player_name_prefix_on_stadia: Cow<'a, str>,
     #[serde(rename = "wdfPlayerNamePrefixNonPS4")]
     pub wdf_player_name_prefix_non_ps4: Cow<'a, str>,
     pub shortcut_descriptors: HashMap<Cow<'a, str>, ShortcutDesc1719<'a>>,
@@ -485,9 +611,8 @@ pub struct GameManagerConfig21<'a> {
     pub jd_points_per_star: Vec<u32>,
     pub banned_maps_in_chinese: Vec<Cow<'a, str>>,
     pub collectiblealbum: CollectibleAlbum<'a>,
-    pub stickerdatabase: Vec<StickerEntry<'a>>,
     pub gachaconfig: GachaConfig<'a>,
-    pub config_files_path: ConfigFilesPath21<'a>,
+    pub config_files_path: ConfigFilesPath22<'a>,
     pub watermark: Cow<'a, str>,
     pub grid_actors_to_preload: HashMap<Cow<'a, str>, GridActorsToPreload<'a>>,
     pub grid_item_descriptors: HashMap<Cow<'a, str>, CarouselElementDesc<'a>>,
@@ -526,7 +651,7 @@ pub struct GameManagerConfig21<'a> {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConfigFilesPath21<'a> {
+pub struct ConfigFilesPath22<'a> {
     pub gachacontent: Cow<'a, str>,
     pub ftuesteps: Cow<'a, str>,
     pub objectives: Cow<'a, str>,
@@ -536,9 +661,9 @@ pub struct ConfigFilesPath21<'a> {
     pub scheduledquests: Cow<'a, str>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE", deny_unknown_fields)]
-pub struct Actor21<'a> {
+pub struct Actor22<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub wip: u32,
@@ -548,5 +673,99 @@ pub struct Actor21<'a> {
     pub startpaused: u32,
     pub forceisenvironment: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub components: Vec<Template21<'a>>,
+    pub components: Vec<Template22<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase", deny_unknown_fields)]
+pub struct AvatarDescription2022<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub jd_version: u16,
+    pub relative_song_name: Cow<'a, str>,
+    #[serde(rename = "RelativeQuestID")]
+    pub relative_quest_id: Cow<'a, str>,
+    #[serde(rename = "RelativeWDFBossName")]
+    pub relative_wdf_boss_name: Cow<'a, str>,
+    #[serde(rename = "RelativeWDFTournamentName")]
+    pub relative_wdf_tournament_name: Cow<'a, str>,
+    #[serde(rename = "RelativeJDRank")]
+    pub relative_jd_rank: Cow<'a, str>,
+    pub relative_game_mode_name: Cow<'a, str>,
+    pub sound_family: Cow<'a, str>,
+    pub status: u8,
+    pub unlock_type: u8,
+    pub mojo_price: u16,
+    pub wdf_level: u8,
+    pub count_in_progression: u8,
+    pub actor_path: Cow<'a, str>,
+    pub phone_image: Cow<'a, str>,
+    pub avatar_id: u16,
+    #[serde(rename = "UsedAsCoach_MapName")]
+    pub used_as_coach_map_name: Cow<'a, str>,
+    #[serde(rename = "UsedAsCoach_CoachId")]
+    pub used_as_coach_coach_id: u8,
+    #[serde(rename = "specialEffect")]
+    pub special_effect: u8,
+    #[serde(rename = "mainAvatarId")]
+    pub main_avatar_id: u16,
+}
+
+impl Default for AvatarDescription2022<'static> {
+    fn default() -> Self {
+        Self {
+            class: Option::default(),
+            jd_version: 2022,
+            relative_song_name: Cow::default(),
+            relative_quest_id: Cow::default(),
+            relative_wdf_boss_name: Cow::default(),
+            relative_wdf_tournament_name: Cow::default(),
+            relative_jd_rank: Cow::default(),
+            relative_game_mode_name: Cow::default(),
+            sound_family: Cow::default(),
+            status: Default::default(),
+            unlock_type: Default::default(),
+            mojo_price: 0,
+            wdf_level: 1,
+            count_in_progression: 1,
+            actor_path: Cow::default(),
+            phone_image: Cow::default(),
+            avatar_id: Default::default(),
+            used_as_coach_map_name: Cow::default(),
+            used_as_coach_coach_id: Default::default(),
+            special_effect: 0,
+            main_avatar_id: u16::MAX,
+        }
+    }
+}
+
+impl AvatarDescription2022<'_> {
+    #[must_use]
+    pub fn into_owned(self) -> AvatarDescription2022<'static> {
+        AvatarDescription2022 {
+            class: None,
+            jd_version: self.jd_version,
+            relative_song_name: Cow::Owned(self.relative_song_name.into_owned()),
+            relative_quest_id: Cow::Owned(self.relative_quest_id.into_owned()),
+            relative_wdf_boss_name: Cow::Owned(self.relative_wdf_boss_name.into_owned()),
+            relative_wdf_tournament_name: Cow::Owned(
+                self.relative_wdf_tournament_name.into_owned(),
+            ),
+            relative_jd_rank: Cow::Owned(self.relative_jd_rank.into_owned()),
+            relative_game_mode_name: Cow::Owned(self.relative_game_mode_name.into_owned()),
+            sound_family: Cow::Owned(self.sound_family.into_owned()),
+            status: self.status,
+            unlock_type: self.unlock_type,
+            mojo_price: self.mojo_price,
+            wdf_level: self.wdf_level,
+            count_in_progression: self.count_in_progression,
+            actor_path: Cow::Owned(self.actor_path.into_owned()),
+            phone_image: Cow::Owned(self.phone_image.into_owned()),
+            avatar_id: self.avatar_id,
+            used_as_coach_map_name: Cow::Owned(self.used_as_coach_map_name.into_owned()),
+            used_as_coach_coach_id: self.used_as_coach_coach_id,
+            special_effect: self.special_effect,
+            main_avatar_id: self.main_avatar_id,
+        }
+    }
 }

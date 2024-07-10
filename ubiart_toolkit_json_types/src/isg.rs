@@ -8,7 +8,7 @@ use super::{
     v1819::ObjectiveDesc1819,
     DifficultyColors, Empty,
 };
-use crate::utils::{Color, LocaleId};
+use ubiart_toolkit_shared_types::{Color, LocaleId};
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]

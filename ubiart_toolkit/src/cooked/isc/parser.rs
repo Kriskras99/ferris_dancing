@@ -1,5 +1,5 @@
 use super::Root;
-use crate::utils::errors::ParserError;
+use ubiart_toolkit_shared_types::errors::ParserError;
 
 /// Parse a isc file
 pub fn parse(src: &[u8]) -> Result<Root<'_>, ParserError> {

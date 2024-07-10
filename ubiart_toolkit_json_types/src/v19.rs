@@ -41,7 +41,7 @@ use super::{
     v1819::{AvatarDescription1819, ObjectiveDesc1819, ScheduledQuestDesc1819},
     DifficultyColors,
 };
-use crate::utils::{errors::ParserError, LocaleId};
+use ubiart_toolkit_shared_types::{errors::ParserError, LocaleId};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]

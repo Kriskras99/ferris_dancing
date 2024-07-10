@@ -1,0 +1,17 @@
+[package]
+name = "ubiart_toolkit_json_types"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dotstar_toolkit_utils = { version = "0.2.0", path = "../dotstar_toolkit_utils" }
+serde.workspace = true
+serde_json.workspace = true
+serde_with.workspace = true
+ubiart_toolkit_shared_types = { path = "../ubiart_toolkit_shared_types" }
+
+[features]
+full_json_types = []
+
+[lints]
+workspace = true

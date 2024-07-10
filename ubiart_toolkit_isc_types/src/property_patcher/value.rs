@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::cooked::isc::types::impl_deserialize_for_internally_tagged_enum;
+use crate::impl_deserialize_for_internally_tagged_enum;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "@NAME", deny_unknown_fields)]
@@ -60,7 +60,7 @@ impl AsRef<Color> for WrappedColor {
 #[serde(deny_unknown_fields)]
 pub struct Color {
     #[serde(rename = "@VALUE")]
-    pub value: crate::utils::Color,
+    pub value: ubiart_toolkit_shared_types::Color,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,7 +90,7 @@ pub struct ColorSet<'a> {
     #[serde(rename = "@KEY")]
     pub key: Cow<'a, str>,
     #[serde(rename = "@VAL")]
-    pub value: crate::utils::Color,
+    pub value: ubiart_toolkit_shared_types::Color,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

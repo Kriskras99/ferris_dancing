@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
 use super::{isg::AutodanceVideoStructure, PhoneImages};
-use crate::utils::{Color, LocaleId};
+use ubiart_toolkit_shared_types::{Color, LocaleId};
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]

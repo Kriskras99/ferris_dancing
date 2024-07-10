@@ -32,6 +32,9 @@ texpresso = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+ubiart_toolkit_isc_types = { version = "0.1.0", path = "../ubiart_toolkit_isc_types" }
+ubiart_toolkit_json_types = { version = "0.1.0", path = "../ubiart_toolkit_json_types" }
+ubiart_toolkit_shared_types = { version = "0.1.0", path = "../ubiart_toolkit_shared_types" }
 wiiu_swizzle = { workspace = true }
 yoke = { workspace = true }
 zopfli = { workspace = true, optional = true }
@@ -44,7 +47,7 @@ default = []
 fuzz = ["arbitrary"]
 zopfli = ["dep:zopfli"]
 arbitrary = ["dep:arbitrary"]
-full_json_types = []
+full_json_types = ["ubiart_toolkit_json_types/full_json_types"]
 
 [lints]
 workspace = true

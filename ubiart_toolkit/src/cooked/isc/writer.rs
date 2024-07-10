@@ -3,7 +3,7 @@ use std::io::Write;
 use serde::Serialize;
 
 use super::Root;
-use crate::utils::errors::WriterError;
+use ubiart_toolkit_shared_types::errors::WriterError;
 
 /// Write the `Root` to the writer
 pub fn create<W: Write>(mut src: W, root: &Root) -> Result<(), WriterError> {

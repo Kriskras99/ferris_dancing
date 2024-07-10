@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::cooked::isc::types::impl_deserialize_for_internally_tagged_enum;
+use crate::impl_deserialize_for_internally_tagged_enum;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "@NAME", deny_unknown_fields)]

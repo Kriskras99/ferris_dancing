@@ -34,8 +34,7 @@ use super::{
         PortraitBordersDatabase, RankDescriptor, RecapConfig, RemoteSoundParams,
         ScheduledQuestDatabase, ScheduledQuestSetup, ScoringCameraParams, ScoringMovespaceParams,
         ScoringParams, ShortcutDesc1719, SongsSearchTags, StickerEntry, TutorialContent,
-        TutorialDesc, UnlimitedUpsellSongList, UnlimitedUpsellSubtitles, UplayReward, WDFBossEntry,
-        WhatsNewConfigs,
+        TutorialDesc, UnlimitedUpsellSongList, UplayReward, WDFBossEntry,
     },
     just_dance::{AutodanceComponent, SongDatabase},
     tape::Tape,
@@ -43,19 +42,19 @@ use super::{
     v22::AvatarDescription2022,
     AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
 };
-use crate::utils::errors::ParserError;
+use ubiart_toolkit_shared_types::errors::ParserError;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]
-pub enum Template20<'a> {
+pub enum Template20C<'a> {
     #[serde(borrow, rename = "Actor_Template")]
-    Actor(Actor20<'a>),
+    Actor(Actor20C<'a>),
     #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
     AutodanceComponent(AutodanceComponent<'a>),
     #[serde(borrow, rename = "JD_AvatarDescTemplate")]
     AvatarDescription(AvatarDescription2022<'a>),
     #[serde(borrow, rename = "JD_GameManagerConfig_Template")]
-    GameManagerConfig(Box<GameManagerConfig20<'a>>),
+    GameManagerConfig(Box<GameManagerConfig20C<'a>>),
     #[serde(borrow, rename = "JD_LocalAliases")]
     LocalAliases(LocalAliases<'a>),
     #[serde(borrow, rename = "JD_ObjectivesDatabase_Template")]
@@ -343,10 +342,10 @@ pub enum Template20<'a> {
     ZInputManager(ZInputManager<'a>),
 }
 
-impl<'a> Template20<'a> {
-    /// Convert this template to a `GameManagerConfig20`.
-    pub fn into_game_manager_config(self) -> Result<GameManagerConfig20<'a>, ParserError> {
-        if let Template20::GameManagerConfig(gmc) = self {
+impl<'a> Template20C<'a> {
+    /// Convert this template to a `GameManagerConfig20C`.
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig20C<'a>, ParserError> {
+        if let Template20C::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
             Err(ParserError::custom(format!(
@@ -357,7 +356,7 @@ impl<'a> Template20<'a> {
 
     /// Convert this template to a `ObjectivesDatabase`.
     pub fn into_objectives_database(&'a self) -> Result<&'a ObjectivesDatabase<'a>, ParserError> {
-        if let Template20::ObjectivesDatabase(objs_db) = self {
+        if let Template20C::ObjectivesDatabase(objs_db) = self {
             Ok(objs_db)
         } else {
             Err(ParserError::custom(format!(
@@ -370,7 +369,7 @@ impl<'a> Template20<'a> {
     pub fn into_scheduled_quests_database(
         &'a self,
     ) -> Result<&'a ScheduledQuestDatabase<'a>, ParserError> {
-        if let Template20::ScheduledQuestDatabase(sqst_db) = self {
+        if let Template20C::ScheduledQuestDatabase(sqst_db) = self {
             Ok(sqst_db)
         } else {
             Err(ParserError::custom(format!(
@@ -381,7 +380,7 @@ impl<'a> Template20<'a> {
 
     /// Convert this template to a `PlaylistDatabase`.
     pub fn into_playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
-        if let Template20::PlaylistDatabase(playlist_db) = self {
+        if let Template20C::PlaylistDatabase(playlist_db) = self {
             Ok(playlist_db)
         } else {
             Err(ParserError::custom(format!(
@@ -394,7 +393,7 @@ impl<'a> Template20<'a> {
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct GameManagerConfig20<'a> {
+pub struct GameManagerConfig20C<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub game_text_file_path: Cow<'a, str>,
@@ -459,13 +458,6 @@ pub struct GameManagerConfig20<'a> {
     pub menumusicconfig: MenuMusicConfig<'a>,
     pub rankdescriptor: RankDescriptor<'a>,
     pub unlimitedupsellsonglist: Vec<UnlimitedUpsellSongList<'a>>,
-    /// Not in the Japanese version
-    #[serde(
-        rename = "defaultJDUVideoPreviewSubtitles",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub default_jdu_video_preview_subtitles: Option<UnlimitedUpsellSubtitles<'a>>,
     pub customizableitemconfig: CustomizableItemConfig<'a>,
     #[serde(rename = "scheduled_questSetup")]
     pub scheduled_quest_setup: ScheduledQuestSetup<'a>,
@@ -498,7 +490,7 @@ pub struct GameManagerConfig20<'a> {
     pub collectiblealbum: CollectibleAlbum<'a>,
     pub stickerdatabase: Vec<StickerEntry<'a>>,
     pub gachaconfig: GachaConfig<'a>,
-    pub config_files_path: ConfigFilesPath20<'a>,
+    pub config_files_path: ConfigFilesPath20C<'a>,
     pub watermark: Cow<'a, str>,
     pub grid_actors_to_preload: HashMap<Cow<'a, str>, GridActorsToPreload<'a>>,
     pub grid_item_descriptors: HashMap<Cow<'a, str>, CarouselElementDesc<'a>>,
@@ -531,17 +523,10 @@ pub struct GameManagerConfig20<'a> {
     pub new_notification_tree: HashMap<Cow<'a, str>, Vec<Cow<'a, str>>>,
     pub recap_config: RecapConfig<'a>,
     pub offline_recommendation: OfflineRecommendation<'a>,
-    /// Not in the Japanese version
-    #[serde(
-        rename = "whats_new_configs",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub whats_new_configs: Option<WhatsNewConfigs<'a>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConfigFilesPath20<'a> {
+pub struct ConfigFilesPath20C<'a> {
     pub gachacontent: Cow<'a, str>,
     pub ftuesteps: Cow<'a, str>,
     pub anthology: Cow<'a, str>,
@@ -553,7 +538,7 @@ pub struct ConfigFilesPath20<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE", deny_unknown_fields)]
-pub struct Actor20<'a> {
+pub struct Actor20C<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub wip: u32,
@@ -563,5 +548,5 @@ pub struct Actor20<'a> {
     pub startpaused: u32,
     pub forceisenvironment: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub components: Vec<Template20<'a>>,
+    pub components: Vec<Template20C<'a>>,
 }

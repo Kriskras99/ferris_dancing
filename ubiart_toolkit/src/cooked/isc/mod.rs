@@ -1,6 +1,5 @@
 mod parser;
-mod types;
 mod writer;
 pub use parser::*;
-pub use types::*;
+pub use ubiart_toolkit_isc_types::*;
 pub use writer::*;

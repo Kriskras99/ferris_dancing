@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use dotstar_toolkit_utils::testing::test_eq;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::utils::Color;
+use ubiart_toolkit_shared_types::Color;
 
 pub mod property_patcher;
 
@@ -2577,7 +2577,7 @@ macro_rules! impl_deserialize_for_internally_tagged_enum {
                         let de = ::serde::de::value::MapAccessDeserializer::new(map);
                         match tag.as_ref() {
                             $(
-                                $variant_tag => Ok(crate::cooked::isc::types::deserialize_variant!( de, $enum, $($variant)+ )),
+                                $variant_tag => Ok(crate::deserialize_variant!( de, $enum, $($variant)+ )),
                             )*
                             _ => Err(A::Error::unknown_field(&tag, &[$($variant_tag),+])),
                         }
@@ -3998,7 +3998,7 @@ mod wrapped_component {
 
 pub use wrapped_carousel_behaviour::*;
 
-use crate::utils::errors::ParserError;
+use ubiart_toolkit_shared_types::errors::ParserError;
 mod wrapped_carousel_behaviour {
     #![allow(
         clippy::wildcard_imports,
