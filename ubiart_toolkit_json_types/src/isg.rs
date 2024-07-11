@@ -2,13 +2,13 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
+use ubiart_toolkit_shared_types::{Color, LocaleId};
 
 use super::{
     just_dance::{AutoDanceFxDesc, PlaybackEvent},
     v1819::ObjectiveDesc1819,
     DifficultyColors, Empty,
 };
-use ubiart_toolkit_shared_types::{Color, LocaleId};
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]

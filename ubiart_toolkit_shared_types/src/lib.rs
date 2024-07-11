@@ -1,10 +1,12 @@
 use std::fmt::Display;
 
-use dotstar_toolkit_utils::bytes::{primitives::u32be, read::{BinaryDeserialize, ReadAtExt, ReadError}};
-use serde::{Serialize, Deserialize};
+use dotstar_toolkit_utils::bytes::{
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
+};
+use serde::{Deserialize, Serialize};
 
 pub mod errors;
-
 
 /// A RGBA color encoded in f32 (0.0 is black, 1.0 is white)
 pub type Color = (f32, f32, f32, f32);

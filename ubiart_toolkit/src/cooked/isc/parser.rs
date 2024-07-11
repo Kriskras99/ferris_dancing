@@ -1,5 +1,6 @@
-use super::Root;
 use ubiart_toolkit_shared_types::errors::ParserError;
+
+use super::Root;
 
 /// Parse a isc file
 pub fn parse(src: &[u8]) -> Result<Root<'_>, ParserError> {

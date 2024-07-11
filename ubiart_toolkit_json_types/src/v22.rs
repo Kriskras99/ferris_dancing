@@ -2,6 +2,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
+use ubiart_toolkit_shared_types::errors::ParserError;
 
 #[cfg(feature = "full_json_types")]
 use super::{
@@ -40,7 +41,6 @@ use super::{
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
     AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
 };
-use ubiart_toolkit_shared_types::errors::ParserError;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]

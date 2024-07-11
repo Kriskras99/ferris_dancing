@@ -1,9 +1,9 @@
 use std::io::Write;
 
 use serde::Serialize;
+use ubiart_toolkit_shared_types::errors::WriterError;
 
 use super::Root;
-use ubiart_toolkit_shared_types::errors::WriterError;
 
 /// Write the `Root` to the writer
 pub fn create<W: Write>(mut src: W, root: &Root) -> Result<(), WriterError> {

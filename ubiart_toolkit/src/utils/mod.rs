@@ -585,9 +585,18 @@ pub fn ubi_crc(data: &[u8]) -> u32 {
 
     let mut pos = 0u64;
     while (pos as usize) + 12 <= length {
-        a = a.wrapping_add(data.read_at::<u32le>(&mut pos).unwrap_or_else(|_| unreachable!()));
-        b = b.wrapping_add(data.read_at::<u32le>(&mut pos).unwrap_or_else(|_| unreachable!()));
-        c = c.wrapping_add(data.read_at::<u32le>(&mut pos).unwrap_or_else(|_| unreachable!()));
+        a = a.wrapping_add(
+            data.read_at::<u32le>(&mut pos)
+                .unwrap_or_else(|_| unreachable!()),
+        );
+        b = b.wrapping_add(
+            data.read_at::<u32le>(&mut pos)
+                .unwrap_or_else(|_| unreachable!()),
+        );
+        c = c.wrapping_add(
+            data.read_at::<u32le>(&mut pos)
+                .unwrap_or_else(|_| unreachable!()),
+        );
         (a, b, c) = shifter(a, b, c);
     }
 

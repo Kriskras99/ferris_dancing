@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
+use ubiart_toolkit_shared_types::Color;
 
 #[cfg(feature = "full_json_types")]
 use super::Empty;
-use ubiart_toolkit_shared_types::Color;
 
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize)]

@@ -7,7 +7,6 @@ use std::borrow::Cow;
 
 use dotstar_toolkit_utils::testing::test_eq;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
 use ubiart_toolkit_shared_types::Color;
 
 pub mod property_patcher;
@@ -3996,9 +3995,8 @@ mod wrapped_component {
     }
 }
 
-pub use wrapped_carousel_behaviour::*;
-
 use ubiart_toolkit_shared_types::errors::ParserError;
+pub use wrapped_carousel_behaviour::*;
 mod wrapped_carousel_behaviour {
     #![allow(
         clippy::wildcard_imports,

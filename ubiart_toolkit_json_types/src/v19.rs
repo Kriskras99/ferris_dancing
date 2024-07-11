@@ -2,6 +2,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
+use ubiart_toolkit_shared_types::{errors::ParserError, LocaleId};
 
 #[cfg(feature = "full_json_types")]
 use super::{
@@ -41,7 +42,6 @@ use super::{
     v1819::{AvatarDescription1819, ObjectiveDesc1819, ScheduledQuestDesc1819},
     DifficultyColors,
 };
-use ubiart_toolkit_shared_types::{errors::ParserError, LocaleId};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]
