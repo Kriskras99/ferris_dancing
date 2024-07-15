@@ -511,8 +511,8 @@ pub struct PlaybackEvent<'a> {
     pub class: Option<&'a str>,
     pub clip_number: u32,
     pub start_clip: f32,
-    pub start_time: f32,
-    pub duration: f32,
+    pub start_time: f64,
+    pub duration: f64,
     pub speed: f32,
 }
 
@@ -525,8 +525,8 @@ impl PlaybackEvent<'_> {
 pub struct Record<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub start: f32,
-    pub duration: f32,
+    pub start: f64,
+    pub duration: f64,
 }
 
 impl Record<'_> {

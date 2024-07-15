@@ -424,9 +424,9 @@ pub struct PhoneImage<'a> {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Record {
     /// Start of the record?
-    pub start: f32,
+    pub start: f64,
     /// Duration of the record?
-    pub duration: f32,
+    pub duration: f64,
 }
 
 impl From<&Record> for json_types::just_dance::Record<'static> {
@@ -456,9 +456,9 @@ pub struct PlaybackEvent {
     /// Start time in the clip?
     pub start_clip: f32,
     /// Start time of the event?
-    pub start_time: f32,
+    pub start_time: f64,
     /// Duration of the event?
-    pub duration: f32,
+    pub duration: f64,
     /// Playback speed?
     pub speed: f32,
 }
@@ -1875,7 +1875,7 @@ impl From<&CurveFloat> for json_types::tape::Curve<'static> {
 
 /// Constant value for the 'curve'
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct CurveFloatConstant(pub f32);
+pub struct CurveFloatConstant(pub f64);
 
 impl From<&json_types::tape::BezierCurveFloatConstant<'_>> for CurveFloatConstant {
     fn from(value: &json_types::tape::BezierCurveFloatConstant) -> Self {
@@ -1922,13 +1922,13 @@ impl PartialOrd for CurveFloatConstant {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CurveFloatLinear {
     /// Unknown
-    pub value_left: (f32, f32),
+    pub value_left: (f64, f64),
     /// Unknown
-    pub normal_left_out: (f32, f32),
+    pub normal_left_out: (f64, f64),
     /// Unknown
-    pub value_right: (f32, f32),
+    pub value_right: (f64, f64),
     /// Unknown
-    pub normal_right_in: (f32, f32),
+    pub normal_right_in: (f64, f64),
 }
 
 impl From<&json_types::tape::BezierCurveFloatLinear<'_>> for CurveFloatLinear {
@@ -2035,11 +2035,11 @@ impl From<&CurveFloatMulti> for json_types::tape::BezierCurveFloatMulti<'static>
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct KeyFloat {
     /// Unknown
-    pub value: (f32, f32),
+    pub value: (f64, f64),
     /// Unknown
-    pub normal_out: (f32, f32),
+    pub normal_out: (f64, f64),
     /// Unknown
-    pub normal_in: (f32, f32),
+    pub normal_in: (f64, f64),
 }
 
 impl From<&json_types::tape::KeyFloat<'_>> for KeyFloat {

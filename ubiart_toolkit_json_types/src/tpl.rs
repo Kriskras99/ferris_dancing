@@ -365,8 +365,8 @@ pub struct ParticleGeneratorParameters<'a> {
     pub showimpostorrender: u32,
     pub impostor_texture_size_x: u32,
     pub impostor_texture_size_y: u32,
-    pub genangmin: f32,
-    pub genangmax: f32,
+    pub genangmin: f64,
+    pub genangmax: f64,
     pub can_flip_angle_offset: u32,
     pub can_flip_init_angle: u32,
     pub can_flip_angular_speed: u32,
@@ -463,11 +463,11 @@ pub struct Spline<'a> {
 pub struct SplinePoint<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     class: Option<&'a str>,
-    pub point: (f32, f32, f32),
+    pub point: (f64, f64, f64),
     pub time: f32,
-    pub normal_in: (f32, f32, f32),
+    pub normal_in: (f64, f64, f64),
     pub normal_in_time: (f32, f32, f32),
-    pub normal_out: (f32, f32, f32),
+    pub normal_out: (f64, f64, f64),
     pub normal_out_time: (f32, f32, f32),
     pub interpolation: u32,
 }
@@ -513,7 +513,7 @@ pub struct MusicTrackStructure<'a> {
     pub fade_end_beat: u32,
     #[serde(default)]
     pub use_fade_end_beat: bool,
-    pub video_start_time: f32,
+    pub video_start_time: f64,
     pub preview_entry: f32,
     pub preview_loop_start: f32,
     pub preview_loop_end: f32,

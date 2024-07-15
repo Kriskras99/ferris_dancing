@@ -773,7 +773,7 @@ pub enum BezierCurveFloatValue<'a> {
 pub struct BezierCurveFloatConstant<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub value: f32,
+    pub value: f64,
 }
 
 impl Default for BezierCurveFloatConstant<'static> {
@@ -790,10 +790,10 @@ impl Default for BezierCurveFloatConstant<'static> {
 pub struct BezierCurveFloatLinear<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub value_left: (f32, f32),
-    pub normal_left_out: (f32, f32),
-    pub value_right: (f32, f32),
-    pub normal_right_in: (f32, f32),
+    pub value_left: (f64, f64),
+    pub normal_left_out: (f64, f64),
+    pub value_right: (f64, f64),
+    pub normal_right_in: (f64, f64),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -809,9 +809,9 @@ pub struct BezierCurveFloatMulti<'a> {
 pub struct KeyFloat<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub value: (f32, f32),
-    pub normal_in: (f32, f32),
-    pub normal_out: (f32, f32),
+    pub value: (f64, f64),
+    pub normal_in: (f64, f64),
+    pub normal_out: (f64, f64),
 }
 
 /// Deserialize a [`BezierCurveFloatValue`] which is weirdly formattend in the JSON files

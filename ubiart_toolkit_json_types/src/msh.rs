@@ -81,7 +81,7 @@ pub struct UVModifier<'a> {
     pub translation_v: f32,
     pub anim_translation_u: u32,
     pub anim_translation_v: u32,
-    pub rotation: f32,
+    pub rotation: f64,
     pub rotation_offset_u: f32,
     pub rotation_offset_v: f32,
     pub anim_rotation: u32,

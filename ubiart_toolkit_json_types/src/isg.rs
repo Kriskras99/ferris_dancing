@@ -1082,7 +1082,7 @@ pub struct AutodanceVideoStructure<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub song_start_position: i32,
-    pub duration: f32,
+    pub duration: f64,
     pub thumbnail_time: u32,
     pub fade_out_duration: f32,
     pub ground_plane_path: Cow<'a, str>,
@@ -2257,10 +2257,10 @@ pub struct JdCarouselElementDesc<'a> {
     pub enabled: u32,
     // Not used in nx2019 and before
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub width: Option<f32>,
+    pub width: Option<f64>,
     // Not used in nx2019 and before
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub height: Option<f32>,
+    pub height: Option<f64>,
     // Not used in nx2020 and after
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub half_size_x: Option<u32>,
