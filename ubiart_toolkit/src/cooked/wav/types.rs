@@ -12,7 +12,7 @@ pub struct Wav<'a> {
     pub platform: WavPlatform,
     pub codec: Codec,
     pub header_size: u32,
-    pub start_offset: u32,
+    pub data_start_offset: u32,
     pub chunks: HashMap<u32, Chunk<'a>>,
 }
 
@@ -220,6 +220,7 @@ pub struct Fmt {
 
 impl Fmt {
     pub const MAGIC: u32 = u32::from_be_bytes(*b"fmt ");
+    pub const SIZE: u32 = 16;
 }
 
 #[derive(Debug)]
@@ -229,6 +230,7 @@ pub struct AdIn {
 
 impl AdIn {
     pub const MAGIC: u32 = u32::from_be_bytes(*b"AdIn");
+    pub const SIZE: u32 = 4;
 }
 
 #[derive(Debug)]

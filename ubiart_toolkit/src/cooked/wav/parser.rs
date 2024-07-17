@@ -6,7 +6,7 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::{test, test_eq, TestResult},
+    testing::{test, test_any, test_eq, TestResult},
 };
 
 use super::{
@@ -31,6 +31,7 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq(magic, Self::MAGIC)?;
         let unk1 = reader.read_at::<u32be>(position)?;
+        test_any(&unk1, &[0x0B00_0000, 0x0A])?;
         let platform = reader.read_at::<WavPlatform>(position)?;
         let codec = reader.read_at::<Codec>(position)?;
 
@@ -40,9 +41,10 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
         };
 
         let header_size = reader.read_at_with::<u32>(position, endian)?;
-        let start_offset = reader.read_at_with::<u32>(position, endian)?;
+        let data_start_offset = reader.read_at_with::<u32>(position, endian)?;
         let number_of_chunks = reader.read_at_with::<u32>(position, endian)?;
         let unk2 = reader.read_at_with::<u32>(position, endian)?;
+        test_any(&unk2, &[0, 3])?;
 
         let mut chunks = HashMap::with_capacity(usize::try_from(number_of_chunks)?);
         for _ in 0..number_of_chunks {
@@ -86,7 +88,7 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
             platform,
             codec,
             header_size,
-            start_offset,
+            data_start_offset,
             chunks,
         })
     }
@@ -151,7 +153,8 @@ impl BinaryDeserialize<'_> for Fmt {
         let (start, endian) = ctx;
 
         let offset = reader.read_at_with::<u32>(position, endian)?;
-        let _size = reader.read_at_with::<u32>(position, endian)?;
+        let size = reader.read_at_with::<u32>(position, endian)?;
+        test_eq(size, Self::SIZE)?;
 
         let mut new_position = start + u64::from(offset);
         let unk1 = reader.read_at_with::<u16>(&mut new_position, endian)?;
@@ -161,11 +164,13 @@ impl BinaryDeserialize<'_> for Fmt {
         let block_align = reader.read_at_with::<u16>(&mut new_position, endian)?;
         let bits_per_sample = reader.read_at_with::<u16>(&mut new_position, endian)?;
 
-        // if let TestResult::Err(_) =
-        //     test_eq(start + u64::from(offset) + u64::from(size), new_position)
-        // {
-        //     println!("Warning: incomplete parsing!");
-        // }
+        let expected_position = start + u64::from(offset) + u64::from(size);
+        if let TestResult::Err(_) = test_eq(expected_position, new_position) {
+            println!("Warning: incomplete parsing!");
+            let leftover_size = usize::try_from(expected_position - new_position)?;
+            let leftovers = reader.read_slice_at(&mut new_position, leftover_size)?;
+            println!("{leftovers:x?}");
+        }
 
         Ok(Self {
             unk1,
@@ -191,12 +196,11 @@ impl BinaryDeserialize<'_> for AdIn {
 
         let offset = reader.read_at_with::<u32>(position, endian)?;
         let size = reader.read_at_with::<u32>(position, endian)?;
+        test_eq(size, Self::SIZE)?;
 
         let mut new_position = start + u64::from(offset);
 
         let num_of_samples = reader.read_at_with::<u32>(&mut new_position, endian)?;
-
-        test_eq(start + u64::from(offset) + u64::from(size), new_position)?;
 
         Ok(Self { num_of_samples })
     }
@@ -267,10 +271,10 @@ impl<'de> BinaryDeserialize<'de> for Strg<'de> {
         let unk2 = reader.read_at_with::<u32>(&mut new_position, endian)?;
 
         let data = if let Ok(string) = reader.read_null_terminated_string_at(&mut new_position) {
-            println!("unk1: 0x{unk1:x}, unk2: 0x{unk2:x}, string: {string}");
+            // println!("unk1: 0x{unk1:x}, unk2: 0x{unk2:x}, string: {string}");
             StrOrRaw::String(string)
         } else {
-            println!("unk1: 0x{unk1:x}, unk2: 0x{unk2:x}");
+            // println!("unk1: 0x{unk1:x}, unk2: 0x{unk2:x}");
             StrOrRaw::Raw(reader.read_slice_at(&mut new_position, usize::try_from(size - 8)?)?)
         };
 

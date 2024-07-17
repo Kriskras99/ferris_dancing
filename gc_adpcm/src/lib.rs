@@ -11,7 +11,7 @@ pub struct Decoder {
 impl Decoder {
     /// Decode a single frame of ADPCM data.
     ///
-    /// Note: the frames need to be parsed sequentily as the hist1 and hist2 values
+    /// Note: the frames need to be parsed sequentially as the hist1 and hist2 values
     /// are updated very frame.
     pub fn decode_frame(&mut self, frame: [u8; 8]) -> [i16; 14] {
         let header = frame[0];

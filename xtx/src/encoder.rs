@@ -18,7 +18,7 @@ use tegra_swizzle::{
 };
 use thiserror::Error;
 
-use crate::{
+use crate::types::{
     Block, BlockData, Format, TextureHeader, XtxRaw, DATA_BLK_TYPE, FIVE_EXPECTED_DATA,
     TEX_HEAD_BLK_TYPE, UNKNOWN_BLK_TYPE_FIVE,
 };

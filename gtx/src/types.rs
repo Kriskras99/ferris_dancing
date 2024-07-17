@@ -1,7 +1,12 @@
-use std::{borrow::Cow, fmt::Debug};
+use std::{borrow::Cow, collections::VecDeque, fmt::Debug};
 
 use dotstar_toolkit_utils::bytes::read::ReadError;
 use wiiu_swizzle::TileMode;
+
+pub struct GtxRaw<'a> {
+    pub header: GfdHeader,
+    pub blocks: VecDeque<Block<'a>>,
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Gtx {
@@ -37,34 +42,18 @@ impl GfdHeader {
 #[derive(Clone, PartialEq, Eq)]
 pub enum Block<'a> {
     Surface(Gx2Surface),
-    Data(Cow<'a, [u8]>),
+    DataLazy(Data),
     Mip(Cow<'a, [u8]>),
-    Unknown(u32, Cow<'a, [u8]>),
 }
 
 impl Block<'_> {
     pub const MAGIC: u32 = 0x424C_4B7B;
 }
 
-impl std::fmt::Debug for Block<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Surface(arg0) => f.debug_tuple("Surface").field(arg0).finish(),
-            Self::Data(arg0) => f
-                .debug_tuple("Data")
-                .field(&format!("[u8; {}]", arg0.len()))
-                .finish(),
-            Self::Mip(arg0) => f
-                .debug_tuple("Mip")
-                .field(&format!("[u8; {}]", arg0.len()))
-                .finish(),
-            Self::Unknown(type_it, arg0) => f
-                .debug_tuple("Unknown")
-                .field(type_it)
-                .field(&format!("[u8; {}]", arg0.len()))
-                .finish(),
-        }
-    }
+#[derive(Clone, PartialEq, Eq)]
+pub struct Data {
+    pub position: u64,
+    pub size: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -115,7 +104,7 @@ pub enum Format {
 
 impl Format {
     #[must_use]
-    pub const fn is_bcn(&self) -> bool {
+    pub const fn is_bcn(self) -> bool {
         matches!(
             self,
             Self::TBc1Srgb
@@ -132,7 +121,7 @@ impl Format {
     }
 
     #[must_use]
-    pub const fn get_bpp(&self) -> u32 {
+    pub const fn get_bpp(self) -> u32 {
         match self {
             Self::TcR8Unorm => 1,
             Self::TcR4G4Unorm => 8,

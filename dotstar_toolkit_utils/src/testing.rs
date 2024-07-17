@@ -102,6 +102,15 @@ impl TestResult {
     pub const fn is_ok(&self) -> bool {
         matches!(self, Self::Ok)
     }
+
+    /// Panic if this result is an error
+    #[allow(clippy::missing_panics_doc, reason = "This is supposed to panic")]
+    pub fn unwrap(self) {
+        match self {
+            Self::Ok => (),
+            Self::Err(err) => panic!("{err:?}"),
+        }
+    }
 }
 
 impl From<TestResult> for Result<(), TestError> {
@@ -134,6 +143,10 @@ impl Try for TestResult {
             Self::Err(error) => ControlFlow::Break(Err(error)),
         }
     }
+}
+
+pub struct TestError2 {
+
 }
 
 /// Errors returend when the test* functions fail

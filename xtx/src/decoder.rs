@@ -19,9 +19,9 @@ use tegra_swizzle::{
 };
 use thiserror::Error;
 
-use super::{Block, BlockData, Format, TextureHeader};
-use crate::{
-    Data, XtxRaw, DATA_BLK_TYPE, FIVE_EXPECTED_DATA, TEX_HEAD_BLK_TYPE, UNKNOWN_BLK_TYPE_FIVE,
+use crate::types::{
+    Block, BlockData, Data, Format, TextureHeader, XtxRaw, DATA_BLK_TYPE, FIVE_EXPECTED_DATA,
+    TEX_HEAD_BLK_TYPE, UNKNOWN_BLK_TYPE_FIVE,
 };
 
 /// Errors returned when the decoder fails
@@ -86,9 +86,7 @@ impl<R: ReadAtExt> XtxDecoder<R> {
     /// the end of the texture file unless an error is returned. In that case
     /// `position` will be in between the start and end of the texture file.
     pub fn new(reader: R, position: &mut u64) -> Result<Self, DecoderError> {
-        let xtx = reader
-            .read_at::<XtxRaw>(position)
-            .map_err(DecoderError::from)?;
+        let xtx = reader.read_at::<XtxRaw>(position)?;
 
         let minor_version = xtx.minor_version;
         let mut blocks = xtx.blocks;

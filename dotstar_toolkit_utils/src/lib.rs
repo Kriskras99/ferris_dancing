@@ -22,3 +22,4 @@
 pub mod bytes;
 pub mod testing;
 pub mod vfs;
+pub mod testing_macros;

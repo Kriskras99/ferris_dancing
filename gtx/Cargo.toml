@@ -1,20 +1,20 @@
 [package]
-name = "xtx"
+name = "gtx"
 version = "0.1.0"
 edition = "2021"
-description = "Texture decoder for the Nintendo Switch XTX format"
+description = "Texture decoder for the WiiU GTX format"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/kriskras99/ferris_dancing"
 readme = "README.md"
-keywords = ["xtx", "switch", "texture", "decoder", "encoder"]
+keywords = ["gtx", "wiiu", "texture", "decoder"]
 categories = ["encoding", "multimedia::encoding", "parser-implementations"]
 
 [dependencies]
-dotstar_toolkit_utils = { version = "0.2.0", path = "../dotstar_toolkit_utils" }
+dotstar_toolkit_utils = { path = "../dotstar_toolkit_utils" }
 image.workspace = true
-tegra_swizzle.workspace = true
 texpresso.workspace = true
 thiserror.workspace = true
+wiiu_swizzle.workspace = true
 
 [lints]
 workspace = true

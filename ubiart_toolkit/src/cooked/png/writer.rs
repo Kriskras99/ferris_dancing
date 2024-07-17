@@ -2,9 +2,9 @@ use dotstar_toolkit_utils::bytes::{
     primitives::{u16be, u32be, u64be},
     write::{BinarySerialize, WriteAt, WriteError},
 };
+use xtx::XtxEncoder;
 
 use super::Png;
-use crate::cooked::xtx::Xtx;
 
 impl BinarySerialize for Png {
     type Ctx = ();
@@ -29,7 +29,11 @@ impl BinarySerialize for Png {
         writer.write_at::<u32be>(position, png.unk9)?;
         writer.write_at::<u16be>(position, png.unk10)?;
         writer.write_at::<u16be>(position, 0x0)?;
-        writer.write_at::<Xtx>(position, png.texture.xtx()?)?;
+
+        let encoder = XtxEncoder::new(writer, *position);
+        png.texture
+            .write_with_encoder(encoder)
+            .map_err(|e| WriteError::custom(format!("{e:?}")))?;
         Ok(())
     }
 }

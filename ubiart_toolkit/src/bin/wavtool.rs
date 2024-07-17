@@ -1,22 +1,27 @@
 #![allow(clippy::missing_panics_doc, reason = "Tool not a library")]
 
 use std::{
+    borrow::Cow,
+    collections::HashMap,
     fs::File,
-    io::{Cursor, Write},
     path::{Path, PathBuf},
 };
 
 use clap::Parser;
-use dotstar_toolkit_utils::bytes::{
-    primitives::{i16le, u16le, u32be, u32le, u64le},
-    read::{BinaryDeserializeExt as _, ReadAt, ReadAtExt},
-    write::WriteAt,
+use dotstar_toolkit_utils::{
+    bytes::{
+        primitives::{i16le, u16le, u32be, u32le, u64be, u64le},
+        read::{BinaryDeserialize, BinaryDeserializeExt as _, ReadAt, ReadAtExt, ReadError},
+        write::{BinarySerialize, BinarySerializeExt, WriteAt, WriteError},
+        CursorAt,
+    },
+    testing::{test_eq, test_ge, test_le, test_not},
 };
 use ogg::{
-    PacketWriteEndInfo::{EndPage, NormalPacket},
+    PacketWriteEndInfo::{EndPage, EndStream, NormalPacket},
     PacketWriter,
 };
-use ubiart_toolkit::cooked::wav::{AdIn, Codec, Data, Dsp, Fmt, Wav, WavPlatform};
+use ubiart_toolkit::cooked::wav::{AdIn, Codec, Data, Dsp, Fmt, Wav, WavCkdEncoder, WavPlatform};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -30,25 +35,46 @@ fn main() {
     // println!("{:?}", cli.source);
 
     let file = File::open(&cli.source).unwrap();
-    let wav = Wav::deserialize(&file).unwrap();
+    let magic = file.read_at::<[u8; 4]>(&mut 0).unwrap();
 
-    let mut path = cli.source.with_extension("wav");
-    println!("{wav:#?}");
+    assert_eq!(magic, *b"HAHA");
 
-    if wav.codec == Codec::PCM {
-        decode_pcm(&file, &wav, &path);
-    } else if wav.codec == Codec::Nx {
-        path.set_extension("opus");
-        decode_opus(&file, &wav, &path);
-    } else if wav.codec == Codec::Adpc && wav.platform == WavPlatform::WiiU {
-        decode_gc_dsp(&file, &wav, &path);
+    match &magic {
+        b"RAKI" => {
+            let wav = Wav::deserialize(&file).unwrap();
+            println!(
+                "Header size: 0x{:x}, start offset: 0x{:x}",
+                wav.header_size, wav.data_start_offset
+            );
+            let mut path = cli.source.with_extension("wav");
+            println!("{wav:#?}");
+            // println!("Decoding {:?} to {path:?}", cli.source);
+            if wav.codec == Codec::PCM {
+                decode_pcm(&file, &wav, &path);
+            } else if wav.codec == Codec::Nx {
+                path.set_extension("opus");
+                decode_opus(&file, &wav, &path);
+            } else if wav.codec == Codec::Adpc && wav.platform == WavPlatform::WiiU {
+                decode_gc_dsp(&file, &wav, &path);
+            } else {
+                panic!("Unsupported codec/platform combination!")
+            }
+        }
+        b"OggS" | b"RIFF" => {
+            let path = cli.source.with_extension("wav.ckd");
+            let destination = File::create(path).unwrap();
+            let encoder = WavCkdEncoder::new(file, destination);
+            encoder.encode(&mut 0).unwrap();
+        }
+        _ => {
+            panic!("Unknown file, expecting .wav.ckd, .opus, or .wav");
+        }
     }
 }
 
 fn decode_opus(file: &File, wav: &Wav, path: &Path) {
     let mut dest = File::create(path).unwrap();
-    let ogg = convert_opus_formats(file, wav);
-    dest.write_all(&ogg).unwrap();
+    decode_nx_opus_inner(file, wav, &mut dest);
 }
 
 fn decode_pcm(file: &File, wav: &Wav, path: &Path) {
@@ -63,9 +89,10 @@ fn decode_pcm(file: &File, wav: &Wav, path: &Path) {
     };
     let mut writer = hound::WavWriter::create(path, spec).unwrap();
 
-    if fmt.bits_per_sample != 16 {
-        todo!();
-    }
+    assert_eq!(
+        fmt.bits_per_sample, 16,
+        "Bits per sample != 16, this is not supported"
+    );
 
     let mut position = data.position;
     for _ in 0..(data.size / 2) {
@@ -182,151 +209,433 @@ fn decode_gc_dsp(file: &File, wav: &Wav, path: &Path) {
     }
 }
 
-fn convert_opus_formats(file: &File, wav: &Wav) -> Vec<u8> {
+fn decode_nx_opus_inner(src: &File, wav: &Wav, destination: &mut (impl WriteAt + ?Sized)) {
     let fmt = wav.chunks[&Fmt::MAGIC].as_fmt().unwrap();
     let data = wav.chunks[&Data::MAGIC].as_data().unwrap();
     let adin = wav.chunks[&AdIn::MAGIC].as_adin().unwrap();
 
-    let num_of_samples = adin.num_of_samples;
-
-    // Apparently `data` contains a normal switch opus header plus the data
     let mut position = data.position;
-    println!("0x{position:x}");
-    let the_type = file.read_at::<u32le>(&mut position).unwrap();
-    let header_size = file.read_at::<u32le>(&mut position).unwrap();
-    let version = file.read_at::<u8>(&mut position).unwrap();
-    let channel_count = file.read_at::<u8>(&mut position).unwrap();
-    let frame_size = file.read_at::<u16le>(&mut position).unwrap();
-    let sample_rate = file.read_at::<u32le>(&mut position).unwrap();
-    let data_offset = file.read_at::<u32le>(&mut position).unwrap();
-    let unk1 = file.read_at::<u64le>(&mut position).unwrap();
-    let pre_skip = file.read_at::<u32le>(&mut position).unwrap();
+
+    let nx_header = NxOpusHeader::deserialize_at(src, &mut position).unwrap();
 
     assert_eq!(
         fmt.channel_count,
-        u16::from(channel_count),
+        u16::from(nx_header.channels),
         "Channel count does not match!"
     );
-    assert_eq!(fmt.sample_rate, sample_rate, "Sample rate does not match!");
-
-    position = data.position + u64::from(data_offset);
-    let data_type = file.read_at::<u32le>(&mut position).unwrap();
-    let data_size = file.read_at::<u32le>(&mut position).unwrap();
-
-    println!("Type: 0x{the_type:x}");
-    println!("Header size: {header_size}");
-    println!("Version: {version}");
-    println!("Channel count: {channel_count}");
-    println!("Frame size: {frame_size}");
-    println!("Sample rate: {sample_rate}");
-    println!("Data offset: {data_offset}");
-    println!("Unk1: {unk1}");
-    println!("Pre skip: {pre_skip}");
-    println!("Data type: 0x{data_type:x}");
-    println!("Data size: {data_size}");
-
-    let mut writer = PacketWriter::new(Cursor::new(Vec::new()));
-    let header = make_opus_header(
-        channel_count,
-        1,
-        i16::try_from(pre_skip).unwrap(),
-        sample_rate,
+    assert_eq!(
+        fmt.sample_rate, nx_header.sample_rate,
+        "Sample rate does not match!"
     );
-    writer.write_packet(header, 0x1234, EndPage, 0).unwrap();
-    let comment = make_opus_comment();
-    writer.write_packet(comment, 0x1234, EndPage, 0).unwrap();
+
+    let data_start = position;
+    let data_type = src.read_at::<u32le>(&mut position).unwrap();
+    test_eq(data_type, 0x80000004).unwrap();
+    let data_size = src.read_at::<u32le>(&mut position).unwrap();
+    let data_end = data_start + u64::from(data_size);
+
+    let mut writer = PacketWriter::new(CursorAt::new(destination, 0));
+    let header = OpusHeader {
+        channels: nx_header.channels,
+        skip: i16::try_from(nx_header.pre_skip).unwrap(),
+        sample_rate: nx_header.sample_rate,
+        output_gain: 0,
+    };
+    let mut vec = Vec::new();
+    OpusHeader::serialize(header, &mut vec).unwrap();
+    writer.write_packet(vec, 0x0D15EA5E, EndPage, 0).unwrap();
+
+    let comments = OpusComments {
+        vendor: Cow::Borrowed("UbiArt Toolkit"),
+        comments: HashMap::new(),
+    };
+    let mut vec = Vec::new();
+    OpusComments::serialize(comments, &mut vec).unwrap();
+    writer.write_packet(vec, 0x0D15EA5E, EndPage, 0).unwrap();
 
     let mut total_samples = 0;
-    while position < data.position + u64::from(data.size) {
-        let data_size = usize::try_from(file.read_at::<u32be>(&mut position).unwrap()).unwrap();
-        let _unk2 = file.read_at::<u32be>(&mut position).unwrap();
+    let mut n = 0;
+    while total_samples < adin.num_of_samples {
+        n += 1;
+        let data_size = usize::try_from(src.read_at::<u32be>(&mut position).unwrap()).unwrap();
+        let _unk2 = src.read_at::<u32be>(&mut position).unwrap(); // opus state??
 
-        let data = file.read_slice_at(&mut position, data_size).unwrap();
-        let samples = opus_get_packet_samples([data[0], data[1]], sample_rate);
+        let data = src.read_slice_at(&mut position, data_size).unwrap();
+
+        let toc = OpusToc::deserialize(data.as_ref()).unwrap();
+        let samples = u32::from(toc.frames_per_packet)
+            * ((toc.frame_size * nx_header.sample_rate) / 1_000_000);
+
         total_samples += samples;
-        writer
-            .write_packet(data, 0x1234, NormalPacket, u64::from(total_samples))
+
+        if total_samples >= adin.num_of_samples {
+            writer
+                .write_packet(data, 0x0D15EA5E, EndStream, u64::from(adin.num_of_samples))
+                .unwrap();
+        } else {
+            writer
+                .write_packet(data, 0x0D15EA5E, NormalPacket, u64::from(total_samples))
+                .unwrap();
+        };
+    }
+
+    if position != data_end {
+        println!("Position is not at data end!: position: {position}, data end: {data_end}");
+    }
+
+    if total_samples != adin.num_of_samples {
+        println!(
+            "Total samples do not match!: expected: {} read: {total_samples}, (packets: {n})",
+            adin.num_of_samples
+        );
+    }
+}
+
+fn encode_opus(file: File, destination: &mut (impl WriteAt + ?Sized)) {
+    let mut ogg = ogg::PacketReader::new(file);
+
+    let mut packet = ogg.read_packet_expected().unwrap();
+    let serial = packet.stream_serial();
+    let mut data = Vec::new();
+    // all header packets have a absgp of 0
+    while packet.absgp_page() == 0 {
+        test_eq(serial, packet.stream_serial())
+            .context("More than one stream in ogg file!")
             .unwrap();
+        data.extend_from_slice(&packet.data);
+        packet = ogg.read_packet_expected().unwrap();
     }
 
-    if total_samples != num_of_samples {
-        println!("Total samples do not match!: {num_of_samples} {total_samples}");
-    }
-
-    writer.into_inner().into_inner()
-}
-
-fn opus_get_packet_samples(data: [u8; 2], fs: u32) -> u32 {
-    opus_packet_get_nb_frames(data) * opus_packet_get_samples_per_frame(data[0], fs)
-}
-
-fn opus_packet_get_samples_per_frame(data: u8, fs: u32) -> u32 {
-    if data & 0x80 == 0x80 {
-        let audiosize = u32::from((data >> 3) & 0x3);
-        (fs << audiosize) / 400
-    } else if data & 0x60 == 0x60 {
-        if (data & 0x8) == 0x8 {
-            fs / 50
-        } else {
-            fs / 100
-        }
-    } else {
-        let audiosize = u32::from((data >> 3) & 0x3);
-        if audiosize == 3 {
-            (fs * 60) / 1000
-        } else {
-            (fs << audiosize) / 100
-        }
-    }
-}
-
-fn opus_packet_get_nb_frames(packet: [u8; 2]) -> u32 {
-    let count = packet[0] & 0x3;
-    if count == 0 {
-        1
-    } else if count != 3 {
-        2
-    } else {
-        u32::from(packet[1] & 0x3F)
-    }
-}
-
-fn make_opus_header(channels: u8, stream_count: usize, skip: i16, sample_rate: u32) -> Vec<u8> {
-    assert!(
-        !(channels > 2 || stream_count > 1),
-        "More than 2 channels or multiple streams is not supported!"
-    );
-
-    let mut vec = Vec::new();
     let mut position = 0;
+    let header = OpusHeader::deserialize_at(&data, &mut position).unwrap();
+    let _comments = OpusComments::deserialize_at(&data, &mut position).unwrap();
 
-    vec.write_at::<u32be>(&mut position, u32::from_be_bytes(*b"Opus"))
+    let mut position = 0;
+    destination
+        .write_at::<NxOpusHeader>(
+            &mut position,
+            NxOpusHeader {
+                channels: header.channels,
+                sample_rate: header.sample_rate,
+                pre_skip: u32::try_from(header.skip).unwrap(),
+            },
+        )
         .unwrap();
-    vec.write_at::<u32be>(&mut position, u32::from_be_bytes(*b"Head"))
-        .unwrap();
-    vec.write_at::<u8>(&mut position, 1).unwrap(); // version
-    vec.write_at::<u8>(&mut position, channels).unwrap();
-    vec.write_at::<i16le>(&mut position, skip).unwrap();
-    vec.write_at::<u32le>(&mut position, sample_rate).unwrap();
-    vec.write_at::<u16le>(&mut position, 0).unwrap(); // output gain
-    vec.write_at::<u8>(&mut position, 0).unwrap(); // mapping file
 
-    vec
+    destination
+        .write_at::<u32le>(&mut position, 0x80000004)
+        .unwrap(); // data magic
+    let mut position_data_size = position;
+    destination.write_at::<u32le>(&mut position, 0).unwrap(); // data size
+
+    let mut data_size = 0;
+    // process all audio packets
+    loop {
+        test_eq(serial, packet.stream_serial())
+            .context("More than one stream in ogg file!")
+            .unwrap();
+        let size = u32::try_from(packet.data.len()).unwrap();
+        data_size += size;
+        destination.write_at::<u32be>(&mut position, size).unwrap();
+        destination
+            .write_at::<u32be>(&mut position, 0x1000000)
+            .unwrap(); // unk2
+        destination
+            .write_slice_at(&mut position, &packet.data)
+            .unwrap();
+        match ogg.read_packet().unwrap() {
+            Some(new) => packet = new,
+            None => break,
+        }
+    }
+    destination
+        .write_at::<u32le>(&mut position_data_size, data_size)
+        .unwrap(); // data size
 }
 
-fn make_opus_comment() -> Vec<u8> {
-    let mut vec = Vec::new();
-    let mut position = 0;
+#[derive(Debug)]
+pub struct OpusHeader {
+    pub channels: u8,
+    pub skip: i16,
+    pub sample_rate: u32,
+    pub output_gain: u16,
+}
 
-    vec.write_at::<u32be>(&mut position, u32::from_be_bytes(*b"Opus"))
-        .unwrap();
-    vec.write_at::<u32be>(&mut position, u32::from_be_bytes(*b"Tags"))
-        .unwrap();
-    vec.write_len_string_at::<u32le>(&mut position, "UbiArt Toolkit")
-        .unwrap();
-    vec.write_at::<u32le>(&mut position, 1).unwrap(); // user comment list length
-    vec.write_len_string_at::<u32le>(&mut position, "UbiArt Toolkit Opus converter")
-        .unwrap();
+impl BinaryDeserialize<'_> for OpusHeader {
+    type Ctx = ();
+    type Output = Self;
 
-    vec
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u64be>(position)?;
+        test_eq(magic, u64::from_be_bytes(*b"OpusHead"))?;
+        let version = reader.read_at::<u8>(position)?;
+        test_eq(version, 1)?;
+        let channels = reader.read_at::<u8>(position)?;
+        let skip = reader.read_at::<i16le>(position)?;
+        let sample_rate = reader.read_at::<u32le>(position)?;
+        let output_gain = reader.read_at::<u16le>(position)?;
+        let mapping_file = reader.read_at::<u8>(position)?;
+        test_eq(mapping_file, 0).context("Mapping file is not yet supported!")?;
+
+        Ok(Self {
+            channels,
+            skip,
+            sample_rate,
+            output_gain,
+        })
+    }
+}
+
+impl BinarySerialize for OpusHeader {
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        test_le(input.channels, 2)
+            .context("Mapping file is required for more than 2 channels and is not supported")?;
+        writer.write_at::<u64be>(position, u64::from_be_bytes(*b"OpusHead"))?;
+        writer.write_at::<u8>(position, 1)?; // version
+
+        writer.write_at::<u8>(position, input.channels)?;
+        writer.write_at::<i16le>(position, input.skip)?;
+        writer.write_at::<u32le>(position, input.sample_rate)?;
+        writer.write_at::<u16le>(position, input.output_gain)?; // output gain
+        writer.write_at::<u8>(position, 0)?; // mapping file
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct OpusComments<'a> {
+    pub vendor: Cow<'a, str>,
+    pub comments: HashMap<Cow<'a, str>, Cow<'a, str>>,
+}
+
+impl<'de> BinaryDeserialize<'de> for OpusComments<'de> {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u64be>(position)?;
+        test_eq(magic, u64::from_be_bytes(*b"OpusTags"))?;
+        let vendor = reader.read_len_string_at::<u32le>(position)?;
+        let comment_list_length = reader.read_at::<u32le>(position)?;
+        let mut comments = HashMap::with_capacity(usize::try_from(comment_list_length)?);
+        for _ in 0..comment_list_length {
+            let comment = reader.read_len_string_at::<u32le>(position)?;
+            let index = comment
+                .find("=")
+                .ok_or_else(|| ReadError::custom(format!("Invalid comment: {comment}")))?;
+            test_ge(comment.len(), index + 2)?;
+            let (key, value) = match comment {
+                Cow::Borrowed(comment) => {
+                    let (left, right) = comment.split_at(index);
+                    let right = &right[1..];
+                    (Cow::Borrowed(left), Cow::Borrowed(right))
+                }
+                Cow::Owned(mut comment) => {
+                    let right = comment.split_at(index + 1).1;
+                    let right = right.to_string();
+                    comment.truncate(index);
+                    comment.shrink_to_fit();
+                    (Cow::Owned(comment), Cow::Owned(right))
+                }
+            };
+            comments.insert(key, value);
+        }
+        Ok(Self { vendor, comments })
+    }
+}
+
+impl BinarySerialize for OpusComments<'_> {
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at::<u64be>(position, u64::from_be_bytes(*b"OpusTags"))?;
+        writer.write_len_string_at::<u32le>(position, &input.vendor)?;
+        writer.write_at::<u32le>(position, u32::try_from(input.comments.len())?)?;
+        for (key, value) in input.comments {
+            test_not(key.contains('=')).context("Comment key cannot contain a '='")?;
+            let length = key.len() + value.len() + 1;
+            writer.write_at::<u32le>(position, u32::try_from(length)?)?;
+            writer.write_slice_at(position, key.as_bytes())?;
+            writer.write_at::<u8>(position, b'=')?;
+            writer.write_slice_at(position, value.as_bytes())?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct OpusToc {
+    pub mode: Mode,
+    pub bandwith: Bandwith,
+    pub frame_size: u32,
+    pub stereo: bool,
+    pub frames_per_packet: u8,
+}
+
+#[derive(Debug)]
+pub enum Mode {
+    Silk,
+    Hybrid,
+    Celt,
+}
+
+#[derive(Debug)]
+pub enum Bandwith {
+    Narrow,
+    Medium,
+    Wide,
+    Superwide,
+    Full,
+}
+
+impl BinaryDeserialize<'_> for OpusToc {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let byte = reader.read_at::<u8>(position)?;
+        let (mode, bandwith, frame_size) = match byte >> 3 {
+            0 => (Mode::Silk, Bandwith::Narrow, 10_000u32),
+            1 => (Mode::Silk, Bandwith::Narrow, 20_000u32),
+            2 => (Mode::Silk, Bandwith::Narrow, 40_000u32),
+            3 => (Mode::Silk, Bandwith::Narrow, 60_000u32),
+            4 => (Mode::Silk, Bandwith::Medium, 10_000u32),
+            5 => (Mode::Silk, Bandwith::Medium, 20_000u32),
+            6 => (Mode::Silk, Bandwith::Medium, 40_000u32),
+            7 => (Mode::Silk, Bandwith::Medium, 60_000u32),
+            8 => (Mode::Silk, Bandwith::Wide, 10_000u32),
+            9 => (Mode::Silk, Bandwith::Wide, 20_000u32),
+            10 => (Mode::Silk, Bandwith::Wide, 40_000u32),
+            11 => (Mode::Silk, Bandwith::Wide, 60_000u32),
+            12 => (Mode::Hybrid, Bandwith::Superwide, 10_000u32),
+            13 => (Mode::Hybrid, Bandwith::Superwide, 20_000u32),
+            14 => (Mode::Hybrid, Bandwith::Full, 10_000u32),
+            15 => (Mode::Hybrid, Bandwith::Full, 20_000u32),
+            16 => (Mode::Celt, Bandwith::Narrow, 2_500u32),
+            17 => (Mode::Celt, Bandwith::Narrow, 5_000u32),
+            18 => (Mode::Celt, Bandwith::Narrow, 10_000u32),
+            19 => (Mode::Celt, Bandwith::Narrow, 20_000u32),
+            20 => (Mode::Celt, Bandwith::Wide, 2_500u32),
+            21 => (Mode::Celt, Bandwith::Wide, 5_000u32),
+            22 => (Mode::Celt, Bandwith::Wide, 10_000u32),
+            23 => (Mode::Celt, Bandwith::Wide, 20_000u32),
+            24 => (Mode::Celt, Bandwith::Superwide, 2_500u32),
+            25 => (Mode::Celt, Bandwith::Superwide, 5_000u32),
+            26 => (Mode::Celt, Bandwith::Superwide, 10_000u32),
+            27 => (Mode::Celt, Bandwith::Superwide, 20_000u32),
+            28 => (Mode::Celt, Bandwith::Full, 2_500u32),
+            29 => (Mode::Celt, Bandwith::Full, 5_000u32),
+            30 => (Mode::Celt, Bandwith::Full, 10_000u32),
+            31 => (Mode::Celt, Bandwith::Full, 20_000u32),
+            _ => unreachable!(),
+        };
+        let stereo = (byte & 0b100) == 0b100;
+        let frames_per_packet = match byte & 0b11 {
+            0 => 1u8,
+            1 | 2 => 2,
+            3 => reader.read_at::<u8>(position)? & 0x3F,
+            _ => unreachable!(),
+        };
+
+        Ok(Self {
+            mode,
+            bandwith,
+            frame_size,
+            stereo,
+            frames_per_packet,
+        })
+    }
+}
+
+pub struct NxOpusHeader {
+    pub channels: u8,
+    pub sample_rate: u32,
+    pub pre_skip: u32,
+}
+
+impl NxOpusHeader {
+    const MAGIC: u32 = 0x8000_0001;
+}
+
+impl BinaryDeserialize<'_> for NxOpusHeader {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let the_type = reader.read_at::<u32le>(position)?;
+        test_eq(the_type, Self::MAGIC)?;
+        let header_size = reader.read_at::<u32le>(position)?;
+        test_eq(header_size, 24)?; // header size excludes itself and the type
+        let version = reader.read_at::<u8>(position)?;
+        test_eq(version, 0)?;
+        let channels = reader.read_at::<u8>(position)?;
+        let frame_size = reader.read_at::<u16le>(position)?;
+        test_eq(frame_size, 0)?;
+        let sample_rate = reader.read_at::<u32le>(position)?;
+        let data_offset = reader.read_at::<u32le>(position)?;
+        test_eq(data_offset, 32)?; // from the start of the data block
+        let unk1 = reader.read_at::<u64le>(position)?;
+        test_eq(unk1, 0)?;
+        let pre_skip = reader.read_at::<u32le>(position)?;
+
+        Ok(Self {
+            channels,
+            sample_rate,
+            pre_skip,
+        })
+    }
+}
+
+impl BinarySerialize for NxOpusHeader {
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at::<u32le>(position, Self::MAGIC)?;
+        writer.write_at::<u32le>(position, 0x18)?; // header size
+        writer.write_at::<u8>(position, 0)?; // version
+        writer.write_at::<u8>(position, input.channels)?;
+        writer.write_at::<u16le>(position, 0)?; // frame size?
+        writer.write_at::<u32le>(position, input.sample_rate)?;
+        writer.write_at::<u32le>(position, 0x20)?; // data offset
+        writer.write_at::<u64le>(position, 0)?; // unk1
+        writer.write_at::<u32le>(position, input.pre_skip)?;
+
+        Ok(())
+    }
 }

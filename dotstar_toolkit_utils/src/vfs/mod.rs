@@ -157,7 +157,7 @@ impl<'vf> ReadAt for VirtualFile<'vf> {
 
     fn len(&self) -> Result<u64, ReadError> {
         match self {
-            VirtualFile::Slice(data) => Ok(u64::try_from(data.len())?),
+            VirtualFile::Slice(data) => data.len(),
             VirtualFile::Vec(data) => data.len(),
             VirtualFile::Mmap(data) => Ok(u64::try_from(data.len())?),
         }

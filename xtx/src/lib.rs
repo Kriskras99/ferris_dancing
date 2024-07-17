@@ -1,6 +1,6 @@
-pub mod decoder;
+mod decoder;
+mod encoder;
 mod types;
-// mod writer;
-pub mod encoder;
 
-pub use types::*;
+pub use decoder::XtxDecoder;
+pub use encoder::XtxEncoder;

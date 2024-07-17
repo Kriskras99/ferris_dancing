@@ -7,12 +7,12 @@ use dotstar_toolkit_utils::{
     },
     testing::{test_any, test_eq},
 };
+use gtx::GtxDecoder;
+use image::DynamicImage;
+use xtx::XtxDecoder;
 
 use super::Png;
-use crate::{
-    cooked::{gtx::Gtx, png::Texture, xtx::Xtx},
-    utils::{Platform, UniqueGameId},
-};
+use crate::utils::{Platform, UniqueGameId};
 
 impl BinaryDeserialize<'_> for Png {
     type Ctx = UniqueGameId;
@@ -64,14 +64,19 @@ impl BinaryDeserialize<'_> for Png {
 
         let texture = match ugi.platform {
             Platform::Nx => {
-                let xtx = reader.read_at::<Xtx>(position)?;
-
-                if xtx.images.len() > 1 {
-                    println!("Multiple XTX images!");
-                }
-                Texture::Xtx(xtx)
+                let decoder = XtxDecoder::new(reader, position)
+                    .map_err(|e| ReadError::custom(format!("{e:?}")))?;
+                DynamicImage::from_decoder(decoder)
+                    .map_err(|e| ReadError::custom(format!("{e:?}")))?
+                    .into_rgba8()
             }
-            Platform::WiiU => Texture::Gtx(reader.read_at::<Gtx>(position)?),
+            Platform::WiiU => {
+                let decoder = GtxDecoder::new(reader, position)
+                    .map_err(|e| ReadError::custom(format!("{e:?}")))?;
+                DynamicImage::from_decoder(decoder)
+                    .map_err(|e| ReadError::custom(format!("{e:?}")))?
+                    .into_rgba8()
+            }
             _ => todo!(),
         };
 

@@ -104,7 +104,7 @@ impl From<Format> for u32 {
 impl Format {
     #[must_use]
     /// Get the amount of bytes per pixel/texel
-    pub const fn get_bpp(&self) -> u32 {
+    pub const fn get_bpp(self) -> u32 {
         match self {
             Self::NvnFormatR8 => 1,
             Self::NvnFormatRGB565
@@ -118,7 +118,7 @@ impl Format {
     }
 
     #[must_use]
-    pub const fn is_bcn(&self) -> bool {
+    pub const fn is_bcn(self) -> bool {
         matches!(
             self,
             Self::BC1 | Self::BC2 | Self::BC3 | Self::BC4U | Self::BC4S | Self::BC5U | Self::BC5S

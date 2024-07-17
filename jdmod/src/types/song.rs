@@ -377,7 +377,7 @@ pub struct Autodance<'a> {
     /// Position in the clip to start at
     pub song_start_position: i32,
     /// Duration to play
-    pub duration: f32,
+    pub duration: f64,
     /// Unknown
     pub record: Vec<Record>,
     /// Unknown
@@ -731,7 +731,7 @@ pub struct MusicTrack {
     /// End of the audio track
     pub end_beat: u32,
     /// Start of the video
-    pub video_start_time: f32,
+    pub video_start_time: f64,
     /// Unknown
     pub preview_entry: f32,
     /// Preview audio track start

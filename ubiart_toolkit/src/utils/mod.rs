@@ -16,8 +16,6 @@ use serde::{Deserialize, Serialize};
 use ubiart_toolkit_shared_types::errors::ParserError;
 pub use ubiart_toolkit_shared_types::{errors, Color, LocaleId};
 
-use crate::ipk;
-
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct SplitPath<'a> {
@@ -474,37 +472,76 @@ impl Display for Game {
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum Platform {
-    X360,
-    Ps3,
-    Ps4,
-    Wii,
-    WiiU,
-    Nx,
-}
-
-impl From<Platform> for ipk::IpkPlatform {
-    fn from(value: Platform) -> Self {
-        match value {
-            Platform::X360 => Self::X360,
-            Platform::Ps4 => Self::Ps4,
-            Platform::Wii => Self::Wii,
-            Platform::WiiU => Self::WiiU,
-            Platform::Nx => Self::Nx,
-            Platform::Ps3 => todo!("No IPK platform number known for {value}"),
-        }
-    }
+    X360 = 0x1,
+    Ps4 = 0x3,
+    Wii = 0x5,
+    WiiU = 0x8,
+    Nx = 0xB,
 }
 
 impl Display for Platform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::X360 => std::write!(f, "Xbox 360"),
-            Self::Ps3 => std::write!(f, "PlayStation 3"),
             Self::Ps4 => std::write!(f, "PlayStation 4"),
             Self::Wii => std::write!(f, "Wii"),
             Self::WiiU => std::write!(f, "Wii U"),
             Self::Nx => std::write!(f, "Switch"),
         }
+    }
+}
+
+impl TryFrom<u32> for Platform {
+    type Error = ParserError;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        match value {
+            0x1 => Ok(Self::X360),
+            0x3 => Ok(Self::Ps4),
+            0x5 => Ok(Self::Wii),
+            0x8 => Ok(Self::WiiU),
+            0xB => Ok(Self::Nx),
+            _ => Err(ParserError::custom(format!("Unknown platform id {value}!"))),
+        }
+    }
+}
+
+impl From<Platform> for u32 {
+    #[allow(
+        clippy::as_conversions,
+        reason = "Platform is repr(u32) thus this is always safe"
+    )]
+    fn from(value: Platform) -> Self {
+        value as Self
+    }
+}
+
+impl BinaryDeserialize<'_> for Platform {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        Self::try_from(reader.read_at::<u32be>(position)?)
+            .map_err(|e| ReadError::custom(format!("{e:?}")))
+    }
+}
+
+impl BinarySerialize for Platform {
+    type Ctx = ();
+    type Input = Self;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at::<u32be>(position, u32::from(input))?;
+        Ok(())
     }
 }
 

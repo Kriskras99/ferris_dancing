@@ -312,3 +312,24 @@ impl ReadAt for Vec<u8> {
         u64::try_from(self.len()).map_err(ReadError::from)
     }
 }
+
+impl<R: ReadAt + ?Sized> ReadAt for &R {
+    fn read_null_terminated_string_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+    ) -> Result<Cow<'rf, str>, ReadError> {
+        (*self).read_null_terminated_string_at(position)
+    }
+
+    fn read_slice_at<'rf>(
+        &'rf self,
+        position: &mut u64,
+        len: usize,
+    ) -> Result<Cow<'rf, [u8]>, ReadError> {
+        (*self).read_slice_at(position, len)
+    }
+
+    fn len(&self) -> Result<u64, ReadError> {
+        (*self).len()
+    }
+}

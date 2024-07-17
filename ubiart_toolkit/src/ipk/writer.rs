@@ -7,7 +7,7 @@ use std::{
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u32be, u64be},
-        write::{BinarySerialize, WriteAt, WriteError},
+        write::{WriteAt, WriteError},
         CursorAt,
     },
     testing::test_eq,
@@ -16,8 +16,8 @@ use dotstar_toolkit_utils::{
 use flate2::{write::ZlibEncoder, Compression};
 use tracing::instrument;
 
-use super::{IpkPlatform, MAGIC};
-use crate::utils::{self, Game, SplitPath, UniqueGameId};
+use super::MAGIC;
+use crate::utils::{self, Game, Platform, SplitPath, UniqueGameId};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
@@ -108,10 +108,10 @@ pub fn write(
     files: &[&VirtualPath],
 ) -> Result<(), WriteError> {
     // TODO: Make this code position independent
-    // assert!(
-    //     *position == 0,
-    //     "TODO: This code is not yet position independent!"
-    // );
+    assert!(
+        *position == 0,
+        "TODO: This code is not yet position independent!"
+    );
     // let static_header_size = *position + u64::try_from(STATIC_HEADER_SIZE)?;
     // Calculate the size of the header, starting with the static size
     let mut base_offset = STATIC_HEADER_SIZE;
@@ -133,7 +133,7 @@ pub fn write(
     // Start writing the header
     writer.write_at::<u32be>(position, MAGIC)?;
     writer.write_at::<u32be>(position, 0x5)?; // version
-    writer.write_at::<IpkPlatform>(position, IpkPlatform::from(options.game_platform.platform))?;
+    writer.write_at::<Platform>(position, options.game_platform.platform)?;
     writer.write_at::<u32be>(position, u32::try_from(base_offset)?)?;
     writer.write_at::<u32be>(position, u32::try_from(files.len())?)?;
     writer.write_at::<u32be>(position, 0x0)?; // unk1
@@ -258,19 +258,4 @@ pub fn write(
     test_eq(*position, base_offset)?;
 
     Ok(())
-}
-
-impl BinarySerialize for IpkPlatform {
-    type Ctx = ();
-    type Input = Self;
-
-    fn serialize_at_with_ctx(
-        input: Self::Input,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        _ctx: Self::Ctx,
-    ) -> Result<(), WriteError> {
-        writer.write_at::<u32be>(position, u32::from(input))?;
-        Ok(())
-    }
 }

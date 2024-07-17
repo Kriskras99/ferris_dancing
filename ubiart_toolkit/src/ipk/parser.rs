@@ -10,10 +10,10 @@ use dotstar_toolkit_utils::{
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use super::{
-    types::IpkPlatform, Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC,
-    SEPARATOR, UNK1, UNK2, UNK3, UNK6,
+    Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR, UNK1, UNK2, UNK3,
+    UNK6,
 };
-use crate::utils::{self, Game, PathId, SplitPath, UniqueGameId};
+use crate::utils::{self, Game, PathId, Platform, SplitPath, UniqueGameId};
 
 impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     type Ctx = ();
@@ -28,7 +28,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq(&magic, &MAGIC)?;
         let version = reader.read_at::<u32be>(position)?;
-        let platform = reader.read_at::<IpkPlatform>(position)?;
+        let platform = reader.read_at::<Platform>(position)?;
         let base_offset = u64::from(reader.read_at::<u32be>(position)?);
         let num_files = reader.read_at::<u32be>(position)?;
         let unk1 = reader.read_at::<u32be>(position)?;
@@ -44,7 +44,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
 
         // Sanity check
         test_eq(&num_files, &num_files_2)?;
-        if !platform.matches_game_platform(game_platform) {
+        if platform != game_platform.platform {
             println!("Header: Warning! Platform (0x{:x} ({platform:?})) does not match GamePlatformId (0x{:x} ({game_platform}))!", u32::from(platform), u32::from(game_platform));
         }
 
@@ -144,25 +144,5 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             game_platform,
             files,
         })
-    }
-}
-
-impl BinaryDeserialize<'_> for IpkPlatform {
-    type Ctx = ();
-    type Output = Self;
-
-    fn deserialize_at_with(
-        reader: &(impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        _ctx: (),
-    ) -> Result<Self, ReadError> {
-        match reader.read_at::<u32be>(position)? {
-            0x1 => Ok(Self::X360),
-            0x3 => Ok(Self::Ps4),
-            0x5 => Ok(Self::Wii),
-            0x8 => Ok(Self::WiiU),
-            0xB => Ok(Self::Nx),
-            value => Err(ReadError::custom(format!("Unknown platform id {value}!"))),
-        }
     }
 }

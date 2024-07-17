@@ -1,9 +1,8 @@
 //! Interfaces and utilities for reading and writing data and types
 
 pub mod endian;
-// pub mod primitives;
 pub mod len;
-pub mod primitives2;
+pub mod primitives;
 pub mod read;
 pub mod write;
 
@@ -11,11 +10,8 @@ use std::{
     fmt::Debug,
     fs::File,
     io::{Error, ErrorKind, Read, Seek, Write},
-    ops::Deref,
     path::Path,
 };
-
-pub use primitives2 as primitives;
 
 use self::{read::ReadAt, write::WriteAt};
 
@@ -88,12 +84,13 @@ impl<T: ReadAt> Read for CursorAt<T> {
     }
 }
 
-impl<T: Deref<Target = [u8]>> Seek for CursorAt<T> {
+impl<T: ReadAt> Seek for CursorAt<T> {
     fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> {
         match pos {
             std::io::SeekFrom::Start(pos) => self.position = pos,
             std::io::SeekFrom::End(pos) => {
-                let size = i64::try_from(self.inner.deref().len()).map_err(Error::other)?;
+                let size =
+                    i64::try_from(self.inner.len().map_err(Error::other)?).map_err(Error::other)?;
                 let new_pos = size
                     .checked_sub(pos)
                     .ok_or_else(|| Error::other("Integer underflow"))?;

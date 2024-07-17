@@ -1,292 +1,456 @@
-//! Integer primitives with a specific endianness
-
-use std::{marker::PhantomData, num::TryFromIntError};
+#![allow(
+    non_camel_case_types,
+    reason = "The type aliases need to look like primary types"
+)]
 
 use super::{
-    endian::{BigEndian, Endianness, LittleEndian},
+    endian::{self, Endian, BE, LE},
+    len::Len,
     read::{BinaryDeserialize, ReadAtExt, ReadError},
     write::{BinarySerialize, WriteAt, WriteError},
-    Len,
 };
 
-/// Creates a uint of n bytes
-macro_rules! create_uint {
-    ( $name:ident, $lename:ident, $bename:ident, $native:ident, $n_bytes:literal ) => {
-        #[doc = concat!(r" Unsigned integer type of ", stringify!($n_bytes), r" bytes invariant over [`Endianness`].")]
-        #[doc = r""]
-        #[doc = r" The alignment of this type is 1 byte."]
-        #[doc = concat!(r" Two convenience aliases exist [`", stringify!($lename), r"`] and [`", stringify!($bename), r"`].")]
-        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-        pub struct $name<E: Endianness> {
-            bytes: [u8; $n_bytes],
-            byteorder: PhantomData<E>,
-        }
+impl BinaryDeserialize<'_> for u8 {
+    type Ctx = ();
+    type Output = Self;
 
-        #[allow(non_camel_case_types, reason = "Makes it more like a primitive type")]
-        #[doc = concat!(r"Alias for [`", stringify!($name), r"<BigEndian>`].")]
-        pub type $bename = $name<BigEndian>;
-        #[allow(non_camel_case_types, reason = "Makes it more like a primitive type")]
-        #[doc = concat!(r"Alias for [`", stringify!($name), r"<LittleEndian>`].")]
-        pub type $lename = $name<LittleEndian>;
-
-        impl<E: Endianness> $name<E> {
-            #[must_use]
-            /// Checked integer addition. Computes `self + rhs`, returning None if overflow occurred.
-            pub fn checked_add(self, rhs: Self) -> Option<Self> {
-                $native::from(self).checked_add($native::from(rhs)).and_then(|n| Self::try_from(n).ok())
-            }
-        }
-
-        impl<E: Endianness> ::std::ops::BitAnd for $name<E> {
-            type Output = Self;
-
-            fn bitand(self, rhs: Self) -> Self::Output {
-                let mut output = self.bytes;
-                for i in 0..$n_bytes {
-                    output[i] &= rhs.bytes[i];
-                }
-                Self {
-                    bytes: output,
-                    byteorder: self.byteorder,
-                }
-            }
-        }
-
-        impl<E: Endianness> ::std::ops::Not for $name<E> {
-            type Output = Self;
-
-            fn not(self) -> Self::Output {
-                let mut output = self.bytes;
-                for i in 0..$n_bytes {
-                    output[i] = !output[i];
-                }
-                Self {
-                    bytes: output,
-                    byteorder: self.byteorder,
-                }
-            }
-        }
-
-        impl<E: Endianness> TryFrom<$name<E>> for usize {
-            type Error = TryFromIntError;
-
-            #[inline]
-            fn try_from(value: $name<E>) -> Result<Self, Self::Error> {
-                let value = $native::from(value);
-                let value = usize::try_from(value)?;
-                Ok(value)
-            }
-        }
-
-        impl<E: Endianness> TryFrom<usize> for $name<E> {
-            type Error = TryFromIntError;
-
-            #[inline]
-            fn try_from(value: usize) -> Result<Self, Self::Error> {
-                let value = $native::try_from(value)?;
-                let value = Self::try_from(value)?;
-                Ok(value)
-            }
-        }
-
-        impl<E: Endianness> From<$name<E>> for $native {
-            #[inline]
-            fn from(value: $name<E>) -> Self {
-                let mut new_bytes = [0; std::mem::size_of::<$native>()];
-                #[cfg(target_endian = "big")]
-                {
-                    new_bytes.as_mut_slice().split_at_mut(std::mem::size_of::<$native>() - $n_bytes).1.copy_from_slice(value.bytes.as_slice());
-                }
-                #[cfg(target_endian = "little")]
-                {
-                    new_bytes.as_mut_slice().split_at_mut(std::mem::size_of::<$native>() - (std::mem::size_of::<$native>() - $n_bytes)).0.copy_from_slice(value.bytes.as_slice());
-                }
-                $native::from_ne_bytes(new_bytes)
-            }
-        }
-
-        impl<'de, E: Endianness> Len<'de> for $name<E> {}
-
-        impl<'de, E: Endianness> BinaryDeserialize<'de> for $name<E> {
-            #[inline]
-            fn deserialize_at(
-                reader: &'de (impl ReadAtExt + ?Sized),
-                position: &mut u64,
-            ) -> Result<Self, ReadError> {
-                let mut bytes = reader.read_fixed_slice_at(position)?;
-                E::to_native(bytes.as_mut_slice());
-                Ok($name {
-                    bytes,
-                    byteorder: PhantomData,
-                })
-            }
-        }
-
-        impl<E: Endianness> BinarySerialize for $name<E> {
-            #[inline]
-            fn serialize_at(
-                &self,
-                writer: &mut (impl WriteAt + ?Sized),
-                position: &mut u64,
-            ) -> Result<(), WriteError> {
-                let mut bytes = self.bytes.clone();
-                E::to_native(&mut bytes);
-                writer.write_at(position, &bytes)?;
-                Ok(())
-            }
-        }
-    };
+    #[inline]
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: (),
+    ) -> Result<Self, ReadError> {
+        Ok(reader.read_slice_at(position, 1)?[0])
+    }
 }
 
-create_uint!(U16, u16le, u16be, u16, 2);
-create_uint!(U24, u24le, u24be, u32, 3);
-create_uint!(U32, u32le, u32be, u32, 4);
-create_uint!(U40, u40le, u40be, u64, 5);
-create_uint!(U48, u48le, u48be, u64, 6);
-create_uint!(U56, u56le, u56be, u64, 7);
-create_uint!(U64, u64le, u64be, u64, 8);
+impl BinarySerialize for u8 {
+    type Ctx = ();
+    type Input = Self;
 
-/// Implements From for types of the same width
-macro_rules! impl_pow2_uint {
-    ( $name:ident, $native:ident) => {
-        impl<E: Endianness> From<$native> for $name<E> {
-            #[inline]
-            fn from(value: $native) -> Self {
-                Self {
-                    bytes: value.to_ne_bytes(),
-                    byteorder: PhantomData,
-                }
-            }
-        }
-
-        impl<E: Endianness> $name<E> {
-            /// Create a new value
-            #[must_use]
-            pub const fn new(value: $native) -> Self {
-                Self {
-                    bytes: value.to_ne_bytes(),
-                    byteorder: PhantomData,
-                }
-            }
-        }
-    };
+    #[inline]
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_slice_at(position, &[input])
+    }
 }
 
-impl_pow2_uint!(U16, u16);
-impl_pow2_uint!(U32, u32);
-impl_pow2_uint!(U64, u64);
+impl Len<'_> for u8 {}
 
-/// Implement try_from for types that are smaller
-macro_rules! impl_non_pow2_uint {
-    ( $name:ident, $native:ident, $n_bytes:literal, $max:literal) => {
-        impl<E: Endianness> TryFrom<$native> for $name<E> {
-            type Error = TryFromIntError;
+pub enum u16be {}
+impl BinaryDeserialize<'_> for u16be {
+    type Ctx = ();
+    type Output = u16;
 
-            #[inline]
-            fn try_from(value: $native) -> Result<Self, Self::Error> {
-                if value > $max {
-                    // Force TryFromIntError creation
-                    u8::try_from(1024u16)?;
-                }
-                let wide_bytes = value.to_ne_bytes();
-                let mut bytes = [0; $n_bytes];
-                #[cfg(target_endian = "big")]
-                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
-                {
-                    let mut i = 0;
-                    while i < $n_bytes {
-                        bytes[i] = wide_bytes[i + std::mem::size_of::<$native>() - $n_bytes];
-                        i += 1;
-                    }
-                }
-                #[cfg(target_endian = "little")]
-                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
-                {
-                    let mut i = 0;
-                    while i < $n_bytes {
-                        bytes[i] = wide_bytes[i];
-                        i += 1;
-                    }
-                }
-                Ok(Self {
-                    bytes,
-                    byteorder: PhantomData,
-                })
-            }
-        }
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<u16>(position, BE)
+    }
+}
+impl BinarySerialize for u16be {
+    type Ctx = ();
+    type Input = u16;
 
-        impl<E: Endianness> $name<E> {
-            #[must_use]
-            /// Create a new value
-            pub const fn new(value: $native) -> Self {
-                if value > $max {
-                    panic!(concat!("value is larger than", stringify!("$max")))
-                }
-                let wide_bytes = value.to_ne_bytes();
-                let mut bytes = [0; $n_bytes];
-                #[cfg(target_endian = "big")]
-                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
-                {
-                    let mut i = 0;
-                    while i < $n_bytes {
-                        bytes[i] = wide_bytes[i + std::mem::size_of::<$native>() - $n_bytes];
-                        i += 1;
-                    }
-                }
-                #[cfg(target_endian = "little")]
-                #[allow(clippy::arithmetic_side_effects, reason = "Should be `for i in 0..$n_bytes` but that's not yet supported in const")]
-                {
-                    let mut i = 0;
-                    while i < $n_bytes {
-                        bytes[i] = wide_bytes[i];
-                        i += 1;
-                    }
-                }
-                Self {
-                    bytes,
-                    byteorder: PhantomData,
-                }
-            }
-        }
-    };
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<u16>(position, input, BE)
+    }
+}
+impl Len<'_> for u16be {}
+pub enum u16le {}
+impl BinaryDeserialize<'_> for u16le {
+    type Ctx = ();
+    type Output = u16;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<u16>(position, LE)
+    }
+}
+impl BinarySerialize for u16le {
+    type Ctx = ();
+    type Input = u16;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<u16>(position, input, LE)
+    }
+}
+impl Len<'_> for u16le {}
+impl BinaryDeserialize<'_> for u16 {
+    type Ctx = Endian;
+    type Output = Self;
+
+    #[inline]
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let mut bytes = reader.read_at::<[u8; 2]>(position)?;
+        ctx.to_native(&mut bytes);
+        Ok(Self::from_ne_bytes(bytes))
+    }
 }
 
-impl_non_pow2_uint!(U24, u32, 3, 0x00FF_FFFF);
-impl_non_pow2_uint!(U40, u64, 5, 0x00FF_FFFF_FFFF);
-impl_non_pow2_uint!(U48, u64, 6, 0xFFFF_FFFF_FFFF);
-impl_non_pow2_uint!(U56, u64, 7, 0x00FF_FFFF_FFFF_FFFF);
+impl BinarySerialize for u16 {
+    type Ctx = Endian;
+    type Input = Self;
 
-/// Implements From for wider types
-macro_rules! impl_widening_pow2_uint {
-    ( $name:ident, $native:ident, $n_bytes:literal ) => {
-        impl<E: Endianness> From<$name<E>> for $native {
-            #[inline]
-            fn from(value: $name<E>) -> Self {
-                let mut new_bytes = [0; std::mem::size_of::<$native>()];
-                #[cfg(target_endian = "big")]
-                {
-                    new_bytes
-                        .as_mut_slice()
-                        .split_at_mut(std::mem::size_of::<$native>() - $n_bytes)
-                        .1
-                        .copy_from_slice(value.bytes.as_slice());
-                }
-                #[cfg(target_endian = "little")]
-                {
-                    new_bytes
-                        .as_mut_slice()
-                        .split_at_mut(
-                            std::mem::size_of::<$native>()
-                                - (std::mem::size_of::<$native>() - $n_bytes),
-                        )
-                        .0
-                        .copy_from_slice(value.bytes.as_slice());
-                }
-                $native::from_ne_bytes(new_bytes)
-            }
-        }
-    };
+    #[inline]
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        let mut bytes = input.to_ne_bytes();
+        ctx.from_native(&mut bytes);
+        writer.write_slice_at(position, &bytes)
+    }
+}
+pub enum i16be {}
+impl BinaryDeserialize<'_> for i16be {
+    type Ctx = ();
+    type Output = i16;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<i16>(position, BE)
+    }
+}
+impl BinarySerialize for i16be {
+    type Ctx = ();
+    type Input = i16;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<i16>(position, input, BE)
+    }
+}
+impl Len<'_> for i16be {}
+pub enum i16le {}
+impl BinaryDeserialize<'_> for i16le {
+    type Ctx = ();
+    type Output = i16;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<i16>(position, LE)
+    }
+}
+impl BinarySerialize for i16le {
+    type Ctx = ();
+    type Input = i16;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<i16>(position, input, LE)
+    }
+}
+impl Len<'_> for i16le {}
+impl BinaryDeserialize<'_> for i16 {
+    type Ctx = Endian;
+    type Output = Self;
+
+    #[inline]
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let mut bytes = reader.read_at::<[u8; 2]>(position)?;
+        ctx.to_native(&mut bytes);
+        Ok(Self::from_ne_bytes(bytes))
+    }
 }
 
-impl_widening_pow2_uint!(U24, u64, 3);
-impl_widening_pow2_uint!(U32, u64, 4);
+impl BinarySerialize for i16 {
+    type Ctx = Endian;
+    type Input = Self;
+
+    #[inline]
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        let mut bytes = input.to_ne_bytes();
+        ctx.from_native(&mut bytes);
+        writer.write_slice_at(position, &bytes)
+    }
+}
+
+pub enum u24be {}
+impl BinaryDeserialize<'_> for u24be {
+    type Ctx = ();
+    type Output = u32;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let mut bytes = reader.read_at::<[u8; 3]>(position)?;
+        BE.to_native(&mut bytes);
+        let bytes = endian::pad(bytes);
+        Ok(Self::Output::from_ne_bytes(bytes))
+    }
+}
+impl BinarySerialize for u24be {
+    type Ctx = ();
+    type Input = u32;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        let mut bytes = input.to_ne_bytes();
+        BE.from_native(&mut bytes);
+        let bytes: [u8; 3] = endian::unpad(bytes);
+        writer.write_slice_at(position, &bytes)
+    }
+}
+impl Len<'_> for u24be {}
+pub enum u24le {}
+impl BinaryDeserialize<'_> for u24le {
+    type Ctx = ();
+    type Output = u32;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let mut bytes = reader.read_at::<[u8; 3]>(position)?;
+        LE.to_native(&mut bytes);
+        let bytes = endian::pad(bytes);
+        Ok(Self::Output::from_ne_bytes(bytes))
+    }
+}
+impl BinarySerialize for u24le {
+    type Ctx = ();
+    type Input = u32;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        let mut bytes = input.to_ne_bytes();
+        LE.from_native(&mut bytes);
+        let bytes: [u8; 3] = endian::unpad(bytes);
+        writer.write_slice_at(position, &bytes)
+    }
+}
+impl Len<'_> for u24le {}
+
+pub enum u32be {}
+impl BinaryDeserialize<'_> for u32be {
+    type Ctx = ();
+    type Output = u32;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<u32>(position, BE)
+    }
+}
+impl BinarySerialize for u32be {
+    type Ctx = ();
+    type Input = u32;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<u32>(position, input, BE)
+    }
+}
+impl Len<'_> for u32be {}
+pub enum u32le {}
+impl BinaryDeserialize<'_> for u32le {
+    type Ctx = ();
+    type Output = u32;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<u32>(position, LE)
+    }
+}
+impl BinarySerialize for u32le {
+    type Ctx = ();
+    type Input = u32;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<u32>(position, input, LE)
+    }
+}
+impl Len<'_> for u32le {}
+impl BinaryDeserialize<'_> for u32 {
+    type Ctx = Endian;
+    type Output = Self;
+
+    #[inline]
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let mut bytes = reader.read_at::<[u8; 4]>(position)?;
+        ctx.to_native(&mut bytes);
+        Ok(Self::from_ne_bytes(bytes))
+    }
+}
+
+impl BinarySerialize for u32 {
+    type Ctx = Endian;
+    type Input = Self;
+
+    #[inline]
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        let mut bytes = input.to_ne_bytes();
+        ctx.from_native(&mut bytes);
+        writer.write_slice_at(position, &bytes)
+    }
+}
+
+pub enum u64be {}
+impl BinaryDeserialize<'_> for u64be {
+    type Ctx = ();
+    type Output = u64;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<u64>(position, BE)
+    }
+}
+impl BinarySerialize for u64be {
+    type Ctx = ();
+    type Input = u64;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<u64>(position, input, BE)
+    }
+}
+impl Len<'_> for u64be {}
+pub enum u64le {}
+impl BinaryDeserialize<'_> for u64le {
+    type Ctx = ();
+    type Output = u64;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        reader.read_at_with::<u64>(position, LE)
+    }
+}
+impl BinarySerialize for u64le {
+    type Ctx = ();
+    type Input = u64;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        writer.write_at_with_ctx::<u64>(position, input, LE)
+    }
+}
+impl Len<'_> for u64le {}
+impl BinaryDeserialize<'_> for u64 {
+    type Ctx = Endian;
+    type Output = Self;
+
+    #[inline]
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let mut bytes = reader.read_at::<[u8; 8]>(position)?;
+        ctx.to_native(&mut bytes);
+        Ok(Self::from_ne_bytes(bytes))
+    }
+}
+
+impl BinarySerialize for u64 {
+    type Ctx = Endian;
+    type Input = Self;
+
+    #[inline]
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        let mut bytes = input.to_ne_bytes();
+        ctx.from_native(&mut bytes);
+        writer.write_slice_at(position, &bytes)
+    }
+}

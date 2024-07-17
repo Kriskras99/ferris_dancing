@@ -5,64 +5,12 @@ use std::borrow::Cow;
 use nohash_hasher::IntMap;
 use yoke::Yokeable;
 
-use crate::utils::{self, errors::ParserError, PathId, SplitPath, UniqueGameId};
-
-// More values!
-// https://github.com/RayCarrot/RayCarrot.RCP.Metro/blob/190c884a7745dedde6a33337a4c9684e5094c90a/src/RayCarrot.RCP.Metro/Archive/Manager/UbiArt_Ipk/UbiArtIPKArchiveConfigViewModel.cs#L85
-// https://github.com/BinarySerializer/BinarySerializer.UbiArt/blob/main/src/DataTypes/Bundle/BundleBootHeader.cs
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum IpkPlatform {
-    X360 = 0x1,
-    Ps4 = 0x3,
-    Wii = 0x5,
-    WiiU = 0x8,
-    Nx = 0xB,
-}
-
-impl TryFrom<u32> for IpkPlatform {
-    type Error = ParserError;
-
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        match value {
-            0x1 => Ok(Self::X360),
-            0x3 => Ok(Self::Ps4),
-            0x5 => Ok(Self::Wii),
-            0x8 => Ok(Self::WiiU),
-            0xB => Ok(Self::Nx),
-            _ => Err(ParserError::custom(format!("Unknown platform id {value}!"))),
-        }
-    }
-}
-
-impl From<IpkPlatform> for u32 {
-    #[allow(
-        clippy::as_conversions,
-        reason = "Platform is repr(u32) thus this is always safe"
-    )]
-    fn from(value: IpkPlatform) -> Self {
-        value as Self
-    }
-}
-
-impl IpkPlatform {
-    #[must_use]
-    pub fn matches_game_platform(&self, gp: UniqueGameId) -> bool {
-        match self {
-            Self::X360 => gp.platform == utils::Platform::X360,
-            Self::Ps4 => gp.platform == utils::Platform::Ps4,
-            Self::Wii => gp.platform == utils::Platform::Wii,
-            Self::WiiU => gp.platform == utils::Platform::WiiU,
-            Self::Nx => gp.platform == utils::Platform::Nx,
-        }
-    }
-}
+use crate::utils::{PathId, Platform, SplitPath, UniqueGameId};
 
 #[derive(Clone, Yokeable)]
 pub struct Bundle<'a> {
     pub version: u32,
-    pub platform: IpkPlatform,
+    pub platform: Platform,
     pub unk4: u32,
     pub engine_version: u32,
     pub game_platform: UniqueGameId,
