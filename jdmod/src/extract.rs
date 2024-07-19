@@ -9,7 +9,7 @@ use std::{
 use anyhow::{anyhow, Error};
 use clap::Args;
 use dotstar_toolkit_utils::{
-    testing::test,
+    test_eq,
     vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
 };
 use ubiart_toolkit::{ipk, secure_fat};
@@ -39,8 +39,8 @@ pub struct Extract {
 /// If `files` is specified, it will only extract those files
 pub fn main(extract: Extract) -> Result<(), Error> {
     let source = extract.source;
-    test(source.try_exists()?).context("Source does not exist!")?;
-    test(source.is_file()).context("Source is not a file!")?;
+    test_eq!(source.try_exists()?, true, "Source does not exist!")?;
+    test_eq!(source.is_file(), true, "Source is not a file!")?;
     let source = source.canonicalize()?;
     let destination = extract.destination.unwrap_or(fs::canonicalize(".")?);
     // Create the export directory

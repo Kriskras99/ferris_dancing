@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::{
-    testing::{test, test_eq},
+    test_eq,
     vfs::VirtualFileSystem,
 };
 use ubiart_toolkit::{cooked, utils::SplitPath};
@@ -41,11 +41,8 @@ pub fn build(
 
     // the actual video
     let video_path = ses.dirs.song().join(ses.song.videofile.as_ref());
-    test_eq(&video_path.extension(), &Some("webm")).with_context(|| {
-        format!("Video file is not a webm! Transcoding is not supported: {video_path:?}")
-    })?;
-    test(ses.native_vfs.exists(&video_path))
-        .with_context(|| format!("Video file does not exist at {video_path:?}!"))?;
+    test_eq!(video_path.extension(), Some("webm"), "Video file is not a webm! Transcoding is not supported: {:?}", video_path)?;
+    test_eq!(ses.native_vfs.exists(&video_path), true, "Video file does not exist at {:?}!", video_path)?;
 
     bf.generated_files.add_file(
         videoscoach_cache_dir.join(format!("{lower_map_name}.mpd.ckd")),

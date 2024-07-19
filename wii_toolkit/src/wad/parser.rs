@@ -6,7 +6,7 @@ use dotstar_toolkit_utils::{
         primitives::{u16be, u32be, u64be},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::test_eq,
+    test_eq,
 };
 
 use super::types::{
@@ -62,8 +62,8 @@ impl<'de> BinaryDeserialize<'de> for InstallableArchive<'de> {
         let _footer_size = reader.read_at::<u32be>(position)?;
 
         // verify known constant values`
-        test_eq(&version, &0x0u16)?;
-        test_eq(&unk1, &0x0u32)?;
+        test_eq!(version, 0x0u16)?;
+        test_eq!(unk1, 0x0u32)?;
 
         // skip cert chain
         // TODO: implement verification of cert chain
@@ -76,14 +76,14 @@ impl<'de> BinaryDeserialize<'de> for InstallableArchive<'de> {
         let ticket_metadata = reader.read_at::<TicketMetadata>(position)?;
         *position = round_to_boundary_u64(*position);
         let ticket_end = *position;
-        test_eq(&ticket_end.checked_sub(ticket_start), &Some(ticket_size))?;
+        test_eq!(ticket_end.checked_sub(ticket_start), Some(ticket_size))?;
 
         // parse title_metadata
         let tmd_start = *position;
         let title_metadata = reader.read_at::<TitleMetadata>(position)?;
         *position = round_to_boundary_u64(*position);
         let tmd_end = *position;
-        test_eq(&tmd_end.checked_sub(tmd_start), &Some(tmd_size))?;
+        test_eq!(tmd_end.checked_sub(tmd_start), Some(tmd_size))?;
 
         let content = parse_content(reader, position, &ticket_metadata, &title_metadata)?;
 
@@ -120,15 +120,15 @@ impl BinaryDeserialize<'_> for TicketMetadata {
         // Read the metadata
         let format_version = reader.read_at::<u8>(position)?;
         let unk1 = reader.read_at::<u16be>(position)?;
-        test_eq(&unk1, &0x0)?;
+        test_eq!(unk1, 0x0)?;
         let mut title_key = reader.read_at::<[u8; 0x10]>(position)?;
         let unk2 = reader.read_at::<u8>(position)?; // TODO: Figure out this value
-        test_eq(&unk2, &0x0)?;
+        test_eq!(unk2, 0x0)?;
         let ticket_id = reader.read_at::<u64be>(position)?;
         let console_id = reader.read_at::<u32be>(position)?;
         let title_id: u64 = reader.read_at::<u64be>(position)?;
         let unk3 = reader.read_at::<u16be>(position)?;
-        test_eq(&unk3, &0xFFFF)?;
+        test_eq!(unk3, 0xFFFF)?;
         let title_version = reader.read_at::<u16be>(position)?;
         let permitted_titles_mask = reader.read_at::<u64be>(position)?;
         let permit_mask = reader.read_at::<u64be>(position)?;
@@ -143,7 +143,7 @@ impl BinaryDeserialize<'_> for TicketMetadata {
             )));
         };
         let common_key_index = reader.read_at::<u8>(position)?;
-        test_eq(&common_key_index, &0x0)?;
+        test_eq!(common_key_index, 0x0)?;
         // Skip remainder of the header
         // TODO: Parse this?
         *position = position
@@ -184,14 +184,14 @@ impl BinaryDeserialize<'_> for TitleMetadata {
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let signature_type = reader.read_at::<u32be>(position)?;
-        test_eq(&signature_type, &0x10001u32)?;
+        test_eq!(signature_type, 0x10001u32)?;
         // skip signature, padding and issuer
         // TODO: Verify signature
         *position = position
             .checked_add(0x17C)
             .ok_or_else(ReadError::int_under_overflow)?;
         let version = reader.read_at::<u8>(position)?;
-        test_eq(&version, &0)?;
+        test_eq!(version, 0)?;
         let ca_crl_version = reader.read_at::<u8>(position)?;
         let signer_crl_version = reader.read_at::<u8>(position)?;
         let iw = reader.read_at::<u8>(position)?;
@@ -209,20 +209,20 @@ impl BinaryDeserialize<'_> for TitleMetadata {
         let title_type = reader.read_at::<TitleType>(position)?;
         let group_id = reader.read_at::<u16be>(position)?;
         let unk1 = reader.read_at::<u16be>(position)?;
-        test_eq(&unk1, &0x0)?;
+        test_eq!(unk1, 0x0)?;
         let region = reader.read_at::<Region>(position)?;
         let ratings = reader.read_at::<[u8; 0x10]>(position)?;
         let reserved1 = reader.read_at::<[u8; 0xC]>(position)?;
-        test_eq(&reserved1, &[0; 0xC])?;
+        test_eq!(reserved1, [0; 0xC])?;
         let ipc_mask = reader.read_at::<[u8; 0xC]>(position)?;
         let reserved2 = reader.read_at::<[u8; 0x12]>(position)?;
-        test_eq(&reserved2, &[0; 0x12])?;
+        test_eq!(reserved2, [0; 0x12])?;
         let access_rights = reader.read_at::<AccessRights>(position)?;
         let title_version = reader.read_at::<u16be>(position)?;
         let number_of_contents: u16 = reader.read_at::<u16be>(position)?;
         let boot_index = reader.read_at::<u16be>(position)?;
         let minor_version = reader.read_at::<u16be>(position)?;
-        test_eq(&minor_version, &0x0)?;
+        test_eq!(minor_version, 0x0)?;
 
         let mut contents = Vec::with_capacity(number_of_contents.into());
 

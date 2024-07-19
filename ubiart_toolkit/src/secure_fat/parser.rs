@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::{test_eq, test_le, test_ne},
+    test_eq, test_le, test_ne,
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
@@ -23,10 +23,10 @@ impl BinaryDeserialize<'_> for SecureFat {
     ) -> Result<Self, ReadError> {
         // Read the header
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq(&magic, &MAGIC)?;
+        test_eq!(magic, MAGIC)?;
         let game_platform = reader.read_at::<UniqueGameId>(position)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        test_eq(&unk1, &UNK1)?;
+        test_eq!(unk1, UNK1)?;
 
         // Read how many path IDs there are and prepare a map
         let path_id_count = usize::try_from(reader.read_at::<u32be>(position)?)?;
@@ -39,7 +39,7 @@ impl BinaryDeserialize<'_> for SecureFat {
 
             // Read how many bundles this path is in
             let bundle_count = usize::try_from(reader.read_at::<u32be>(position)?)?;
-            test_ne(&bundle_count, &0).context("Bundle count is zero!")?;
+            test_ne!(bundle_count, 0)?;
 
             // Read the bundle ids
             let mut bundle_ids = Vec::with_capacity(bundle_count);
@@ -53,7 +53,7 @@ impl BinaryDeserialize<'_> for SecureFat {
 
         // Read how many bundles there are and prepare a map
         let bundle_count = usize::try_from(reader.read_at::<u32be>(position)?)?;
-        test_le(&bundle_count, &0xFF)?;
+        test_le!(bundle_count, 0xFF)?;
         let mut bundle_id_to_bundle_name =
             IntMap::with_capacity_and_hasher(bundle_count, BuildNoHashHasher::default());
 

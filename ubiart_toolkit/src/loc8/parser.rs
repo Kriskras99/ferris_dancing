@@ -7,7 +7,7 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::test_any,
+    test_any,
 };
 
 use super::types::Loc8;
@@ -27,7 +27,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
 
         // When unk1 == 2 there's a second version of strings
         // However these alternative strings seem to be riddled with typos, so just use the first one
-        test_any(&unk1, &[1, 2])?;
+        test_any!(unk1, [1, 2])?;
 
         let mut strings = HashMap::new();
 
@@ -52,7 +52,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
         }
 
         if let Ok(footer) = reader.read_at::<[u8; 100]>(position) {
-            if test_any(&footer, Loc8::FOOTERS).is_err() {
+            if test_any!(footer, Loc8::FOOTERS).is_err() {
                 println!("Warning! Unexpected footer in loc8 file: {footer:x?}",);
             }
         } else {

@@ -6,7 +6,8 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::{test, test_any, test_eq, TestResult},
+    testing::TestResult,
+    test_any, test_eq,
 };
 
 use super::{
@@ -29,9 +30,9 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
     ) -> Result<Self::Output, ReadError> {
         let start = *position;
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq(magic, Self::MAGIC)?;
+        test_eq!(magic, Self::MAGIC)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        test_any(&unk1, &[0x0B00_0000, 0x0A])?;
+        test_any!(unk1, [0x0B00_0000, 0x0A])?;
         let platform = reader.read_at::<WavPlatform>(position)?;
         let codec = reader.read_at::<Codec>(position)?;
 
@@ -44,7 +45,7 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
         let data_start_offset = reader.read_at_with::<u32>(position, endian)?;
         let number_of_chunks = reader.read_at_with::<u32>(position, endian)?;
         let unk2 = reader.read_at_with::<u32>(position, endian)?;
-        test_any(&unk2, &[0, 3])?;
+        test_any!(unk2, [0, 3])?;
 
         let mut chunks = HashMap::with_capacity(usize::try_from(number_of_chunks)?);
         for _ in 0..number_of_chunks {
@@ -63,7 +64,7 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
             }
         }
 
-        // test_eq(start + u64::from(header_size), *position)?;
+        // test_eq!(start + u64::from(header_size), *position)?;
 
         // let fmt = chunks
         //     .get(&Fmt::MAGIC)
@@ -154,7 +155,7 @@ impl BinaryDeserialize<'_> for Fmt {
 
         let offset = reader.read_at_with::<u32>(position, endian)?;
         let size = reader.read_at_with::<u32>(position, endian)?;
-        test_eq(size, Self::SIZE)?;
+        test_eq!(size, Self::SIZE)?;
 
         let mut new_position = start + u64::from(offset);
         let unk1 = reader.read_at_with::<u16>(&mut new_position, endian)?;
@@ -165,7 +166,7 @@ impl BinaryDeserialize<'_> for Fmt {
         let bits_per_sample = reader.read_at_with::<u16>(&mut new_position, endian)?;
 
         let expected_position = start + u64::from(offset) + u64::from(size);
-        if let TestResult::Err(_) = test_eq(expected_position, new_position) {
+        if let TestResult::Err(_) = test_eq!(expected_position, new_position) {
             println!("Warning: incomplete parsing!");
             let leftover_size = usize::try_from(expected_position - new_position)?;
             let leftovers = reader.read_slice_at(&mut new_position, leftover_size)?;
@@ -196,7 +197,7 @@ impl BinaryDeserialize<'_> for AdIn {
 
         let offset = reader.read_at_with::<u32>(position, endian)?;
         let size = reader.read_at_with::<u32>(position, endian)?;
-        test_eq(size, Self::SIZE)?;
+        test_eq!(size, Self::SIZE)?;
 
         let mut new_position = start + u64::from(offset);
 
@@ -278,7 +279,7 @@ impl<'de> BinaryDeserialize<'de> for Strg<'de> {
             StrOrRaw::Raw(reader.read_slice_at(&mut new_position, usize::try_from(size - 8)?)?)
         };
 
-        if let TestResult::Err(_) = test_eq(new_position, start + u64::from(offset + size)) {
+        if let TestResult::Err(_) = test_eq!(new_position, start + u64::from(offset + size)) {
             println!("Warning! STRG broken!");
         }
 
@@ -332,11 +333,11 @@ impl BinaryDeserialize<'_> for Dsp {
             }
         };
 
-        test_eq(format, 0)?;
-        test_eq(gain, 0)?;
-        test(reserved.iter().all(|b| *b == 0))?;
+        test_eq!(format, 0)?;
+        test_eq!(gain, 0)?;
+        test_eq!(reserved.iter().all(|b| *b == 0), true)?;
 
-        test_eq(new_position, start + u64::from(offset + size))?;
+        test_eq!(new_position, start + u64::from(offset + size))?;
 
         Ok(Self {
             coefficients,

@@ -8,7 +8,8 @@ use dotstar_toolkit_utils::{
         read::{BinaryDeserialize, ReadAtExt, ReadError},
         write::{BinarySerialize, WriteAt, WriteError},
     },
-    testing::{test, test_eq, TestError},
+    test_eq,
+    testing::TestError,
     vfs::{VirtualPath, VirtualPathBuf},
 };
 use nohash_hasher::IsEnabled;
@@ -33,10 +34,10 @@ impl<'a> SplitPath<'a> {
             string.push('/');
             path = string.into();
         }
-        test(path.ends_with('/')).or(test(path.is_empty()))?;
-        test(!path.contains('.'))?;
-        test(!filename.ends_with('/'))?;
-        test(!filename.starts_with('/'))?;
+        test_eq!(path.ends_with('/'), true).or(test_eq!(path.is_empty(), true))?;
+        test_eq!(!path.contains('.'), true)?;
+        test_eq!(!filename.ends_with('/'), true)?;
+        test_eq!(!filename.starts_with('/'), true)?;
         Ok(Self { path, filename })
     }
 
@@ -100,9 +101,9 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
             let path = reader.read_len_string_at::<u32be>(position)?;
             let path_id = reader.read_at::<PathId>(position)?;
             let split_path = SplitPath::new(path, filename)?;
-            test_eq(&path_id, &split_path.id())?;
+            test_eq!(path_id, split_path.id())?;
             let padding = reader.read_at::<u32be>(position)?;
-            test_eq(&padding, &Self::PADDING)?;
+            test_eq!(padding, Self::PADDING)?;
             split_path
         };
         if result.is_err() {

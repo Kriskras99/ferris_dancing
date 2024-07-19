@@ -5,7 +5,8 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::{test_eq, test_ge, test_le, TestError},
+    test_eq, test_ge, test_le, 
+    testing::TestError,
 };
 use image::{
     error::{DecodingError, ImageFormatHint},
@@ -226,20 +227,20 @@ impl BinaryDeserialize<'_> for GfdHeader {
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq(&magic, &Self::MAGIC)?;
+        test_eq!(magic, Self::MAGIC)?;
         let size = reader.read_at::<u32be>(position)?;
-        test_eq(&size, &0x20)?;
+        test_eq!(size, 0x20)?;
         let major_version = reader.read_at::<u32be>(position)?;
-        test_eq(&major_version, &7)?;
+        test_eq!(major_version, 7)?;
         let minor_version = reader.read_at::<u32be>(position)?;
-        test_eq(&minor_version, &1)?;
+        test_eq!(minor_version, 1)?;
         let gpu_version = reader.read_at::<u32be>(position)?;
-        test_eq(&gpu_version, &Self::GPU_VERSION)?;
+        test_eq!(gpu_version, Self::GPU_VERSION)?;
         let align_mode = reader.read_at::<u32be>(position)?;
         let reserved1 = reader.read_at::<u32be>(position)?;
-        test_eq(&reserved1, &0)?;
+        test_eq!(reserved1, 0)?;
         let reserved2 = reader.read_at::<u32be>(position)?;
-        test_eq(&reserved2, &0)?;
+        test_eq!(reserved2, 0)?;
 
         Ok(Self { align_mode })
     }
@@ -256,19 +257,19 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
     ) -> Result<Self::Output, ReadError> {
         let start = *position;
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq(&magic, &Self::MAGIC)?;
+        test_eq!(magic, Self::MAGIC)?;
         let size = reader.read_at::<u32be>(position)?;
         let major_version = reader.read_at::<u32be>(position)?;
-        test_eq(&major_version, &1)?;
+        test_eq!(major_version, 1)?;
         let minor_version = reader.read_at::<u32be>(position)?;
-        test_eq(&minor_version, &0)?;
+        test_eq!(minor_version, 0)?;
         let type_it = reader.read_at::<u32be>(position)?;
         let data_size = reader.read_at::<u32be>(position)?;
         let id = reader.read_at::<u32be>(position)?;
-        test_eq(&id, &0)?;
+        test_eq!(id, 0)?;
         let type_idx = reader.read_at::<u32be>(position)?;
-        test_eq(&type_idx, &0)?;
-        test_eq(&(*position - start), &u64::from(size))?;
+        test_eq!(type_idx, 0)?;
+        test_eq!((*position - start), u64::from(size))?;
 
         let block = match type_it {
             // Surf
@@ -305,17 +306,17 @@ impl BinaryDeserialize<'_> for Gx2Surface {
         let height = reader.read_at::<u32be>(position)?;
         let depth = reader.read_at::<u32be>(position)?;
         let num_mips = reader.read_at::<u32be>(position)?;
-        test_le(&num_mips, &13)?;
+        test_le!(num_mips, 13)?;
         let format = reader.read_at::<Format>(position)?;
         let aa = reader.read_at::<u32be>(position)?;
-        test_eq(&aa, &0)?;
+        test_eq!(aa, 0)?;
         let use_it = reader.read_at::<u32be>(position)?;
         let image_size = reader.read_at::<u32be>(position)?;
         let image_ptr = reader.read_at::<u32be>(position)?;
         let mip_size = reader.read_at::<u32be>(position)?;
         let mip_ptr = reader.read_at::<u32be>(position)?;
         let tile_mode = reader.read_at::<u32be>(position)?;
-        test_ge(&tile_mode, &0).and(test_le(&tile_mode, &19))?;
+        test_le!(tile_mode, 19)?;
         let tile_mode = TileMode::from_repr(tile_mode)
             .ok_or_else(|| ReadError::custom("Tile mode is invalid!".into()))?;
         let swizzle = reader.read_at::<u32be>(position)?;

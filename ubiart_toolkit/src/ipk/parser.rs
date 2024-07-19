@@ -5,7 +5,8 @@ use dotstar_toolkit_utils::{
         primitives::{u32be, u64be},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::{test_any, test_eq, TestResult},
+    testing::TestResult,
+    test_any, test_eq,
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
@@ -26,24 +27,24 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     ) -> Result<Self, ReadError> {
         // Read the header
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq(&magic, &MAGIC)?;
+        test_eq!(magic, MAGIC)?;
         let version = reader.read_at::<u32be>(position)?;
         let platform = reader.read_at::<Platform>(position)?;
         let base_offset = u64::from(reader.read_at::<u32be>(position)?);
         let num_files = reader.read_at::<u32be>(position)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        test_any(&unk1, UNK1)?;
+        test_any!(unk1, UNK1)?;
         let unk2 = reader.read_at::<u32be>(position)?;
-        test_any(&unk2, UNK2)?;
+        test_any!(unk2, UNK2)?;
         let unk3 = reader.read_at::<u32be>(position)?;
-        test_any(&unk3, UNK3)?;
+        test_any!(unk3, UNK3)?;
         let unk4 = reader.read_at::<u32be>(position)?;
         let game_platform = reader.read_at::<UniqueGameId>(position)?;
         let engine_version = reader.read_at::<u32be>(position)?;
         let num_files_2 = reader.read_at::<u32be>(position)?;
 
         // Sanity check
-        test_eq(&num_files, &num_files_2)?;
+        test_eq!(num_files, num_files_2)?;
         if platform != game_platform.platform {
             println!("Header: Warning! Platform (0x{:x} ({platform:?})) does not match GamePlatformId (0x{:x} ({game_platform}))!", u32::from(platform), u32::from(game_platform));
         }
@@ -56,7 +57,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         for _ in 0..num_files {
             // Read the file information
             let unk6 = reader.read_at::<u32be>(position)?;
-            test_eq(&unk6, &UNK6)?;
+            test_eq!(unk6, UNK6)?;
             let size = usize::try_from(reader.read_at::<u32be>(position)?)?;
             let compressed_size = usize::try_from(reader.read_at::<u32be>(position)?)?;
             let timestamp = reader.read_at::<u64be>(position)?;
@@ -66,7 +67,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             let mut path = reader.read_len_string_at::<u32be>(position)?;
             let path_id = reader.read_at::<PathId>(position)?;
             let is_cooked_u32 = reader.read_at::<u32be>(position)?;
-            test_any(&is_cooked_u32, IS_COOKED)?;
+            test_any!(is_cooked_u32, IS_COOKED)?;
 
             // This is swapped for one game
             if game_platform.game == Game::JustDance2014
@@ -80,7 +81,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
 
             // Construct the path and check the PathId
             let full_path = SplitPath::new(path, filename)?;
-            test_eq(&path_id, &full_path.id())?;
+            test_eq!(path_id, full_path.id())?;
 
             // Derive info from file information
             let is_cooked = is_cooked_u32 == 0x2;
@@ -123,17 +124,16 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
                 || game_platform.game == Game::JustDanceChina)
         {
             // Make sure the separator is here
-            match test_eq(&(header_end + 0x4), &base_offset) {
+            match test_eq!((header_end + 0x4), base_offset) {
                 TestResult::Ok => {
                     let separator = reader.read_at::<u32be>(position)?;
-                    test_eq(&separator, &SEPARATOR)?;
+                    test_eq!(separator, SEPARATOR)?;
                 }
                 result @ TestResult::Err(_) => result?,
             }
         } else {
             // Make sure the separator is not here
-            test_eq(&header_end, &base_offset)
-                .context("Found unexpected separator between header and files!")?;
+            test_eq!(header_end, base_offset)?;
         };
 
         Ok(Bundle {

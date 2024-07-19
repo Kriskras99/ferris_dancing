@@ -8,7 +8,7 @@ use std::{borrow::Cow, collections::HashMap, fs::File, io::Write, sync::OnceLock
 use anyhow::{anyhow, Context, Error};
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
-    testing::{test_eq, test_not},
+    test_eq,
     vfs::{VirtualFile, VirtualPath},
 };
 use ubiart_toolkit::{
@@ -75,7 +75,7 @@ fn save_images(
 
     // Save decooked image
     let image_path = mtg.files[0].to_string();
-    test_not(image_path.is_empty())?;
+    test_eq!(image_path.is_empty(), false)?;
     let cooked_image_path = cook_path(&image_path, is.ugi.platform)?;
     let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?, is.ugi)
         .with_context(|| format!("Failed to decode {cooked_image_path}!"))?;
@@ -152,7 +152,7 @@ fn parse_actor_v20v22<'a>(
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v22(file, is.lax)?;
     let mut actor_template = template.into_actor()?;
-    test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
         .components
         .remove(1)
@@ -167,7 +167,7 @@ fn parse_actor_v18v19<'a>(
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v19(file, is.lax)?;
     let mut actor_template = template.into_actor()?;
-    test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
         .components
         .remove(1)
@@ -182,7 +182,7 @@ fn parse_actor_v17<'a>(
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v17(file, is.lax)?;
     let mut actor_template = template.into_actor()?;
-    test_eq(&actor_template.components.len(), &2).context("Not exactly two components in actor")?;
+    test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
         .components
         .remove(1)

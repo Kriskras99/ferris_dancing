@@ -7,7 +7,8 @@ use dotstar_toolkit_utils::{
         primitives::{u32le, u64le},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::{test_eq, test_le, TestError},
+    test_eq, test_le,
+    testing::TestError,
 };
 use image::{
     error::{DecodingError, ImageFormatHint},
@@ -219,13 +220,13 @@ impl<'de> BinaryDeserialize<'de> for XtxRaw<'de> {
         _ctx: (),
     ) -> Result<Self, ReadError> {
         let magic = reader.read_at::<u32le>(position)?;
-        test_eq(&magic, &0x4E76_4644)?;
+        test_eq!(magic, 0x4E76_4644)?;
 
         let size = reader.read_at::<u32le>(position)?;
-        test_eq(&size, &0x10)?;
+        test_eq!(size, 0x10)?;
 
         let major_version = reader.read_at::<u32le>(position)?;
-        test_eq(&major_version, &0x1)?;
+        test_eq!(major_version, 0x1)?;
 
         let minor_version = reader.read_at::<u32le>(position)?;
 
@@ -267,21 +268,21 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
     ) -> Result<Self, ReadError> {
         let start = *position;
         let magic = reader.read_at::<u32le>(position)?;
-        test_eq(&magic, &0x4E76_4248)?;
+        test_eq!(magic, 0x4E76_4248)?;
         let header_size = u64::from(reader.read_at::<u32le>(position)?);
-        test_eq(&header_size, &0x24)?;
+        test_eq!(header_size, 0x24)?;
         let data_size = usize::try_from(reader.read_at::<u64le>(position)?)?;
         let data_offset = reader.read_at::<u64le>(position)?;
         let block_type = reader.read_at::<u32le>(position)?;
         let id = reader.read_at::<u32le>(position)?;
         let type_idx = reader.read_at::<u32le>(position)?;
-        test_eq(&type_idx, &0x0)?;
+        test_eq!(type_idx, 0x0)?;
 
         let pos = *position;
         let block_data = match block_type {
             TEX_HEAD_BLK_TYPE => {
-                test_eq(&data_size, &0x78)?;
-                test_eq(&data_offset, &0x24)?;
+                test_eq!(data_size, 0x78)?;
+                test_eq!(data_offset, 0x24)?;
                 Ok(BlockData::TextureHeader(
                     reader.read_at::<TextureHeader>(position)?,
                 ))
@@ -298,7 +299,7 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
             UNKNOWN_BLK_TYPE_FIVE => {
                 *position = pos + data_offset - header_size;
                 let data = reader.read_slice_at(position, data_size)?;
-                test_eq(&data.as_ref(), &FIVE_EXPECTED_DATA)?;
+                test_eq!(&data, &FIVE_EXPECTED_DATA)?;
                 Ok(BlockData::Five(data))
             }
             _ => Err(ReadError::custom(format!(
@@ -309,7 +310,7 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
         let data_size = u64::try_from(data_size)?;
 
         let new_pos = *position;
-        test_eq(&(new_pos - pos), &(data_size + data_offset - header_size))?;
+        test_eq!((new_pos - pos), (data_size + data_offset - header_size))?;
 
         *position = start + data_offset + data_size;
         Ok(Block {
@@ -344,19 +345,19 @@ impl BinaryDeserialize<'_> for TextureHeader {
     ) -> Result<Self::Output, ReadError> {
         let image_size = reader.read_at::<u64le>(position)?;
         let alignment = reader.read_at::<u32le>(position)?;
-        test_eq(&alignment, &0x200)?;
+        test_eq!(alignment, 0x200)?;
         let width = reader.read_at::<u32le>(position)?;
         let height = reader.read_at::<u32le>(position)?;
         let depth = reader.read_at::<u32le>(position)?;
-        test_eq(&depth, &1)?;
+        test_eq!(depth, 1)?;
         let target = reader.read_at::<u32le>(position)?;
-        test_eq(&target, &1)?;
+        test_eq!(target, 1)?;
         let format = reader.read_at::<Format>(position)?;
         let mip_count = reader.read_at::<u32le>(position)?;
-        test_le(&mip_count, &17)?;
+        test_le!(mip_count, 17)?;
         let slice_size = reader.read_at::<u32le>(position)?;
 
-        test_eq(&image_size, &u64::from(slice_size))?;
+        test_eq!(image_size, u64::from(slice_size))?;
 
         let mut mipmap_offsets = [0; 17];
         for i in &mut mipmap_offsets {
@@ -364,11 +365,11 @@ impl BinaryDeserialize<'_> for TextureHeader {
         }
 
         let texture_layout_1: u32 = reader.read_at::<u32le>(position)?;
-        test_eq(&(texture_layout_1 & !0b111), &0)?;
+        test_eq!((texture_layout_1 & !0b111), 0)?;
         let texture_layout_2 = reader.read_at::<u32le>(position)?;
-        test_eq(&texture_layout_2, &7u32)?;
+        test_eq!(texture_layout_2, 7u32)?;
         let boolean = reader.read_at::<u32le>(position)?;
-        test_eq(&boolean, &0u32)?;
+        test_eq!(boolean, 0u32)?;
 
         let block_height_log2 =
             u8::try_from(texture_layout_1 & 0b111).unwrap_or_else(|_| unreachable!());

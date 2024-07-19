@@ -3,7 +3,7 @@
 use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test_eq;
+use dotstar_toolkit_utils::test_eq;
 use ubiart_toolkit::cooked;
 
 use super::SongImportState;
@@ -16,7 +16,7 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         .open(cook_path(musictrack_path, sis.ugi.platform)?.as_ref())?;
     let template = cooked::json::parse_v22(&mainsequence_file, sis.lax)?;
     let mut actor = template.into_actor()?;
-    test_eq(&actor.components.len(), &1).context("More than one component in muisctrack")?;
+    test_eq!(actor.components.len(), 1)?;
     let track_data = actor
         .components
         .swap_remove(0)

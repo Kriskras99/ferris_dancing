@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::BTreeSet, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::testing::test_eq;
+use dotstar_toolkit_utils::test_eq;
 use ubiart_toolkit::{cooked, json_types};
 
 use super::SongImportState;
@@ -18,7 +18,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
         .vfs
         .open(cook_path(mainsequence_path, sis.ugi.platform)?.as_ref())?;
     let mut actor = cooked::json::parse_v22(&mainsequence_file, sis.lax)?.into_actor()?;
-    test_eq(&actor.components.len(), &1).context("More than one component in actor!")?;
+    test_eq!(actor.components.len(), 1)?;
     let tape_case = actor.components.swap_remove(0).into_master_tape()?;
 
     let mainsequence_tml_path_option = tape_case

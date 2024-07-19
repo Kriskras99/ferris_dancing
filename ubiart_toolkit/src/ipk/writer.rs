@@ -10,7 +10,7 @@ use dotstar_toolkit_utils::{
         write::{WriteAt, WriteError},
         CursorAt,
     },
-    testing::test_eq,
+    test_eq,
     vfs::{VirtualFileSystem, VirtualPath},
 };
 use flate2::{write::ZlibEncoder, Compression};
@@ -255,7 +255,7 @@ pub fn write(
         writer.write_at::<u32be>(position, 0x0)?; // unknown seperator between metadata and data
     }
 
-    test_eq(*position, base_offset)?;
+    test_eq!(*position, base_offset)?;
 
     Ok(())
 }

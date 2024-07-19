@@ -12,12 +12,10 @@ use std::{
 use anyhow::{anyhow, Error};
 use crossbeam::channel::{Receiver, Sender};
 use dotstar_toolkit_utils::{
-    bytes::write::WriteAt,
-    testing::test,
-    vfs::{
+    bytes::write::WriteAt, test_eq, vfs::{
         layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
         VirtualFileSystem,
-    },
+    }
 };
 use ubiart_toolkit::{
     ipk::{self, vfs::IpkFilesystem},
@@ -45,8 +43,7 @@ pub fn bundle<'fs: 'bf, 'bf>(
     destination: &Path,
 ) -> Result<(), Error> {
     // Make sure the destination directory actually exists
-    test(destination.exists())
-        .with_context(|| format!("Destination directory {destination:?} does not exist!"))?;
+    test_eq!(destination.exists(), true, "Destination directory {:?} does not exist!", destination)?;
 
     // For files that go into the main (logic) bundle
     let mut bundle_files = BuildFiles {

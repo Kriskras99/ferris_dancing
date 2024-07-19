@@ -4,7 +4,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{
-    testing::test_eq,
+    test_eq,
     vfs::{VirtualFileSystem, VirtualPath},
 };
 use ubiart_toolkit::{
@@ -109,8 +109,7 @@ fn build_carousel(
     carousel_rule
         .categories
         .retain(|c| c.title == "Recommended for me");
-    test_eq(&carousel_rule.categories.len(), &1)
-        .context("More than one category in carousel_rule!")?;
+    test_eq!(carousel_rule.categories.len(), 1)?;
     let recommended = carousel_rule
         .categories
         .first()

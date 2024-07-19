@@ -15,7 +15,7 @@ use dotstar_toolkit_utils::{
         write::{BinarySerialize, BinarySerializeExt, WriteAt, WriteError},
         CursorAt,
     },
-    testing::{test_eq, test_ge, test_le, test_not},
+    test_eq, test_ge, test_le,
 };
 use ogg::{
     PacketWriteEndInfo::{EndPage, EndStream, NormalPacket},
@@ -230,7 +230,7 @@ fn decode_nx_opus_inner(src: &File, wav: &Wav, destination: &mut (impl WriteAt +
 
     let data_start = position;
     let data_type = src.read_at::<u32le>(&mut position).unwrap();
-    test_eq(data_type, 0x80000004).unwrap();
+    test_eq!(data_type, 0x80000004).unwrap();
     let data_size = src.read_at::<u32le>(&mut position).unwrap();
     let data_end = data_start + u64::from(data_size);
 
@@ -299,8 +299,7 @@ fn encode_opus(file: File, destination: &mut (impl WriteAt + ?Sized)) {
     let mut data = Vec::new();
     // all header packets have a absgp of 0
     while packet.absgp_page() == 0 {
-        test_eq(serial, packet.stream_serial())
-            .context("More than one stream in ogg file!")
+        test_eq!(serial, packet.stream_serial(), "More than one stream in ogg file!")
             .unwrap();
         data.extend_from_slice(&packet.data);
         packet = ogg.read_packet_expected().unwrap();
@@ -331,8 +330,7 @@ fn encode_opus(file: File, destination: &mut (impl WriteAt + ?Sized)) {
     let mut data_size = 0;
     // process all audio packets
     loop {
-        test_eq(serial, packet.stream_serial())
-            .context("More than one stream in ogg file!")
+        test_eq!(serial, packet.stream_serial(), "More than one stream in ogg file!")
             .unwrap();
         let size = u32::try_from(packet.data.len()).unwrap();
         data_size += size;
@@ -371,15 +369,15 @@ impl BinaryDeserialize<'_> for OpusHeader {
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u64be>(position)?;
-        test_eq(magic, u64::from_be_bytes(*b"OpusHead"))?;
+        test_eq!(magic, u64::from_be_bytes(*b"OpusHead"))?;
         let version = reader.read_at::<u8>(position)?;
-        test_eq(version, 1)?;
+        test_eq!(version, 1)?;
         let channels = reader.read_at::<u8>(position)?;
         let skip = reader.read_at::<i16le>(position)?;
         let sample_rate = reader.read_at::<u32le>(position)?;
         let output_gain = reader.read_at::<u16le>(position)?;
         let mapping_file = reader.read_at::<u8>(position)?;
-        test_eq(mapping_file, 0).context("Mapping file is not yet supported!")?;
+        test_eq!(mapping_file, 0, "Mapping file is not yet supported!")?;
 
         Ok(Self {
             channels,
@@ -400,8 +398,7 @@ impl BinarySerialize for OpusHeader {
         position: &mut u64,
         _ctx: Self::Ctx,
     ) -> Result<(), WriteError> {
-        test_le(input.channels, 2)
-            .context("Mapping file is required for more than 2 channels and is not supported")?;
+        test_le!(input.channels, 2, "Mapping file is required for more than 2 channels and is not supported")?;
         writer.write_at::<u64be>(position, u64::from_be_bytes(*b"OpusHead"))?;
         writer.write_at::<u8>(position, 1)?; // version
 
@@ -430,7 +427,7 @@ impl<'de> BinaryDeserialize<'de> for OpusComments<'de> {
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u64be>(position)?;
-        test_eq(magic, u64::from_be_bytes(*b"OpusTags"))?;
+        test_eq!(magic, u64::from_be_bytes(*b"OpusTags"))?;
         let vendor = reader.read_len_string_at::<u32le>(position)?;
         let comment_list_length = reader.read_at::<u32le>(position)?;
         let mut comments = HashMap::with_capacity(usize::try_from(comment_list_length)?);
@@ -439,7 +436,7 @@ impl<'de> BinaryDeserialize<'de> for OpusComments<'de> {
             let index = comment
                 .find("=")
                 .ok_or_else(|| ReadError::custom(format!("Invalid comment: {comment}")))?;
-            test_ge(comment.len(), index + 2)?;
+            test_ge!(comment.len(), index + 2)?;
             let (key, value) = match comment {
                 Cow::Borrowed(comment) => {
                     let (left, right) = comment.split_at(index);
@@ -474,7 +471,7 @@ impl BinarySerialize for OpusComments<'_> {
         writer.write_len_string_at::<u32le>(position, &input.vendor)?;
         writer.write_at::<u32le>(position, u32::try_from(input.comments.len())?)?;
         for (key, value) in input.comments {
-            test_not(key.contains('=')).context("Comment key cannot contain a '='")?;
+            test_eq!(key.contains('='), false, "Comment key cannot contain a '='")?;
             let length = key.len() + value.len() + 1;
             writer.write_at::<u32le>(position, u32::try_from(length)?)?;
             writer.write_slice_at(position, key.as_bytes())?;
@@ -593,19 +590,19 @@ impl BinaryDeserialize<'_> for NxOpusHeader {
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let the_type = reader.read_at::<u32le>(position)?;
-        test_eq(the_type, Self::MAGIC)?;
+        test_eq!(the_type, Self::MAGIC)?;
         let header_size = reader.read_at::<u32le>(position)?;
-        test_eq(header_size, 24)?; // header size excludes itself and the type
+        test_eq!(header_size, 24)?; // header size excludes itself and the type
         let version = reader.read_at::<u8>(position)?;
-        test_eq(version, 0)?;
+        test_eq!(version, 0)?;
         let channels = reader.read_at::<u8>(position)?;
         let frame_size = reader.read_at::<u16le>(position)?;
-        test_eq(frame_size, 0)?;
+        test_eq!(frame_size, 0)?;
         let sample_rate = reader.read_at::<u32le>(position)?;
         let data_offset = reader.read_at::<u32le>(position)?;
-        test_eq(data_offset, 32)?; // from the start of the data block
+        test_eq!(data_offset, 32)?; // from the start of the data block
         let unk1 = reader.read_at::<u64le>(position)?;
-        test_eq(unk1, 0)?;
+        test_eq!(unk1, 0)?;
         let pre_skip = reader.read_at::<u32le>(position)?;
 
         Ok(Self {

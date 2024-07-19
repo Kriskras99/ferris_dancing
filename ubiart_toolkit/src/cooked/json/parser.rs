@@ -1,4 +1,5 @@
-use dotstar_toolkit_utils::testing::{test_eq, TestError, TestResult};
+use dotstar_toolkit_utils::testing::{TestError, TestResult};
+use dotstar_toolkit_utils::test_eq;
 
 use crate::{
     json_types::{
@@ -10,7 +11,7 @@ use crate::{
 
 /// Remove the '\0' from the end of the `buffer`
 fn clean_buffer_tpl(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
-    let result = test_eq(&buffer[buffer.len() - 1], &0x0);
+    let result = test_eq!(buffer[buffer.len() - 1], 0x0);
     match (result, lax) {
         (TestResult::Ok, _) => Ok(&buffer[..buffer.len() - 1]),
         (TestResult::Err(error), true) => {
