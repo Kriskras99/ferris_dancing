@@ -50,7 +50,6 @@ fn import_song(
     // TODO: Create autodance stuff
 
     let zip = vfs.open(&directory.join("bundle.zip"))?;
-    tracing::trace!("Opened zip file");
     let zipfs = ZipFs::new(zip)?;
 
     // TODO: Import moves and classifiers

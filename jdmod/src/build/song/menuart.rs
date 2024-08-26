@@ -178,7 +178,7 @@ fn materialgraphiccomponent_scene(
     let name = texture.name.as_ref();
 
     cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
-        actor: cooked::isc::Actor {
+        actor: Box::new(cooked::isc::Actor {
             scale: texture.scale,
             userfriendly: Cow::Owned(format!("{map_name}_{name}")),
             pos2d: texture.pos2d,
@@ -216,6 +216,6 @@ fn materialgraphiccomponent_scene(
                 }})
             ],
             ..Default::default()
-        }
+        })
     })
 }

@@ -171,7 +171,6 @@ pub fn write(
             || path.extension() == Some("ogg")
             || path.extension() == Some("png")
         {
-            tracing::trace!("Not compressing {path:?}");
             // Skip compression for already compressed files and small files
             writer.write_slice_at(position, &file)?;
             // No compression thus compressed size is 0

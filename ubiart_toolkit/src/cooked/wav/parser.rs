@@ -6,8 +6,8 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::TestResult,
     test_any, test_eq,
+    testing::TestResult,
 };
 
 use super::{
@@ -63,25 +63,6 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
                 }
             }
         }
-
-        // test_eq!(start + u64::from(header_size), *position)?;
-
-        // let fmt = chunks
-        //     .get(&Fmt::MAGIC)
-        //     .ok_or_else(|| ReadError::custom("No `fmt ` chunk!".into()))?;
-        // let fmt = fmt.as_fmt()?;
-
-        // match (platform, codec) {
-        //     (_, Codec::PCM) => todo!("PCM16LE, interleave, interleave block size 2"),
-        //     (WavPlatform::Windows, Codec::Adpc) => todo!("MSADPCM"),
-        //     (WavPlatform::Wii | WavPlatform::WiiU, Codec::Adpc) => todo!("NGC_DSP"),
-        //     (WavPlatform::DS3, Codec::Adpc) => todo!("NGC_DSP different chunk magics"),
-        //     (WavPlatform::PS3, Codec::Mp3) => todo!("Mpeg"),
-        //     (WavPlatform::X360, Codec::Xma2) => todo!("xma2"),
-        //     (WavPlatform::Vita, Codec::At9) => todo!("atrac9"),
-        //     (WavPlatform::Switch, Codec::Nx) => todo!("Opus"),
-        //     _ => panic!("Unknown platform, codec combination! {platform:?}, {codec:?}"),
-        // }
 
         Ok(Wav {
             unk1,
@@ -142,12 +123,12 @@ impl<'de> BinaryDeserialize<'de> for Chunk<'de> {
     }
 }
 
-impl BinaryDeserialize<'_> for Fmt {
+impl<'de> BinaryDeserialize<'de> for Fmt<'de> {
     type Ctx = (u64, Endian);
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
@@ -155,7 +136,8 @@ impl BinaryDeserialize<'_> for Fmt {
 
         let offset = reader.read_at_with::<u32>(position, endian)?;
         let size = reader.read_at_with::<u32>(position, endian)?;
-        test_eq!(size, Self::SIZE)?;
+
+        test_any!(size, [Self::NORMAL_SIZE, 18, 40])?;
 
         let mut new_position = start + u64::from(offset);
         let unk1 = reader.read_at_with::<u16>(&mut new_position, endian)?;
@@ -165,13 +147,14 @@ impl BinaryDeserialize<'_> for Fmt {
         let block_align = reader.read_at_with::<u16>(&mut new_position, endian)?;
         let bits_per_sample = reader.read_at_with::<u16>(&mut new_position, endian)?;
 
-        let expected_position = start + u64::from(offset) + u64::from(size);
-        if let TestResult::Err(_) = test_eq!(expected_position, new_position) {
-            println!("Warning: incomplete parsing!");
-            let leftover_size = usize::try_from(expected_position - new_position)?;
-            let leftovers = reader.read_slice_at(&mut new_position, leftover_size)?;
-            println!("{leftovers:x?}");
-        }
+        let unk3 = match size {
+            18 | 40 => Some(reader.read_slice_at(
+                &mut new_position,
+                usize::try_from(size - Self::NORMAL_SIZE)?,
+            )?),
+            Self::NORMAL_SIZE => None,
+            _ => unreachable!(),
+        };
 
         Ok(Self {
             unk1,
@@ -180,6 +163,7 @@ impl BinaryDeserialize<'_> for Fmt {
             unk2,
             block_align,
             bits_per_sample,
+            unk3,
         })
     }
 }
@@ -207,12 +191,12 @@ impl BinaryDeserialize<'_> for AdIn {
     }
 }
 
-impl BinaryDeserialize<'_> for Data {
+impl<'de> BinaryDeserialize<'de> for Data<'de> {
     type Ctx = (u64, Endian);
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'_ (impl ReadAtExt + ?Sized),
+        reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
@@ -221,10 +205,10 @@ impl BinaryDeserialize<'_> for Data {
         let offset = reader.read_at_with::<u32>(position, endian)?;
         let size = reader.read_at_with::<u32>(position, endian)?;
 
-        Ok(Self {
-            position: start + u64::from(offset),
-            size,
-        })
+        let mut position = start + u64::from(offset);
+        let data = reader.read_slice_at(&mut position, usize::try_from(size)?)?;
+
+        Ok(Self { data })
     }
 }
 

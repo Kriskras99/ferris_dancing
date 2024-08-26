@@ -10,7 +10,7 @@ use super::SongExportState;
 use crate::{
     build::BuildFiles,
     types::song::{Clip, Timeline},
-    utils::cook_path,
+    utils::{self, cook_path},
 };
 
 /// Build the mainsequence
@@ -97,12 +97,12 @@ fn cine_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             is_popup: false,
             platform_filters: Vec::new(),
             actors: vec![
-                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: cooked::isc::Actor {
+                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
                     userfriendly: Cow::Owned(format!("{map_name}_MainSequence")),
                     lua: Cow::Owned(format!("world/maps/{lower_map_name}/cinematics/{lower_map_name}_mainsequence.tpl")),
                     components: vec![cooked::isc::WrappedComponent::MasterTape],
                     ..Default::default()
-                }}),
+                })}),
             ],
             scene_configs: cooked::isc::WrappedSceneConfigs::default(),
         },
@@ -170,8 +170,10 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
                     Cow::Owned(map_path.join(format!("audio/amb/{name}.tpl")).into_string());
 
                 // If the amb clip is already in the list, we skip building the template
-                if !bf.static_files.exists(&to) {
-                    bf.static_files.add_file(from, to)?;
+                if !bf.generated_files.exists(&to) {
+                    let encoded = utils::encode_audio(ses.native_vfs, &from)?;
+                    bf.generated_files.add_file(to, encoded)?;
+
                     // Create the sound template
                     let sound_descriptor = json_types::tpl::SoundDescriptor {
                         name: Cow::Borrowed(name),

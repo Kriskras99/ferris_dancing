@@ -1,5 +1,7 @@
-use dotstar_toolkit_utils::testing::{TestError, TestResult};
-use dotstar_toolkit_utils::test_eq;
+use dotstar_toolkit_utils::{
+    test_eq,
+    testing::{TestError, TestResult},
+};
 
 use crate::{
     json_types::{

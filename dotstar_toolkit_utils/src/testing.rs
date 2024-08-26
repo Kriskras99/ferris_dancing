@@ -123,10 +123,7 @@ pub enum TestError {
     #[error("{0}")]
     Normal(String),
     #[error("Both tests failed:\n1: {left}\n2: {right}")]
-    And {
-        left: Box<Self>,
-        right: Box<Self>
-    },
+    And { left: Box<Self>, right: Box<Self> },
     #[error("One of the tests failed:\n{0}")]
     Or(Box<Self>),
 }
@@ -140,24 +137,38 @@ impl TestError {
         left_val: &T,
         right_ident: &'static str,
         right_val: &U,
-        args: Option<std::fmt::Arguments<'_>>) -> Self 
-        where T: std::fmt::Debug + ?Sized, U: std::fmt::Debug + ?Sized {
-            Self::test_failed_inner(message, &left_val, left_ident, &right_val, right_ident, args)
-        }
-    
+        args: Option<std::fmt::Arguments<'_>>,
+    ) -> Self
+    where
+        T: std::fmt::Debug + ?Sized,
+        U: std::fmt::Debug + ?Sized,
+    {
+        Self::test_failed_inner(
+            message,
+            &left_val,
+            left_ident,
+            &right_val,
+            right_ident,
+            args,
+        )
+    }
+
     fn test_failed_inner(
-        message: &'static str, 
-        left_val: &dyn std::fmt::Debug, 
+        message: &'static str,
+        left_val: &dyn std::fmt::Debug,
         left_ident: &'static str,
-        right_val: &dyn std::fmt::Debug, 
+        right_val: &dyn std::fmt::Debug,
         right_ident: &'static str,
-        args: Option<std::fmt::Arguments<'_>>) -> Self {
+        args: Option<std::fmt::Arguments<'_>>,
+    ) -> Self {
         let msg = match args {
-            Some(args) => format!(r#"{message}: {args}
+            Some(args) => format!(
+                r#"{message}: {args}
 {left_ident}: {left_val:?}
 {right_ident}: {right_val:?}"#
             ),
-            None => format!(r#"{message}
+            None => format!(
+                r#"{message}
 {left_ident}: {left_val:?}
 {right_ident}: {right_val:?}"#
             ),

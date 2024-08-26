@@ -3,4 +3,4 @@ mod types;
 mod writer;
 
 pub use types::*;
-pub use writer::WavCkdEncoder;
+pub use writer::Writer;

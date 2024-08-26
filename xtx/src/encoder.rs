@@ -147,12 +147,9 @@ impl<W: WriteAt> ImageEncoder for XtxEncoder<W> {
         };
 
         let (block_dim, block_height) = if format.is_bcn() {
-            (
-                BlockDim::block_4x4(),
-                block_height_mip0(height_usize.div_ceil(4)),
-            )
+            (BlockDim::block_4x4(), block_height_mip0(height.div_ceil(4)))
         } else {
-            (BlockDim::uncompressed(), block_height_mip0(height_usize))
+            (BlockDim::uncompressed(), block_height_mip0(height))
         };
 
         let block_height_log2: u8 = match block_height {
@@ -217,14 +214,14 @@ impl<W: WriteAt> ImageEncoder for XtxEncoder<W> {
         };
 
         let swizzled = swizzle_surface(
-            width_usize,
-            height_usize,
+            width,
+            height,
             1,
             &data,
             block_dim,
             Some(block_height),
-            usize::try_from(format.get_bpp()).map_err(EncoderError::from)?,
-            usize::try_from(header.mipmaps).map_err(EncoderError::from)?,
+            format.bytes_per_pixel(),
+            header.mipmaps,
             1,
         )
         .map_err(EncoderError::from)?;

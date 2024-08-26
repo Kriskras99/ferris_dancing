@@ -1007,14 +1007,14 @@ pub struct AFXBlurParam {
 #[serde(deny_unknown_fields)]
 pub struct BoxInterpolatorComponent {
     #[serde(rename = "innerBox")]
-    pub inner_box: Box,
+    pub inner_box: IscBox,
     #[serde(rename = "outerBox")]
-    pub outer_box: Box,
+    pub outer_box: IscBox,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct Box {
+pub struct IscBox {
     #[serde(rename = "AABB")]
     pub aabb: AaBb,
 }
@@ -2506,7 +2506,7 @@ where
         max_i = i;
     }
     if max_i != 3 {
-        return Err(D::Error::custom("max_i is not 3!"))
+        return Err(D::Error::custom("max_i is not 3!"));
     }
     Ok(result)
 }
@@ -2679,7 +2679,7 @@ mod wrapped_actors {
     #[repr(transparent)]
     pub struct WrappedSubSceneActor<'a> {
         #[serde(borrow)]
-        pub sub_scene_actor: SubSceneActor<'a>,
+        pub sub_scene_actor: Box<SubSceneActor<'a>>,
     }
 
     impl<'a> AsRef<SubSceneActor<'a>> for WrappedSubSceneActor<'a> {
@@ -2693,7 +2693,7 @@ mod wrapped_actors {
     #[repr(transparent)]
     pub struct WrappedActor<'a> {
         #[serde(borrow)]
-        pub actor: Actor<'a>,
+        pub actor: Box<Actor<'a>>,
     }
 
     impl<'a> AsRef<Actor<'a>> for WrappedActor<'a> {

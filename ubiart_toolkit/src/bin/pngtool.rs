@@ -18,6 +18,10 @@ struct Cli {
     info: bool,
     #[arg(short, long, default_value_t = false)]
     xtx_info: bool,
+    #[arg(short, long, default_value_t = Game::JustDance2022)]
+    game: Game,
+    #[arg(short, long, default_value_t = Platform::Nx)]
+    platform: Platform,
     output: Option<PathBuf>,
 }
 
@@ -28,8 +32,8 @@ fn main() {
     let png = Png::deserialize_with(
         &file,
         UniqueGameId {
-            game: Game::JustDance2022,
-            platform: Platform::Nx,
+            game: cli.game,
+            platform: cli.platform,
             id: 0,
         },
     )

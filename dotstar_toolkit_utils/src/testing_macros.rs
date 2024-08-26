@@ -80,7 +80,7 @@ macro_rules! test_ne {
     ($left:expr, $right:expr $(,)?) => {{
         match (&$left, &$right) {
             (left_val, right_val) => {
-                if !(left_val == right_val) {
+                if !(left_val != right_val) {
                     // "[src/main:2:5]: Test failed: a * 2 == b * 5"
                     let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($left), " == ", ::std::stringify!($right));
 
@@ -97,7 +97,7 @@ macro_rules! test_ne {
     ($left:expr, $right:expr, $($arg:tt)+) => {{
         match (&$left, &$right) {
             (left_val, right_val) => {
-                if !(left_val == right_val) {
+                if !(left_val != right_val) {
                     // "[src/main:2:5]: Test failed: a * 2 == b * 5"
                     let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($left), " == ", ::std::stringify!($right));
                     // The reborrows below are intentional. Without them, the stack slot for the
@@ -223,7 +223,6 @@ macro_rules! test_not_any {
         }
     }};
 }
-
 
 /// Tests that the left expression is smaller or equal to the right expression (using [`PartialOrd`]).
 ///

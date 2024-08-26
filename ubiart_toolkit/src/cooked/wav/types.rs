@@ -127,21 +127,21 @@ impl BinaryDeserialize<'_> for Codec {
 #[derive(Debug)]
 pub enum Chunk<'a> {
     /// Basic codec information
-    Fmt(Fmt),
+    Fmt(Fmt<'a>),
     /// Aditional information needed by a codec
     AdIn(AdIn),
     /// The samples
-    Data(Data),
+    Data(Data<'a>),
     /// Seek table
     Mark(Mark),
     /// Description
     Strg(Strg<'a>),
     /// The samples (stereo)
-    DatS(Data),
+    DatS(Data<'a>),
     /// The samples (left channel or mono)
-    DatL(Data),
+    DatL(Data<'a>),
     /// The samples (right channel)
-    DatR(Data),
+    DatR(Data<'a>),
     /// Dsp coefficients (left channel or mono)
     DspL(Dsp),
     /// Dsp coefficients (right channel)
@@ -208,7 +208,7 @@ impl Chunk<'_> {
 }
 
 #[derive(Debug)]
-pub struct Fmt {
+pub struct Fmt<'a> {
     pub unk1: u16,
     pub channel_count: u16,
     /// Sample rate in Hz
@@ -216,11 +216,13 @@ pub struct Fmt {
     pub unk2: u32,
     pub block_align: u16,
     pub bits_per_sample: u16,
+    // Only on WiiU
+    pub unk3: Option<Cow<'a, [u8]>>,
 }
 
-impl Fmt {
+impl Fmt<'_> {
     pub const MAGIC: u32 = u32::from_be_bytes(*b"fmt ");
-    pub const SIZE: u32 = 16;
+    pub const NORMAL_SIZE: u32 = 16;
 }
 
 #[derive(Debug)]
@@ -234,12 +236,11 @@ impl AdIn {
 }
 
 #[derive(Debug)]
-pub struct Data {
-    pub position: u64,
-    pub size: u32,
+pub struct Data<'a> {
+    pub data: Cow<'a, [u8]>,
 }
 
-impl Data {
+impl Data<'_> {
     pub const MAGIC: u32 = u32::from_be_bytes(*b"data");
     pub const MAGIC_STEREO: u32 = u32::from_be_bytes(*b"datS");
     pub const MAGIC_LEFT: u32 = u32::from_be_bytes(*b"datL");
@@ -295,4 +296,5 @@ pub struct Dsp {
 impl Dsp {
     pub const MAGIC_LEFT: u32 = u32::from_be_bytes(*b"dspL");
     pub const MAGIC_RIGHT: u32 = u32::from_be_bytes(*b"dspR");
+    pub const SIZE: u32 = 96;
 }

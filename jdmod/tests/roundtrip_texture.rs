@@ -24,7 +24,6 @@ fn tga_roundtrip(input: &Path) -> datatest_stable::Result<()> {
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    tracing::trace!("Parse original texture");
     let data = read_to_vec(input)?;
     let one = decode_texture(&data, UniqueGameId::NX2022)?;
     let mut cursor = Cursor::new(Vec::new());
@@ -32,10 +31,8 @@ fn tga_roundtrip(input: &Path) -> datatest_stable::Result<()> {
     let content = cursor.into_inner();
     let mut fs = VecFs::with_capacity(1);
     fs.add_file("decoded.png".into(), content)?;
-    tracing::trace!("Create new texture");
     let two = encode_texture(&fs, VirtualPath::new("decoded.png"))?;
     let three = png::create_vec(two)?;
-    tracing::trace!("Parse new texture");
     let _four = decode_texture(&three, UniqueGameId::NX2022)?;
     // if one != four {
     //     panic!("did not match! {input:?}")
@@ -45,9 +42,9 @@ fn tga_roundtrip(input: &Path) -> datatest_stable::Result<()> {
 
 datatest_stable::harness!(
     tga_roundtrip,
-    "../ubiart_toolkit/files/2022",
+    "../ubiart_toolkit/files/nx2022",
     r".*/tga.ckd/.*",
     tga_roundtrip,
-    "../ubiart_toolkit/files/2022",
+    "../ubiart_toolkit/files/nx2022",
     r".*/png.ckd/.*"
 );

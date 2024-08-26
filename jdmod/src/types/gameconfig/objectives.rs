@@ -10,7 +10,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{test_eq,testing::TestResult};
+use dotstar_toolkit_utils::{test_eq, testing::TestResult};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types;
 

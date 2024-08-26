@@ -182,7 +182,7 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
 /// Build the description scene
 fn desc_scene(id: u16) -> cooked::isc::WrappedActors<'static> {
     cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
-        actor: cooked::isc::Actor {
+        actor: Box::new(cooked::isc::Actor {
             relativez: 0.000_122,
             userfriendly: Cow::Owned(format!("{id:04}")),
             pos2d: (-61.994_202, 37.990_768),
@@ -216,7 +216,7 @@ fn desc_scene(id: u16) -> cooked::isc::WrappedActors<'static> {
                 cooked::isc::WrappedComponent::AvatarDesc,
             ],
             ..Default::default()
-        },
+        }),
     })
 }
 

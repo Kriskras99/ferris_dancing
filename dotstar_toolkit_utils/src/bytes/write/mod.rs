@@ -39,23 +39,23 @@ pub trait BinarySerialize {
     ) -> Result<(), WriteError>;
 }
 
-impl<'a, T> BinarySerialize for &'a T
-where
-    T: BinarySerialize,
-    T::Input: 'a + Copy,
-{
-    type Ctx = T::Ctx;
-    type Input = &'a T::Input;
+// impl<'a, T> BinarySerialize for &'a T
+// where
+//     T: BinarySerialize,
+//     T::Input: 'a + Copy,
+// {
+//     type Ctx = T::Ctx;
+//     type Input = &'a T::Input;
 
-    fn serialize_at_with_ctx(
-        input: Self::Input,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
-    ) -> Result<(), WriteError> {
-        T::serialize_at_with_ctx(*input, writer, position, ctx)
-    }
-}
+//     fn serialize_at_with_ctx(
+//         input: Self::Input,
+//         writer: &mut (impl WriteAt + ?Sized),
+//         position: &mut u64,
+//         ctx: Self::Ctx,
+//     ) -> Result<(), WriteError> {
+//         T::serialize_at_with_ctx(*input, writer, position, ctx)
+//     }
+// }
 
 pub trait BinarySerializeExt: BinarySerialize
 where

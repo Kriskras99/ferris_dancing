@@ -265,7 +265,7 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             platform_filters: Vec::new(),
             actors: vec![
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
-                    actor: cooked::isc::Actor {
+                    actor: Box::new(cooked::isc::Actor {
                         relativez: 0.000_001,
                         userfriendly: Cow::Owned(format!("{map_name}_tml_dance")),
                         pos2d: (-1.157_74, 0.006_158),
@@ -276,10 +276,10 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
-                    },
+                    }),
                 }),
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
-                    actor: cooked::isc::Actor {
+                    actor: Box::new(cooked::isc::Actor {
                         relativez: 0.000_001,
                         userfriendly: Cow::Owned(format!("{map_name}_tml_karaoke")),
                         pos2d: (-1.157_74, 0.006_158),
@@ -290,7 +290,7 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase],
                         ..Default::default()
-                    },
+                    }),
                 }),
             ],
             scene_configs: cooked::isc::WrappedSceneConfigs {

@@ -5,7 +5,7 @@ use dotstar_toolkit_utils::{
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    test_eq, test_ge, test_le, 
+    test_eq, test_le,
     testing::TestError,
 };
 use image::{
@@ -54,7 +54,7 @@ pub enum DecoderError {
 
 impl From<DecoderError> for ImageError {
     fn from(err: DecoderError) -> Self {
-        Self::Decoding(DecodingError::new(ImageFormatHint::Name("XTX".into()), err))
+        Self::Decoding(DecodingError::new(ImageFormatHint::Name("GTX".into()), err))
     }
 }
 
@@ -90,7 +90,7 @@ impl<R: ReadAtExt> GtxDecoder<R> {
                     }
                 }
                 Block::DataLazy(_) => Err(DecoderError::DataBlockWithoutHeaderBlock),
-                Block::Mip(_) => Ok(()),
+                Block::Mip(_) | Block::Two => Ok(()),
             }?;
         }
 
@@ -121,13 +121,13 @@ impl<R: ReadAtExt> ImageDecoder for GtxDecoder<R> {
         Self: Sized,
     {
         assert_eq!(
-            u64::try_from(buf.len()).expect("Image is too big for usize"),
+            u64::try_from(buf.len()).expect("Image is too big for u64"),
             self.total_bytes(),
             "Buffer is too small or too big for the image"
         );
 
         let hdr = self.header;
-        let bpp = hdr.format.get_bpp();
+        let bpp = hdr.format.bytes_per_pixel();
         let is_bcn = hdr.format.is_bcn();
         let (width, height) = if is_bcn {
             (hdr.width / 4, hdr.height / 4)
@@ -142,6 +142,11 @@ impl<R: ReadAtExt> ImageDecoder for GtxDecoder<R> {
         let tile_mode = hdr.tile_mode;
 
         let mut position = self.data.position;
+
+        // the size is a lie, is only for the first mipmap
+        // which breaks the deswizzling library
+        let _size = usize::try_from(self.reader.len().map_err(DecoderError::from)? - position)
+            .map_err(DecoderError::from)?;
 
         let data = self
             .reader
@@ -213,6 +218,8 @@ impl<'de> BinaryDeserialize<'de> for GtxRaw<'de> {
             blocks.push_back(block);
         }
 
+        blocks.retain(|b| b != &Block::Two);
+
         Ok(GtxRaw { header, blocks })
     }
 }
@@ -283,6 +290,11 @@ impl<'de> BinaryDeserialize<'de> for Block<'de> {
             0x0D => Ok(Block::Mip(
                 reader.read_slice_at(position, usize::try_from(data_size)?)?,
             )),
+            0x02 => {
+                let slice = reader.read_slice_at(position, usize::try_from(data_size)?)?;
+                test_eq!(slice.iter().all(|b| *b == 0), true)?;
+                Ok(Block::Two)
+            }
             _ => Err(ReadError::custom(format!(
                 "Unknown block type: 0x{type_it:x}"
             ))),
@@ -327,14 +339,6 @@ impl BinaryDeserialize<'_> for Gx2Surface {
         let _comp_sel: [u8; 4] = reader.read_at::<[u8; 4]>(position)?;
         let _slice = reader.read_slice_at(position, 20)?;
 
-        let bpp = format.get_bpp();
-
-        let real_size = if format.is_bcn() {
-            ((width + 3) / 4) * ((height + 3) / 4) * (bpp / 8)
-        } else {
-            width * height * (bpp / 8)
-        };
-
         Ok(Self {
             dim,
             width,
@@ -352,8 +356,6 @@ impl BinaryDeserialize<'_> for Gx2Surface {
             alignment,
             pitch,
             mip_offsets,
-            bpp,
-            real_size,
         })
     }
 }

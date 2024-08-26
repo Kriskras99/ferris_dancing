@@ -1,5 +1,4 @@
-use dotstar_toolkit_utils::testing::TestError;
-use dotstar_toolkit_utils::test_eq;
+use dotstar_toolkit_utils::{test_eq, testing::TestError};
 
 use super::Sgs;
 use crate::utils::errors::ParserError;

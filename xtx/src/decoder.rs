@@ -145,28 +145,23 @@ impl<R: ReadAtExt> ImageDecoder for XtxDecoder<R> {
     where
         Self: Sized,
     {
+        let expected_size =
+            usize::try_from(self.total_bytes()).expect("Image is too big for memory");
+
         assert_eq!(
-            u64::try_from(buf.len()).expect("Image is too big for usize"),
-            self.total_bytes(),
+            buf.len(),
+            expected_size,
             "Buffer is too small or too big for the image"
         );
 
-        let hdr = self.header;
-        let bpp = usize::try_from(hdr.format.get_bpp()).map_err(DecoderError::from)?;
-        let is_bcn = hdr.format.is_bcn();
-        let width = usize::try_from(hdr.width).map_err(DecoderError::from)?;
-        let height = usize::try_from(hdr.height).map_err(DecoderError::from)?;
-        let depth = usize::try_from(hdr.depth).map_err(DecoderError::from)?;
-        let mipmap_count = usize::try_from(hdr.mipmaps).map_err(DecoderError::from)?;
-
-        let block_dim = if is_bcn {
+        let block_dim = if self.header.format.is_bcn() {
             BlockDim::block_4x4()
         } else {
             BlockDim::uncompressed()
         };
 
-        let block_height_log2 = u32::from(hdr.block_height_log2);
-        let block_height = BlockHeight::new(2usize.pow(block_height_log2))
+        let block_height_log2 = u32::from(self.header.block_height_log2);
+        let block_height_mip0 = BlockHeight::new(2u32.pow(block_height_log2))
             .ok_or(DecoderError::InvalidBlockHeight(block_height_log2))?;
 
         let mut position = self.data.position;
@@ -176,19 +171,22 @@ impl<R: ReadAtExt> ImageDecoder for XtxDecoder<R> {
             .read_slice_at(&mut position, self.data.size)
             .map_err(DecoderError::from)?;
         let deswizzled = deswizzle_surface(
-            width,
-            height,
-            depth,
+            self.header.width,
+            self.header.height,
+            self.header.depth,
             &data,
             block_dim,
-            Some(block_height),
-            bpp,
-            mipmap_count,
+            Some(block_height_mip0),
+            self.header.format.bytes_per_pixel(),
+            self.header.mipmaps,
             1,
         )
         .map_err(DecoderError::from)?;
         drop(data); // drop original data early
-        match hdr.format {
+
+        let width = usize::try_from(self.header.width).map_err(DecoderError::from)?;
+        let height = usize::try_from(self.header.height).map_err(DecoderError::from)?;
+        match self.header.format {
             Format::BC1 => {
                 texpresso::Format::Bc1.decompress(&deswizzled, width, height, buf);
             }
@@ -198,8 +196,11 @@ impl<R: ReadAtExt> ImageDecoder for XtxDecoder<R> {
             Format::BC3 => {
                 texpresso::Format::Bc3.decompress(&deswizzled, width, height, buf);
             }
-            Format::NvnFormatRGBA8 => buf.copy_from_slice(&deswizzled),
-            _ => unimplemented!("Decoding of {:?} is not yet implemented", hdr.format),
+            Format::NvnFormatRGBA8 => buf.copy_from_slice(&deswizzled[..expected_size]),
+            _ => unimplemented!(
+                "Decoding of {:?} is not yet implemented",
+                self.header.format
+            ),
         }
 
         Ok(())

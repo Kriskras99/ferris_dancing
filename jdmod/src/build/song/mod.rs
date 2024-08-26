@@ -153,12 +153,12 @@ fn graph_scene(
             platform_filters: Vec::new(),
             actors: vec![cooked::isc::WrappedActors::Actor(
                 cooked::isc::WrappedActor {
-                    actor: cooked::isc::Actor {
+                    actor: Box::new(cooked::isc::Actor {
                         relativez: 10.0,
                         userfriendly: Cow::Borrowed("Camera_JD_Dummy"),
                         lua: Cow::Borrowed("enginedata/actortemplates/tpl_emptyactor.tpl"),
                         ..Default::default()
-                    },
+                    }),
                 },
             )],
             scene_configs: cooked::isc::WrappedSceneConfigs {
@@ -228,7 +228,7 @@ fn main_scene<'a>(
     ] {
         actors.push(cooked::isc::WrappedActors::SubSceneActor(
             cooked::isc::WrappedSubSceneActor {
-                sub_scene_actor: cooked::isc::SubSceneActor {
+                sub_scene_actor: Box::new(cooked::isc::SubSceneActor {
                     userfriendly: Cow::Owned(format!("{map_name}_{userfriendly}")),
                     pos2d,
                     lua: Cow::Borrowed("enginedata/actortemplates/subscene.tpl"),
@@ -241,19 +241,19 @@ fn main_scene<'a>(
                     }],
                     wrapped_scene: scene,
                     ..Default::default()
-                },
+                }),
             },
         ));
     }
 
-    actors.push(cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: cooked::isc::Actor {
+    actors.push(cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
         // This is not an oversight, the JDVer, ID, Type, Flags, NbCoach, and Difficulty do not change per map
         userfriendly: Cow::Owned(format!("{map_name} : Template Artist - Template Title&#10;JDVer = 5, ID = 842776738, Type = 1 (Flags 0x00000000), NbCoach = 2, Difficulty = 2")),
         pos2d: (-3.531_976, -1.485_322),
         lua: Cow::Owned(format!("world/maps/{lower_map_name}/songdesc.tpl")),
         components: vec![cooked::isc::WrappedComponent::SongDesc],
         ..Default::default()
-    }}));
+    })}));
 
     cooked::isc::Root {
         scene: cooked::isc::Scene {

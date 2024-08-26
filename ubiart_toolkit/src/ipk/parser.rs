@@ -5,8 +5,8 @@ use dotstar_toolkit_utils::{
         primitives::{u32be, u64be},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    testing::TestResult,
     test_any, test_eq,
+    testing::TestResult,
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 

@@ -131,7 +131,6 @@ pub fn import(
                 .ok_or_else(|| anyhow!("Filename is invalid!"))?;
             let native_vfs = NativeFs::new(parent)?;
             let path = VirtualPath::new(filename);
-            tracing::trace!("Parent: {parent:?}, filename: {filename}, path: {path}");
             jdnow::import(&native_vfs, path, &dir_tree)?;
         }
         #[cfg(not(feature = "experimental"))]

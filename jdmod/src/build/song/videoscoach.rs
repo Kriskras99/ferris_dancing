@@ -3,10 +3,7 @@
 use std::borrow::Cow;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::{
-    test_eq,
-    vfs::VirtualFileSystem,
-};
+use dotstar_toolkit_utils::{test_eq, vfs::VirtualFileSystem};
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
@@ -41,8 +38,18 @@ pub fn build(
 
     // the actual video
     let video_path = ses.dirs.song().join(ses.song.videofile.as_ref());
-    test_eq!(video_path.extension(), Some("webm"), "Video file is not a webm! Transcoding is not supported: {:?}", video_path)?;
-    test_eq!(ses.native_vfs.exists(&video_path), true, "Video file does not exist at {:?}!", video_path)?;
+    test_eq!(
+        video_path.extension(),
+        Some("webm"),
+        "Video file is not a webm! Transcoding is not supported: {:?}",
+        video_path
+    )?;
+    test_eq!(
+        ses.native_vfs.exists(&video_path),
+        true,
+        "Video file does not exist at {:?}!",
+        video_path
+    )?;
 
     bf.generated_files.add_file(
         videoscoach_cache_dir.join(format!("{lower_map_name}.mpd.ckd")),
@@ -132,7 +139,7 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             is_popup: false,
             platform_filters: Vec::new(),
             actors: vec![
-                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: cooked::isc::Actor {
+                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
                     relativez: -1.0,
                     userfriendly: Cow::Borrowed("VideoScreen"),
                     pos2d: (0.0, -4.5),
@@ -143,8 +150,8 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         channel_id: Cow::Borrowed(""),
                     }})],
                     ..Default::default()
-                }}),
-                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: cooked::isc::Actor {
+                })}),
+                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
                     scale: (3.941_238, 2.22),
                     userfriendly: Cow::Borrowed("VideoOutput"),
                     lua: Cow::Borrowed("world/_common/videoscreen/video_output_main.tpl"),
@@ -207,7 +214,7 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         )
                     ],
                     ..Default::default()
-                }}),
+                })}),
             ],
             scene_configs: cooked::isc::WrappedSceneConfigs {
                 scene_configs: cooked::isc::SceneConfigs {
@@ -245,7 +252,7 @@ fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'
             platform_filters: Vec::new(),
             actors: vec![cooked::isc::WrappedActors::Actor(
                 cooked::isc::WrappedActor {
-                    actor: cooked::isc::Actor {
+                    actor: Box::new(cooked::isc::Actor {
                         relativez: -1.0,
                         userfriendly: Cow::Borrowed("VideoScreen"),
                         pos2d: (0.0, -4.5),
@@ -270,7 +277,7 @@ fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'
                             },
                         )],
                         ..Default::default()
-                    },
+                    }),
                 },
             )],
             scene_configs: cooked::isc::WrappedSceneConfigs {

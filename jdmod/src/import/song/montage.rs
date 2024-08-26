@@ -34,16 +34,26 @@ pub fn import(
     // Calculate the amount of pictos in the montage
     let pictos_horizontal = montage_width / picto_width;
     let pictos_vertical = montage_height / PICTO_HEIGHT;
-    test_eq!((montage_width % picto_width), 0, "Montage is not divisble by expected pictogram width!")?;
-    test_eq!((montage_height % PICTO_HEIGHT), 0, "Montage is not divisible by pictogram height!")?;
+    test_eq!(
+        (montage_width % picto_width),
+        0,
+        "Montage is not divisble by expected pictogram width!"
+    )?;
+    test_eq!(
+        (montage_height % PICTO_HEIGHT),
+        0,
+        "Montage is not divisible by pictogram height!"
+    )?;
     test_ge!(
         picto_filenames.len(),
         usize::try_from(pictos_horizontal * (pictos_vertical - 1) + 1)?,
-        "Not enough filenames for montage size!")?;
+        "Not enough filenames for montage size!"
+    )?;
     test_le!(
         picto_filenames.len(),
         usize::try_from(pictos_horizontal * pictos_vertical)?,
-        "Too many filenames for montage size!")?;
+        "Too many filenames for montage size!"
+    )?;
 
     let mut pictos = Vec::with_capacity(usize::try_from(pictos_horizontal * pictos_vertical)?);
 

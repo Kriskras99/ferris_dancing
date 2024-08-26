@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Error};
-use bitvec::BitArr;
+use bit_vec::BitVec;
 use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem};
 use ubiart_toolkit::loc8::Language;
 pub use ubiart_toolkit::utils::LocaleId;
@@ -271,37 +271,48 @@ impl<'a> Localisation<'a> {
 }
 
 /// Contains all translations for a locale id
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Translation<'a> {
     /// The translations, indexed by [`Language`] as usize
     inner: [Cow<'a, str>; 0x18],
     /// Keep track of which strings are not empty (performance optimisation)
-    not_empty: BitArr!(for 0x18, in u8),
+    not_empty: BitVec<u32>,
+}
+
+impl Default for Translation<'_> {
+    fn default() -> Self {
+        Self {
+            inner: Default::default(),
+            not_empty: BitVec::from_elem(0x18, false),
+        }
+    }
 }
 
 impl Translation<'_> {
     /// Check if all localisations of this translation are empty
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.not_empty.not_any()
+        self.not_empty.none()
     }
 
     /// Check if the translations overlap, excluding empty translations
     #[must_use]
     pub fn empty_or_equals(&self, other: &Self) -> bool {
+        let mut non_empty_overlap = self.not_empty.clone();
+        non_empty_overlap.and(&other.not_empty);
         if self.is_empty() && other.is_empty() {
             // Both are empty
             true
-        } else if (self.not_empty & other.not_empty).not_any() {
+        } else if (non_empty_overlap).none() {
             // They don't overlap, so equality cannot be checked
             false
         } else {
             // They have some overlap
-            for (bit, (left, right)) in (self.not_empty & other.not_empty)
+            for (bit, (left, right)) in (non_empty_overlap)
                 .iter()
                 .zip(self.inner.iter().zip(other.inner.iter()))
             {
-                if *bit && left != right {
+                if bit && left != right {
                     return false;
                 }
             }
@@ -325,10 +336,12 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
     /// # Errors
     /// Will error if the translations don't overlap or don't match
     pub fn merge(self, other: Translation<'b>) -> Result<Translation<'c>, Error> {
+        let mut not_empty_overlap = self.not_empty.clone();
+        not_empty_overlap.and(&other.not_empty);
         if self.is_empty() && other.is_empty() {
             // Both are empty
             Ok(self)
-        } else if (self.not_empty & other.not_empty).not_any() {
+        } else if (not_empty_overlap).none() {
             // They don't overlap, so equality cannot be checked
             Err(anyhow!("No overlap between translations, can't merge!"))
         } else {
@@ -341,7 +354,9 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
             {
                 *new = merge_string(one, two)?;
             }
-            translation.not_empty = self.not_empty | other.not_empty;
+            let mut new_not_empty = self.not_empty.clone();
+            new_not_empty.or(&other.not_empty);
+            translation.not_empty = new_not_empty;
             Ok(translation)
         }
     }

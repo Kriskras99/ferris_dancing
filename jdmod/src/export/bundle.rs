@@ -9,13 +9,15 @@ use std::{
     },
 };
 
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, Context, Error};
 use crossbeam::channel::{Receiver, Sender};
 use dotstar_toolkit_utils::{
-    bytes::write::WriteAt, test_eq, vfs::{
+    bytes::write::WriteAt,
+    test_eq,
+    vfs::{
         layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
         VirtualFileSystem,
-    }
+    },
 };
 use ubiart_toolkit::{
     ipk::{self, vfs::IpkFilesystem},
@@ -43,7 +45,12 @@ pub fn bundle<'fs: 'bf, 'bf>(
     destination: &Path,
 ) -> Result<(), Error> {
     // Make sure the destination directory actually exists
-    test_eq!(destination.exists(), true, "Destination directory {:?} does not exist!", destination)?;
+    test_eq!(
+        destination.exists(),
+        true,
+        "Destination directory {:?} does not exist!",
+        destination
+    )?;
 
     // For files that go into the main (logic) bundle
     let mut bundle_files = BuildFiles {
@@ -188,7 +195,8 @@ pub fn bundle<'fs: 'bf, 'bf>(
 
     // Create secure_fat.gf
     println!("Creating secure_fat.gf");
-    let mut file = File::open(destination.join("secure_fat.gf"))?;
+    let mut file = File::create(destination.join("secure_fat.gf"))
+        .with_context(|| destination.join("secure_fat.gf").display().to_string())?;
     file.write_at::<SecureFat>(&mut 0, sfat)?;
 
     Ok(())

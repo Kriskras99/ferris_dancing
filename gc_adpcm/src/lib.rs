@@ -1,5 +1,152 @@
+use dotstar_toolkit_utils::bytes::read::{ReadAtExt, ReadError};
+use itertools::Itertools;
+
 /// Decoder for Nintendo GameCube ADPCM audio format
-pub struct Decoder {
+///
+/// Produces [`i16`] samples. When decoding a stereo sound,
+/// the two channels are interleaved per sample.
+pub struct Decoder<'a, R: ReadAtExt + ?Sized> {
+    left_reader: (&'a R, u64),
+    right_reader: Option<(&'a R, u64)>,
+    left_state: DspState,
+    right_state: Option<DspState>,
+    frames_remaing: u32,
+    buffer: Vec<i16>,
+}
+
+impl<'a, R: ReadAtExt + ?Sized> Decoder<'a, R> {
+    /// Decode mono sound
+    ///
+    /// `total_frames` is the total amount of frames in the channel
+    pub fn mono(reader: &'a R, position: u64, state: DspState, total_frames: u32) -> Self {
+        Self {
+            left_reader: (reader, position),
+            right_reader: None,
+            left_state: state,
+            right_state: None,
+            frames_remaing: total_frames,
+            buffer: Vec::with_capacity(14),
+        }
+    }
+
+    /// Decode stereo sound where each channel has their own buffer
+    ///
+    /// `total_frames` is the total amount of frames in one channel
+    pub fn stereo(
+        left_reader: &'a R,
+        left_position: u64,
+        left_state: DspState,
+        right_reader: &'a R,
+        right_position: u64,
+        right_state: DspState,
+        total_frames: u32,
+    ) -> Self {
+        Self {
+            left_reader: (left_reader, left_position),
+            right_reader: Some((right_reader, right_position)),
+            left_state,
+            right_state: Some(right_state),
+            frames_remaing: total_frames,
+            buffer: Vec::with_capacity(28),
+        }
+    }
+
+    /// Decode stereo sound interleaved per frame
+    ///
+    /// `total_frames` is the total amount of frames for both channels.
+    ///
+    /// # Panics
+    /// Will panic if `total_frames` is not a multiple of 2
+    pub fn interleaved_stereo(
+        reader: &'a R,
+        position: u64,
+        left_state: DspState,
+        right_state: DspState,
+        total_frames: u32,
+    ) -> Self {
+        assert_eq!(
+            total_frames % 2,
+            0,
+            "Total frames needs to be a multiple of 2"
+        );
+        Self {
+            left_reader: (reader, position),
+            right_reader: None,
+            left_state,
+            right_state: Some(right_state),
+            frames_remaing: total_frames,
+            buffer: Vec::with_capacity(28),
+        }
+    }
+}
+
+impl<R: ReadAtExt + ?Sized> Iterator for Decoder<'_, R> {
+    type Item = Result<i16, ReadError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.buffer.is_empty() && self.frames_remaing != 0 {
+            match &mut (self.right_reader, self.right_state.as_mut()) {
+                (None, None) => {
+                    // mono
+                    let frame = self
+                        .left_reader
+                        .0
+                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
+                    let Ok(frame) = frame else {
+                        return Some(frame.map(|_| 0i16));
+                    };
+                    let samples = self.left_state.decode_frame(frame);
+                    self.buffer.extend_from_slice(&samples);
+                    self.frames_remaing -= 1;
+                }
+                (None, Some(right_state)) => {
+                    let frame = self
+                        .left_reader
+                        .0
+                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
+                    let Ok(frame) = frame else {
+                        return Some(frame.map(|_| 0i16));
+                    };
+                    let left_samples = self.left_state.decode_frame(frame);
+                    let frame = self
+                        .left_reader
+                        .0
+                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
+                    let Ok(frame) = frame else {
+                        return Some(frame.map(|_| 0i16));
+                    };
+                    let right_samples = right_state.decode_frame(frame);
+                    self.buffer
+                        .extend(left_samples.into_iter().interleave(right_samples));
+                    self.frames_remaing -= 2;
+                }
+                (Some((right_reader, right_position)), Some(right_state)) => {
+                    let frame = self
+                        .left_reader
+                        .0
+                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
+                    let Ok(frame) = frame else {
+                        return Some(frame.map(|_| 0i16));
+                    };
+                    let left_samples = self.left_state.decode_frame(frame);
+                    let frame = right_reader.read_at::<[u8; 8]>(right_position);
+                    let Ok(frame) = frame else {
+                        return Some(frame.map(|_| 0i16));
+                    };
+                    let right_samples = right_state.decode_frame(frame);
+                    self.buffer
+                        .extend(left_samples.into_iter().interleave(right_samples));
+                    self.frames_remaing -= 1;
+                }
+                (Some(_), None) => unreachable!(),
+            }
+        };
+        self.buffer.pop().map(Ok)
+    }
+}
+
+/// State of the DSP encoder of a single channel
+pub struct DspState {
     /// The initial history
     pub hist1: i16,
     /// The initial history 2
@@ -8,7 +155,7 @@ pub struct Decoder {
     pub coefficients: [i16; 16],
 }
 
-impl Decoder {
+impl DspState {
     /// Decode a single frame of ADPCM data.
     ///
     /// Note: the frames need to be parsed sequentially as the hist1 and hist2 values
@@ -52,6 +199,8 @@ impl Decoder {
     }
 }
 
+/// The amount of samples in a single frame
+pub const SAMPLES_PER_FRAME: u32 = 14;
 const NIBBLE_TO_S8: [i32; 0x10] = [0, 1, 2, 3, 4, 5, 6, 7, -8, -7, -6, -5, -4, -3, -2, -1];
 fn get_low_nibble(byte: u8) -> i32 {
     NIBBLE_TO_S8[usize::from(byte & 0xF)]

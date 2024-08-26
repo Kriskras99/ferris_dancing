@@ -13,6 +13,9 @@ use std::{
     path::Path,
 };
 
+use read::ReadError;
+use tracing::instrument;
+
 use self::{read::ReadAt, write::WriteAt};
 
 /// Read the file at path into a `Vec`
@@ -74,27 +77,39 @@ impl<T: WriteAt> Write for CursorAt<T> {
 }
 
 impl<T: ReadAt> Read for CursorAt<T> {
+    #[instrument(skip(self, buf))]
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        let slice = self
-            .inner
-            .read_slice_at(&mut self.position, buf.len())
-            .map_err(|e| Error::new(ErrorKind::Other, e))?;
-        buf.copy_from_slice(&slice);
-        Ok(buf.len())
+        let mut len = buf.len();
+        while len > 0 {
+            match self.inner.read_slice_at(&mut self.position, len) {
+                Ok(slice) => {
+                    buf.copy_from_slice(&slice);
+                    break;
+                }
+                Err(ReadError::IoError {
+                    error,
+                    backtrace: _,
+                }) if error.kind() == ErrorKind::UnexpectedEof => {
+                    len -= 1;
+                }
+                Err(err) => {
+                    return Err(Error::other(err));
+                }
+            }
+        }
+        Ok(len)
     }
 }
 
-impl<T: ReadAt> Seek for CursorAt<T> {
+impl<T> Seek for CursorAt<T> {
     fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> {
         match pos {
             std::io::SeekFrom::Start(pos) => self.position = pos,
-            std::io::SeekFrom::End(pos) => {
-                let size =
-                    i64::try_from(self.inner.len().map_err(Error::other)?).map_err(Error::other)?;
-                let new_pos = size
-                    .checked_sub(pos)
-                    .ok_or_else(|| Error::other("Integer underflow"))?;
-                self.position = u64::try_from(new_pos).map_err(Error::other)?;
+            std::io::SeekFrom::End(_) => {
+                return Err(Error::new(
+                    ErrorKind::Unsupported,
+                    "SeekFrom::End is not supported for CursorAt",
+                ))
             }
             std::io::SeekFrom::Current(pos) => {
                 let old_pos = i64::try_from(self.position).map_err(Error::other)?;

@@ -3,6 +3,7 @@ use std::{borrow::Cow, collections::VecDeque, fmt::Debug};
 use dotstar_toolkit_utils::bytes::read::ReadError;
 use wiiu_swizzle::TileMode;
 
+#[derive(Debug)]
 pub struct GtxRaw<'a> {
     pub header: GfdHeader,
     pub blocks: VecDeque<Block<'a>>,
@@ -39,18 +40,19 @@ impl GfdHeader {
     pub const GPU_VERSION: u32 = 0x2;
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Block<'a> {
     Surface(Gx2Surface),
     DataLazy(Data),
     Mip(Cow<'a, [u8]>),
+    Two,
 }
 
 impl Block<'_> {
     pub const MAGIC: u32 = 0x424C_4B7B;
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Data {
     pub position: u64,
     pub size: usize,
@@ -74,8 +76,6 @@ pub struct Gx2Surface {
     pub alignment: u32,
     pub pitch: u32,
     pub mip_offsets: [u32; 13],
-    pub bpp: u32,
-    pub real_size: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -121,22 +121,21 @@ impl Format {
     }
 
     #[must_use]
-    pub const fn get_bpp(self) -> u32 {
+    pub const fn bytes_per_pixel(self) -> u32 {
         match self {
-            Self::TcR8Unorm => 1,
-            Self::TcR4G4Unorm => 8,
+            Self::TcR8Unorm | Self::TcR4G4Unorm => 1,
             Self::TcsR5G6B5Unorm
             | Self::TcR5G5B5A1Unorm
             | Self::TcR4G4B4A4Unorm
-            | Self::TcR8G8Unorm => 16,
-            Self::TcsR8G8B8A8Unorm | Self::TcsR8G8B8A8Srgb | Self::TcsR10G10B10A2Unorm => 32,
-            Self::TBc1Unorm | Self::TBc1Srgb | Self::TBc4Unorm | Self::TBc4Snorm => 64,
+            | Self::TcR8G8Unorm => 2,
+            Self::TcsR8G8B8A8Unorm | Self::TcsR8G8B8A8Srgb | Self::TcsR10G10B10A2Unorm => 4,
+            Self::TBc1Unorm | Self::TBc1Srgb | Self::TBc4Unorm | Self::TBc4Snorm => 8,
             Self::TBc2Unorm
             | Self::TBc2Srgb
             | Self::TBc3Unorm
             | Self::TBc3Srgb
             | Self::TBc5Unorm
-            | Self::TBc5Snorm => 128,
+            | Self::TBc5Snorm => 16,
         }
     }
 }

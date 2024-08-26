@@ -76,12 +76,12 @@ pub fn song_database(
     let mut isc_coverflow_sku_songs = Vec::new();
     let mut actors = vec![cooked::isc::WrappedActors::Actor(
         cooked::isc::WrappedActor {
-            actor: cooked::isc::Actor {
+            actor: Box::new(cooked::isc::Actor {
                 userfriendly: Cow::Borrowed("skuscene_db"),
                 lua: Cow::Borrowed("world/skuscenes/skuscene_base.tpl"),
                 components: vec![cooked::isc::WrappedComponent::SongDatabase],
                 ..Default::default()
-            },
+            }),
         },
     )];
 
@@ -131,12 +131,12 @@ pub fn song_database(
         });
 
         actors.push(isc::WrappedActors::Actor(isc::WrappedActor {
-            actor: isc::Actor {
+            actor: Box::new(isc::Actor {
                 userfriendly: song_name,
                 lua: Cow::Owned(format!("world/maps/{lower_song_name}/songdesc.tpl")),
                 components: vec![isc::WrappedComponent::SongDesc],
                 ..Default::default()
-            },
+            }),
         }));
     }
 

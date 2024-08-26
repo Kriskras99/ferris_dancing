@@ -2670,6 +2670,18 @@ pub enum CarouselRequestDesc<'a> {
     MapSearch(Empty<'a>),
     #[serde(borrow, rename = "JD_CarouselSearchRequestDesc")]
     Search(Empty<'a>),
+    #[serde(borrow, rename = "JD_CarouselGalaxyRequestDesc")]
+    Galaxy(CarouselGalaxyRequestDesc<'a>),
+    #[serde(borrow, rename = "JD_CarouselPlaylistRequestDesc")]
+    Playlist(CarouselPlaylistRequestDesc<'a>),
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct CarouselGalaxyRequestDesc<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub sub_type: Cow<'a, str>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -2717,6 +2729,8 @@ pub struct CarouselMapRequestDesc<'a> {
     pub order: Cow<'a, str>,
     pub subscribed: bool,
     pub favorites: bool,
+    /// Only included in nx2019
+    pub sweat_toggle_item: Option<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub included_tags: Vec<Cow<'a, str>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -2781,6 +2795,15 @@ pub struct CarouselPhotoRequestDesc<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub action_list_name: Cow<'a, str>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct CarouselPlaylistRequestDesc<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub action_list_name: Cow<'a, str>,
+    pub create: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]

@@ -3,11 +3,14 @@
 use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::test_eq;
+use dotstar_toolkit_utils::{test_eq, vfs::VirtualPath};
 use ubiart_toolkit::cooked;
 
 use super::SongImportState;
-use crate::{types::song::MusicTrack, utils::cook_path};
+use crate::{
+    types::song::MusicTrack,
+    utils::{self, cook_path},
+};
 
 /// Imports the main sequence and audio file
 pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String, Error> {
@@ -27,23 +30,40 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
 
     // TODO: Decook WAV!
     let audio_filename = if sis.vfs.exists(path.as_ref()) {
-        let audio_filename = path
-            .rsplit_once('/')
-            .map(|p| p.1.to_string())
-            .ok_or_else(|| anyhow!("Invalid path! {path:?}"))?;
+        let audio_filename = VirtualPath::new(path)
+            .file_name()
+            .ok_or_else(|| anyhow!("Can't find filename! {path:?}"))?
+            .to_string();
         let from = sis.vfs.open(path.as_ref())?;
         let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
         to.write_all(&from)?;
         audio_filename
     } else {
         let cooked_path = cook_path(path, sis.ugi.platform)?;
-        let audio_filename = cooked_path
-            .rsplit_once('/')
-            .map(|p| p.1.to_string())
-            .ok_or_else(|| anyhow!("Invalid cooked path! {cooked_path:?}"))?;
+        let mut audio_filename = VirtualPath::new(&cooked_path)
+            .file_name()
+            .ok_or_else(|| anyhow!("Can't find filename! {cooked_path:?}"))?
+            .to_string();
+        assert!(
+            audio_filename.ends_with(".wav.ckd"),
+            "audio filename does not end in wav.ckd?"
+        );
+        if audio_filename.ends_with(".ckd") {
+            audio_filename.truncate(audio_filename.len() - 4);
+        }
         let from = sis.vfs.open(cooked_path.as_ref())?;
-        let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
-        to.write_all(&from)?;
+        let filename = sis.dirs.audio().join(&audio_filename);
+        println!(
+            "cooked_path: {cooked_path}, filename: {}",
+            filename.display()
+        );
+        let mut to = File::create(&filename)?;
+        let is_opus = utils::decode_audio(&from, &mut to)?;
+        if is_opus {
+            std::fs::rename(&filename, filename.with_extension("opus"))?;
+            audio_filename.truncate(audio_filename.len() - 4);
+            audio_filename.push_str(".opus");
+        }
         audio_filename
     };
 

@@ -35,11 +35,9 @@ impl<'fs> IpkFilesystem<'fs> {
     /// Create a new virtual filesystem from the IPK file at `path`.
     #[instrument(skip(fs))]
     pub fn new(fs: &'fs dyn VirtualFileSystem, path: &VirtualPath) -> Result<Self, std::io::Error> {
-        tracing::trace!("creating IpkFilesystem");
         let file = fs.open(path)?;
         let bundle = Yoke::try_attach_to_cart(file, |data: &[u8]| Bundle::deserialize(data))
             .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
-        tracing::trace!("succesfully parsed bundle file");
         Ok(Self {
             bundle,
             cache: Mutex::new(IntMap::default()),
@@ -61,9 +59,7 @@ impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
             string.remove(0);
             path = VirtualPathBuf::from(string);
         }
-        tracing::trace!("cleaned: {path:?}");
         let path_id = PathId::from(&path);
-        tracing::trace!("path id: {path_id:?}");
         let file = self.bundle.get().files.get(&path_id).ok_or_else(|| {
             std::io::Error::new(
                 ErrorKind::NotFound,

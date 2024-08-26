@@ -1,6 +1,6 @@
 //! # Main sequence
 //! Imports the mainsequence and files referenced in it
-use std::{borrow::Cow, collections::BTreeSet, fs::File, io::Write};
+use std::{borrow::Cow, collections::BTreeSet, fs::File};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::test_eq;
@@ -9,7 +9,7 @@ use ubiart_toolkit::{cooked, json_types};
 use super::SongImportState;
 use crate::{
     types::song::{Clip, SoundSetClip, Timeline},
-    utils::cook_path,
+    utils::{self, cook_path},
 };
 
 /// Imports the mainsequence and files referenced in it
@@ -153,10 +153,19 @@ pub fn parse_soundset(
 
     let cooked_path = cook_path(filename, sis.ugi.platform)?;
     let from = sis.vfs.open(cooked_path.as_ref())?;
-    let new_filename = format!("{name}.wav.ckd");
-    // TODO: Decook wav.ckd!
-    let mut to = File::create(sis.dirs.audio().join(&new_filename))?;
-    to.write_all(&from)?;
+    let mut new_filename = format!("{name}.wav");
+    let filename = sis.dirs.audio().join(&new_filename);
+
+    println!(
+        "Cooked path: {cooked_path}, filename: {}",
+        filename.display()
+    );
+    let mut to = File::create(&filename)?;
+    let is_opus = utils::decode_audio(&from, &mut to)?;
+    if is_opus {
+        std::fs::rename(&filename, filename.with_extension("opus"))?;
+        new_filename = format!("{name}.opus");
+    }
 
     Ok(Clip::SoundSet(SoundSetClip {
         is_active: soundset.is_active == 1,

@@ -1,17 +1,19 @@
 [package]
-name = "gc_adpcm"
+name = "nx_opus"
 version = "0.1.0"
 edition = "2021"
-description = "Decoder for the ADPCM bitstream format used by Nintendo on the GameCube, Wii, and WiiU"
+description = "Muxer for the Opus container used on the Nintendo Switch"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/kriskras99/ferris_dancing"
 readme = "README.md"
-keywords = ["adpcm", "decoder", "gamecube", "wii", "wiiu"]
+keywords = ["opus", "muxer", "switch", "nx"]
 categories = ["encoding", "multimedia::encoding", "parser-implementations"]
 
 [dependencies]
 dotstar_toolkit_utils = { workspace = true }
-itertools = { workspace = true }
+ogg = { workspace = true }
+thiserror = { workspace = true }
+tracing.workspace = true
 
 [lints]
 workspace = true

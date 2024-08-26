@@ -88,7 +88,7 @@ fn autodance_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             engine_version: ses.engine_version,
             actors: vec![cooked::isc::WrappedActors::Actor(
                 cooked::isc::WrappedActor {
-                    actor: cooked::isc::Actor {
+                    actor: Box::new(cooked::isc::Actor {
                         userfriendly: Cow::Owned(format!("{map_name}_autodance")),
                         pos2d: (-0.006_150, -0.003_075),
                         lua: Cow::Owned(format!(
@@ -96,7 +96,7 @@ fn autodance_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         )),
                         components: vec![cooked::isc::WrappedComponent::Autodance],
                         ..Default::default()
-                    },
+                    }),
                 },
             )],
             ..Default::default()
