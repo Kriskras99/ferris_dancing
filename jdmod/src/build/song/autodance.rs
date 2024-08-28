@@ -57,9 +57,7 @@ pub fn build(
         println!("Warning! Missing autodance.ogg for {lower_map_name}!");
     }
 
-    Ok(cooked::isc::WrappedScene {
-        scene: autodance_scene.scene,
-    })
+    Ok(autodance_scene.scene.into())
 }
 
 /// Build the autodance actor

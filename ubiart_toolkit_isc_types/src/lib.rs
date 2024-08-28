@@ -291,12 +291,7 @@ pub struct TransitionSceneConfig<'a> {
     pub enums: Vec<Enum<'a>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct WrappedParamBinding<'a> {
-    #[serde(borrow, rename = "ParamBinding")]
-    pub param_binding: ParamBinding<'a>,
-}
+wrap!(WrappedParamBinding, ParamBinding, "ParamBinding", 'a);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -774,12 +769,7 @@ pub struct UIWidgetGroupHUD<'a> {
     pub elements: Vec<WrappedUIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct WrappedUIWidgetElementDesc<'a> {
-    #[serde(borrow, rename = "JD_UIWidgetElementDesc")]
-    pub ui_widget_element_desc: UIWidgetElementDesc<'a>,
-}
+wrap!(WrappedUIWidgetElementDesc, UIWidgetElementDesc, "JD_UIWidgetElementDesc", 'a);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -1402,11 +1392,7 @@ pub struct Grid<'a> {
     pub anim_item_desc: Option<WrappedAnimItemsDesc<'a>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct WrappedAnimItemsDesc<'a> {
-    #[serde(rename = "$value")]
-    pub inner: AnimItemsDesc<'a>,
-}
+wrap!(WrappedAnimItemsDesc, AnimItemsDesc, "$value", 'a);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -1417,12 +1403,11 @@ pub enum AnimItemsDesc<'a> {
     Carousel(CarouselAnimItemsDesc<'a>),
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct WrappedBrowserAnimItemsDesc {
-    #[serde(rename = "BrowserAnimItemsDesc")]
-    pub browser: BrowserAnimItemsDesc,
-}
+wrap!(
+    WrappedBrowserAnimItemsDesc,
+    BrowserAnimItemsDesc,
+    "BrowserAnimItemsDesc"
+);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -1440,12 +1425,7 @@ pub struct BrowserAnimItemsDesc {
     pub check_items_visibility_on_anim_ends: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct WrappedCarouselAnimItemsDesc<'a> {
-    #[serde(rename = "CarouselAnimItemsDesc")]
-    pub browser: CarouselAnimItemsDesc<'a>,
-}
+wrap!(WrappedCarouselAnimItemsDesc, CarouselAnimItemsDesc, "CarouselAnimItemsDesc", 'a);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -2363,7 +2343,7 @@ impl Default for SubSceneActor<'_> {
             direct_picking: true,
             ignore_save: Default::default(),
             enums: Vec::default(),
-            wrapped_scene: WrappedScene::default(),
+            wrapped_scene: Scene::default().into(),
             components: Vec::default(),
             parent_bind: Option::default(),
             markers: Vec::default(),
@@ -2379,12 +2359,7 @@ pub struct Marker<'a> {
     pub value: Cow<'a, str>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-pub struct WrappedScene<'a> {
-    #[serde(borrow)]
-    pub scene: Scene<'a>,
-}
+wrap!(WrappedScene, Scene, "Scene", 'a);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -2628,8 +2603,43 @@ macro_rules! deserialize_variant {
 
 pub(crate) use deserialize_variant;
 
+/// Macro to create structs that wrap around other types
+///
+/// With a wrapping struct:
+/// ```xml
+/// <values NAME="PropertyPatchValue_String">
+///         <PropertyPatchValue_String VALUE="loc ID + ICON" />
+/// </values>
+/// ```
+/// Without a wrapping struct
+/// ```xml
+/// <values NAME="PropertyPatchValue_String" VALUE="loc ID + ICON" />
+/// ```
+///
+/// # Variants
+/// For structs without any members:
+/// `wrap!(SomeStructName, "SomeStructName")`
+/// For structs without lifetimes:
+/// `wrap!(WrappedSomeStructName, SomeStructName, "SomeStructName")`
+/// For structs with lifetimes:
+/// `wrap!(WrappedSomeStructName, SomeStructName, "SomeStructName", 'a)`
 macro_rules! wrap {
+    ( $wrapper_struct_name:ident, $rename:literal) => {
+        /// Automatically generated empty struct for correct XML parsing
+        #[derive(Debug, Clone, Copy, Default, ::serde::Serialize, ::serde::Deserialize)]
+        #[serde(deny_unknown_fields)]
+        #[repr(transparent)]
+        pub struct $wrapper_struct_name {
+            #[serde(rename = $rename)]
+            pub wrapped: (),
+        }
+    };
     ( $wrapper_struct_name:ident, $wrapped_struct:ident, $rename:literal) => {
+        /// Automatically generated wrapper struct for correct XML parsing
+        ///
+        /// Can automatically be dereferenced to the inner type because it implements [`Deref`].
+        /// Can also be automatically constructed and deconstructed from and into the inner type
+        /// using the [`From`] implementations.
         #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize)]
         #[serde(deny_unknown_fields)]
         #[repr(transparent)]
@@ -2657,6 +2667,11 @@ macro_rules! wrap {
         }
     };
     ( $wrapper_struct_name:ident, $wrapped_struct:ident, $rename:literal, $lifetime:lifetime) => {
+        /// Automatically generated wrapper struct for correct XML parsing
+        ///
+        /// Can automatically be dereferenced to the inner type because it implements [`Deref`].
+        /// Can also be automatically constructed and deconstructed from and into the inner type
+        /// using the [`From`] implementations.
         #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize)]
         #[serde(deny_unknown_fields)]
         #[repr(transparent)]
@@ -2686,25 +2701,6 @@ macro_rules! wrap {
 }
 
 pub(crate) use wrap;
-
-macro_rules! wrap_empty {
-    ( $wrapper_struct_name:ident, $wrapped_struct:ident, $rename:literal) => {
-        #[derive(Debug, Clone, Copy, Default, ::serde::Serialize, ::serde::Deserialize)]
-        #[serde(deny_unknown_fields)]
-        #[repr(transparent)]
-        pub struct $wrapped_struct;
-
-        #[derive(Debug, Clone, Copy, Default, ::serde::Serialize, ::serde::Deserialize)]
-        #[serde(deny_unknown_fields)]
-        #[repr(transparent)]
-        pub struct $wrapper_struct_name {
-            #[serde(rename = $rename)]
-            pub wrapped: $wrapped_struct,
-        }
-    };
-}
-
-pub(crate) use wrap_empty;
 pub use wrapped_actors::*;
 mod wrapped_actors {
     #![allow(
@@ -2833,11 +2829,11 @@ mod wrapped_component {
         #[serde(rename = "AFXPostProcessComponent")]
         AFXPostProcess(WrappedAFXPostProcessComponent),
         #[serde(rename = "BezierBranchFxComponent")]
-        BezierBranchFx(WrappedBezierBranchFx),
+        BezierBranchFx(BezierBranchFx),
         #[serde(rename = "BezierTreeComponent")]
         BezierTree(WrappedBezierTreeComponent<'a>),
         #[serde(rename = "JD_BlockFlowComponent")]
-        BlockFlowComponent(WrappedBlockFlowComponent),
+        BlockFlowComponent(BlockFlowComponent),
         #[serde(rename = "BoxInterpolatorComponent")]
         BoxInterpolator(WrappedBoxInterpolatorComponent),
         #[serde(rename = "JD_Carousel")]
@@ -2855,17 +2851,17 @@ mod wrapped_component {
         #[serde(rename = "FXControllerComponent")]
         FXController(WrappedFXControllerComponent),
         #[serde(rename = "JD_AutodanceComponent")]
-        Autodance(WrappedAutodance),
+        Autodance(Autodance),
         #[serde(rename = "JD_AvatarDescComponent")]
-        AvatarDesc(WrappedAvatarDesc),
+        AvatarDesc(AvatarDesc),
         #[serde(rename = "JD_CMU_GenericStage_Component")]
-        CMUGenericStage(WrappedCMUGenericStage),
+        CMUGenericStage(CMUGenericStage),
         #[serde(rename = "JD_FixedCameraComponent")]
         FixedCamera(WrappedFixedCameraComponent),
         #[serde(rename = "JD_GachaComponent")]
-        Gacha(WrappedGacha),
+        Gacha(Gacha),
         #[serde(rename = "JD_GoldMoveComponent")]
-        GoldMove(WrappedGoldMove),
+        GoldMove(GoldMove),
         #[serde(rename = "JD_Grid_RegularPatterned")]
         GridRegularPatterned(WrappedGridRegularPatterned<'a>),
         #[serde(rename = "JD_Grid_CustomPatterned")]
@@ -2879,7 +2875,7 @@ mod wrapped_component {
         #[serde(rename = "JD_AnthologyGrid")]
         AnthologyGrid(WrappedAnthologyGrid<'a>),
         #[serde(rename = "JD_PleoInfoComponent")]
-        PleoInfo(WrappedPleoInfo),
+        PleoInfo(PleoInfo),
         #[serde(rename = "JD_WDFTeamBattleTransitionComponent")]
         WDFTeamBattleTransitionComponent(WrappedWDFTeamBattleTransitionComponent<'a>),
         #[serde(rename = "JD_BeatPulseComponent")]
@@ -2889,77 +2885,77 @@ mod wrapped_component {
         #[serde(rename = "UIItemTextField")]
         UIItemTextField(WrappedUIItemTextField<'a>),
         #[serde(rename = "JD_NotificationBubble")]
-        NotificationBubble(WrappedNotificationBubble),
+        NotificationBubble(NotificationBubble),
         #[serde(rename = "JD_NotificationBubblesPile")]
-        NotificationBubblesPile(WrappedNotificationBubblesPile),
+        NotificationBubblesPile(NotificationBubblesPile),
         #[serde(rename = "JD_RegistrationComponent")]
         Registration(WrappedRegistrationComponent<'a>),
         #[serde(rename = "JD_ScrollingTextComponent")]
-        ScrollingText(WrappedScrollingText),
+        ScrollingText(ScrollingText),
         #[serde(rename = "JD_SkinDescComponent")]
-        SkinDesc(WrappedSkinDesc),
+        SkinDesc(SkinDesc),
         #[serde(rename = "JD_SongDatabaseComponent")]
-        SongDatabase(WrappedSongDatabase),
+        SongDatabase(SongDatabase),
         #[serde(rename = "JD_SongDescComponent")]
-        SongDesc(WrappedSongDesc),
+        SongDesc(SongDesc),
         #[serde(rename = "JD_StickerGrid")]
         StickerGrid(WrappedStickerGrid<'a>),
         #[serde(rename = "JD_PictoComponent")]
-        Picto(WrappedPicto),
+        Picto(Picto),
         #[serde(rename = "JD_SubtitleComponent")]
-        Subtitle(WrappedSubtitle),
+        Subtitle(Subtitle),
         #[serde(rename = "JD_UIAvatarUnlockWidget")]
-        UIAvatarUnlockWidget(WrappedUIAvatarUnlockWidget),
+        UIAvatarUnlockWidget(UIAvatarUnlockWidget),
         #[serde(rename = "JD_UIHudCoopFeedbackComponent")]
-        UIHudCoopFeedback(WrappedUIHudCoopFeedback),
+        UIHudCoopFeedback(UIHudCoopFeedback),
         #[serde(rename = "JD_UIHudLyricsComponent")]
-        UIHudLyrics(WrappedUIHudLyrics),
+        UIHudLyrics(UIHudLyrics),
         #[serde(rename = "JD_UIHudPictoComponent")]
-        UIHudPicto(WrappedUIHudPicto),
+        UIHudPicto(UIHudPicto),
         #[serde(rename = "JD_UIHudPictolineComponent")]
-        UIHudPictoline(WrappedUIHudPictoline),
+        UIHudPictoline(UIHudPictoline),
         #[serde(rename = "JD_UIHudRacelineCoopComponent")]
-        UIHudRacelineCoop(WrappedUIHudRacelineCoop),
+        UIHudRacelineCoop(UIHudRacelineCoop),
         #[serde(rename = "JD_UIHudRacelineGaugeBarComponent")]
-        UIHudRacelineGaugeBar(WrappedUIHudRacelineGaugeBar),
+        UIHudRacelineGaugeBar(UIHudRacelineGaugeBar),
         #[serde(rename = "JD_UIHudRacelineGaugeComponent")]
-        UIHudRacelineGauge(WrappedUIHudRacelineGauge),
+        UIHudRacelineGauge(UIHudRacelineGauge),
         #[serde(rename = "JD_UIHudRacelineRivalBarComponent")]
-        UIHudRacelineRivalBar(WrappedUIHudRacelineRivalBar),
+        UIHudRacelineRivalBar(UIHudRacelineRivalBar),
         #[serde(rename = "JD_UIHudRacelineWDFBossComponent")]
-        UIHudRacelineWDFBoss(WrappedUIHudRacelineWDFBoss),
+        UIHudRacelineWDFBoss(UIHudRacelineWDFBoss),
         #[serde(rename = "JD_UIHudRacelineWDFRankComponent")]
-        UIHudRacelineWDFRank(WrappedUIHudRacelineWDFRank),
+        UIHudRacelineWDFRank(UIHudRacelineWDFRank),
         #[serde(rename = "JD_UIHudRacelineWDFSpotlightComponent")]
-        UIHudRacelineWDFSpotlight(WrappedUIHudRacelineWDFSpotlight),
+        UIHudRacelineWDFSpotlight(UIHudRacelineWDFSpotlight),
         #[serde(rename = "JD_UIHudRacelineWDFTeamBattleComponent")]
-        UIHudRaceLineWDFTeamBattle(WrappedUIHudRaceLineWDFTeamBattle),
+        UIHudRaceLineWDFTeamBattle(UIHudRaceLineWDFTeamBattle),
         #[serde(rename = "JD_UIHudStarvingComponent")]
-        UIHudStarving(WrappedUIHudStarving),
+        UIHudStarving(UIHudStarving),
         #[serde(rename = "JD_UIHudSweatTimer")]
-        UIHudSweatTimer(WrappedUIHudSweatTimer),
+        UIHudSweatTimer(UIHudSweatTimer),
         #[serde(rename = "JD_UIHudWDFIngameNotificationComponent")]
-        UIHudWDFIngameNotification(WrappedUIHudWDFIngameNotification),
+        UIHudWDFIngameNotification(UIHudWDFIngameNotification),
         #[serde(rename = "JD_UIJoyconWidget")]
-        UIJoyconWidget(WrappedUIJoyconWidget),
+        UIJoyconWidget(UIJoyconWidget),
         #[serde(rename = "JD_UIMojoWidget")]
-        UIMojoWidget(WrappedUIMojoWidget),
+        UIMojoWidget(UIMojoWidget),
         #[serde(rename = "JD_UISaveWidget")]
-        UISaveWidget(WrappedUISaveWidget),
+        UISaveWidget(UISaveWidget),
         #[serde(rename = "JD_UIScheduledQuestComponent")]
-        UIScheduledQuest(WrappedUIScheduledQuest),
+        UIScheduledQuest(UIScheduledQuest),
         #[serde(rename = "JD_WDFTransitionComponent")]
-        WDFTransitionComponent(WrappedWDFTransitionComponent),
+        WDFTransitionComponent(WDFTransitionComponent),
         #[serde(rename = "JD_WDFUnlimitedFeedbackComponent")]
-        WDFUnlimitedFeedback(WrappedWDFUnlimitedFeedback),
+        WDFUnlimitedFeedback(WDFUnlimitedFeedback),
         #[serde(rename = "JD_UIHudPlayerComponent")]
-        UIHudPlayer(WrappedUIHudPlayer),
+        UIHudPlayer(UIHudPlayer),
         #[serde(rename = "MasterTape")]
-        MasterTape(WrappedMasterTape),
+        MasterTape(MasterTape),
         #[serde(rename = "MaterialGraphicComponent")]
         MaterialGraphic(WrappedMaterialGraphicComponent<'a>),
         #[serde(rename = "MusicTrackComponent")]
-        MusicTrack(WrappedMusicTrackComponent),
+        MusicTrack(MusicTrackComponent),
         #[serde(rename = "PleoComponent")]
         Pleo(WrappedPleoComponent<'a>),
         #[serde(rename = "PleoTextureGraphicComponent")]
@@ -2975,45 +2971,45 @@ mod wrapped_component {
         #[serde(rename = "Mesh3DComponent")]
         Mesh3D(WrappedMesh3DComponent<'a>),
         #[serde(rename = "SoundComponent")]
-        Sound(WrappedSound),
+        Sound(Sound),
         #[serde(rename = "TapeCase_Component")]
-        TapeCase(WrappedTapeCase),
+        TapeCase(TapeCase),
         #[serde(rename = "JD_UIUplayNotification")]
-        UIUplayNotification(WrappedUIUplayNotification),
+        UIUplayNotification(UIUplayNotification),
         #[serde(rename = "JD_UIHudSpotlightPlayerComponent")]
-        UIHudSpotlightPlayerComponent(WrappedUIHudSpotlightPlayerComponent),
+        UIHudSpotlightPlayerComponent(UIHudSpotlightPlayerComponent),
         #[serde(rename = "JD_UIHudLyricsFeedbackComponent")]
-        UIHudLyricsFeedbackComponent(WrappedUIHudLyricsFeedbackComponent),
+        UIHudLyricsFeedbackComponent(UIHudLyricsFeedbackComponent),
         #[serde(rename = "JD_UIHudCamerafeedComponent")]
-        UIHudCamerafeedComponent(WrappedUIHudCamerafeedComponent),
+        UIHudCamerafeedComponent(UIHudCamerafeedComponent),
         #[serde(rename = "JD_UIHudProgressComponent")]
-        UIHudProgressComponent(WrappedUIHudProgressComponent),
+        UIHudProgressComponent(UIHudProgressComponent),
         #[serde(rename = "JD_UIHudCommunityDancerCardComponent")]
-        UIHudCommunityDancerCardComponent(WrappedUIHudCommunityDancerCardComponent),
+        UIHudCommunityDancerCardComponent(UIHudCommunityDancerCardComponent),
         #[serde(rename = "JD_UIHudRacelineRivalComponent")]
-        UIHudRacelineRivalComponent(WrappedUIHudRacelineRivalComponent),
+        UIHudRacelineRivalComponent(UIHudRacelineRivalComponent),
         #[serde(rename = "JD_WDFOnlineRankTransitionComponent")]
-        WDFOnlineRankTransitionComponent(WrappedWDFOnlineRankTransitionComponent),
+        WDFOnlineRankTransitionComponent(WDFOnlineRankTransitionComponent),
         #[serde(rename = "JD_AliasUnlockNotification")]
-        AliasUnlockNotification(WrappedAliasUnlockNotification),
+        AliasUnlockNotification(AliasUnlockNotification),
         #[serde(rename = "JD_UIHudDoubleScoringPlayerComponent")]
-        UIHudDoubleScoringPlayerComponent(WrappedUIHudDoubleScoringPlayerComponent),
+        UIHudDoubleScoringPlayerComponent(UIHudDoubleScoringPlayerComponent),
         #[serde(rename = "JD_UIProfileStatWidget")]
-        UIProfileStatWidget(WrappedUIProfileStatWidget),
+        UIProfileStatWidget(UIProfileStatWidget),
         #[serde(rename = "JD_UIJDRankWidget")]
-        UIJDRankWidget(WrappedUIJDRankWidget),
+        UIJDRankWidget(UIJDRankWidget),
         #[serde(rename = "JD_ScrollingPopupComponent")]
-        ScrollingPopupComponent(WrappedScrollingPopupComponent),
+        ScrollingPopupComponent(ScrollingPopupComponent),
         #[serde(rename = "JD_UISkinUnlockWidget")]
-        UISkinUnlockWidget(WrappedUISkinUnlockWidget),
+        UISkinUnlockWidget(UISkinUnlockWidget),
         #[serde(rename = "JD_UIHudVumeterComponent")]
-        UIHudVumeterComponent(WrappedUIHudVumeterComponent),
+        UIHudVumeterComponent(UIHudVumeterComponent),
         #[serde(rename = "TextureGraphicComponent")]
         TextureGraphic(WrappedTextureGraphicComponent<'a>),
         #[serde(rename = "TexturePatcherComponent")]
         TexturePatcher(WrappedTexturePatcherComponent<'a>),
         #[serde(rename = "UIComponent")]
-        UI(WrappedUI),
+        UI(UI),
         #[serde(rename = "UIAnchor")]
         UIAnchor(WrappedUIAnchor),
         #[serde(rename = "UICarousel")]
@@ -3097,17 +3093,9 @@ mod wrapped_component {
         AFXPostProcessComponent,
         "AFXPostProcessComponent"
     );
-    wrap_empty!(
-        WrappedBezierBranchFx,
-        BezierBranchFx,
-        "BezierBranchFxComponent"
-    );
+    wrap!(BezierBranchFx, "BezierBranchFxComponent");
     wrap!(WrappedBezierTreeComponent, BezierTreeComponent, "BezierTreeComponent", 'a);
-    wrap_empty!(
-        WrappedBlockFlowComponent,
-        BlockFlowComponent,
-        "JD_BlockFlowComponent"
-    );
+    wrap!(BlockFlowComponent, "JD_BlockFlowComponent");
     wrap!(
         WrappedBoxInterpolatorComponent,
         BoxInterpolatorComponent,
@@ -3128,158 +3116,74 @@ mod wrapped_component {
         FXControllerComponent,
         "FXControllerComponent"
     );
-    wrap_empty!(WrappedAutodance, Autodance, "JD_AutodanceComponent");
-    wrap_empty!(WrappedAvatarDesc, AvatarDesc, "JD_AvatarDescComponent");
-    wrap_empty!(
-        WrappedCMUGenericStage,
-        CMUGenericStage,
-        "JD_CMU_GenericStage_Component"
-    );
+    wrap!(Autodance, "JD_AutodanceComponent");
+    wrap!(AvatarDesc, "JD_AvatarDescComponent");
+    wrap!(CMUGenericStage, "JD_CMU_GenericStage_Component");
     wrap!(
         WrappedFixedCameraComponent,
         FixedCameraComponent,
         "JD_FixedCameraComponent"
     );
-    wrap_empty!(WrappedGacha, Gacha, "JD_GachaComponent");
-    wrap_empty!(WrappedGoldMove, GoldMove, "JD_GoldMoveComponent");
+    wrap!(Gacha, "JD_GachaComponent");
+    wrap!(GoldMove, "JD_GoldMoveComponent");
     wrap!(WrappedGridRegularPatterned, Grid, "JD_Grid_RegularPatterned", 'a);
     wrap!(WrappedGridCustomPatterned, Grid, "JD_Grid_CustomPatterned", 'a);
     wrap!(WrappedLineGrid, LineGrid, "JD_LineGrid", 'a);
     wrap!(WrappedUILineGrid, UIGrid, "JD_UILineGrid", 'a);
     wrap!(WrappedUIGrid, UIGrid, "JD_UIGrid", 'a);
     wrap!(WrappedAnthologyGrid, AnthologyGrid, "JD_AnthologyGrid", 'a);
-    wrap_empty!(WrappedPleoInfo, PleoInfo, "JD_PleoInfoComponent");
+    wrap!(PleoInfo, "JD_PleoInfoComponent");
     wrap!(WrappedWDFTeamBattleTransitionComponent, WDFTeamBattleTransitionComponent, "JD_WDFTeamBattleTransitionComponent", 'a);
     wrap!(WrappedBeatPulseComponent, BeatPulseComponent, "JD_BeatPulseComponent", 'a);
     wrap!(WrappedPictoTimeline, PictoTimeline, "JD_PictoTimeline", 'a);
     wrap!(WrappedUIItemTextField, UIItemTextField, "UIItemTextField", 'a);
-    wrap_empty!(
-        WrappedNotificationBubble,
-        NotificationBubble,
-        "JD_NotificationBubble"
-    );
-    wrap_empty!(
-        WrappedNotificationBubblesPile,
-        NotificationBubblesPile,
-        "JD_NotificationBubblesPile"
-    );
+    wrap!(NotificationBubble, "JD_NotificationBubble");
+    wrap!(NotificationBubblesPile, "JD_NotificationBubblesPile");
     wrap!(WrappedRegistrationComponent, RegistrationComponent, "JD_RegistrationComponent", 'a);
-    wrap_empty!(
-        WrappedScrollingText,
-        ScrollingText,
-        "JD_ScrollingTextComponent"
-    );
-    wrap_empty!(WrappedSkinDesc, SkinDesc, "JD_SkinDescComponent");
-    wrap_empty!(
-        WrappedSongDatabase,
-        SongDatabase,
-        "JD_SongDatabaseComponent"
-    );
-    wrap_empty!(WrappedSongDesc, SongDesc, "JD_SongDescComponent");
+    wrap!(ScrollingText, "JD_ScrollingTextComponent");
+    wrap!(SkinDesc, "JD_SkinDescComponent");
+    wrap!(SongDatabase, "JD_SongDatabaseComponent");
+    wrap!(SongDesc, "JD_SongDescComponent");
     wrap!(WrappedStickerGrid, Grid, "JD_StickerGrid", 'a);
-    wrap_empty!(WrappedPicto, Picto, "JD_PictoComponent");
-    wrap_empty!(WrappedSubtitle, Subtitle, "JD_SubtitleComponent");
-    wrap_empty!(
-        WrappedUIAvatarUnlockWidget,
-        UIAvatarUnlockWidget,
-        "JD_UIAvatarUnlockWidget"
-    );
-    wrap_empty!(
-        WrappedUIHudCoopFeedback,
-        UIHudCoopFeedback,
-        "JD_UIHudCoopFeedbackComponent"
-    );
-    wrap_empty!(WrappedUIHudLyrics, UIHudLyrics, "JD_UIHudLyricsComponent");
-    wrap_empty!(WrappedUIHudPicto, UIHudPicto, "JD_UIHudPictoComponent");
-    wrap_empty!(
-        WrappedUIHudPictoline,
-        UIHudPictoline,
-        "JD_UIHudPictolineComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudRacelineCoop,
-        UIHudRacelineCoop,
-        "JD_UIHudRacelineCoopComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudRacelineGaugeBar,
-        UIHudRacelineGaugeBar,
-        "JD_UIHudRacelineGaugeBarComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudRacelineGauge,
-        UIHudRacelineGauge,
-        "JD_UIHudRacelineGaugeComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudRacelineRivalBar,
-        UIHudRacelineRivalBar,
-        "JD_UIHudRacelineRivalBarComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudRacelineWDFBoss,
-        UIHudRacelineWDFBoss,
-        "JD_UIHudRacelineWDFBossComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudRacelineWDFRank,
-        UIHudRacelineWDFRank,
-        "JD_UIHudRacelineWDFRankComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudRacelineWDFSpotlight,
+    wrap!(Picto, "JD_PictoComponent");
+    wrap!(Subtitle, "JD_SubtitleComponent");
+    wrap!(UIAvatarUnlockWidget, "JD_UIAvatarUnlockWidget");
+    wrap!(UIHudCoopFeedback, "JD_UIHudCoopFeedbackComponent");
+    wrap!(UIHudLyrics, "JD_UIHudLyricsComponent");
+    wrap!(UIHudPicto, "JD_UIHudPictoComponent");
+    wrap!(UIHudPictoline, "JD_UIHudPictolineComponent");
+    wrap!(UIHudRacelineCoop, "JD_UIHudRacelineCoopComponent");
+    wrap!(UIHudRacelineGaugeBar, "JD_UIHudRacelineGaugeBarComponent");
+    wrap!(UIHudRacelineGauge, "JD_UIHudRacelineGaugeComponent");
+    wrap!(UIHudRacelineRivalBar, "JD_UIHudRacelineRivalBarComponent");
+    wrap!(UIHudRacelineWDFBoss, "JD_UIHudRacelineWDFBossComponent");
+    wrap!(UIHudRacelineWDFRank, "JD_UIHudRacelineWDFRankComponent");
+    wrap!(
         UIHudRacelineWDFSpotlight,
         "JD_UIHudRacelineWDFSpotlightComponent"
     );
-    wrap_empty!(
-        WrappedUIHudRaceLineWDFTeamBattle,
+    wrap!(
         UIHudRaceLineWDFTeamBattle,
         "JD_UIHudRacelineWDFTeamBattleComponent"
     );
-    wrap_empty!(
-        WrappedUIHudStarving,
-        UIHudStarving,
-        "JD_UIHudStarvingComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudSweatTimer,
-        UIHudSweatTimer,
-        "JD_UIHudSweatTimer"
-    );
-    wrap_empty!(
-        WrappedUIHudWDFIngameNotification,
+    wrap!(UIHudStarving, "JD_UIHudStarvingComponent");
+    wrap!(UIHudSweatTimer, "JD_UIHudSweatTimer");
+    wrap!(
         UIHudWDFIngameNotification,
         "JD_UIHudWDFIngameNotificationComponent"
     );
-    wrap_empty!(WrappedUIJoyconWidget, UIJoyconWidget, "JD_UIJoyconWidget");
-    wrap_empty!(WrappedUIMojoWidget, UIMojoWidget, "JD_UIMojoWidget");
-    wrap_empty!(WrappedUISaveWidget, UISaveWidget, "JD_UISaveWidget");
-    wrap_empty!(
-        WrappedUIScheduledQuest,
-        UIScheduledQuest,
-        "JD_UIScheduledQuestComponent"
-    );
-    wrap_empty!(
-        WrappedWDFTransitionComponent,
-        WDFTransitionComponent,
-        "JD_WDFTransitionComponent"
-    );
-    wrap_empty!(
-        WrappedWDFUnlimitedFeedback,
-        WDFUnlimitedFeedback,
-        "JD_WDFUnlimitedFeedbackComponent"
-    );
-    wrap_empty!(WrappedUIHudPlayer, UIHudPlayer, "JD_UIHudPlayerComponent");
-    wrap_empty!(WrappedMasterTape, MasterTape, "MasterTape");
+    wrap!(UIJoyconWidget, "JD_UIJoyconWidget");
+    wrap!(UIMojoWidget, "JD_UIMojoWidget");
+    wrap!(UISaveWidget, "JD_UISaveWidget");
+    wrap!(UIScheduledQuest, "JD_UIScheduledQuestComponent");
+    wrap!(WDFTransitionComponent, "JD_WDFTransitionComponent");
+    wrap!(WDFUnlimitedFeedback, "JD_WDFUnlimitedFeedbackComponent");
+    wrap!(UIHudPlayer, "JD_UIHudPlayerComponent");
+    wrap!(MasterTape, "MasterTape");
     wrap!(WrappedMaterialGraphicComponent, MaterialGraphicComponent, "MaterialGraphicComponent", 'a);
-    wrap_empty!(
-        WrappedMusicTrackComponent,
-        MusicTrackComponent,
-        "MusicTrackComponent"
-    );
+    wrap!(MusicTrackComponent, "MusicTrackComponent");
     wrap!(WrappedPleoComponent, PleoComponent, "PleoComponent", 'a);
     wrap!(WrappedPleoTextureGraphicComponent, PleoTextureGraphicComponent, "PleoTextureGraphicComponent", 'a);
-    // wrap!(WrappedPropertyPatcher, PropertyPatcher, "PropertyPatcher", 'a);
     wrap!(WrappedSceneSpawnerComponent, SceneSpawnerComponent, "JD_SceneSpawnerComponent", 'a);
     wrap!(
         WrappedScrollBarComponent,
@@ -3288,82 +3192,44 @@ mod wrapped_component {
     );
     wrap!(WrappedSingleInstanceMesh3DComponent, Mesh3DComponent, "SingleInstanceMesh3DComponent", 'a);
     wrap!(WrappedMesh3DComponent, Mesh3DComponent, "Mesh3DComponent", 'a);
-    wrap_empty!(WrappedSound, Sound, "SoundComponent");
-    wrap_empty!(WrappedTapeCase, TapeCase, "TapeCase_Component");
-    wrap_empty!(
-        WrappedUIUplayNotification,
-        UIUplayNotification,
-        "JD_UIUplayNotification"
-    );
-    wrap_empty!(
-        WrappedUIHudSpotlightPlayerComponent,
+    wrap!(Sound, "SoundComponent");
+    wrap!(TapeCase, "TapeCase_Component");
+    wrap!(UIUplayNotification, "JD_UIUplayNotification");
+    wrap!(
         UIHudSpotlightPlayerComponent,
         "JD_UIHudSpotlightPlayerComponent"
     );
-    wrap_empty!(
-        WrappedUIHudLyricsFeedbackComponent,
+    wrap!(
         UIHudLyricsFeedbackComponent,
         "JD_UIHudLyricsFeedbackComponent"
     );
-    wrap_empty!(
-        WrappedUIHudCamerafeedComponent,
-        UIHudCamerafeedComponent,
-        "JD_UIHudCamerafeedComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudProgressComponent,
-        UIHudProgressComponent,
-        "JD_UIHudProgressComponent"
-    );
-    wrap_empty!(
-        WrappedUIHudCommunityDancerCardComponent,
+    wrap!(UIHudCamerafeedComponent, "JD_UIHudCamerafeedComponent");
+    wrap!(UIHudProgressComponent, "JD_UIHudProgressComponent");
+    wrap!(
         UIHudCommunityDancerCardComponent,
         "JD_UIHudCommunityDancerCardComponent"
     );
-    wrap_empty!(
-        WrappedUIHudRacelineRivalComponent,
+    wrap!(
         UIHudRacelineRivalComponent,
         "JD_UIHudRacelineRivalComponent"
     );
-    wrap_empty!(
-        WrappedWDFOnlineRankTransitionComponent,
+    wrap!(
         WDFOnlineRankTransitionComponent,
         "JD_WDFOnlineRankTransitionComponent"
     );
-    wrap_empty!(
-        WrappedAliasUnlockNotification,
-        AliasUnlockNotification,
-        "JD_AliasUnlockNotification"
-    );
-    wrap_empty!(
-        WrappedUIHudDoubleScoringPlayerComponent,
+    wrap!(AliasUnlockNotification, "JD_AliasUnlockNotification");
+    wrap!(
         UIHudDoubleScoringPlayerComponent,
         "JD_UIHudDoubleScoringPlayerComponent"
     );
-    wrap_empty!(
-        WrappedUIProfileStatWidget,
-        UIProfileStatWidget,
-        "JD_UIProfileStatWidget"
-    );
-    wrap_empty!(WrappedUIJDRankWidget, UIJDRankWidget, "JD_UIJDRankWidget");
-    wrap_empty!(
-        WrappedScrollingPopupComponent,
-        ScrollingPopupComponent,
-        "JD_ScrollingPopupComponent"
-    );
-    wrap_empty!(
-        WrappedUISkinUnlockWidget,
-        UISkinUnlockWidget,
-        "JD_UISkinUnlockWidget"
-    );
-    wrap_empty!(
-        WrappedUIHudVumeterComponent,
-        UIHudVumeterComponent,
-        "JD_UIHudVumeterComponent"
-    );
+    wrap!(UIProfileStatWidget, "JD_UIProfileStatWidget");
+    wrap!(UIJDRankWidget, "JD_UIJDRankWidget");
+    wrap!(ScrollingPopupComponent, "JD_ScrollingPopupComponent");
+    wrap!(UISkinUnlockWidget, "JD_UISkinUnlockWidget");
+    wrap!(UIHudVumeterComponent, "JD_UIHudVumeterComponent");
     wrap!(WrappedTextureGraphicComponent, TextureGraphicComponent, "TextureGraphicComponent", 'a);
     wrap!(WrappedTexturePatcherComponent, TexturePatcherComponent, "TexturePatcherComponent", 'a);
-    wrap_empty!(WrappedUI, UI, "UIComponent");
+    wrap!(UI, "UIComponent");
     wrap!(WrappedUIAnchor, UIAnchor, "UIAnchor");
     wrap!(WrappedUICarousel, UICarousel, "UICarousel", 'a);
     wrap!(WrappedUIChangePage, UIChangePage, "UIChangePage", 'a);
@@ -3401,7 +3267,7 @@ mod wrapped_component {
     impl_deserialize_for_internally_tagged_enum! {
         WrappedComponent<'a>, "@NAME",
         ("AFXPostProcessComponent" => AFXPostProcess(WrappedAFXPostProcessComponent)),
-        ("BezierBranchFxComponent" => BezierBranchFx(WrappedBezierBranchFx)),
+        ("BezierBranchFxComponent" => BezierBranchFx(BezierBranchFx)),
         ("BezierTreeComponent" => BezierTree(WrappedBezierTreeComponent)),
         ("BoxInterpolatorComponent" => BoxInterpolator(WrappedBoxInterpolatorComponent)),
         ("CameraGraphicComponent" => CameraGraphic(WrappedCameraGraphicComponent)),
@@ -3409,25 +3275,25 @@ mod wrapped_component {
         ("ConvertedTmlTape_Component" => ConvertedTmlTape(WrappedConvertedTmlTapeComponent)),
         ("FxBankComponent" => FxBank(WrappedFxBankComponent)),
         ("FXControllerComponent" => FXController(WrappedFXControllerComponent)),
-        ("JD_AutodanceComponent" => Autodance(WrappedAutodance)),
-        ("JD_AvatarDescComponent" => AvatarDesc(WrappedAvatarDesc)),
-        ("JD_BlockFlowComponent" => BlockFlowComponent(WrappedBlockFlowComponent)),
+        ("JD_AutodanceComponent" => Autodance(Autodance)),
+        ("JD_AvatarDescComponent" => AvatarDesc(AvatarDesc)),
+        ("JD_BlockFlowComponent" => BlockFlowComponent(BlockFlowComponent)),
         ("JD_Carousel" => Carousel(WrappedCarousel)),
-        ("JD_CMU_GenericStage_Component" => CMUGenericStage(WrappedCMUGenericStage)),
+        ("JD_CMU_GenericStage_Component" => CMUGenericStage(CMUGenericStage)),
         ("JD_CreditsComponent" => Credits(WrappedCreditsComponent)),
         ("JD_FixedCameraComponent" => FixedCamera(WrappedFixedCameraComponent)),
-        ("JD_GachaComponent" => Gacha(WrappedGacha)),
-        ("JD_GoldMoveComponent" => GoldMove(WrappedGoldMove)),
+        ("JD_GachaComponent" => Gacha(Gacha)),
+        ("JD_GoldMoveComponent" => GoldMove(GoldMove)),
         ("JD_Grid_CustomPatterned" => GridCustomPatterned(WrappedGridCustomPatterned)),
         ("JD_Grid_RegularPatterned" => GridRegularPatterned(WrappedGridRegularPatterned)),
         ("JD_LineGrid" => LineGrid(WrappedLineGrid)),
         ("JD_UILineGrid" => UILineGrid(WrappedUILineGrid)),
         ("JD_UIGrid" => UIGrid(WrappedUIGrid)),
         ("JD_AnthologyGrid" => AnthologyGrid(WrappedAnthologyGrid)),
-        ("JD_NotificationBubble" => NotificationBubble(WrappedNotificationBubble)),
-        ("JD_NotificationBubblesPile" => NotificationBubblesPile(WrappedNotificationBubblesPile)),
-        ("JD_PictoComponent" => Picto(WrappedPicto)),
-        ("JD_PleoInfoComponent" => PleoInfo(WrappedPleoInfo)),
+        ("JD_NotificationBubble" => NotificationBubble(NotificationBubble)),
+        ("JD_NotificationBubblesPile" => NotificationBubblesPile(NotificationBubblesPile)),
+        ("JD_PictoComponent" => Picto(Picto)),
+        ("JD_PleoInfoComponent" => PleoInfo(PleoInfo)),
         ("JD_RegistrationComponent" => Registration(WrappedRegistrationComponent)),
         ("JD_WDFTeamBattleTransitionComponent" => WDFTeamBattleTransitionComponent(WrappedWDFTeamBattleTransitionComponent)),
         ("JD_BeatPulseComponent" => BeatPulseComponent(WrappedBeatPulseComponent)),
@@ -3435,36 +3301,36 @@ mod wrapped_component {
         ("UIItemTextField" => UIItemTextField(WrappedUIItemTextField)),
         ("JD_SceneSpawnerComponent" => SceneSpawner(WrappedSceneSpawnerComponent)),
         ("JD_ScrollBarComponent" => ScrollBar(WrappedScrollBarComponent)),
-        ("JD_ScrollingTextComponent" => ScrollingText(WrappedScrollingText)),
-        ("JD_SkinDescComponent" => SkinDesc(WrappedSkinDesc)),
-        ("JD_SongDatabaseComponent" => SongDatabase(WrappedSongDatabase)),
-        ("JD_SongDescComponent" => SongDesc(WrappedSongDesc)),
+        ("JD_ScrollingTextComponent" => ScrollingText(ScrollingText)),
+        ("JD_SkinDescComponent" => SkinDesc(SkinDesc)),
+        ("JD_SongDatabaseComponent" => SongDatabase(SongDatabase)),
+        ("JD_SongDescComponent" => SongDesc(SongDesc)),
         ("JD_StickerGrid" => StickerGrid(WrappedStickerGrid)),
-        ("JD_SubtitleComponent" => Subtitle(WrappedSubtitle)),
-        ("JD_UIAvatarUnlockWidget" => UIAvatarUnlockWidget(WrappedUIAvatarUnlockWidget)),
+        ("JD_SubtitleComponent" => Subtitle(Subtitle)),
+        ("JD_UIAvatarUnlockWidget" => UIAvatarUnlockWidget(UIAvatarUnlockWidget)),
         ("JD_UIHudAutodanceRecorderComponent" => UIHudAutodanceRecorder(WrappedUIHudAutodanceRecorderComponent)),
-        ("JD_UIHudCoopFeedbackComponent" => UIHudCoopFeedback(WrappedUIHudCoopFeedback)),
-        ("JD_UIHudLyricsComponent" => UIHudLyrics(WrappedUIHudLyrics)),
-        ("JD_UIHudPictoComponent" => UIHudPicto(WrappedUIHudPicto)),
-        ("JD_UIHudPictolineComponent" => UIHudPictoline(WrappedUIHudPictoline)),
-        ("JD_UIHudPlayerComponent" => UIHudPlayer(WrappedUIHudPlayer)),
-        ("JD_UIHudRacelineCoopComponent" => UIHudRacelineCoop(WrappedUIHudRacelineCoop)),
-        ("JD_UIHudRacelineGaugeBarComponent" => UIHudRacelineGaugeBar(WrappedUIHudRacelineGaugeBar)),
-        ("JD_UIHudRacelineRivalBarComponent" => UIHudRacelineRivalBar(WrappedUIHudRacelineRivalBar)),
-        ("JD_UIHudRacelineGaugeComponent" => UIHudRacelineGauge(WrappedUIHudRacelineGauge)),
-        ("JD_UIHudRacelineWDFBossComponent" => UIHudRacelineWDFBoss(WrappedUIHudRacelineWDFBoss)),
-        ("JD_UIHudRacelineWDFRankComponent" => UIHudRacelineWDFRank(WrappedUIHudRacelineWDFRank)),
-        ("JD_UIHudRacelineWDFSpotlightComponent" => UIHudRacelineWDFSpotlight(WrappedUIHudRacelineWDFSpotlight)),
-        ("JD_UIHudRacelineWDFTeamBattleComponent" => UIHudRaceLineWDFTeamBattle(WrappedUIHudRaceLineWDFTeamBattle)),
-        ("JD_UIHudStarvingComponent" => UIHudStarving(WrappedUIHudStarving)),
+        ("JD_UIHudCoopFeedbackComponent" => UIHudCoopFeedback(UIHudCoopFeedback)),
+        ("JD_UIHudLyricsComponent" => UIHudLyrics(UIHudLyrics)),
+        ("JD_UIHudPictoComponent" => UIHudPicto(UIHudPicto)),
+        ("JD_UIHudPictolineComponent" => UIHudPictoline(UIHudPictoline)),
+        ("JD_UIHudPlayerComponent" => UIHudPlayer(UIHudPlayer)),
+        ("JD_UIHudRacelineCoopComponent" => UIHudRacelineCoop(UIHudRacelineCoop)),
+        ("JD_UIHudRacelineGaugeBarComponent" => UIHudRacelineGaugeBar(UIHudRacelineGaugeBar)),
+        ("JD_UIHudRacelineRivalBarComponent" => UIHudRacelineRivalBar(UIHudRacelineRivalBar)),
+        ("JD_UIHudRacelineGaugeComponent" => UIHudRacelineGauge(UIHudRacelineGauge)),
+        ("JD_UIHudRacelineWDFBossComponent" => UIHudRacelineWDFBoss(UIHudRacelineWDFBoss)),
+        ("JD_UIHudRacelineWDFRankComponent" => UIHudRacelineWDFRank(UIHudRacelineWDFRank)),
+        ("JD_UIHudRacelineWDFSpotlightComponent" => UIHudRacelineWDFSpotlight(UIHudRacelineWDFSpotlight)),
+        ("JD_UIHudRacelineWDFTeamBattleComponent" => UIHudRaceLineWDFTeamBattle(UIHudRaceLineWDFTeamBattle)),
+        ("JD_UIHudStarvingComponent" => UIHudStarving(UIHudStarving)),
         ("JD_UIHudSweatCounter" => UIHudSweatCounter(WrappedUIHudSweatCounter)),
-        ("JD_UIHudSweatTimer" => UIHudSweatTimer(WrappedUIHudSweatTimer)),
+        ("JD_UIHudSweatTimer" => UIHudSweatTimer(UIHudSweatTimer)),
         ("JD_UIHudVersusPlayerComponent" => UIHudVersusPlayer(WrappedUIHudVersusPlayerComponent)),
-        ("JD_UIHudWDFIngameNotificationComponent" => UIHudWDFIngameNotification(WrappedUIHudWDFIngameNotification)),
-        ("JD_UIJoyconWidget" => UIJoyconWidget(WrappedUIJoyconWidget)),
-        ("JD_UIMojoWidget" => UIMojoWidget(WrappedUIMojoWidget)),
-        ("JD_UISaveWidget" => UISaveWidget(WrappedUISaveWidget)),
-        ("JD_UIScheduledQuestComponent" => UIScheduledQuest(WrappedUIScheduledQuest)),
+        ("JD_UIHudWDFIngameNotificationComponent" => UIHudWDFIngameNotification(UIHudWDFIngameNotification)),
+        ("JD_UIJoyconWidget" => UIJoyconWidget(UIJoyconWidget)),
+        ("JD_UIMojoWidget" => UIMojoWidget(UIMojoWidget)),
+        ("JD_UISaveWidget" => UISaveWidget(UISaveWidget)),
+        ("JD_UIScheduledQuestComponent" => UIScheduledQuest(UIScheduledQuest)),
         ("JD_UIUploadIcon" => UIUploadIcon(WrappedUIUploadIcon)),
         ("JD_UIWidgetGroupHUD" => UIWidgetGroupHUD(WrappedUIWidgetGroupHUD)),
         ("JD_UIWidgetGroupHUD_AutodanceRecorder" => UIWidgetGroupHUDAutodanceRecorder(WrappedUIWidgetGroupHUDAutodanceRecorder)),
@@ -3473,41 +3339,41 @@ mod wrapped_component {
         ("JD_WDFBossSpawnerComponent" => WDFBossSpawner(WrappedWDFBossSpawnerComponent)),
         ("JD_WDFTeamBattlePresentationComponent" => WDFTeamBattlePresentation(WrappedWDFTeamBattlePresentationComponent)),
         ("JD_WDFThemePresentationComponent" => WDFThemePresentation(WrappedWDFThemePresentationComponent)),
-        ("JD_WDFTransitionComponent" => WDFTransitionComponent(WrappedWDFTransitionComponent)),
-        ("JD_WDFUnlimitedFeedbackComponent" => WDFUnlimitedFeedback(WrappedWDFUnlimitedFeedback)),
-        ("SoundComponent" => Sound(WrappedSound)),
-        ("MasterTape" => MasterTape(WrappedMasterTape)),
-        ("JD_UIUplayNotification" => UIUplayNotification(WrappedUIUplayNotification)),
-        ("JD_UIHudSpotlightPlayerComponent" => UIHudSpotlightPlayerComponent(WrappedUIHudSpotlightPlayerComponent)),
-        ("JD_UIHudLyricsFeedbackComponent" => UIHudLyricsFeedbackComponent(WrappedUIHudLyricsFeedbackComponent)),
-        ("JD_UIHudCamerafeedComponent" => UIHudCamerafeedComponent(WrappedUIHudCamerafeedComponent)),
-        ("JD_UIHudProgressComponent" => UIHudProgressComponent(WrappedUIHudProgressComponent)),
-        ("JD_UIHudCommunityDancerCardComponent" => UIHudCommunityDancerCardComponent(WrappedUIHudCommunityDancerCardComponent)),
-        ("JD_UIHudRacelineRivalComponent" => UIHudRacelineRivalComponent(WrappedUIHudRacelineRivalComponent)),
-        ("JD_WDFOnlineRankTransitionComponent" => WDFOnlineRankTransitionComponent(WrappedWDFOnlineRankTransitionComponent)),
-        ("JD_AliasUnlockNotification" => AliasUnlockNotification(WrappedAliasUnlockNotification)),
-        ("JD_UIHudDoubleScoringPlayerComponent" => UIHudDoubleScoringPlayerComponent(WrappedUIHudDoubleScoringPlayerComponent)),
-        ("JD_UIProfileStatWidget" => UIProfileStatWidget(WrappedUIProfileStatWidget)),
-        ("JD_UIJDRankWidget" => UIJDRankWidget(WrappedUIJDRankWidget)),
-        ("JD_ScrollingPopupComponent" => ScrollingPopupComponent(WrappedScrollingPopupComponent)),
-        ("JD_UIHudVumeterComponent" => UIHudVumeterComponent(WrappedUIHudVumeterComponent)),
-        ("JD_UISkinUnlockWidget" => UISkinUnlockWidget(WrappedUISkinUnlockWidget)),
+        ("JD_WDFTransitionComponent" => WDFTransitionComponent(WDFTransitionComponent)),
+        ("JD_WDFUnlimitedFeedbackComponent" => WDFUnlimitedFeedback(WDFUnlimitedFeedback)),
+        ("SoundComponent" => Sound(Sound)),
+        ("MasterTape" => MasterTape(MasterTape)),
+        ("JD_UIUplayNotification" => UIUplayNotification(UIUplayNotification)),
+        ("JD_UIHudSpotlightPlayerComponent" => UIHudSpotlightPlayerComponent(UIHudSpotlightPlayerComponent)),
+        ("JD_UIHudLyricsFeedbackComponent" => UIHudLyricsFeedbackComponent(UIHudLyricsFeedbackComponent)),
+        ("JD_UIHudCamerafeedComponent" => UIHudCamerafeedComponent(UIHudCamerafeedComponent)),
+        ("JD_UIHudProgressComponent" => UIHudProgressComponent(UIHudProgressComponent)),
+        ("JD_UIHudCommunityDancerCardComponent" => UIHudCommunityDancerCardComponent(UIHudCommunityDancerCardComponent)),
+        ("JD_UIHudRacelineRivalComponent" => UIHudRacelineRivalComponent(UIHudRacelineRivalComponent)),
+        ("JD_WDFOnlineRankTransitionComponent" => WDFOnlineRankTransitionComponent(WDFOnlineRankTransitionComponent)),
+        ("JD_AliasUnlockNotification" => AliasUnlockNotification(AliasUnlockNotification)),
+        ("JD_UIHudDoubleScoringPlayerComponent" => UIHudDoubleScoringPlayerComponent(UIHudDoubleScoringPlayerComponent)),
+        ("JD_UIProfileStatWidget" => UIProfileStatWidget(UIProfileStatWidget)),
+        ("JD_UIJDRankWidget" => UIJDRankWidget(UIJDRankWidget)),
+        ("JD_ScrollingPopupComponent" => ScrollingPopupComponent(ScrollingPopupComponent)),
+        ("JD_UIHudVumeterComponent" => UIHudVumeterComponent(UIHudVumeterComponent)),
+        ("JD_UISkinUnlockWidget" => UISkinUnlockWidget(UISkinUnlockWidget)),
         ("MaterialGraphicComponent" => MaterialGraphic(WrappedMaterialGraphicComponent)),
         ("JD_UIHudRacelineDM" => UIHudRacelineDM(WrappedUIHudRacelineDM)),
-        ("MusicTrackComponent" => MusicTrack(WrappedMusicTrackComponent)),
+        ("MusicTrackComponent" => MusicTrack(MusicTrackComponent)),
         ("PleoComponent" => Pleo(WrappedPleoComponent)),
         ("PleoTextureGraphicComponent" => PleoTextureGraphic(WrappedPleoTextureGraphicComponent)),
         ("PropertyPatcher" => PropertyPatcher(WrappedPropertyPatcher)),
         ("SingleInstanceMesh3DComponent" => SingleInstanceMesh3D(WrappedSingleInstanceMesh3DComponent)),
         ("Mesh3DComponent" => Mesh3D(WrappedMesh3DComponent)),
-        ("TapeCase_Component" => TapeCase(WrappedTapeCase)),
+        ("TapeCase_Component" => TapeCase(TapeCase)),
         ("TextureGraphicComponent" => TextureGraphic(WrappedTextureGraphicComponent)),
         ("TexturePatcherComponent" => TexturePatcher(WrappedTexturePatcherComponent)),
         ("UIAnchor" => UIAnchor(WrappedUIAnchor)),
         ("UICarousel" => UICarousel(WrappedUICarousel)),
         ("UIChangePage" => UIChangePage(WrappedUIChangePage)),
         ("UIControl" => UIControl(WrappedUIControl)),
-        ("UIComponent" => UI(WrappedUI)),
+        ("UIComponent" => UI(UI)),
         ("UICountdown" => UICountdown(WrappedUICountdown)),
         ("UIItemSlot" => UIItemSlot(WrappedUIItemSlot)),
         ("UINineSliceComponent" => UINineSlice(WrappedUINineSliceComponent)),

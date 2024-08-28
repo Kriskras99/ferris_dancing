@@ -82,9 +82,7 @@ pub fn build(
         audio_scene_vec,
     )?;
 
-    Ok(cooked::isc::WrappedScene {
-        scene: audio_scene.scene,
-    })
+    Ok(audio_scene.scene.into())
 }
 
 /// Build the audio scene
@@ -197,7 +195,7 @@ fn musictrack_template(
 /// Build the sequence template
 fn sequence_template() -> Result<Vec<u8>, Error> {
     let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
-        components: vec![json_types::v22::Template22::MasterTape(
+        components: vec![json_types::v22::Template22::TapeCase(
             json_types::tpl::MasterTape::default(),
         )],
         ..Default::default()

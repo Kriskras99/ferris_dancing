@@ -77,9 +77,7 @@ pub fn build(
         videoscoach_dir.join(format!("{lower_map_name}.vp9.720.webm")),
     )?;
 
-    Ok(cooked::isc::WrappedScene {
-        scene: video_scene.scene,
-    })
+    Ok(video_scene.scene.into())
 }
 
 /// Build the video player actor

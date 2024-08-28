@@ -71,9 +71,7 @@ pub fn build(
     // Build the karaoke timeline and related files
     build_karaoke(ses, bf)?;
 
-    Ok(cooked::isc::WrappedScene {
-        scene: tml_scene.scene,
-    })
+    Ok(tml_scene.scene.into())
 }
 
 /// Build the dance timeline and pictos

@@ -181,7 +181,8 @@ pub fn decode_audio(
     match (wav.platform, wav.codec) {
         (_, Codec::PCM) => {
             test_eq!(
-                fmt.bits_per_sample, 16,
+                fmt.bits_per_sample,
+                16,
                 "Bits per sample != 16, this is not supported"
             )?;
             let data = wav.chunks[&Data::MAGIC].as_data()?;
@@ -247,7 +248,8 @@ pub fn decode_audio(
                 };
                 let total_frames = dsp_left.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME) * 2;
                 test_eq!(
-                    dsp_left.sample_count, dsp_right.sample_count,
+                    dsp_left.sample_count,
+                    dsp_right.sample_count,
                     "One channel has more samples than the other"
                 )?;
 
@@ -288,7 +290,8 @@ pub fn decode_audio(
                     coefficients: dsp_right.coefficients,
                 };
                 test_eq!(
-                    dsp_left.sample_count, dsp_right.sample_count,
+                    dsp_left.sample_count,
+                    dsp_right.sample_count,
                     "One channel has more samples than the other"
                 )?;
                 let total_frames = dsp_left.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME);

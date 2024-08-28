@@ -68,10 +68,9 @@ pub fn main() {
         let mut output_file = File::create(&output_file_path).unwrap();
         let is_opus = decode_audio(&source_file, &mut output_file).unwrap();
         if is_opus {
-            std::fs::rename(&output_file_path, output_file_path.with_extension("opus"))
-                .unwrap();
+            std::fs::rename(&output_file_path, output_file_path.with_extension("opus")).unwrap();
         }
-    } else  {
+    } else {
         let content = encode_audio(source_file).unwrap();
         let filename = args.source.file_name().unwrap();
         let output_file_path = output_dir.join(filename).with_extension("wav.ckd");

@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::impl_deserialize_for_internally_tagged_enum;
+use crate::{impl_deserialize_for_internally_tagged_enum, wrap};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "@NAME", deny_unknown_fields)]
@@ -20,7 +20,7 @@ pub enum Value<'a> {
     #[serde(rename = "PropertyPatchValue_String")]
     String(WrappedString<'a>),
     #[serde(rename = "PropertyPatchValue_Time")]
-    Time(WrappedBase),
+    Time(Base),
 }
 
 impl_deserialize_for_internally_tagged_enum! {
@@ -31,50 +31,22 @@ impl_deserialize_for_internally_tagged_enum! {
     ("PropertyPatchValue_Int" => Int(WrappedInt)),
     ("PropertyPatchValue_Path" => Path(WrappedPath<'a>)),
     ("PropertyPatchValue_String" => String(WrappedString<'a>)),
-    ("PropertyPatchValue_Time" => Time(WrappedBase)),
+    ("PropertyPatchValue_Time" => Time(Base)),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[repr(transparent)]
-pub struct WrappedBase {
-    #[serde(rename = "PropertyPatchValue_Base")]
-    base: (),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[repr(transparent)]
-pub struct WrappedColor {
-    #[serde(rename = "PropertyPatchValue_Color")]
-    color: Color,
-}
-
-impl AsRef<Color> for WrappedColor {
-    fn as_ref(&self) -> &Color {
-        &self.color
-    }
-}
+wrap!(WrappedColor, Color, "PropertyPatchValue_Color");
+wrap!(WrappedColorSet, ColorSets, "PropertyPatchValue_ColorSet", 'a);
+wrap!(WrappedFloat, Float, "PropertyPatchValue_Float");
+wrap!(WrappedInt, Int, "PropertyPatchValue_Int");
+wrap!(WrappedPath, Path, "PropertyPatchValue_Path", 'a);
+wrap!(WrappedString, String, "PropertyPatchValue_String", 'a);
+wrap!(Base, "PropertyPatchValue_Base");
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Color {
     #[serde(rename = "@VALUE")]
     pub value: ubiart_toolkit_shared_types::Color,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[repr(transparent)]
-pub struct WrappedColorSet<'a> {
-    #[serde(borrow, rename = "PropertyPatchValue_ColorSet")]
-    color_set: ColorSets<'a>,
-}
-
-impl<'a> AsRef<ColorSets<'a>> for WrappedColorSet<'a> {
-    fn as_ref(&self) -> &ColorSets<'a> {
-        &self.color_set
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -93,39 +65,11 @@ pub struct ColorSet<'a> {
     pub value: ubiart_toolkit_shared_types::Color,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[repr(transparent)]
-pub struct WrappedFloat {
-    #[serde(rename = "PropertyPatchValue_Float")]
-    float: Float,
-}
-
-impl AsRef<Float> for WrappedFloat {
-    fn as_ref(&self) -> &Float {
-        &self.float
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Float {
     #[serde(rename = "@VALUE")]
     pub value: f32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[repr(transparent)]
-pub struct WrappedInt {
-    #[serde(rename = "PropertyPatchValue_Int")]
-    int: Int,
-}
-
-impl AsRef<Int> for WrappedInt {
-    fn as_ref(&self) -> &Int {
-        &self.int
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -135,39 +79,11 @@ pub struct Int {
     pub value: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[repr(transparent)]
-pub struct WrappedPath<'a> {
-    #[serde(borrow, rename = "PropertyPatchValue_Path")]
-    path: Path<'a>,
-}
-
-impl<'a> AsRef<Path<'a>> for WrappedPath<'a> {
-    fn as_ref(&self) -> &Path<'a> {
-        &self.path
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Path<'a> {
     #[serde(rename = "@VALUE")]
     pub value: Cow<'a, str>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-#[repr(transparent)]
-pub struct WrappedString<'a> {
-    #[serde(borrow, rename = "PropertyPatchValue_String")]
-    string: String<'a>,
-}
-
-impl<'a> AsRef<String<'a>> for WrappedString<'a> {
-    fn as_ref(&self) -> &String<'a> {
-        &self.string
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

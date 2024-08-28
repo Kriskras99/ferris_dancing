@@ -86,9 +86,7 @@ pub fn build(
         menuart_scene_vec,
     )?;
 
-    Ok(cooked::isc::WrappedScene {
-        scene: menuart_scene.scene,
-    })
+    Ok(menuart_scene.scene.into())
 }
 
 /// Build the menuart scene
@@ -198,7 +196,7 @@ fn materialgraphiccomponent_scene(
                     primitive_parameters: cooked::isc::PrimitiveParameters {
                         gfx_primitive_param: cooked::isc::GFXPrimitiveParam { color_factor: (0.0, 0.0, 0.0, 0.0), enums: vec![cooked::isc::Enum { name: Cow::Borrowed("gfxOccludeInfo"), selection: 0 }] } 
                     },
-                    enums: vec![cooked::isc::Enum { name: Cow::Borrowed("anchor"), selection: texture.anchor }, cooked::isc::Enum { name: Cow::Borrowed("anchor"), selection: texture.anchor }],
+                    enums: vec![cooked::isc::Enum { name: Cow::Borrowed("anchor"), selection: texture.anchor }, cooked::isc::Enum { name: Cow::Borrowed("oldAnchor"), selection: texture.anchor }],
                     material: cooked::isc::Material { gfx_material_serializable: cooked::isc::GFXMaterialSerializable {
                         atl_channel: 0,
                         atl_path: Cow::Borrowed(""),

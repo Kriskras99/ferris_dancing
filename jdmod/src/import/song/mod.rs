@@ -89,7 +89,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let autodance_path = main_scene
         .get_subscene_by_userfriendly_end("_AUTODANCE", sis.lax)?
         .wrapped_scene
-        .scene
+        .as_ref()
         .get_actor_by_userfriendly_end("_autodance", sis.lax)?
         .lua
         .as_ref();
@@ -99,7 +99,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let timeline_scene = &main_scene
         .get_subscene_by_userfriendly_end("_TML", sis.lax)?
         .wrapped_scene
-        .scene;
+        .as_ref();
 
     // Import the dance timeline
     let dance_timeline_path = &timeline_scene
@@ -117,7 +117,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let mainsequence_path = &main_scene
         .get_subscene_by_userfriendly_end("_CINE", sis.lax)?
         .wrapped_scene
-        .scene
+        .as_ref()
         .get_actor_by_userfriendly_end("_MainSequence", sis.lax)?
         .lua;
     mainsequence::import(&sis, mainsequence_path)?;
@@ -126,7 +126,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let musictrack_path = &main_scene
         .get_subscene_by_userfriendly_end("_AUDIO", sis.lax)?
         .wrapped_scene
-        .scene
+        .as_ref()
         .get_actor_by_userfriendly("MusicTrack")?
         .lua;
     let audiofile = musictrack::import(&sis, musictrack_path)?;
@@ -135,7 +135,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let video_actor = &main_scene
         .get_subscene_by_userfriendly_end("_VIDEO", sis.lax)?
         .wrapped_scene
-        .scene
+        .as_ref()
         .get_actor_by_userfriendly("VideoScreen")?;
     let videofile = video::import(&sis, video_actor)?;
 
@@ -145,8 +145,11 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         sis.lax,
     ) {
         (Ok(subscene), _) => {
-            let menuart_scene = &subscene.wrapped_scene.scene;
-            menuart::import(&sis, menuart_scene, &songdesc.phone_images)?;
+            menuart::import(
+                &sis,
+                subscene.wrapped_scene.as_ref(),
+                &songdesc.phone_images,
+            )?;
         }
         (Err(_), true) => {
             println!("Warning! Could not find menuart subscene, trying to use scene file!");

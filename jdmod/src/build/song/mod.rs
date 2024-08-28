@@ -176,7 +176,7 @@ fn graph_scene(
         graph_scene_vec,
     )?;
 
-    Ok(cooked::isc::WrappedScene { scene: root.scene })
+    Ok(root.scene.into())
 }
 
 /// Build the main scene from all the subscenes

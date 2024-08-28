@@ -71,7 +71,7 @@ impl Writer {
         let data_start_pos = *position;
         writer.write_at::<u32le>(position, 0)?; // data start offset
         writer.write_at::<u32le>(position, chunk_len)?; // number of chunks
-        writer.write_at::<u32le>(position, 0)?; // unk2
+        writer.write_at::<u32le>(position, if codec == Codec::PCM { 0 } else { 3 })?; // unk2
 
         let mut chunk_data_start =
             original_position + u64::from(header_size) + u64::from(chunk_header_size);

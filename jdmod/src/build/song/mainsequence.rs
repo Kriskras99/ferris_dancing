@@ -50,9 +50,7 @@ pub fn build(
     // the timeline
     mainsequence_timeline(ses, bf)?;
 
-    Ok(cooked::isc::WrappedScene {
-        scene: cine_scene.scene,
-    })
+    Ok(cine_scene.scene.into())
 }
 
 /// Build the mainsequence actor
