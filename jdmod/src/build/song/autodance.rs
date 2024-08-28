@@ -94,7 +94,9 @@ fn autodance_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                         lua: Cow::Owned(format!(
                             "world/maps/{lower_map_name}/autodance/{lower_map_name}_autodance.tpl"
                         )),
-                        components: vec![cooked::isc::WrappedComponent::Autodance],
+                        components: vec![cooked::isc::WrappedComponent::Autodance(
+                            Default::default(),
+                        )],
                         ..Default::default()
                     }),
                 },

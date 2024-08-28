@@ -106,7 +106,7 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                 .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::MusicTrack(
-                            cooked::isc::WrappedMusicTrackComponent,
+                            Default::default(),
                         )],
                         ..Default::default()
                     }),
@@ -121,7 +121,9 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                 .join(format!("audio/{lower_map_name}_sequence.tpl"))
                                 .into_string(),
                         ),
-                        components: vec![cooked::isc::WrappedComponent::TapeCase],
+                        components: vec![cooked::isc::WrappedComponent::TapeCase(
+                            Default::default(),
+                        )],
                         ..Default::default()
                     }),
                 }),

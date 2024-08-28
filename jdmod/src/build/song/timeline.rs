@@ -274,7 +274,9 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                 .join(format!("timeline/{lower_map_name}_tml_dance.tpl"))
                                 .into_string(),
                         ),
-                        components: vec![cooked::isc::WrappedComponent::TapeCase],
+                        components: vec![cooked::isc::WrappedComponent::TapeCase(
+                            Default::default(),
+                        )],
                         ..Default::default()
                     }),
                 }),
@@ -288,17 +290,18 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                 .join(format!("timeline/{lower_map_name}_tml_karaoke.tpl"))
                                 .into_string(),
                         ),
-                        components: vec![cooked::isc::WrappedComponent::TapeCase],
+                        components: vec![cooked::isc::WrappedComponent::TapeCase(
+                            Default::default(),
+                        )],
                         ..Default::default()
                     }),
                 }),
             ],
-            scene_configs: cooked::isc::WrappedSceneConfigs {
-                scene_configs: cooked::isc::SceneConfigs {
-                    active_scene_config: 0,
-                    jd_scene_config: Vec::new(),
-                },
-            },
+            scene_configs: cooked::isc::SceneConfigs {
+                active_scene_config: 0,
+                jd_scene_config: Vec::new(),
+            }
+            .into(),
         },
     }
 }

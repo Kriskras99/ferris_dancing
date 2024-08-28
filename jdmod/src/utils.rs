@@ -180,10 +180,10 @@ pub fn decode_audio(
 
     match (wav.platform, wav.codec) {
         (_, Codec::PCM) => {
-            assert_eq!(
+            test_eq!(
                 fmt.bits_per_sample, 16,
                 "Bits per sample != 16, this is not supported"
-            );
+            )?;
             let data = wav.chunks[&Data::MAGIC].as_data()?;
 
             let spec = hound::WavSpec {
@@ -246,10 +246,10 @@ pub fn decode_audio(
                     coefficients: dsp_left.coefficients,
                 };
                 let total_frames = dsp_left.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME) * 2;
-                assert_eq!(
+                test_eq!(
                     dsp_left.sample_count, dsp_right.sample_count,
                     "One channel has more samples than the other"
-                );
+                )?;
 
                 let decoder = gc_adpcm::Decoder::interleaved_stereo(
                     data.data.as_ref(),
@@ -287,10 +287,10 @@ pub fn decode_audio(
                     hist2: dsp_right.initial_sample_history_2,
                     coefficients: dsp_right.coefficients,
                 };
-                assert_eq!(
+                test_eq!(
                     dsp_left.sample_count, dsp_right.sample_count,
                     "One channel has more samples than the other"
-                );
+                )?;
                 let total_frames = dsp_left.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME);
 
                 let decoder = gc_adpcm::Decoder::stereo(

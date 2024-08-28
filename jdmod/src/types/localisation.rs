@@ -354,7 +354,7 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
             {
                 *new = merge_string(one, two)?;
             }
-            let mut new_not_empty = self.not_empty.clone();
+            let mut new_not_empty = self.not_empty;
             new_not_empty.or(&other.not_empty);
             translation.not_empty = new_not_empty;
             Ok(translation)

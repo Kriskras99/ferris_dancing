@@ -117,7 +117,7 @@ fn menuart_scene<'a>(
             is_popup: false,
             platform_filters: Vec::new(),
             actors,
-            scene_configs: cooked::isc::WrappedSceneConfigs::default(),
+            scene_configs: cooked::isc::SceneConfigs::default().into(),
         },
     }
 }
@@ -184,7 +184,7 @@ fn materialgraphiccomponent_scene(
             pos2d: texture.pos2d,
             lua: Cow::Borrowed("enginedata/actortemplates/tpl_materialgraphiccomponent2d.tpl"),
             components: vec![
-                cooked::isc::WrappedComponent::MaterialGraphic(cooked::isc::WrappedMaterialGraphicComponent {material_graphic_component: cooked::isc::MaterialGraphicComponent {
+                cooked::isc::WrappedComponent::MaterialGraphic(cooked::isc::MaterialGraphicComponent {
                     color_computer_tag_id: 0,
                     render_in_target: false,
                     disable_light: false,
@@ -213,7 +213,7 @@ fn materialgraphiccomponent_scene(
                         material_params: cooked::isc::MaterialParams::default(),
                         outlined_mask_params: Some(cooked::isc::OutlinedMaskParams::default())
                     }}
-                }})
+                }.into())
             ],
             ..Default::default()
         })

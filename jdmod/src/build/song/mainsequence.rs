@@ -100,11 +100,11 @@ fn cine_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
                     userfriendly: Cow::Owned(format!("{map_name}_MainSequence")),
                     lua: Cow::Owned(format!("world/maps/{lower_map_name}/cinematics/{lower_map_name}_mainsequence.tpl")),
-                    components: vec![cooked::isc::WrappedComponent::MasterTape],
+                    components: vec![cooked::isc::WrappedComponent::MasterTape(Default::default())],
                     ..Default::default()
                 })}),
             ],
-            scene_configs: cooked::isc::WrappedSceneConfigs::default(),
+            scene_configs: cooked::isc::SceneConfigs::default().into(),
         },
     }
 }

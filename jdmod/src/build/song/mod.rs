@@ -161,12 +161,11 @@ fn graph_scene(
                     }),
                 },
             )],
-            scene_configs: cooked::isc::WrappedSceneConfigs {
-                scene_configs: cooked::isc::SceneConfigs {
-                    active_scene_config: 0,
-                    jd_scene_config: Vec::new(),
-                },
-            },
+            scene_configs: cooked::isc::SceneConfigs {
+                active_scene_config: 0,
+                jd_scene_config: Vec::new(),
+            }
+            .into(),
         },
     };
 
@@ -251,7 +250,7 @@ fn main_scene<'a>(
         userfriendly: Cow::Owned(format!("{map_name} : Template Artist - Template Title&#10;JDVer = 5, ID = 842776738, Type = 1 (Flags 0x00000000), NbCoach = 2, Difficulty = 2")),
         pos2d: (-3.531_976, -1.485_322),
         lua: Cow::Owned(format!("world/maps/{lower_map_name}/songdesc.tpl")),
-        components: vec![cooked::isc::WrappedComponent::SongDesc],
+        components: vec![cooked::isc::WrappedComponent::SongDesc(Default::default())],
         ..Default::default()
     })}));
 
@@ -261,36 +260,34 @@ fn main_scene<'a>(
             gridunit: 2.0,
             depth_separator: 0,
             actors,
-            scene_configs: cooked::isc::WrappedSceneConfigs {
-                scene_configs: cooked::isc::SceneConfigs {
-                    active_scene_config: 0,
-                    jd_scene_config: vec![cooked::isc::WrappedJdSceneConfig::Map(
-                        cooked::isc::WrappedMapSceneConfig {
-                            map_scene_config: cooked::isc::MapSceneConfig {
-                                name: Cow::Borrowed(""),
-                                sound_context: Cow::Borrowed(""),
-                                hud: 0,
-                                enums: vec![
-                                    cooked::isc::Enum {
-                                        name: Cow::Borrowed("Pause_Level"),
-                                        selection: 6,
-                                    },
-                                    cooked::isc::Enum {
-                                        name: Cow::Borrowed("type"),
-                                        selection: 1,
-                                    },
-                                    cooked::isc::Enum {
-                                        name: Cow::Borrowed("musicscore"),
-                                        selection: 2,
-                                    },
-                                ],
-                                phone_title_loc_id: None,
-                                phone_image: None,
+            scene_configs: cooked::isc::SceneConfigs {
+                active_scene_config: 0,
+                jd_scene_config: vec![cooked::isc::WrappedJdSceneConfig::Map(
+                    cooked::isc::MapSceneConfig {
+                        name: Cow::Borrowed(""),
+                        sound_context: Cow::Borrowed(""),
+                        hud: 0,
+                        enums: vec![
+                            cooked::isc::Enum {
+                                name: Cow::Borrowed("Pause_Level"),
+                                selection: 6,
                             },
-                        },
-                    )],
-                },
-            },
+                            cooked::isc::Enum {
+                                name: Cow::Borrowed("type"),
+                                selection: 1,
+                            },
+                            cooked::isc::Enum {
+                                name: Cow::Borrowed("musicscore"),
+                                selection: 2,
+                            },
+                        ],
+                        phone_title_loc_id: None,
+                        phone_image: None,
+                    }
+                    .into(),
+                )],
+            }
+            .into(),
             ..Default::default()
         },
     }

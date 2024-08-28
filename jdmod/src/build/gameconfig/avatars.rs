@@ -189,31 +189,28 @@ fn desc_scene(id: u16) -> cooked::isc::WrappedActors<'static> {
             lua: Cow::Owned(format!("world/avatars/{id:04}/desc.tpl")),
             components: vec![
                 cooked::isc::WrappedComponent::MaterialGraphic(
-                    cooked::isc::WrappedMaterialGraphicComponent {
-                        material_graphic_component: cooked::isc::MaterialGraphicComponent {
-                            material: cooked::isc::Material {
-                                gfx_material_serializable: cooked::isc::GFXMaterialSerializable {
-                                    atl_path: Cow::Borrowed("world/ui/atlas/avatar.atl"),
-                                    shader_path: Cow::Borrowed(
-                                        "world/ui/materials/_common/alpha.msh",
-                                    ),
-                                    texture_set: cooked::isc::TextureSet {
-                                        gfx_material_texture_path_set:
-                                            cooked::isc::GFXMaterialTexturePathSet {
-                                                diffuse: Cow::Owned(format!(
-                                                    "world/avatars/{id:04}/avatar.png"
-                                                )),
-                                                ..Default::default()
-                                            },
-                                    },
-                                    ..Default::default()
+                    cooked::isc::MaterialGraphicComponent {
+                        material: cooked::isc::Material {
+                            gfx_material_serializable: cooked::isc::GFXMaterialSerializable {
+                                atl_path: Cow::Borrowed("world/ui/atlas/avatar.atl"),
+                                shader_path: Cow::Borrowed("world/ui/materials/_common/alpha.msh"),
+                                texture_set: cooked::isc::TextureSet {
+                                    gfx_material_texture_path_set:
+                                        cooked::isc::GFXMaterialTexturePathSet {
+                                            diffuse: Cow::Owned(format!(
+                                                "world/avatars/{id:04}/avatar.png"
+                                            )),
+                                            ..Default::default()
+                                        },
                                 },
+                                ..Default::default()
                             },
-                            ..Default::default()
                         },
-                    },
+                        ..Default::default()
+                    }
+                    .into(),
                 ),
-                cooked::isc::WrappedComponent::AvatarDesc,
+                cooked::isc::WrappedComponent::AvatarDesc(Default::default()),
             ],
             ..Default::default()
         }),
@@ -230,17 +227,13 @@ fn avatardb_scene<'a>(
             engine_version: bs.engine_version,
             view_family: true,
             actors,
-            scene_configs: cooked::isc::WrappedSceneConfigs {
-                scene_configs: cooked::isc::SceneConfigs {
-                    active_scene_config: 0,
-                    jd_scene_config: vec![cooked::isc::WrappedJdSceneConfig::SongDatabase(
-                        cooked::isc::WrappedSongDatabaseSceneConfig {
-                            song_database_scene_config:
-                                cooked::isc::SongDatabaseSceneConfig::default(),
-                        },
-                    )],
-                },
-            },
+            scene_configs: cooked::isc::SceneConfigs {
+                active_scene_config: 0,
+                jd_scene_config: vec![cooked::isc::WrappedJdSceneConfig::SongDatabase(
+                    cooked::isc::SongDatabaseSceneConfig::default().into(),
+                )],
+            }
+            .into(),
             ..Default::default()
         },
     }

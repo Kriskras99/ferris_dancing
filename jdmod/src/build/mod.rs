@@ -79,7 +79,9 @@ pub fn song_database(
             actor: Box::new(cooked::isc::Actor {
                 userfriendly: Cow::Borrowed("skuscene_db"),
                 lua: Cow::Borrowed("world/skuscenes/skuscene_base.tpl"),
-                components: vec![cooked::isc::WrappedComponent::SongDatabase],
+                components: vec![cooked::isc::WrappedComponent::SongDatabase(
+                    Default::default(),
+                )],
                 ..Default::default()
             }),
         },
@@ -134,7 +136,7 @@ pub fn song_database(
             actor: Box::new(isc::Actor {
                 userfriendly: song_name,
                 lua: Cow::Owned(format!("world/maps/{lower_song_name}/songdesc.tpl")),
-                components: vec![isc::WrappedComponent::SongDesc],
+                components: vec![isc::WrappedComponent::SongDesc(Default::default())],
                 ..Default::default()
             }),
         }));
@@ -176,23 +178,21 @@ pub fn song_database(
         scene: isc::Scene {
             engine_version: bs.engine_version,
             actors,
-            scene_configs: isc::WrappedSceneConfigs {
-                scene_configs: isc::SceneConfigs {
-                    active_scene_config: 0,
-                    jd_scene_config: vec![isc::WrappedJdSceneConfig::SongDatabase(
-                        isc::WrappedSongDatabaseSceneConfig {
-                            song_database_scene_config: isc::SongDatabaseSceneConfig {
-                                sku: Cow::Borrowed("jd2022-nx-all"),
-                                rating_ui: Cow::Borrowed(
-                                    "world/ui/screens/boot_warning/boot_warning_esrb.isc",
-                                ),
-                                coverflow_sku_songs: isc_coverflow_sku_songs,
-                                ..Default::default()
-                            },
-                        },
-                    )],
-                },
-            },
+            scene_configs: isc::SceneConfigs {
+                active_scene_config: 0,
+                jd_scene_config: vec![isc::WrappedJdSceneConfig::SongDatabase(
+                    isc::SongDatabaseSceneConfig {
+                        sku: Cow::Borrowed("jd2022-nx-all"),
+                        rating_ui: Cow::Borrowed(
+                            "world/ui/screens/boot_warning/boot_warning_esrb.isc",
+                        ),
+                        coverflow_sku_songs: isc_coverflow_sku_songs,
+                        ..Default::default()
+                    }
+                    .into(),
+                )],
+            }
+            .into(),
             ..Default::default()
         },
     };

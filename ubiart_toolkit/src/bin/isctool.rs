@@ -25,6 +25,6 @@ fn main() {
 
     if let Some(path) = cli.output {
         let file = File::create(path).unwrap();
-        serde_json::to_writer_pretty(file, &isc).unwrap();
+        cooked::isc::create(file, &isc).unwrap();
     }
 }

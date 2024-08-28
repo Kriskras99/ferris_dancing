@@ -62,24 +62,21 @@ pub fn main() {
     let source_file = File::open(&args.source).unwrap();
     let magic = source_file.read_at::<[u8; 4]>(&mut 0).unwrap();
 
-    match &magic {
-        b"RAKI" => {
-            let filename = args.source.file_name().unwrap();
-            let output_file_path = output_dir.join(filename).with_extension("");
-            let mut output_file = File::create(&output_file_path).unwrap();
-            let is_opus = decode_audio(&source_file, &mut output_file).unwrap();
-            if is_opus {
-                std::fs::rename(&output_file_path, output_file_path.with_extension("opus"))
-                    .unwrap();
-            }
+    if &magic == b"RAKI" {
+        let filename = args.source.file_name().unwrap();
+        let output_file_path = output_dir.join(filename).with_extension("");
+        let mut output_file = File::create(&output_file_path).unwrap();
+        let is_opus = decode_audio(&source_file, &mut output_file).unwrap();
+        if is_opus {
+            std::fs::rename(&output_file_path, output_file_path.with_extension("opus"))
+                .unwrap();
         }
-        _ => {
-            let content = encode_audio(source_file).unwrap();
-            let filename = args.source.file_name().unwrap();
-            let output_file_path = output_dir.join(filename).with_extension("wav.ckd");
-            let mut output_file = File::create(&output_file_path).unwrap();
-            output_file.write_all(&content).unwrap();
-        }
+    } else  {
+        let content = encode_audio(source_file).unwrap();
+        let filename = args.source.file_name().unwrap();
+        let output_file_path = output_dir.join(filename).with_extension("wav.ckd");
+        let mut output_file = File::create(&output_file_path).unwrap();
+        output_file.write_all(&content).unwrap();
     }
 }
 

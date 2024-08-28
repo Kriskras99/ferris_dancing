@@ -21,7 +21,7 @@ pub fn import(is: &ImportState<'_>, songdb_scene: &str) -> Result<(), Error> {
         if actor
             .components
             .iter()
-            .any(|c| matches!(c, WrappedComponent::SongDesc))
+            .any(|c| matches!(c, WrappedComponent::SongDesc(_)))
         {
             match (song::import(is, &actor.lua), is.lax) {
                 (Ok(()), _) => {}

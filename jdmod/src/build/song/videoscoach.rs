@@ -143,89 +143,105 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             is_popup: false,
             platform_filters: Vec::new(),
             actors: vec![
-                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
-                    relativez: -1.0,
-                    userfriendly: Cow::Borrowed("VideoScreen"),
-                    pos2d: (0.0, -4.5),
-                    lua: Cow::Borrowed("world/_common/videoscreen/video_player_main.tpl"),
-                    components: vec![cooked::isc::WrappedComponent::Pleo(cooked::isc::WrappedPleoComponent{ pleo_component: cooked::isc::PleoComponent {
-                        video: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.webm")).into_string()),
-                        dash_mpd: Cow::Owned(map_path.join(format!("videoscoach/{lower_map_name}.mpd")).into_string()),
-                        channel_id: Cow::Borrowed(""),
-                    }})],
-                    ..Default::default()
-                })}),
-                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
-                    scale: (3.941_238, 2.22),
-                    userfriendly: Cow::Borrowed("VideoOutput"),
-                    lua: Cow::Borrowed("world/_common/videoscreen/video_output_main.tpl"),
-                    components: vec![
-                        cooked::isc::WrappedComponent::PleoTextureGraphic(
-                            cooked::isc::WrappedPleoTextureGraphicComponent {
-                                pleo_texture_graphic_component: cooked::isc::PleoTextureGraphicComponent {
-                                    color_computer_tag_id: 0,
-                                    render_in_target: false,
-                                    disable_light: false,
-                                    disable_shadow: 4_294_967_295,
-                                    atlas_index: 0,
-                                    custom_anchor: (0.0, 0.0),
-                                    sinus_amplitude: (0.0, 0.0, 0.0),
-                                    sinus_speed: 1.0,
-                                    angle_x: 0.0,
-                                    angle_y: 0.0,
-                                    channel_id: Cow::Borrowed(""),
-                                    primitive_parameters: cooked::isc::PrimitiveParameters {
-                                        gfx_primitive_param: cooked::isc::GFXPrimitiveParam {
-                                            color_factor: (1.0, 1.0, 1.0, 1.0),
-                                            enums: vec![cooked::isc::Enum {
-                                                name: Cow::Borrowed("gfxOccludeInfo"),
-                                                selection: 1,
-                                            }],
-                                        },
+                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
+                    actor: Box::new(cooked::isc::Actor {
+                        relativez: -1.0,
+                        userfriendly: Cow::Borrowed("VideoScreen"),
+                        pos2d: (0.0, -4.5),
+                        lua: Cow::Borrowed("world/_common/videoscreen/video_player_main.tpl"),
+                        components: vec![cooked::isc::WrappedComponent::Pleo(
+                            cooked::isc::PleoComponent {
+                                video: Cow::Owned(
+                                    map_path
+                                        .join(format!("videoscoach/{lower_map_name}.webm"))
+                                        .into_string(),
+                                ),
+                                dash_mpd: Cow::Owned(
+                                    map_path
+                                        .join(format!("videoscoach/{lower_map_name}.mpd"))
+                                        .into_string(),
+                                ),
+                                channel_id: Cow::Borrowed(""),
+                            }
+                            .into(),
+                        )],
+                        ..Default::default()
+                    }),
+                }),
+                cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
+                    actor: Box::new(cooked::isc::Actor {
+                        scale: (3.941_238, 2.22),
+                        userfriendly: Cow::Borrowed("VideoOutput"),
+                        lua: Cow::Borrowed("world/_common/videoscreen/video_output_main.tpl"),
+                        components: vec![cooked::isc::WrappedComponent::PleoTextureGraphic(
+                            cooked::isc::PleoTextureGraphicComponent {
+                                color_computer_tag_id: 0,
+                                render_in_target: false,
+                                disable_light: false,
+                                disable_shadow: 4_294_967_295,
+                                atlas_index: 0,
+                                custom_anchor: (0.0, 0.0),
+                                sinus_amplitude: (0.0, 0.0, 0.0),
+                                sinus_speed: 1.0,
+                                angle_x: 0.0,
+                                angle_y: 0.0,
+                                channel_id: Cow::Borrowed(""),
+                                primitive_parameters: cooked::isc::PrimitiveParameters {
+                                    gfx_primitive_param: cooked::isc::GFXPrimitiveParam {
+                                        color_factor: (1.0, 1.0, 1.0, 1.0),
+                                        enums: vec![cooked::isc::Enum {
+                                            name: Cow::Borrowed("gfxOccludeInfo"),
+                                            selection: 1,
+                                        }],
                                     },
-                                    enums: vec![
-                                        cooked::isc::Enum {
-                                            name: Cow::Borrowed("anchor"),
-                                            selection: 1,
-                                        },
-                                        cooked::isc::Enum {
-                                            name: Cow::Borrowed("oldAnchor"),
-                                            selection: 1,
-                                        },
-                                    ],
-                                    material: cooked::isc::Material {
-                                        gfx_material_serializable: cooked::isc::GFXMaterialSerializable {
+                                },
+                                enums: vec![
+                                    cooked::isc::Enum {
+                                        name: Cow::Borrowed("anchor"),
+                                        selection: 1,
+                                    },
+                                    cooked::isc::Enum {
+                                        name: Cow::Borrowed("oldAnchor"),
+                                        selection: 1,
+                                    },
+                                ],
+                                material: cooked::isc::Material {
+                                    gfx_material_serializable:
+                                        cooked::isc::GFXMaterialSerializable {
                                             atl_channel: 0,
                                             atl_path: Cow::Borrowed(""),
-                                            shader_path: Cow::Borrowed("world/_common/matshader/pleofullscreen.msh"),
+                                            shader_path: Cow::Borrowed(
+                                                "world/_common/matshader/pleofullscreen.msh",
+                                            ),
                                             stencil_test: None,
                                             alpha_test: 4_294_967_295,
                                             alpha_ref: 4_294_967_295,
                                             texture_set: cooked::isc::TextureSet::default(),
                                             material_params: cooked::isc::MaterialParams::default(),
-                                            outlined_mask_params: Some(cooked::isc::OutlinedMaskParams {
-                                                outline_mask_material_params:
-                                                    cooked::isc::OutlinedMaskMaterialParams {
-                                                        mask_color: (0.0, 0.0, 0.0, 0.0),
-                                                        outline_color: (0.0, 0.0, 0.0, 0.0),
-                                                        thickness: 1.0,
-                                                    },
-                                            }),
+                                            outlined_mask_params: Some(
+                                                cooked::isc::OutlinedMaskParams {
+                                                    outline_mask_material_params:
+                                                        cooked::isc::OutlinedMaskMaterialParams {
+                                                            mask_color: (0.0, 0.0, 0.0, 0.0),
+                                                            outline_color: (0.0, 0.0, 0.0, 0.0),
+                                                            thickness: 1.0,
+                                                        },
+                                                },
+                                            ),
                                         },
-                                    },
-                                }
-                            },
-                        )
-                    ],
-                    ..Default::default()
-                })}),
+                                },
+                            }
+                            .into(),
+                        )],
+                        ..Default::default()
+                    }),
+                }),
             ],
-            scene_configs: cooked::isc::WrappedSceneConfigs {
-                scene_configs: cooked::isc::SceneConfigs {
-                    active_scene_config: 0,
-                    jd_scene_config: Vec::new(),
-                },
-            },
+            scene_configs: cooked::isc::SceneConfigs {
+                active_scene_config: 0,
+                jd_scene_config: Vec::new(),
+            }
+            .into(),
         },
     }
 }
@@ -264,32 +280,30 @@ fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'
                             "world/_common/videoscreen/video_player_map_preview.tpl",
                         ),
                         components: vec![cooked::isc::WrappedComponent::Pleo(
-                            cooked::isc::WrappedPleoComponent {
-                                pleo_component: cooked::isc::PleoComponent {
-                                    video: Cow::Owned(
-                                        map_path
-                                            .join(format!("videoscoach/{lower_map_name}.webm"))
-                                            .into_string(),
-                                    ),
-                                    dash_mpd: Cow::Owned(
-                                        map_path
-                                            .join(format!("videoscoach/{lower_map_name}.mpd"))
-                                            .into_string(),
-                                    ),
-                                    channel_id: ses.song.map_name.clone(),
-                                },
-                            },
+                            cooked::isc::PleoComponent {
+                                video: Cow::Owned(
+                                    map_path
+                                        .join(format!("videoscoach/{lower_map_name}.webm"))
+                                        .into_string(),
+                                ),
+                                dash_mpd: Cow::Owned(
+                                    map_path
+                                        .join(format!("videoscoach/{lower_map_name}.mpd"))
+                                        .into_string(),
+                                ),
+                                channel_id: ses.song.map_name.clone(),
+                            }
+                            .into(),
                         )],
                         ..Default::default()
                     }),
                 },
             )],
-            scene_configs: cooked::isc::WrappedSceneConfigs {
-                scene_configs: cooked::isc::SceneConfigs {
-                    active_scene_config: 0,
-                    jd_scene_config: Vec::new(),
-                },
-            },
+            scene_configs: cooked::isc::SceneConfigs {
+                active_scene_config: 0,
+                jd_scene_config: Vec::new(),
+            }
+            .into(),
         },
     }
 }

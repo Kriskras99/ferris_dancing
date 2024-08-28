@@ -44,10 +44,10 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
             .file_name()
             .ok_or_else(|| anyhow!("Can't find filename! {cooked_path:?}"))?
             .to_string();
-        assert!(
-            audio_filename.ends_with(".wav.ckd"),
+        test_eq!(
+            audio_filename.ends_with(".wav.ckd"), true,
             "audio filename does not end in wav.ckd?"
-        );
+        )?;
         if audio_filename.ends_with(".ckd") {
             audio_filename.truncate(audio_filename.len() - 4);
         }
