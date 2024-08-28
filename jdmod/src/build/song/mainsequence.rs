@@ -169,7 +169,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
 
                 // If the amb clip is already in the list, we skip building the template
                 if !bf.generated_files.exists(&to) {
-                    let encoded = utils::encode_audio(ses.native_vfs, &from)?;
+                    let encoded = utils::encode_audio(ses.native_vfs, &from, false)?;
                     bf.generated_files.add_file(to, encoded)?;
 
                     // Create the sound template

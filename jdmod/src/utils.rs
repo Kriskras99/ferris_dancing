@@ -226,7 +226,7 @@ pub fn decode_audio(
             let spec = hound::WavSpec {
                 channels: fmt.channel_count,
                 sample_rate: fmt.sample_rate,
-                bits_per_sample: fmt.bits_per_sample,
+                bits_per_sample: 16,
                 sample_format: hound::SampleFormat::Int,
             };
 
@@ -357,6 +357,7 @@ pub fn decode_audio(
 pub fn encode_audio(
     vfs: &impl VirtualFileSystem,
     image_path: &VirtualPath,
+    main_song: bool,
 ) -> Result<Vec<u8>, Error> {
     if image_path.extension() != Some("wav") && image_path.extension() != Some("opus") {
         return Err(anyhow!(
@@ -384,7 +385,7 @@ pub fn encode_audio(
             let adin = AdIn { num_of_samples };
 
             let mut vec = Vec::new();
-            wav::Writer::create_opus(&mut vec, &mut 0, fmt, adin, &nx_opus)?;
+            wav::Writer::create_opus(&mut vec, &mut 0, fmt, adin, &nx_opus, main_song)?;
 
             Ok(vec)
         }
@@ -407,7 +408,7 @@ pub fn encode_audio(
 
             let samples = decoder.into_samples().collect::<Result<Vec<_>, _>>()?;
 
-            wav::Writer::create_pcm(&mut vec, &mut 0, fmt, &samples)?;
+            wav::Writer::create_pcm(&mut vec, &mut 0, fmt, &samples, main_song)?;
 
             Ok(vec)
         }

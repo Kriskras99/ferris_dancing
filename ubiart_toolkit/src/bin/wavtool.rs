@@ -95,8 +95,11 @@ pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
         trace!("No special chunks");
     }
 
+    trace!("Fmt: {fmt:#?}");
+
     match (wav.platform, wav.codec) {
         (_, Codec::PCM) => {
+            trace!("Audio format is PCM");
             let writer = BufWriter::new(writer);
             assert_eq!(
                 fmt.bits_per_sample, 16,
@@ -123,6 +126,7 @@ pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
             Ok(false)
         }
         (WavPlatform::Switch, Codec::Nx) => {
+            trace!("Audio format is Opus");
             let data = wav.chunks[&Data::MAGIC].as_data()?;
             let mut position = 0;
             let adin = wav
@@ -148,10 +152,14 @@ pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
             };
 
             if let Some(data) = wav.chunks.get(&Data::MAGIC_STEREO) {
+                trace!("Audio format is GC ADPC interleaved stereo");
                 // interleaved per frame
                 let data = data.as_data()?;
                 let dsp_left = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp()?;
                 let dsp_right = wav.chunks[&Dsp::MAGIC_RIGHT].as_dsp()?;
+
+                trace!("DSP Left: {dsp_left:#?}");
+                trace!("DSP Right: {dsp_right:#?}");
 
                 let left_state = gc_adpcm::DspState {
                     hist1: dsp_left.initial_sample_history_1,
@@ -188,6 +196,7 @@ pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
                 writer.finalize()?;
                 Ok(false)
             } else if let Some(data_right) = wav.chunks.get(&Data::MAGIC_RIGHT) {
+                trace!("Audio format is GC ADPC non-interleaved stereo");
                 // non-interleaved stereo
                 let data_right = data_right.as_data()?;
                 let data_left = wav.chunks[&Data::MAGIC_LEFT].as_data()?;
@@ -231,6 +240,7 @@ pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
                 writer.finalize()?;
                 Ok(false)
             } else if let Some(data) = wav.chunks.get(&Data::MAGIC_LEFT) {
+                trace!("Audio format is GC ADPC mono");
                 // mono
                 let data = data.as_data()?;
                 let dsp = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp()?;
@@ -287,7 +297,7 @@ pub fn encode_audio(file: File) -> Result<Vec<u8>, Error> {
             let adin = AdIn { num_of_samples };
 
             let mut vec = Vec::new();
-            wav::Writer::create_opus(&mut vec, &mut 0, fmt, adin, &nx_opus)?;
+            wav::Writer::create_opus(&mut vec, &mut 0, fmt, adin, &nx_opus, true)?;
 
             Ok(vec)
         }
@@ -310,7 +320,7 @@ pub fn encode_audio(file: File) -> Result<Vec<u8>, Error> {
 
             let samples = decoder.into_samples().collect::<Result<Vec<_>, _>>()?;
 
-            wav::Writer::create_pcm(&mut vec, &mut 0, fmt, &samples)?;
+            wav::Writer::create_pcm(&mut vec, &mut 0, fmt, &samples, true)?;
 
             Ok(vec)
         }

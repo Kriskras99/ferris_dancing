@@ -84,14 +84,12 @@ impl<R: ReadAtExt + ?Sized> Iterator for Decoder<'_, R> {
     type Item = Result<i16, ReadError>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        let (left_reader, left_position) = &mut self.left_reader;
         if self.buffer.is_empty() && self.frames_remaing != 0 {
             match &mut (self.right_reader, self.right_state.as_mut()) {
                 (None, None) => {
                     // mono
-                    let frame = self
-                        .left_reader
-                        .0
-                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
+                    let frame = left_reader.read_at::<[u8; 8]>(left_position);
                     let Ok(frame) = frame else {
                         return Some(frame.map(|_| 0i16));
                     };
@@ -100,31 +98,36 @@ impl<R: ReadAtExt + ?Sized> Iterator for Decoder<'_, R> {
                     self.frames_remaing -= 1;
                 }
                 (None, Some(right_state)) => {
-                    let frame = self
-                        .left_reader
-                        .0
-                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
-                    let Ok(frame) = frame else {
-                        return Some(frame.map(|_| 0i16));
+                    // stereo interleaved per frame
+
+                    // read the frame for the left channel
+                    let left_frame = left_reader.read_at::<[u8; 8]>(left_position);
+                    let Ok(left_frame) = left_frame else {
+                        return Some(left_frame.map(|_| 0i16));
                     };
-                    let left_samples = self.left_state.decode_frame(frame);
-                    let frame = self
-                        .left_reader
-                        .0
-                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
-                    let Ok(frame) = frame else {
-                        return Some(frame.map(|_| 0i16));
+                    // decode the frame for the left channel
+                    let left_samples = self.left_state.decode_frame(left_frame);
+
+                    // read the frame for the right channel
+                    let right_frame = left_reader.read_at::<[u8; 8]>(left_position);
+                    let Ok(right_frame) = right_frame else {
+                        return Some(right_frame.map(|_| 0i16));
                     };
-                    let right_samples = right_state.decode_frame(frame);
-                    self.buffer
-                        .extend(left_samples.into_iter().interleave(right_samples));
+                    // decode the frame for the right channel
+                    let right_samples = right_state.decode_frame(right_frame);
+
+                    // interleave the samples
+                    self.buffer.extend(
+                        left_samples
+                            .into_iter()
+                            .rev()
+                            .interleave(right_samples.into_iter().rev()),
+                    );
                     self.frames_remaing -= 2;
                 }
                 (Some((right_reader, right_position)), Some(right_state)) => {
-                    let frame = self
-                        .left_reader
-                        .0
-                        .read_at::<[u8; 8]>(&mut self.left_reader.1);
+                    // stereo not interleaved
+                    let frame = left_reader.read_at::<[u8; 8]>(left_position);
                     let Ok(frame) = frame else {
                         return Some(frame.map(|_| 0i16));
                     };
@@ -134,8 +137,12 @@ impl<R: ReadAtExt + ?Sized> Iterator for Decoder<'_, R> {
                         return Some(frame.map(|_| 0i16));
                     };
                     let right_samples = right_state.decode_frame(frame);
-                    self.buffer
-                        .extend(left_samples.into_iter().interleave(right_samples));
+                    self.buffer.extend(
+                        left_samples
+                            .into_iter()
+                            .rev()
+                            .interleave(right_samples.into_iter().rev()),
+                    );
                     self.frames_remaing -= 1;
                 }
                 (Some(_), None) => unreachable!(),

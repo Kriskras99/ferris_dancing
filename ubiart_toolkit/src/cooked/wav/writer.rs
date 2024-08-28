@@ -17,6 +17,7 @@ impl Writer {
         position: &mut u64,
         fmt: Fmt,
         samples: &[i16],
+        main_song: bool,
     ) -> Result<(), WriteError> {
         let data: *const u8 = samples.as_ptr().cast();
         let len = samples.len() * 2;
@@ -26,6 +27,7 @@ impl Writer {
             position,
             Codec::PCM,
             &[Chunk::Fmt(fmt), Chunk::Data(Data { data: data.into() })],
+            main_song,
         )
     }
 
@@ -35,6 +37,7 @@ impl Writer {
         fmt: Fmt,
         adin: AdIn,
         nx_opus: &[u8],
+        main_song: bool,
     ) -> Result<(), WriteError> {
         Self::create(
             writer,
@@ -47,6 +50,7 @@ impl Writer {
                     data: nx_opus.into(),
                 }),
             ],
+            main_song,
         )
     }
 
@@ -55,6 +59,7 @@ impl Writer {
         position: &mut u64,
         codec: Codec,
         chunks: &[Chunk],
+        main_song: bool,
     ) -> Result<(), WriteError> {
         let original_position = *position;
         let chunk_len = u32::try_from(chunks.len())?;
@@ -71,7 +76,7 @@ impl Writer {
         let data_start_pos = *position;
         writer.write_at::<u32le>(position, 0)?; // data start offset
         writer.write_at::<u32le>(position, chunk_len)?; // number of chunks
-        writer.write_at::<u32le>(position, if codec == Codec::PCM { 0 } else { 3 })?; // unk2
+        writer.write_at::<u32le>(position, if main_song { 3 } else { 0 })?; // unk2
 
         let mut chunk_data_start =
             original_position + u64::from(header_size) + u64::from(chunk_header_size);

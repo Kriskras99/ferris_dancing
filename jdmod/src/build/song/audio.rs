@@ -32,7 +32,7 @@ pub fn build(
             .ok_or_else(|| anyhow!("Invalid or missing extension! {source_file_path}"))?;
         match extension {
             "wav" | "opus" => {
-                let muxed = utils::encode_audio(ses.native_vfs, &source_file_path)?;
+                let muxed = utils::encode_audio(ses.native_vfs, &source_file_path, true)?;
                 let cache_audio_file_path =
                     audio_cache_dir.join(format!("{lower_map_name}.wav.ckd"));
                 let audio_file_path = audio_dir.join(format!("{lower_map_name}.wav"));
