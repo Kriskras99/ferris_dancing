@@ -156,10 +156,6 @@ pub fn parse_soundset(
     let mut new_filename = format!("{name}.wav");
     let filename = sis.dirs.audio().join(&new_filename);
 
-    println!(
-        "Cooked path: {cooked_path}, filename: {}",
-        filename.display()
-    );
     let mut to = File::create(&filename)?;
     let is_opus = utils::decode_audio(&from, &mut to)?;
     if is_opus {

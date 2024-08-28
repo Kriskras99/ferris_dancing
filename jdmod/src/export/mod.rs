@@ -70,23 +70,18 @@ pub fn export(
         } else if destination.read_dir()?.next().is_some() {
             bail!("Destination directory is not empty! {destination:?}");
         }
-        tracing::trace!("{destination:?} exists and is empty");
     } else {
-        tracing::trace!("{destination:?} does not exist");
         std::fs::create_dir(destination)?;
-        tracing::trace!("{destination:?} has been created");
     }
 
     // Do everything through a virtual filesystem with the mod directory as the root
     let native_vfs = NativeFs::new(dir_tree.root())?;
     let rel_tree = RelativeDirectoryTree::new();
-    tracing::trace!("Relative tree has been setup");
 
     // Load bundle_nx.ipk and patch_nx.ipk to use as a base
     let bundle_nx_vfs = IpkFilesystem::new(&native_vfs, &rel_tree.base().join("bundle_nx.ipk"))?;
     let patch_nx_vfs = IpkFilesystem::new(&native_vfs, &rel_tree.base().join("patch_nx.ipk"))?;
     let patched_base_vfs = OverlayFs::new(&patch_nx_vfs, &bundle_nx_vfs);
-    tracing::trace!("Overlay of bundle_nx and patch_nx has been created");
 
     /*
      * 1 thread bundles build files into ipks. It will only bundle song files until the channel is dropped

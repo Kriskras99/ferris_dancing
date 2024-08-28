@@ -53,10 +53,6 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         }
         let from = sis.vfs.open(cooked_path.as_ref())?;
         let filename = sis.dirs.audio().join(&audio_filename);
-        println!(
-            "cooked_path: {cooked_path}, filename: {}",
-            filename.display()
-        );
         let mut to = File::create(&filename)?;
         let is_opus = utils::decode_audio(&from, &mut to)?;
         if is_opus {

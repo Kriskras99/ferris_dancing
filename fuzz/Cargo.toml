@@ -8,12 +8,12 @@ edition = "2021"
 cargo-fuzz = true
 
 [dependencies]
-libfuzzer-sys = "0.4"
-ubiart_toolkit = { path = "../ubiart_toolkit", features = ["fuzz"] }
-dotstar_toolkit_utils = { path = "../dotstar_toolkit_utils" }
-rgbcx = { path = "../rgbcx" }
-rgbcx-rs = { path = "../rgbcx-rs" }
-image = { version = "0.25.1", default-features = false }
+libfuzzer-sys.workspace = true
+ubiart_toolkit = { workspace = true, features = ["fuzz"] }
+dotstar_toolkit_utils.workspace = true
+rgbcx.workspace = true
+rgbcx-rs.workspace = true
+image.workspace = true
 
 # Prevent this from interfering with workspaces
 [workspace]

@@ -1,6 +1,9 @@
-use dotstar_toolkit_utils::bytes::{
-    primitives::{i16le, u16le, u32be, u32le},
-    write::{BinarySerialize, WriteAt, WriteError},
+use dotstar_toolkit_utils::{
+    bytes::{
+        primitives::{i16le, u16le, u32be, u32le},
+        write::{BinarySerialize, WriteAt, WriteError},
+    },
+    test_eq,
 };
 
 use super::{AdIn, Chunk, Codec, Data, Fmt, Wav, WavPlatform};
@@ -21,6 +24,7 @@ impl Writer {
         Self::create(
             writer,
             position,
+            Codec::PCM,
             &[Chunk::Fmt(fmt), Chunk::Data(Data { data: data.into() })],
         )
     }
@@ -35,6 +39,7 @@ impl Writer {
         Self::create(
             writer,
             position,
+            Codec::Nx,
             &[
                 Chunk::Fmt(fmt),
                 Chunk::AdIn(adin),
@@ -48,6 +53,7 @@ impl Writer {
     fn create(
         writer: &mut (impl WriteAt + ?Sized),
         position: &mut u64,
+        codec: Codec,
         chunks: &[Chunk],
     ) -> Result<(), WriteError> {
         let original_position = *position;
@@ -59,7 +65,7 @@ impl Writer {
         writer.write_at::<u32be>(position, Wav::MAGIC)?;
         writer.write_at::<u32le>(position, 0xB)?;
         writer.write_at::<WavPlatform>(position, WavPlatform::Switch)?;
-        writer.write_at::<Codec>(position, Codec::PCM)?;
+        writer.write_at::<Codec>(position, codec)?;
         let total_header_size_pos = *position;
         writer.write_at::<u32le>(position, 0)?; // header size
         let data_start_pos = *position;
@@ -79,10 +85,11 @@ impl Writer {
                     let mut chunk_data_start_copy = chunk_data_start;
                     writer.write_at::<&Fmt>(&mut chunk_data_start_copy, fmt)?;
                     chunk_data_start += u64::from(Fmt::NORMAL_SIZE);
-                    assert_eq!(
-                        chunk_data_start, chunk_data_start_copy,
+                    test_eq!(
+                        chunk_data_start,
+                        chunk_data_start_copy,
                         "Wrote more than expected size"
-                    );
+                    )?;
                     relative_chunk_data_start += Fmt::NORMAL_SIZE;
                 }
                 Chunk::AdIn(adin) => {
@@ -92,10 +99,11 @@ impl Writer {
                     let mut chunk_data_start_copy = chunk_data_start;
                     writer.write_at::<&AdIn>(&mut chunk_data_start_copy, adin)?;
                     chunk_data_start += u64::from(AdIn::SIZE);
-                    assert_eq!(
-                        chunk_data_start, chunk_data_start_copy,
+                    test_eq!(
+                        chunk_data_start,
+                        chunk_data_start_copy,
                         "Wrote more than expected size"
-                    );
+                    )?;
                     relative_chunk_data_start += AdIn::SIZE;
                 }
                 Chunk::Mark(_) => unimplemented!(),
@@ -107,10 +115,11 @@ impl Writer {
                     let mut chunk_data_start_copy = chunk_data_start;
                     writer.write_at::<&Dsp>(&mut chunk_data_start_copy, dsp)?;
                     chunk_data_start += u64::from(Dsp::SIZE);
-                    assert_eq!(
-                        chunk_data_start, chunk_data_start_copy,
+                    test_eq!(
+                        chunk_data_start,
+                        chunk_data_start_copy,
                         "Wrote more than expected size"
-                    );
+                    )?;
                     relative_chunk_data_start += Dsp::SIZE;
                 }
                 Chunk::Data(_) | Chunk::DatS(_) | Chunk::DatL(_) | Chunk::DatR(_) => {}

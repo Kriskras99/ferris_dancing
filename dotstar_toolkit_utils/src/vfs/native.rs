@@ -31,7 +31,6 @@ impl NativeFs {
     /// Will error if `root` does not exist
     #[instrument]
     pub fn new(root: &Path) -> std::io::Result<Self> {
-        tracing::trace!("Created NativeFs");
         Ok(Self {
             root: root.canonicalize()?,
             cache: Mutex::new(HashMap::new()),

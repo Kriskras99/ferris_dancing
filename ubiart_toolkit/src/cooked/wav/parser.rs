@@ -9,6 +9,7 @@ use dotstar_toolkit_utils::{
     test_any, test_eq,
     testing::TestResult,
 };
+use tracing::debug;
 
 use super::{
     types::{Chunk, Fmt, Wav},
@@ -264,7 +265,7 @@ impl<'de> BinaryDeserialize<'de> for Strg<'de> {
         };
 
         if let TestResult::Err(_) = test_eq!(new_position, start + u64::from(offset + size)) {
-            println!("Warning! STRG broken!");
+            debug!("STRG broken!");
         }
 
         Ok(Self { unk1, unk2, data })

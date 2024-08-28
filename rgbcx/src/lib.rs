@@ -330,6 +330,7 @@ impl Rgbcx {
 }
 
 /// How to approximate colors
+///
 /// Important: If you encode textures for a specific vendor's GPU's, beware that using that texture data on other GPU's may result in ugly artifacts.
 /// Encode to [`Bc1ApproxMode::Ideal`] unless you know the texture data will only be deployed or used on a specific vendor's GPU.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

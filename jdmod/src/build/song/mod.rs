@@ -173,7 +173,7 @@ fn graph_scene(
     let graph_scene_vec = cooked::isc::create_vec_with_capacity_hint(&root, 791)?;
 
     bf.generated_files.add_file(
-        cache_map_path.join(format!("{lower_map_name}_graph.isc.ckd")),
+        cache_map_path.join(format!("graph/{lower_map_name}_graph.isc.ckd")),
         graph_scene_vec,
     )?;
 

@@ -2937,7 +2937,7 @@ mod wrapped_component {
         #[serde(rename = "MaterialGraphicComponent")]
         MaterialGraphic(WrappedMaterialGraphicComponent<'a>),
         #[serde(rename = "MusicTrackComponent")]
-        MusicTrack,
+        MusicTrack(WrappedMusicTrackComponent),
         #[serde(rename = "PleoComponent")]
         Pleo(WrappedPleoComponent<'a>),
         #[serde(rename = "PleoTextureGraphicComponent")]
@@ -3069,6 +3069,11 @@ mod wrapped_component {
             }
         }
     }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[serde(rename_all = "PascalCase", deny_unknown_fields)]
+    #[repr(transparent)]
+    pub struct WrappedMusicTrackComponent;
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     #[serde(rename_all = "PascalCase", deny_unknown_fields)]
@@ -3968,7 +3973,7 @@ mod wrapped_component {
         ("JD_UISkinUnlockWidget" => UISkinUnlockWidget),
         ("MaterialGraphicComponent" => MaterialGraphic(WrappedMaterialGraphicComponent)),
         ("JD_UIHudRacelineDM" => UIHudRacelineDM(WrappedUIHudRacelineDM)),
-        ("MusicTrackComponent" => MusicTrack),
+        ("MusicTrackComponent" => MusicTrack(WrappedMusicTrackComponent)),
         ("PleoComponent" => Pleo(WrappedPleoComponent)),
         ("PleoTextureGraphicComponent" => PleoTextureGraphic(WrappedPleoTextureGraphicComponent)),
         ("PropertyPatcher" => PropertyPatcher(WrappedPropertyPatcher)),

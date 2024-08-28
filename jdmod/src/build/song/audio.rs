@@ -105,7 +105,9 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                 .join(format!("audio/{lower_map_name}_musictrack.tpl"))
                                 .into_string(),
                         ),
-                        components: vec![cooked::isc::WrappedComponent::MusicTrack],
+                        components: vec![cooked::isc::WrappedComponent::MusicTrack(
+                            cooked::isc::WrappedMusicTrackComponent,
+                        )],
                         ..Default::default()
                     }),
                 }),

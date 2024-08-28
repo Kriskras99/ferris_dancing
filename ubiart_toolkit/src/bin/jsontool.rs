@@ -1,6 +1,6 @@
 #![allow(clippy::missing_panics_doc, reason = "Tool not a library")]
 
-use std::path::PathBuf;
+use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use dotstar_toolkit_utils::bytes::read_to_vec;
@@ -11,6 +11,7 @@ use ubiart_toolkit::{cooked, utils::Game};
 struct Cli {
     game: String,
     source: PathBuf,
+    destination: Option<PathBuf>,
 }
 
 fn main() {
@@ -50,7 +51,11 @@ fn main() {
             cooked::json::parse_v21(&data, false).unwrap();
         }
         Game::JustDance2022 => {
-            cooked::json::parse_v22(&data, false).unwrap();
+            let json = cooked::json::parse_v22(&data, false).unwrap();
+            if let Some(path) = cli.destination {
+                let file = File::create(path).unwrap();
+                cooked::json::create(file, &json).unwrap();
+            }
         }
         _ => panic!("Unsupported game version: {game}"),
     }

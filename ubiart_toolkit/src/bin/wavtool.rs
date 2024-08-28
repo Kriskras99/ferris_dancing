@@ -1,164 +1,84 @@
-//! Various utilities like texture encoding/decoding and dealing with paths
-use std::borrow::Cow;
+#![allow(clippy::missing_panics_doc, reason = "Tool not a library")]
+
+use std::{
+    fs::File,
+    io::{BufWriter, Write},
+    path::PathBuf,
+};
 
 use anyhow::{anyhow, Error};
+use clap::Parser;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::i16le,
-        read::{BinaryDeserialize, BinaryDeserializeExt as _, ReadAtExt},
-        write::WriteAt,
-        CursorAt,
+        read::{BinaryDeserializeExt as _, ReadAtExt},
     },
     test_eq,
-    vfs::{VirtualFileSystem, VirtualPath},
 };
 use hound::SampleFormat;
-use image::{imageops, RgbaImage};
 use nx_opus::{mux_from_opus, mux_to_opus};
-use regex::Regex;
-use ubiart_toolkit::{
-    cooked::{
-        png::Png,
-        wav::{self, AdIn, Codec, Data, Dsp, Fmt, Wav, WavPlatform},
-    },
-    utils::{Platform, UniqueGameId},
+use tracing::{level_filters::LevelFilter, trace};
+use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
+use ubiart_toolkit::cooked::wav::{
+    self, AdIn, Codec, Data, Dsp, Fmt, Mark, Strg, Wav, WavPlatform,
 };
 
-/// Cook a path so it stars with 'cache/itf_cooked/...'
-///
-/// # Errors
-/// Will return an error if it's unknown how the path or the platform should be cooked
-pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
-    let path = path.strip_prefix('/').unwrap_or(path);
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    source: PathBuf,
+    output_dir: Option<PathBuf>,
+}
 
-    // Just return if it is already cooked
-    if path.starts_with("cache/itf_cooked/") {
-        return Ok(path.to_string());
-    }
+pub fn main() {
+    let args = Cli::parse();
 
-    // Reserve enough memory for the entire cooked path: original path + cooked prefix + .ckd + max platform name
-    let mut cooked =
-        String::with_capacity(path.len() + "cache/itf_cooked/".len() + 4 + "durango".len());
-    cooked.push_str("cache/itf_cooked/");
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        // Display source code file paths
+        .with_file(false)
+        // Display source code line numbers
+        .with_line_number(false)
+        // Display the thread ID an event was recorded on
+        .with_thread_ids(true)
+        // Don't display the event's target (module path)
+        .with_target(true)
+        .without_time();
+    tracing_subscriber::registry()
+        .with(fmt_layer)
+        .with(
+            tracing_subscriber::EnvFilter::builder()
+                .with_default_directive(LevelFilter::WARN.into())
+                .from_env_lossy(),
+        )
+        .init();
 
-    match platform {
-        Platform::Nx => cooked.push_str("nx/"),
-        Platform::WiiU => cooked.push_str("wiiu/"),
-        _ => Err(anyhow!("Not yet implemented for {path}"))?,
+    let output_dir = if let Some(dir) = args.output_dir {
+        assert!(dir.is_dir(), "output_dir needs to be a directory");
+        dir
+    } else {
+        std::env::current_dir().unwrap()
     };
 
-    cooked.push_str(path);
+    let source_file = File::open(&args.source).unwrap();
+    let magic = source_file.read_at::<[u8; 4]>(&mut 0).unwrap();
 
-    // Early exit if there's no filename
-    if path.ends_with('/') {
-        return Ok(cooked);
-    }
-
-    if let Some((_, extension)) = path.rsplit_once('.') {
-        match extension {
-            "tpl" | "tape" | "ktape" | "dtape" | "wav" | "png" | "tga" | "isg" | "isc" | "sgs"
-            | "json" | "act" => cooked.push_str(".ckd"),
-            _ => Err(anyhow!(
-                "Cooking extension '{extension}' not yet implemented! Full path: {path}"
-            ))?,
-        };
-    } else {
-        match path {
-            "sgscontainer" => cooked.push_str(".ckd"),
-            _ => Err(anyhow!("Don't know how to cook: {path}!"))?,
+    match &magic {
+        b"RAKI" => {
+            let filename = args.source.file_name().unwrap();
+            let output_file_path = output_dir.join(filename).with_extension("");
+            let mut output_file = File::create(&output_file_path).unwrap();
+            let is_opus = decode_audio(&source_file, &mut output_file).unwrap();
+            if is_opus {
+                std::fs::rename(&output_file_path, output_file_path.with_extension("opus"))
+                    .unwrap();
+            }
         }
-    }
-
-    Ok(cooked)
-}
-
-/// With this macro you can create a Regex that is only compiled once.
-#[macro_export]
-macro_rules! regex {
-    ($re:literal $(,)?) => {{
-        static RE: ::std::sync::OnceLock<regex::Regex> = ::std::sync::OnceLock::new();
-        RE.get_or_init(|| ::regex::Regex::new($re).unwrap_or_else(|_| ::std::unreachable!()))
-    }};
-}
-
-/// Decode a XTX texture into an image buffer
-///
-/// # Errors
-/// Will return an error if the parsing fails
-/// Will return an error if the decoded image doesn't fit into memory
-///
-/// # Panics
-/// Will panic if there is more than one image in the texture
-pub fn decode_texture(
-    reader: &(impl ReadAtExt + ?Sized),
-    ugi: UniqueGameId,
-) -> Result<RgbaImage, Error> {
-    let png = Png::deserialize_with(reader, ugi)?;
-
-    let png_height = u32::from(png.height);
-    let png_width = u32::from(png.width);
-
-    let mut buffer = png.texture;
-
-    if png_width != buffer.width() || png_height != buffer.height() {
-        buffer = imageops::resize(
-            &buffer,
-            png_width,
-            png_height,
-            imageops::FilterType::Lanczos3,
-        );
-    }
-
-    Ok(buffer)
-}
-
-/// Encode a image at `image_path` as an XTX texture
-///
-/// # Errors
-/// Will return an error if any IO or parsing fails
-pub fn encode_texture(
-    vfs: &impl VirtualFileSystem,
-    image_path: &VirtualPath,
-) -> Result<Png, Error> {
-    // let mipmaps = false;
-    let img_file = vfs.open(image_path)?;
-    let img = image::load_from_memory(&img_file)?;
-    let img = img.into_rgba8();
-
-    let width = u16::try_from(img.width())?;
-    let height = u16::try_from(img.height())?;
-
-    Ok(Png {
-        width,
-        height,
-        unk5: 0x2000,
-        texture: img,
-        ..Default::default()
-    })
-}
-
-/// Efficient implementation of `(_, [needle]) = regex.captures(haystack).extract()` for `Cow<str>`
-///
-/// # Errors
-/// Returns an error if the needle is not in the haystack
-pub fn cow_regex_single_capture<'a>(
-    regex: &Regex,
-    haystack: Cow<'a, str>,
-) -> Result<Cow<'a, str>, Error> {
-    match haystack {
-        Cow::Borrowed(haystack) => {
-            let (_, [needle]) = regex
-                .captures(haystack)
-                .ok_or_else(|| anyhow!("No needle found! Haystack: {haystack}, regex: {regex:?}"))?
-                .extract();
-            Ok(Cow::Borrowed(needle))
-        }
-        Cow::Owned(haystack) => {
-            let (_, [needle]) = regex
-                .captures(&haystack)
-                .ok_or_else(|| anyhow!("No needle found! Haystack: {haystack}, regex: {regex:?}"))?
-                .extract();
-            Ok(Cow::Owned(String::from(needle)))
+        _ => {
+            let content = encode_audio(source_file).unwrap();
+            let filename = args.source.file_name().unwrap();
+            let output_file_path = output_dir.join(filename).with_extension("wav.ckd");
+            let mut output_file = File::create(&output_file_path).unwrap();
+            output_file.write_all(&content).unwrap();
         }
     }
 }
@@ -166,10 +86,7 @@ pub fn cow_regex_single_capture<'a>(
 /// Decode JD audio file
 ///
 /// Returns true if the audio is opus encoded
-pub fn decode_audio(
-    reader: &(impl ReadAtExt + ?Sized),
-    writer: &mut (impl WriteAt + ?Sized),
-) -> Result<bool, Error> {
+pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
     let wav = Wav::deserialize(reader)?;
 
     let fmt = wav
@@ -178,8 +95,13 @@ pub fn decode_audio(
         .ok_or_else(|| anyhow!("No `fmt ` chunk!"))?
         .as_fmt()?;
 
+    if !wav.chunks.contains_key(&Strg::MAGIC) && !wav.chunks.contains_key(&Mark::MAGIC) {
+        trace!("No special chunks");
+    }
+
     match (wav.platform, wav.codec) {
         (_, Codec::PCM) => {
+            let writer = BufWriter::new(writer);
             assert_eq!(
                 fmt.bits_per_sample, 16,
                 "Bits per sample != 16, this is not supported"
@@ -192,8 +114,7 @@ pub fn decode_audio(
                 bits_per_sample: fmt.bits_per_sample,
                 sample_format: hound::SampleFormat::Int,
             };
-            let buffer = CursorAt::new(writer, 0);
-            let mut writer = hound::WavWriter::new(buffer, spec)?;
+            let mut writer = hound::WavWriter::new(writer, spec)?;
             let mut sample_writer = writer.get_i16_writer(u32::try_from(data.data.len() / 2)?);
 
             let mut position = 0;
@@ -222,6 +143,7 @@ pub fn decode_audio(
             Ok(true)
         }
         (WavPlatform::WiiU, Codec::Adpc) => {
+            let writer = BufWriter::new(writer);
             let spec = hound::WavSpec {
                 channels: fmt.channel_count,
                 sample_rate: fmt.sample_rate,
@@ -259,8 +181,7 @@ pub fn decode_audio(
                     total_frames,
                 );
 
-                let mut buffer = CursorAt::new(writer, 0);
-                let mut writer = hound::WavWriter::new(&mut buffer, spec)?;
+                let mut writer = hound::WavWriter::new(writer, spec)?;
                 let mut sample_writer = writer.get_i16_writer(dsp_left.sample_count * 2);
 
                 for sample in decoder {
@@ -303,8 +224,7 @@ pub fn decode_audio(
                     total_frames,
                 );
 
-                let mut buffer = CursorAt::new(writer, 0);
-                let mut writer = hound::WavWriter::new(&mut buffer, spec)?;
+                let mut writer = hound::WavWriter::new(writer, spec)?;
                 let mut sample_writer = writer.get_i16_writer(dsp_left.sample_count * 2);
 
                 for sample in decoder {
@@ -327,8 +247,7 @@ pub fn decode_audio(
                 let total_frames = dsp.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME);
                 let decoder = gc_adpcm::Decoder::mono(data.data.as_ref(), 0, state, total_frames);
 
-                let mut buffer = CursorAt::new(writer, 0);
-                let mut writer = hound::WavWriter::new(&mut buffer, spec)?;
+                let mut writer = hound::WavWriter::new(writer, spec)?;
                 let mut sample_writer = writer.get_i16_writer(dsp.sample_count);
 
                 for sample in decoder {
@@ -351,16 +270,7 @@ pub fn decode_audio(
 }
 
 /// Encode a JD audio file
-pub fn encode_audio(
-    vfs: &impl VirtualFileSystem,
-    image_path: &VirtualPath,
-) -> Result<Vec<u8>, Error> {
-    if image_path.extension() != Some("wav") && image_path.extension() != Some("opus") {
-        return Err(anyhow!(
-            "This application only supports .wav and .opus files"
-        ));
-    }
-    let file = vfs.open(image_path)?;
+pub fn encode_audio(file: File) -> Result<Vec<u8>, Error> {
     let magic = file.read_at::<[u8; 4]>(&mut 0)?;
     match &magic {
         b"OggS" => {
@@ -387,7 +297,7 @@ pub fn encode_audio(
         }
         b"RIFF" => {
             let mut vec = Vec::new();
-            let decoder = hound::WavReader::new(CursorAt::new(file, 0))?;
+            let decoder = hound::WavReader::new(file)?;
             let spec = decoder.spec();
             test_eq!(spec.sample_format, SampleFormat::Int)
                 .and(test_eq!(spec.bits_per_sample, 16))?;

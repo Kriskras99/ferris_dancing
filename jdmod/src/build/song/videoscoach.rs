@@ -91,7 +91,11 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
     let actor = cooked::act::Actor {
         tpl: SplitPath::new(
             Cow::Borrowed("world/_common/videoscreen/"),
-            Cow::Borrowed("video_player_main.tpl"),
+            if map_preview {
+                Cow::Borrowed("video_player_map_preview.tpl")
+            } else {
+                Cow::Borrowed("video_player_main.tpl")
+            },
         )?,
         unk1: 0,
         unk2: 0x3F80_0000,

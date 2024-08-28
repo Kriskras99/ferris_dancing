@@ -90,7 +90,7 @@ impl<T: ReadAt> Read for CursorAt<T> {
                     error,
                     backtrace: _,
                 }) if error.kind() == ErrorKind::UnexpectedEof => {
-                    len -= 1;
+                    len = len.checked_sub(1).unwrap_or_else(|| unreachable!());
                 }
                 Err(err) => {
                     return Err(Error::other(err));
