@@ -4,6 +4,11 @@ use std::path::Path;
 
 use ubiart_toolkit::cooked::json;
 
+fn tpl_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    json::parse_v16(&data, false)?;
+    Ok(())
+}
+
 fn tpl_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     json::parse_v17(&data, false)?;
     Ok(())
@@ -45,6 +50,9 @@ fn tpl_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 }
 
 datatest_stable::harness!(
+    tpl_parse_wiiu2016,
+    "files/wiiu2016",
+    r".*/tpl.ckd/.*",
     tpl_parse_nx2017,
     "files/nx2017",
     r".*/tpl.ckd/.*",

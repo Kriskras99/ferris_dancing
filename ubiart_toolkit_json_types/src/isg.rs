@@ -288,7 +288,7 @@ pub struct CollectibleGachaItemAlias<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct ShortcutSetup1719<'a> {
+pub struct ShortcutSetup1619<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub contexts: HashMap<Cow<'a, str>, ContextSetup1719<'a>>,
@@ -673,7 +673,11 @@ pub struct MenuMusicParams<'a> {
     pub scene_path: Cow<'a, str>,
     pub prefetch: u32,
     pub fadein: u32,
+    /// Not in 2016
+    #[serde(default)]
     pub stinger: Cow<'a, str>,
+    /// Not in 2016
+    #[serde(default)]
     pub jingle: Cow<'a, str>,
 }
 
@@ -691,7 +695,11 @@ pub struct MenuMultiTrackItem<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub menu_music_path: Cow<'a, str>,
+    /// Not in 2016
+    #[serde(default)]
     pub stinger: Cow<'a, str>,
+    /// Not in 2016
+    #[serde(default)]
     pub jingle: Cow<'a, str>,
 }
 
@@ -704,6 +712,9 @@ pub struct MenuMusicConfig<'a> {
     pub start_fade_duration: f32,
     pub multi_track_transition_beat_count: u32,
     pub end_of_loop_soundwich_notif_time_offset: u32,
+    /// Only in 2016
+    #[serde(default)]
+    pub menu_music_multi_tracks: HashMap<Cow<'a, str>, Cow<'a, str>>,
 }
 
 #[serde_as]
@@ -724,7 +735,7 @@ pub struct RankDescriptor<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct QuestEntry17<'a> {
+pub struct QuestEntry1617<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub quest_id: Cow<'a, str>,
@@ -806,7 +817,7 @@ pub struct AdventureModeSetup18<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct QuestConfig1718<'a> {
+pub struct QuestConfig1618<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     #[serde(rename = "rankingScenePathID")]
@@ -823,7 +834,7 @@ pub struct QuestConfig1718<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct QuestChallengerEntry1718<'a> {
+pub struct QuestChallengerEntry1618<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -961,7 +972,7 @@ pub struct DanceMachineGlobalConfig1719<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SweatRandomizeConfig1719<'a> {
+pub struct SweatRandomizeConfig1619<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub weights: HashMap<Cow<'a, str>, Vec<f32>>,
@@ -994,7 +1005,7 @@ pub struct SearchConfig1719<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct ChallengerScoreEvolutionTemplate1719<'a> {
+pub struct ChallengerScoreEvolutionTemplate1619<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub template_name: Cow<'a, str>,
@@ -1016,7 +1027,7 @@ pub struct CountryEntry<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct ChatMessagesParams1718<'a> {
+pub struct ChatMessagesParams1618<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     #[serde(rename = "AllMessages_MinDelayBetweenMessages")]
@@ -1066,14 +1077,36 @@ pub struct ChatMessagesParams1718<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, untagged)]
+pub enum AutoDanceEffectData<'a> {
+    #[serde(borrow)]
+    JD1722(AutoDanceEffectData1722<'a>),
+    #[serde(borrow)]
+    JD16(AutoDanceEffectData16<'a>),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct AutoDanceEffectData<'a> {
+pub struct AutoDanceEffectData1722<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     #[serde(rename = "video_structure")]
-    pub video_structure: AutodanceVideoStructure<'a>,
-    pub effect_id: Cow<'a, str>,
+    pub video_structure: Box<AutodanceVideoStructure<'a>>,
     pub effect_type: u32,
+    pub effect_id: Cow<'a, str>,
+    /// Only in 2016
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effect_map_name: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct AutoDanceEffectData16<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub effect_type: u32,
+    pub effect_map_name: Cow<'a, str>,
+    pub effect_path: Cow<'a, str>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1081,10 +1114,16 @@ pub struct AutoDanceEffectData<'a> {
 pub struct AutodanceVideoStructure<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
+    /// Only in 2016
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub game_mode: Option<u32>,
     pub song_start_position: i32,
     pub duration: f64,
     pub thumbnail_time: u32,
     pub fade_out_duration: f32,
+    /// Only in 2016
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub animated_frame_path: Option<Cow<'a, str>>,
     pub ground_plane_path: Cow<'a, str>,
     pub first_layer_triple_background_path: Cow<'a, str>,
     pub second_layer_triple_background_path: Cow<'a, str>,
@@ -1155,8 +1194,13 @@ pub struct AutodancePropData<'a> {
     pub pivot_x: f32,
     pub pivot_y: f32,
     pub size: f32,
-    #[serde(rename = "fx_assetID")]
-    pub fx_asset_id: Cow<'a, str>,
+    /// Not in 2016
+    #[serde(
+        rename = "fx_assetID",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub fx_asset_id: Option<Cow<'a, str>>,
     pub prop_part: u32,
 }
 
@@ -1169,6 +1213,11 @@ pub struct PropPlayerConfig<'a> {
     pub active_props: Vec<u32>,
 }
 
+/// For serde to set a value to default to `u32::MAX`
+const fn u32_max() -> u32 {
+    u32::MAX
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CoopTweakedText17<'a> {
@@ -1176,8 +1225,10 @@ pub struct CoopTweakedText17<'a> {
     pub class: Option<&'a str>,
     pub min_score: f32,
     pub title: u32,
+    #[serde(default = "u32_max")]
     pub title_one_player: u32,
     pub desc: u32,
+    #[serde(default = "u32_max")]
     pub desc_one_player: u32,
     pub sound_notification: Cow<'a, str>,
 }
@@ -1762,6 +1813,8 @@ pub struct WhatsNewConfig<'a> {
 pub struct CarouselManager<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
+    /// Not in 2016
+    #[serde(default)]
     pub anim_setups: HashMap<Cow<'a, str>, CarouselAnimSetup<'a>>,
     pub carousel_descs: HashMap<Cow<'a, str>, CarouselDesc<'a>>,
     pub item_object: HashMap<Cow<'a, str>, Cow<'a, str>>,
@@ -2728,6 +2781,8 @@ pub struct CarouselMapRequestDesc<'a> {
     pub coach_count: u32,
     pub order: Cow<'a, str>,
     pub subscribed: bool,
+    /// Not in 2016
+    #[serde(default)]
     pub favorites: bool,
     /// Only included in nx2019
     pub sweat_toggle_item: Option<bool>,
@@ -2739,6 +2794,8 @@ pub struct CarouselMapRequestDesc<'a> {
     pub filters: Vec<CarouselFilter<'a>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub custom_tags: Vec<Cow<'a, str>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub optional_tags: Vec<Cow<'a, str>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -4127,14 +4184,20 @@ pub struct RewardDetail<'a> {
     pub event_trigger: Cow<'a, str>,
     pub has_to_be_checked_in_game: u32,
     pub uplay_id: i32,
-    pub uplay_tag: u32,
-    #[serde(rename = "uplayXP")]
-    pub uplay_xp: u32,
+    /// Not in 2016
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uplay_tag: Option<u32>,
+    #[serde(rename = "uplayXP", default, skip_serializing_if = "Option::is_none")]
+    pub uplay_xp: Option<u32>,
     pub uplay_points_value: u32,
     #[serde(rename = "uplayLocID")]
     pub uplay_loc_id: u32,
     pub has_no_reward: u32,
-    #[serde(rename = "REWARD_TRIGGER")]
+    #[serde(
+        rename = "REWARD_TRIGGER",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub reward_trigger: Vec<RewardTriggerSum<'a>>,
 }
 

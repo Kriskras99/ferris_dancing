@@ -211,7 +211,7 @@ impl BinarySerialize for &Fmt<'_> {
         writer.write_at::<u16le>(position, fmt.unk1)?;
         writer.write_at::<u16le>(position, fmt.channel_count)?;
         writer.write_at::<u32le>(position, fmt.sample_rate)?;
-        writer.write_at::<u32le>(position, fmt.unk2)?;
+        writer.write_at::<u32le>(position, fmt.total_samples_hz)?;
         writer.write_at::<u16le>(position, fmt.block_align)?;
         writer.write_at::<u16le>(position, fmt.bits_per_sample)?;
         Ok(())

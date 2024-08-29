@@ -4,6 +4,11 @@ use std::path::Path;
 
 use ubiart_toolkit::cooked::sgs;
 
+fn sgscontainer_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    sgs::parse_sgscontainer(&data)?;
+    Ok(())
+}
+
 fn sgscontainer_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     sgs::parse(&data)?;
     Ok(())
@@ -45,6 +50,9 @@ fn sgscontainer_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Re
 }
 
 datatest_stable::harness!(
+    sgscontainer_parse_wiiu2016,
+    "files/wiiu2016",
+    r".*/sgscontainer.ckd/.*",
     sgscontainer_parse_nx2017,
     "files/nx2017",
     r".*/sgscontainer.ckd/.*",

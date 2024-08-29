@@ -4,6 +4,11 @@ use std::path::Path;
 
 use ubiart_toolkit::cooked::isc;
 
+fn isc_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    isc::parse(&data)?;
+    Ok(())
+}
+
 fn isc_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     isc::parse(&data)?;
     Ok(())
@@ -45,6 +50,9 @@ fn isc_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 }
 
 datatest_stable::harness!(
+    isc_parse_wiiu2016,
+    "files/wiiu2016",
+    r".*/isc.ckd/.*",
     isc_parse_nx2017,
     "files/nx2017",
     r".*/isc.ckd/.*",

@@ -16,7 +16,11 @@ pub struct MovementSpaceMove<'a> {
     pub unk5: u32,
     pub unk6: u32,
     pub unk7: u32,
+    pub unk8: u32,
+    pub unk9: u32,
     pub unk10: u32,
+    pub unk12: u32,
+    pub unk13: u32,
     pub unk14: u32,
     pub unk15: u32,
 }

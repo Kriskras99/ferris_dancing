@@ -138,7 +138,7 @@ macro_rules! test_any {
             (left_val, right_val) => {
                 if !(right_val.contains(left_val)) {
                     // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
-                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($right), ')');
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
 
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
@@ -155,7 +155,7 @@ macro_rules! test_any {
             (left_val, right_val) => {
                 if !(right_val.contains(left_val)) {
                     // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
-                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($right), ')');
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
@@ -194,7 +194,7 @@ macro_rules! test_not_any {
             (left_val, right_val) => {
                 if (right_val.contains(left_val)) {
                     // "[src/main:2:5]: Test failed: [5, 10, 15].contains(unk1)"
-                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($right), ".contains(", ::std::stringify!($right), ')');
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
 
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
@@ -211,7 +211,7 @@ macro_rules! test_not_any {
             (left_val, right_val) => {
                 if (right_val.contains(left_val)) {
                     // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
-                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($right), ".contains(", ::std::stringify!($right), ')');
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.

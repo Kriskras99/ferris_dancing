@@ -2,6 +2,7 @@ use dotstar_toolkit_utils::{
     test_eq,
     testing::{TestError, TestResult},
 };
+use ubiart_toolkit_json_types::v16::Template16;
 
 use crate::{
     json_types::{
@@ -22,6 +23,15 @@ fn clean_buffer_tpl(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
         }
         (TestResult::Err(error), false) => Err(error),
     }
+}
+
+/// Parse a cooked json file from Just Dance 2016
+pub fn parse_v16(src: &[u8], lax: bool) -> Result<Template16<'_>, ParserError> {
+    let src = clean_buffer_tpl(src, lax)?;
+
+    let template: Template16 = serde_json::from_slice(src)?;
+
+    Ok(template)
 }
 
 /// Parse a cooked json file from Just Dance 2017

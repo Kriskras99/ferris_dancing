@@ -2,19 +2,20 @@ use std::{borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
-use ubiart_toolkit_shared_types::{errors::ParserError, LocaleId};
+use ubiart_toolkit_shared_types::errors::ParserError;
 
 #[cfg(feature = "full_json_types")]
 use super::{
     frt::FeedbackFXManager,
     isg::{
         CameraShakeConfig, CarouselManager, CarouselRules, FontEffectList, PadRumbleManager,
-        SoundConfig, TRCLocalisation, UITextManager, VibrationManager, ZInputConfig, ZInputManager,
+        RewardContainer, SoundConfig, StatsContainer, TRCLocalisation, UITextManager, ZInputConfig,
+        ZInputManager,
     },
     just_dance::{
         AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
     },
-    msh::GFXMaterialShader,
+    msh::GFXMaterialShader1718,
     tfn::FontTemplate,
     tpl::{
         BezierTreeComponent, FxBankComponent, FxControllerComponent, ModeType, PleoComponent,
@@ -25,39 +26,33 @@ use super::{
 };
 use super::{
     isg::{
-        AutoDanceEffectData, CarouselElementDesc, ChallengerScoreEvolutionTemplate1619,
-        ClubRewardConfig, CollectibleAlbum, CountryEntry, CustomizableItemConfig,
-        DanceMachineGlobalConfig1719, FTUEConfig, GachaConfig, GridDesc, HomeDataConfig,
-        HomeDataTipEntry, HomeVideoDesc, ItemColorLookUp, LayoutTabbedGrids, MenuAssetsCacheParams,
-        MenuMultiTrackItem, MenuMusicConfig, MenuMusicParams, PlaylistDatabase, PopupConfigList,
-        RankDescriptor, Rarity, RemoteSoundParams, RumbleConfig, ScheduledQuestSetup,
-        ScoringCameraParams, ScoringMovespaceParams, ScoringParams, SearchConfig1719,
-        ShortcutSetup1619, SongsSearchTags, StickerEntry, SweatRandomizeConfig1619,
-        TutorialContent, TutorialDesc, UnlimitedUpsellSongList, UplayReward, VideoLoopSetup,
-        WDFBossEntry,
+        AutoDanceEffectData, ChallengerScoreEvolutionTemplate1619, ChatMessagesParams1618,
+        CoopTweakedText17, CountryEntry, MenuAssetsCacheParams, MenuMusicConfig, MenuMusicParams,
+        PopupConfigList, QuestChallengerEntry1618, QuestConfig1618, QuestEntry1617,
+        RemoteSoundParams, ScoringCameraParams, ScoringParams, ShortcutSetup1619,
+        SweatRandomizeConfig1619, TutorialContent, TutorialDesc, UnlimitedUpsellSongList,
     },
     just_dance::{AutodanceComponent, SongDatabase},
     tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
-    v1819::{AvatarDescription1819, ObjectiveDesc1819, ScheduledQuestDesc1819},
-    DifficultyColors,
 };
+use crate::tpl::{AsyncPlayerDescTemplate, BlockFlowTemplate};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]
-pub enum Template19<'a> {
+pub enum Template16<'a> {
     #[serde(borrow, rename = "Actor_Template")]
-    Actor(Actor19<'a>),
+    Actor(Actor16<'a>),
     #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
     AutodanceComponent(AutodanceComponent<'a>),
+    #[serde(borrow, rename = "JD_AsyncPlayerDesc_Template")]
+    AsyncPlayerDescTemplate(AsyncPlayerDescTemplate<'a>),
     #[serde(borrow, rename = "JD_AvatarDescTemplate")]
-    AvatarDescription(AvatarDescription1819<'a>),
+    AvatarDescription(AvatarDescription16<'a>),
+    #[serde(borrow, rename = "JD_BlockFlowTemplate")]
+    BlockFlowTemplate(BlockFlowTemplate<'a>),
     #[serde(borrow, rename = "JD_GameManagerConfig_Template")]
-    GameManagerConfig(Box<GameManagerConfig19<'a>>),
-    #[serde(borrow, rename = "JD_LocalAliases")]
-    LocalAliases(LocalAliases19<'a>),
-    #[serde(borrow, rename = "JD_PlaylistDatabase_Template")]
-    PlaylistDatabase(PlaylistDatabase<'a>),
+    GameManagerConfig(Box<GameManagerConfig16<'a>>),
     #[serde(borrow, rename = "JD_SongDatabaseTemplate")]
     SongDatabase(SongDatabase<'a>),
     #[serde(borrow, rename = "MasterTape_Template")]
@@ -85,6 +80,9 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "CarouselManager_Template")]
     CarouselManager(CarouselManager<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "ClearColorComponent_Template")]
+    ClearColorComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "ConvertedTmlTape_Template")]
     ConvertedTmlTape(Empty<'a>),
     #[cfg(feature = "full_json_types")]
@@ -106,17 +104,23 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "FXControllerComponent_Template")]
     FxControllerComponent(FxControllerComponent<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "GFXMaterialShader_Template")]
-    GFXMaterialShader(GFXMaterialShader<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_AgingBot_BehaviourAllTrees")]
     AgingBotBehaviourAllTrees(AgingBotBehaviourAllTrees<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_AliasUnlockNotification_Template")]
-    AliasUnlockNotification(Empty<'a>),
+    #[serde(borrow, rename = "JD_BeatPulseComponent_Template")]
+    BeatPulseComponent(ModeType<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_CameraFeedComponent_Template")]
+    CameraFeedComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_CarouselRules")]
     CarouselRules(CarouselRules<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_ChannelZappingComponent_Template")]
+    ChannelZappingComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_CMU_GenericStage_Component_Template")]
+    CMUGenericStageComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_CreditsComponent_Template")]
     CreditsComponent(Empty<'a>),
@@ -124,11 +128,14 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "JD_FixedCameraComponent_Template")]
     FixedCameraComponent(FixedCameraComponent<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_GachaComponent_Template")]
-    GachaComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_GoldMoveComponent_Template")]
     GoldMoveComponent(ModeType<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_PictoComponent_Template")]
+    PictoComponent(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_PictoTimeline_Template")]
+    PictoTimeline(ModeType<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_PleoInfoComponent_Template")]
     PleoInfoComponent(Empty<'a>),
@@ -136,29 +143,11 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "JD_RegistrationComponent_Template")]
     RegistrationComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_SceneSpawnerComponent_Template")]
-    SceneSpawnerComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_ScrollBarComponent_Template")]
-    ScrollBarComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_ScrollingPopupComponent_Template")]
-    ScrollingPopupComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_SkinDescTemplate")]
-    SkinDescription(SkinDescription<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_SongDescTemplate")]
     SongDescription(SongDescription<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_SubtitleComponent_Template")]
-    SubtitleComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIAvatarUnlockWidget_Template")]
     UIAvatarUnlockWidget(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIGrid_Template")]
-    UIGrid(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudCamerafeedComponent_Template")]
     UIHudCamerafeedComponent(Empty<'a>),
@@ -166,26 +155,14 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "JD_UIHudCommunityDancerCardComponent_Template")]
     UIHudCommunityDancerCardComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudDoubleScoringPlayerComponent_Template")]
-    UIHudDoubleScoringPlayerComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudLyricsComponent_Template")]
-    UIHudLyricsComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudPictoComponent_Template")]
-    UIHudPictoComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudPictolineComponent_Template")]
-    UIHudPictolineComponent(Empty<'a>),
+    #[serde(borrow, rename = "JD_UIHudLyricsFeedbackComponent_Template")]
+    UIHudLyricsFeedbackComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudPlayerComponent_Template")]
     UIHudPlayerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudProgressComponent_Template")]
-    UIHudProgressComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudRacelineDM_Template")]
-    UIHudRacelineDM(Empty<'a>),
+    #[serde(borrow, rename = "JD_UIHudRacelineCoopComponent_Template")]
+    UIHudRacelineCoopComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudRacelineRivalBarComponent_Template")]
     UIHudRacelineRivalBarComponent(Empty<'a>),
@@ -193,14 +170,8 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "JD_UIHudRacelineRivalComponent_Template")]
     UIHudRacelineRivalComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudRacelineWDFBossComponent_Template")]
-    UIHudRacelineWDFBossComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudRacelineWDFRankComponent_Template")]
-    UIHudRacelineWDFRankComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudRacelineWDFTeamBattleComponent_Template")]
-    UIHudRacelineWDFTeamBattleComponent(Empty<'a>),
+    #[serde(borrow, rename = "JD_UIHudShowtimePhotoFeedbackComponent_Template")]
+    UIHudShowtimePhotoFeedbackComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIHudStarvingComponent_Template")]
     UIHudStarvingComponent(Empty<'a>),
@@ -214,29 +185,14 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "JD_UIHudVersusPlayerComponent_Template")]
     UIHudVersusPlayerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIHudWDFIngameNotificationComponent_Template")]
-    UIHudWDFIngameNotificationComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIJDRankWidget_Template")]
-    UIJDRankWidget(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UILineGrid_Template")]
-    UILineGrid(Empty<'a>),
+    #[serde(borrow, rename = "JD_UIHudVumeterComponent_Template")]
+    UIHudVumeterComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIMojoWidget_Template")]
     UIMojoWidget(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIProfileStatWidget_Template")]
-    UIProfileStatWidget(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UISaveWidget_Template")]
     UISaveWidget(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UIScheduledQuestComponent_Template")]
-    UIScheduledQuestComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_UISkinUnlockWidget_Template")]
-    UISkinUnlockWidget(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIUplayNotification_Template")]
     UIUplayNotification(Empty<'a>),
@@ -244,23 +200,23 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "JD_UIUploadIcon_Template")]
     UIUploadIcon(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "JD_UIWidgetElement_Template")]
+    UIWidgetElement(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_UIWidgetGroupHUD_AutodanceRecorder_Template")]
     UIWidgetGroupHUDAutodanceRecorder(ModeType<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_WDFBossSpawnerComponent_Template")]
-    WDFBossSpawnerComponent(Empty<'a>),
+    #[serde(borrow, rename = "JD_UIWidgetGroupHUD_Lyrics_Template")]
+    UIWidgetGroupHUDLyrics(ModeType<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_WDFOnlineRankTransitionComponent_Template")]
-    WDFOnlineRankTransitionComponent(Empty<'a>),
+    #[serde(borrow, rename = "JD_UIWidgetGroupHUD_PauseIcon_Template")]
+    UIWidgetGroupHUDPauseIcon(ModeType<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_WDFTeamBattlePresentationComponent_Template")]
-    WDFTeamBattlePresentationComponent(Empty<'a>),
+    #[serde(borrow, rename = "JD_UIWidgetGroupHUD_Template")]
+    UIWidgetGroupHUD(ModeType<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_WDFThemePresentationComponent_Template")]
-    WDFThemePresentationComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_WDFUnlimitedFeedbackComponent_Template")]
-    WDFUnlimitedFeedbackComponent(Empty<'a>),
+    #[serde(borrow, rename = "Mesh3DComponent_Template")]
+    Mesh3DComponent(SingleInstanceMesh3DComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "PadRumbleManager_Template")]
     PadRumbleManager(PadRumbleManager<'a>),
@@ -274,14 +230,23 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "PropertyPatcher_Template")]
     PropertyPatcher(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "RewardContainer_Template")]
+    RewardContainer(RewardContainer<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "SingleInstanceMesh3DComponent_Template")]
     SingleInstanceMesh3DComponent(SingleInstanceMesh3DComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "SoundConfig_Template")]
     SoundConfig(SoundConfig<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "StatsContainer_Template")]
+    StatsContainer(StatsContainer<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "TextureGraphicComponent_Template")]
     TextureGraphicComponent(TextureGraphicComponent<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "TexturePatcherComponent_Template")]
+    TexturePatcherComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "TRCLocalisation_Template")]
     TRCLocalisation(TRCLocalisation<'a>),
@@ -304,11 +269,11 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "UICountdown_Template")]
     UICountdown(Empty<'a>),
     #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "UIItemSlot_Template")]
+    UIItemSlot(Empty<'a>),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UIItemTextField_Template")]
     UIItemTextField(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "UINineSliceComponent_Template")]
-    UiNineSliceComponent(MaterialGraphicComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UIPhoneData_Template")]
     UIPhoneData(Empty<'a>),
@@ -325,8 +290,8 @@ pub enum Template19<'a> {
     #[serde(borrow, rename = "UITextManager_Template")]
     UITextManager(UITextManager<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "VibrationManager_Template")]
-    VibrationManager(VibrationManager<'a>),
+    #[serde(borrow, rename = "ViewportUIComponent_Template")]
+    ViewportUIComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "ZInputConfig_Template")]
     ZInputConfig(ZInputConfig<'a>),
@@ -335,10 +300,10 @@ pub enum Template19<'a> {
     ZInputManager(ZInputManager<'a>),
 }
 
-impl<'a> Template19<'a> {
-    /// Convert this template to a `Actor19`.
-    pub fn into_actor(self) -> Result<Actor19<'a>, ParserError> {
-        if let Template19::Actor(actor) = self {
+impl<'a> Template16<'a> {
+    /// Convert this template to a `Actor17`.
+    pub fn into_actor(self) -> Result<Actor16<'a>, ParserError> {
+        if let Template16::Actor(actor) = self {
             Ok(actor)
         } else {
             Err(ParserError::custom(format!(
@@ -347,9 +312,9 @@ impl<'a> Template19<'a> {
         }
     }
 
-    /// Convert this template to a `AvatarDescription22`.
-    pub fn into_avatar_description(self) -> Result<AvatarDescription1819<'a>, ParserError> {
-        if let Template19::AvatarDescription(avatar_description) = self {
+    /// Convert this template to a `AvatarDescription17`.
+    pub fn into_avatar_description(self) -> Result<AvatarDescription16<'a>, ParserError> {
+        if let Template16::AvatarDescription(avatar_description) = self {
             Ok(avatar_description)
         } else {
             Err(ParserError::custom(format!(
@@ -358,35 +323,13 @@ impl<'a> Template19<'a> {
         }
     }
 
-    /// Convert this template to a `GameManagerConfig19`.
-    pub fn into_game_manager_config(self) -> Result<GameManagerConfig19<'a>, ParserError> {
-        if let Template19::GameManagerConfig(gmc) = self {
+    /// Convert this template to a `GameManagerConfig17`.
+    pub fn into_game_manager_config(self) -> Result<GameManagerConfig16<'a>, ParserError> {
+        if let Template16::GameManagerConfig(gmc) = self {
             Ok(*gmc)
         } else {
             Err(ParserError::custom(format!(
                 "GameManagerConfig not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `PlaylistDatabase`.
-    pub fn into_playlists_database(&'a self) -> Result<&'a PlaylistDatabase<'a>, ParserError> {
-        if let Template19::PlaylistDatabase(playlist_db) = self {
-            Ok(playlist_db)
-        } else {
-            Err(ParserError::custom(format!(
-                "PlaylistDatabase not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `LocalAliases1719`.
-    pub fn into_local_aliases(self) -> Result<LocalAliases19<'a>, ParserError> {
-        if let Template19::LocalAliases(local_aliases) = self {
-            Ok(local_aliases)
-        } else {
-            Err(ParserError::custom(format!(
-                "LocalAliases not found in template: {self:?}"
             )))
         }
     }
@@ -395,7 +338,7 @@ impl<'a> Template19<'a> {
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct GameManagerConfig19<'a> {
+pub struct GameManagerConfig16<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub game_text_file_path: Cow<'a, str>,
@@ -415,8 +358,6 @@ pub struct GameManagerConfig19<'a> {
     pub sweat_magic_add: u32,
     #[serde(rename = "carousel_rules")]
     pub carousel_rules: Cow<'a, str>,
-    #[serde(rename = "alias_db_path")]
-    pub alias_db_path: Cow<'a, str>,
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub jdpaths: HashMap<u32, Cow<'a, str>>,
     pub jdblockspath: Cow<'a, str>,
@@ -429,17 +370,11 @@ pub struct GameManagerConfig19<'a> {
     pub agingbot_behaviours_tpl: Cow<'a, str>,
     #[serde(rename = "avatardb_scene")]
     pub avatardb_scene: Cow<'a, str>,
-    #[serde(rename = "skindb_scene")]
-    pub skindb_scene: Cow<'a, str>,
     #[serde(rename = "flagdb_scene")]
     pub flagdb_scene: Cow<'a, str>,
     pub avatar_folder: Cow<'a, str>,
-    pub pin_unplayed_song: Cow<'a, str>,
-    pub wdf_player_name_prefix_on_xbox_one: Cow<'a, str>,
-    #[serde(rename = "wdfPlayerNamePrefixNonPS4")]
-    pub wdf_player_name_prefix_non_ps4: Cow<'a, str>,
+    pub song_tags: Vec<Cow<'a, str>>,
     pub short_cut_configs: HashMap<Cow<'a, str>, ShortcutSetup1619<'a>>,
-    pub space_between_shortcuts: Cow<'a, str>,
     pub default_phone_images: HashMap<Cow<'a, str>, Cow<'a, str>>,
     pub max_controller_sleep_time: f32,
     pub audio_package_name: Cow<'a, str>,
@@ -450,94 +385,54 @@ pub struct GameManagerConfig19<'a> {
     pub uiscenes: HashMap<Cow<'a, str>, Cow<'a, str>>,
     pub banner_scenes: Vec<Cow<'a, str>>,
     pub transition_scenes: Vec<Cow<'a, str>>,
-    pub actors_to_bundle: Vec<Cow<'a, str>>,
+    pub genericstages: HashMap<Cow<'a, str>, Cow<'a, str>>,
     pub popupconfigs: PopupConfigList<'a>,
-    pub clubrewardconfigs: HashMap<Cow<'a, str>, ClubRewardConfig<'a>>,
     pub scoringparams: ScoringParams<'a>,
-    pub scoringcameraparams: ScoringCameraParams<'a>,
-    pub scoringmovespaceparams: ScoringMovespaceParams<'a>,
+    pub kinect_scoringparams: ScoringCameraParams<'a>,
     pub menuassetsparams: Vec<MenuAssetsCacheParams<'a>>,
     pub menumusicsparams: HashMap<Cow<'a, str>, MenuMusicParams<'a>>,
     pub remotesoundparams: HashMap<Cow<'a, str>, RemoteSoundParams<'a>>,
-    pub menu_music_multi_tracks: HashMap<Cow<'a, str>, MenuMultiTrackItem<'a>>,
     pub menumusicconfig: MenuMusicConfig<'a>,
+    pub sweat_programs: Vec<u32>,
+    pub mashupdates: HashMap<Cow<'a, str>, u32>,
+    pub mashupavatars: HashMap<Cow<'a, str>, u32>,
     pub mojoprices: HashMap<Cow<'a, str>, u32>,
-    pub rankdescriptor: RankDescriptor<'a>,
+    pub slave_phone_loc_ids: HashMap<Cow<'a, str>, Vec<u32>>,
+    pub questdataentries: Vec<QuestEntry1617<'a>>,
     pub unlimitedupsellsonglist: Vec<UnlimitedUpsellSongList<'a>>,
-    pub customizableitemconfig: CustomizableItemConfig<'a>,
-    #[serde(rename = "scheduled_questSetup")]
-    pub scheduled_quest_setup: ScheduledQuestSetup<'a>,
-    pub dancemachineglobalconfig: DanceMachineGlobalConfig1719<'a>,
+    pub questconfig: QuestConfig1618<'a>,
+    pub questchallengerentries: Vec<QuestChallengerEntry1618<'a>>,
     pub sweatrandomizeconfig: SweatRandomizeConfig1619<'a>,
-    pub searchconfig: SearchConfig1719<'a>,
     pub challenger_evolution_template_list: Vec<ChallengerScoreEvolutionTemplate1619<'a>>,
     pub countryentries: Vec<CountryEntry<'a>>,
-    pub default_country_code: Cow<'a, str>,
     pub credits_textbox_path: Cow<'a, str>,
+    pub avatar_min_anim_hud_duration: u32,
+    pub b2b_maps: Vec<Cow<'a, str>>,
+    pub chatmessagesparams: ChatMessagesParams1618<'a>,
+    pub chat_messages: HashMap<Cow<'a, str>, Vec<u32>>,
+    pub challenge_algo_order: Vec<Cow<'a, str>>,
+    pub challenge_friend_score_offset: f32,
+    pub challenge_signature_score_offset: f32,
+    pub challenger_connection_time_delay: f32,
     pub coop_score_diamonds_values: Vec<f32>,
+    pub coop_jauge_anim_time: Vec<u32>,
     pub rival_recap_incr_score_speed: f32,
+    pub retained_most_played_among_all_played_songs_ratio: f32,
+    pub locked_songs_push_occurence_value: u32,
+    pub unlimited_songs_push_occurence_value: u32,
+    pub push_recap_min_played_song_count_before_unlimited: u32,
     pub countdown_delays: HashMap<Cow<'a, str>, u32>,
     pub autodance_effects_list: Vec<AutoDanceEffectData<'a>>,
-    pub autodance_transition_sound_path: Cow<'a, str>,
-    pub autodance_transition_sound_synchronise_sample: u32,
-    pub autodance_transition_sound_synchronise_time: u32,
-    pub tutorials_contents: HashMap<Cow<'a, str>, TutorialContent<'a>>,
+    pub coop_tweaked_texts: Vec<CoopTweakedText17<'a>>,
+    pub messages_slides: HashMap<Cow<'a, str>, TutorialContent<'a>>,
     pub tutorials: Vec<TutorialDesc<'a>>,
     pub redeem_maps: HashMap<Cow<'a, str>, Vec<Cow<'a, str>>>,
-    #[serde(rename = "UplayRewards")]
-    pub uplay_rewards: Vec<UplayReward<'a>>,
-    pub stars_6th_step_song_score: u32,
-    pub stars_6th_step_incoming_effect_start_relative_score: i32,
-    pub stars_7th_step_song_score: u32,
-    pub perfect_feedback_min_score: u32,
-    pub min_song_nb_for_shuffle: u32,
-    pub stars_needed_to_unlock_extreme_alt_map: u32,
-    pub wdf_boss_entries: Vec<WDFBossEntry<'a>>,
-    #[serde(rename = "scheduled_quests")]
-    pub scheduled_quests: Vec<ScheduledQuestDesc1819<'a>>,
-    pub itemcolorlookup: ItemColorLookUp<'a>,
-    pub looped_video_config: HashMap<Cow<'a, str>, VideoLoopSetup<'a>>,
-    #[serde(rename = "defaultJDUVideoPreview")]
-    pub default_jdu_video_preview: Cow<'a, str>,
-    #[serde(rename = "defaultJDUVideoPreview_kids")]
-    pub default_jdu_video_preview_kids: Cow<'a, str>,
-    pub jd_points_per_star: Vec<u32>,
-    pub banned_maps_in_chinese: Vec<Cow<'a, str>>,
-    pub collectiblealbum: CollectibleAlbum<'a>,
-    pub stickerdatabase: Vec<StickerEntry<'a>>,
-    pub gachaconfig: GachaConfig<'a>,
-    pub ftueconfig: FTUEConfig<'a>,
-    pub rumbleconfig: RumbleConfig<'a>,
-    pub profile_landing_stats_thresholds: Vec<(u32, u32, u32)>,
-    pub config_files_path: ConfigFilesPath19<'a>,
-    pub news_update_interval: u32,
-    pub new_update_pause_time: u32,
-    pub watermark: Cow<'a, str>,
-    pub grid_descriptors: HashMap<Cow<'a, str>, GridDesc<'a>>,
-    pub grid_item_descriptors: HashMap<Cow<'a, str>, CarouselElementDesc<'a>>,
-    pub tabbed_grids_layout_descriptors: HashMap<Cow<'a, str>, LayoutTabbedGrids<'a>>,
-    pub home_data_config: HomeDataConfig<'a>,
-    pub home_data_tips_config: Vec<HomeDataTipEntry<'a>>,
-    pub home_data_default_article_thumbnail: Cow<'a, str>,
-    pub home_videos_descs: HashMap<Cow<'a, str>, HomeVideoDesc<'a>>,
-    #[serde(rename = "special_characters")]
-    pub special_characters: Vec<Cow<'a, str>>,
-    #[serde(rename = "derived_letters")]
-    pub derived_letters: HashMap<Cow<'a, str>, Cow<'a, str>>,
-    #[serde(rename = "search_labels")]
-    pub search_labels: SongsSearchTags<'a>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConfigFilesPath19<'a> {
-    pub dmconfig: Cow<'a, str>,
-    pub playlist: Cow<'a, str>,
-    pub postcards: Cow<'a, str>,
+    pub uplay_unlockable_maps: HashMap<Cow<'a, str>, u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE", deny_unknown_fields)]
-pub struct Actor19<'a> {
+pub struct Actor16<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub wip: u32,
@@ -547,35 +442,25 @@ pub struct Actor19<'a> {
     pub startpaused: u32,
     pub forceisenvironment: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub components: Vec<Template19<'a>>,
+    pub components: Vec<Template16<'a>>,
 }
 
-#[serde_as]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct LocalAliases19<'a> {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase", deny_unknown_fields)]
+pub struct AvatarDescription16<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    pub locked_color: Cow<'a, str>,
-    pub difficulty_colors: DifficultyColors<'a>,
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    pub aliases: HashMap<u16, UnlockableAliasDescriptor19<'a>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct UnlockableAliasDescriptor19<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    #[serde(rename = "StringLocID")]
-    pub string_loc_id: LocaleId,
-    pub string_online_localized: Cow<'a, str>,
-    pub string_placeholder: Cow<'a, str>,
-    pub difficulty_color: Rarity,
-    pub restricted_to_unlimited_songs: bool,
-    pub unlock_objective: ObjectiveDesc1819<'a>,
-}
-
-impl UnlockableAliasDescriptor19<'_> {
-    pub const CLASS: &'static str = "JD_UnlockableAliasDescriptor";
+    pub jd_version: u16,
+    pub relative_song_name: Cow<'a, str>,
+    #[serde(rename = "RelativeQuestID")]
+    pub relative_quest_id: Cow<'a, str>,
+    pub relative_game_mode_name: Cow<'a, str>,
+    pub actor_path: Cow<'a, str>,
+    pub avatar_id: u16,
+    pub phone_image: Cow<'a, str>,
+    pub status: u8,
+    pub unlock_type: u8,
+    pub mojo_price: u16,
+    pub wdf_level: u8,
+    pub count_in_progression: u8,
 }

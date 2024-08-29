@@ -161,7 +161,7 @@ impl<'de> BinaryDeserialize<'de> for Fmt<'de> {
             unk1,
             channel_count,
             sample_rate,
-            unk2,
+            total_samples_hz: unk2,
             block_align,
             bits_per_sample,
             unk3,

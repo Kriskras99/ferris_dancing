@@ -133,9 +133,15 @@ pub struct ParamBinding<'a> {
 pub struct SongDatabaseSceneConfig<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
-    #[serde(rename = "Pause_Level")]
-    pub pause_level: u64,
-    #[serde(rename = "name")]
+    /// Not in JD2016
+    #[serde(
+        rename = "Pause_Level",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub pause_level: Option<u64>,
+    /// Not in JD2016
+    #[serde(rename = "name", default)]
     pub name: Cow<'a, str>,
     #[serde(rename = "SKU")]
     pub sku: Cow<'a, str>,
@@ -150,7 +156,7 @@ impl Default for SongDatabaseSceneConfig<'static> {
     fn default() -> Self {
         Self {
             class: Option::default(),
-            pause_level: 6,
+            pause_level: Some(6),
             name: Cow::Borrowed(""),
             sku: Cow::Borrowed("jd2022-nx-all"),
             territory: Cow::Borrowed("NCSA"),

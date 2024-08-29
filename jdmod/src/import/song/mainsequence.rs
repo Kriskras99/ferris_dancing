@@ -4,7 +4,7 @@ use std::{borrow::Cow, collections::BTreeSet, fs::File};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::test_eq;
-use ubiart_toolkit::{cooked, json_types};
+use ubiart_toolkit::{cooked, json_types, utils::Game};
 
 use super::SongImportState;
 use crate::{
@@ -26,10 +26,13 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
         .first()
         .and_then(|t| t.entries.first())
         .map(|t| t.path.as_ref());
-    let mainsequence_tml_path = match (mainsequence_tml_path_option, sis.lax) {
+    let lax = sis.lax || sis.ugi.game == Game::JustDance2016;
+    let mainsequence_tml_path = match (mainsequence_tml_path_option, lax) {
         (Some(mainsequence_tml_path), _) => Cow::Borrowed(mainsequence_tml_path),
         (None, true) => {
-            println!("Warning! MainSequence Timeline Template is empty! Guessing name!");
+            if sis.ugi.game != Game::JustDance2016 {
+                println!("Warning! MainSequence Timeline Template is empty! Guessing name!");
+            }
             Cow::Owned(mainsequence_path.replace(".tpl", ".tape"))
         }
         (None, false) => return Err(anyhow!("MainSequence Timeline Template is empty!")),

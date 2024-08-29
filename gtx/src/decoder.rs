@@ -129,13 +129,11 @@ impl<R: ReadAtExt> ImageDecoder for GtxDecoder<R> {
         let hdr = self.header;
         let bpp = hdr.format.bytes_per_pixel();
         let is_bcn = hdr.format.is_bcn();
-        let (width, height) = if is_bcn {
+        let (width_in_blocks, height_in_blocks) = if is_bcn {
             (hdr.width / 4, hdr.height / 4)
         } else {
             (hdr.width, hdr.height)
         };
-        let width_usize = usize::try_from(width).map_err(DecoderError::from)?;
-        let height_usize = usize::try_from(height).map_err(DecoderError::from)?;
         let depth = hdr.depth;
         let swizzle = hdr.swizzle;
         let pitch = hdr.pitch;
@@ -153,8 +151,8 @@ impl<R: ReadAtExt> ImageDecoder for GtxDecoder<R> {
             .read_slice_at(&mut position, self.data.size)
             .map_err(DecoderError::from)?;
         let deswizzled = deswizzle_mipmap(
-            width,
-            height,
+            width_in_blocks,
+            height_in_blocks,
             depth,
             &data,
             swizzle,
@@ -165,6 +163,8 @@ impl<R: ReadAtExt> ImageDecoder for GtxDecoder<R> {
         )
         .map_err(DecoderError::from)?;
         drop(data); // drop original data early
+        let width_usize = usize::try_from(hdr.width).map_err(DecoderError::from)?;
+        let height_usize = usize::try_from(hdr.height).map_err(DecoderError::from)?;
         match hdr.format {
             Format::TBc1Srgb | Format::TBc1Unorm => {
                 texpresso::Format::Bc1.decompress(&deswizzled, width_usize, height_usize, buf);

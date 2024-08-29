@@ -33,8 +33,12 @@ pub enum Clip<'a> {
     ActorEnable(ActorEnableClip<'a>),
     #[serde(borrow, rename = "AlphaClip")]
     Alpha(AlphaClip<'a>),
+    #[serde(borrow, rename = "CameraFeedClip")]
+    CameraFeed(CameraFeedClip<'a>),
     #[serde(borrow, rename = "ColorClip")]
     Color(ColorClip<'a>),
+    #[serde(borrow, rename = "CommunityDancerClip")]
+    CommunityDancer(CommunityDancerClip<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "FXClip")]
     FX(FXClip<'a>),
@@ -89,6 +93,9 @@ pub enum Clip<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "SlotClip")]
     Slot(SlotClip<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "SpawnActorClip")]
+    SpawnActor(SpawnActorClip<'a>),
     #[serde(borrow, rename = "SoundSetClip")]
     SoundSet(SoundSetClip<'a>),
     #[cfg(feature = "full_json_types")]
@@ -117,7 +124,7 @@ pub enum Clip<'a> {
 #[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct Proportion3DClip<'a> {
+pub struct ActorEnableClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -127,294 +134,7 @@ pub struct Proportion3DClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-    pub curve_z: Curve<'a>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct TextAreaSizeClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub curve_max_width: Curve<'a>,
-    pub curve_max_height: Curve<'a>,
-    pub curve_area_x: Curve<'a>,
-    pub curve_area_y: Curve<'a>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct SoundwichClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    /// Not present in nx2017
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub soundwich_event: Option<Cow<'a, str>>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct SoundwichClipWithId<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    /// Not present in nx2017
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub soundwich_event: Option<Cow<'a, str>>,
-    pub soundwich_id: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct GameplayEventClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub event_type: u32,
-    pub custom_param: Cow<'a, str>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct SizeClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct SlotClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub bpm: f32,
-    pub signature: Cow<'a, str>,
-    pub guid: Cow<'a, str>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct TextClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub localization_key: u32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct PictogramClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    pub picto_path: Cow<'a, str>,
-    /// Only in nx2017-nx2018, only has non-empty values in nx2018
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub montage_path: Option<Cow<'a, str>>,
-    /// Only in nx2017-nx2018
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub atl_index: Option<u32>,
-    pub coach_count: i64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct MotionClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    pub classifier_path: Cow<'a, str>,
-    pub gold_move: u8,
-    pub coach_id: u8,
-    pub move_type: u8,
-    pub color: Color,
-    #[serde(default)]
-    pub motion_platform_specifics: HashMap<Cow<'a, str>, MotionPlatformSpecific<'a>>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct MotionPlatformSpecific<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub score_scale: f32,
-    pub score_smoothing: u32,
-    /// Not used in nx2019 or later
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub low_threshold: Option<f32>,
-    /// Not used in nx2019 or later
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub high_threshold: Option<f32>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct GoldEffectClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default)]
-    pub effect_type: u8,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct KaraokeClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    pub pitch: f32,
-    pub lyrics: Cow<'a, str>,
-    pub is_end_of_line: u8,
-    pub content_type: u8,
-    pub start_time_tolerance: u8,
-    pub end_time_tolerance: u8,
-    pub semitone_tolerance: f32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct SoundSetClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    pub sound_set_path: Cow<'a, str>,
-    pub sound_channel: i32,
-    #[serde(default)]
-    pub start_offset: u32,
-    pub stops_on_end: u32,
-    pub accounted_for_duration: u32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct VibrationClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    pub vibration_file_path: Cow<'a, str>,
-    #[serde(rename = "Loop")]
-    pub loop_it: u8,
-    pub device_side: u8,
-    pub player_id: i8,
-    pub context: u32,
-    pub start_time_offset: f32,
-    pub modulation: f32,
-}
-
-impl VibrationClip<'_> {
-    #[must_use]
-    pub fn to_owned(self) -> VibrationClip<'static> {
-        let class = None;
-        let vibration_file_path = Cow::Owned(self.vibration_file_path.into_owned());
-        VibrationClip {
-            class,
-            id: self.id,
-            track_id: self.track_id,
-            is_active: self.is_active,
-            start_time: self.start_time,
-            duration: self.duration,
-            vibration_file_path,
-            loop_it: self.loop_it,
-            device_side: self.device_side,
-            player_id: self.player_id,
-            context: self.context,
-            start_time_offset: self.start_time_offset,
-            modulation: self.modulation,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct HideUserInterfaceClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    pub event_type: u32,
-    pub custom_param: Cow<'a, str>,
+    pub actor_enable: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -434,7 +154,7 @@ pub struct AlphaClip<'a> {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct RotationClip<'a> {
+pub struct CameraFeedClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -444,14 +164,14 @@ pub struct RotationClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-    pub curve_z: Curve<'a>,
+    pub capture_type: u32,
+    pub record_beat: u32,
+    pub feed_type: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct TranslationClip<'a> {
+pub struct ColorClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -461,30 +181,14 @@ pub struct TranslationClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-    pub curve_z: Curve<'a>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct ActorEnableClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub actor_enable: u32,
+    pub curve_red: Curve<'a>,
+    pub curve_green: Curve<'a>,
+    pub curve_blue: Curve<'a>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct ProportionClip<'a> {
+pub struct CommunityDancerClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -492,30 +196,9 @@ pub struct ProportionClip<'a> {
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[allow(clippy::module_name_repetitions, reason = "Name is enforced by UbiArt")]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub struct TapeLauncherClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub id: u32,
-    pub track_id: u32,
-    pub is_active: u8,
-    pub start_time: i32,
-    pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub action: u32,
-    pub tape_choice: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tape_labels: Vec<Cow<'a, str>>,
+    pub dancer_country_code: Cow<'a, str>,
+    pub dancer_avatar_id: u32,
+    pub dancer_name: Cow<'a, str>,
 }
 
 #[cfg(feature = "full_json_types")]
@@ -537,7 +220,7 @@ pub struct FXClip<'a> {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct ColorClip<'a> {
+pub struct GameplayEventClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -547,15 +230,13 @@ pub struct ColorClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_red: Curve<'a>,
-    pub curve_green: Curve<'a>,
-    pub curve_blue: Curve<'a>,
+    pub event_type: u32,
+    pub custom_param: Cow<'a, str>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct MaterialGraphicDiffuseColorClip<'a> {
+pub struct GoldEffectClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -563,23 +244,13 @@ pub struct MaterialGraphicDiffuseColorClip<'a> {
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub layer_idx: u32,
-    #[serde(rename = "UVModifierIdx")]
-    pub uv_modifier_idx: u32,
-    pub curve_r: Curve<'a>,
-    pub curve_g: Curve<'a>,
-    pub curve_b: Curve<'a>,
+    #[serde(default)]
+    pub effect_type: u8,
 }
 
-#[allow(
-    clippy::module_name_repetitions,
-    reason = "Name is required by the engine"
-)]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct TapeReferenceClip<'a> {
+pub struct HideUserInterfaceClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -587,15 +258,13 @@ pub struct TapeReferenceClip<'a> {
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub path: Cow<'a, str>,
-    #[serde(rename = "Loop")]
-    pub loop_it: u32,
+    pub event_type: u32,
+    pub custom_param: Cow<'a, str>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct MaterialGraphicUVScaleClip<'a> {
+pub struct KaraokeClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -603,15 +272,13 @@ pub struct MaterialGraphicUVScaleClip<'a> {
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
-    pub layer_idx: u32,
-    #[serde(rename = "UVModifierIdx")]
-    pub uv_modifier_idx: u32,
-    pub curve_scale_u: Curve<'a>,
-    pub curve_scale_v: Curve<'a>,
-    pub curve_pivot_x: Curve<'a>,
-    pub curve_pivot_y: Curve<'a>,
+    pub pitch: f32,
+    pub lyrics: Cow<'a, str>,
+    pub is_end_of_line: u8,
+    pub content_type: u8,
+    pub start_time_tolerance: u8,
+    pub end_time_tolerance: u8,
+    pub semitone_tolerance: f32,
 }
 
 #[cfg(feature = "full_json_types")]
@@ -636,7 +303,7 @@ pub struct MaterialGraphicDiffuseAlphaClip<'a> {
 #[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct MaterialGraphicUVTranslationClip<'a> {
+pub struct MaterialGraphicDiffuseColorClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub id: u32,
@@ -649,8 +316,9 @@ pub struct MaterialGraphicUVTranslationClip<'a> {
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_u: Curve<'a>,
-    pub curve_v: Curve<'a>,
+    pub curve_r: Curve<'a>,
+    pub curve_g: Curve<'a>,
+    pub curve_b: Curve<'a>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -716,6 +384,28 @@ pub struct MaterialGraphicUVRotationClip<'a> {
 #[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+pub struct MaterialGraphicUVScaleClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub layer_idx: u32,
+    #[serde(rename = "UVModifierIdx")]
+    pub uv_modifier_idx: u32,
+    pub curve_scale_u: Curve<'a>,
+    pub curve_scale_v: Curve<'a>,
+    pub curve_pivot_x: Curve<'a>,
+    pub curve_pivot_y: Curve<'a>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicUVScrollClip<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
@@ -731,6 +421,374 @@ pub struct MaterialGraphicUVScrollClip<'a> {
     pub uv_modifier_idx: u32,
     pub curve_scroll_u: Curve<'a>,
     pub curve_scroll_v: Curve<'a>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct MaterialGraphicUVTranslationClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub layer_idx: u32,
+    #[serde(rename = "UVModifierIdx")]
+    pub uv_modifier_idx: u32,
+    pub curve_u: Curve<'a>,
+    pub curve_v: Curve<'a>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct MotionClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    pub classifier_path: Cow<'a, str>,
+    pub gold_move: u8,
+    pub coach_id: u8,
+    pub move_type: u8,
+    pub color: Color,
+    #[serde(default)]
+    pub motion_platform_specifics: HashMap<Cow<'a, str>, MotionPlatformSpecific<'a>>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct MotionPlatformSpecific<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub score_scale: f32,
+    pub score_smoothing: u32,
+    /// Not used in nx2019 or later
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub low_threshold: Option<f32>,
+    /// Not used in nx2019 or later
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub high_threshold: Option<f32>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct PictogramClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    pub picto_path: Cow<'a, str>,
+    /// Only in nx2017-nx2018, only has non-empty values in nx2018
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub montage_path: Option<Cow<'a, str>>,
+    /// Only in nx2017-nx2018
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub atl_index: Option<u32>,
+    pub coach_count: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct ProportionClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub curve_x: Curve<'a>,
+    pub curve_y: Curve<'a>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct Proportion3DClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub curve_x: Curve<'a>,
+    pub curve_y: Curve<'a>,
+    pub curve_z: Curve<'a>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct RotationClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub curve_x: Curve<'a>,
+    pub curve_y: Curve<'a>,
+    pub curve_z: Curve<'a>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SizeClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub curve_x: Curve<'a>,
+    pub curve_y: Curve<'a>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SlotClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub bpm: f32,
+    pub signature: Cow<'a, str>,
+    pub guid: Cow<'a, str>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SpawnActorClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    pub actor_path: Cow<'a, str>,
+    pub actor_name: Cow<'a, str>,
+    pub spawn_position: (f32, f32, f32),
+    pub parent_actor: Cow<'a, str>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SoundSetClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    pub sound_set_path: Cow<'a, str>,
+    pub sound_channel: i32,
+    #[serde(default)]
+    pub start_offset: u32,
+    pub stops_on_end: u32,
+    pub accounted_for_duration: u32,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SoundwichClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    /// Not present in nx2017
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub soundwich_event: Option<Cow<'a, str>>,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct SoundwichClipWithId<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    /// Not present in nx2017
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub soundwich_event: Option<Cow<'a, str>>,
+    pub soundwich_id: i32,
+}
+
+#[cfg(feature = "full_json_types")]
+#[allow(clippy::module_name_repetitions, reason = "Name is enforced by UbiArt")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct TapeLauncherClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub action: u32,
+    /// Not in WiiU 2016
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tape_choice: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tape_labels: Vec<Cow<'a, str>>,
+}
+
+#[allow(
+    clippy::module_name_repetitions,
+    reason = "Name is required by the engine"
+)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct TapeReferenceClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    pub path: Cow<'a, str>,
+    #[serde(rename = "Loop")]
+    pub loop_it: u32,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct TextClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub localization_key: u32,
+}
+
+#[cfg(feature = "full_json_types")]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct TextAreaSizeClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub curve_max_width: Curve<'a>,
+    pub curve_max_height: Curve<'a>,
+    pub curve_area_x: Curve<'a>,
+    pub curve_area_y: Curve<'a>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct TranslationClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_indices: Vec<u8>,
+    pub curve_x: Curve<'a>,
+    pub curve_y: Curve<'a>,
+    pub curve_z: Curve<'a>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct VibrationClip<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<&'a str>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    pub vibration_file_path: Cow<'a, str>,
+    #[serde(rename = "Loop")]
+    pub loop_it: u8,
+    pub device_side: u8,
+    pub player_id: i8,
+    pub context: u32,
+    pub start_time_offset: f32,
+    pub modulation: f32,
+}
+
+impl VibrationClip<'_> {
+    #[must_use]
+    pub fn to_owned(self) -> VibrationClip<'static> {
+        let class = None;
+        let vibration_file_path = Cow::Owned(self.vibration_file_path.into_owned());
+        VibrationClip {
+            class,
+            id: self.id,
+            track_id: self.track_id,
+            is_active: self.is_active,
+            start_time: self.start_time,
+            duration: self.duration,
+            vibration_file_path,
+            loop_it: self.loop_it,
+            device_side: self.device_side,
+            player_id: self.player_id,
+            context: self.context,
+            start_time_offset: self.start_time_offset,
+            modulation: self.modulation,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

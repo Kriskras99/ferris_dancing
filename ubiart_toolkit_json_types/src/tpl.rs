@@ -6,6 +6,71 @@ use ubiart_toolkit_shared_types::Color;
 #[cfg(feature = "full_json_types")]
 use super::Empty;
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase", deny_unknown_fields)]
+pub struct BlockFlowTemplate<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    class: Option<&'a str>,
+    pub is_mash_up: u32,
+    pub is_party_master: u32,
+    pub block_descriptor_vector: Vec<BlockReplacements<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase", deny_unknown_fields)]
+pub struct BlockReplacements<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    class: Option<&'a str>,
+    pub base_block: BlockDescriptor<'a>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub alternative_blocks: Vec<BlockDescriptor<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BlockDescriptor<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    class: Option<&'a str>,
+    pub song_name: Cow<'a, str>,
+    pub frst_beat: u32,
+    pub last_beat: u32,
+    pub song_switch: u32,
+    pub video_coach_offset: (f32, f32),
+    pub video_coach_scale: f32,
+    pub dance_step_name: Cow<'a, str>,
+    pub playing_speed: u32,
+    pub is_entry_point: u32,
+    pub is_empty_block: u32,
+    pub is_no_score_block: u32,
+    pub guid: Cow<'a, str>,
+    pub force_display_last_pictos: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AsyncPlayerDescTemplate<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    class: Option<&'a str>,
+    pub player_name: Cow<'a, str>,
+    pub player_country: Country<'a>,
+    pub player_age_bracket: u32,
+    pub player_gender: u32,
+    #[serde(rename = "avatarID")]
+    pub avatar_id: u32,
+    pub thumbnails_path: Vec<Cow<'a, str>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Country<'a> {
+    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
+    class: Option<&'a str>,
+    #[serde(rename = "countryID")]
+    pub country_id: u32,
+    pub country_code: Cow<'a, str>,
+    pub country_name: Cow<'a, str>,
+}
+
 #[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -500,6 +565,7 @@ pub struct MusicTrackStructure<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     pub class: Option<&'a str>,
     pub markers: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub signatures: Vec<MusicSignature<'a>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub sections: Vec<MusicSection<'a>>,
@@ -610,7 +676,9 @@ pub struct PleoComponent<'a> {
     pub play_to_texture: u32,
     #[serde(rename = "loop")]
     pub loop_it: u32,
-    pub clean_loop: u32,
+    /// Not in 2016
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clean_loop: Option<u32>,
     pub alpha: u32,
     pub sound: u32,
     #[serde(rename = "channelID")]
@@ -623,7 +691,9 @@ pub struct PleoComponent<'a> {
     #[serde(rename = "dashMPD")]
     pub dash_mpd: Cow<'a, str>,
     pub audio_bus: Cow<'a, str>,
-    pub loop_frame: u32,
+    /// Not in 2016
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loop_frame: Option<u32>,
 }
 
 #[cfg(feature = "full_json_types")]
@@ -1013,7 +1083,7 @@ pub struct SoundParams<'a> {
     pub random_vol_max: f32,
     pub delay: u32,
     pub random_delay: u32,
-    /// Not present in nx2017
+    /// Not present in nx2017 and earlier
     #[serde(default = "default_pitch")]
     pub pitch: f32,
     pub random_pitch_min: f32,
@@ -1022,6 +1092,8 @@ pub struct SoundParams<'a> {
     pub fade_out_time: f32,
     pub filter_frequency: u32,
     pub filter_type: u32,
+    /// Not present in nx2016
+    #[serde(default)]
     pub transition_sample_offset: u32,
 }
 

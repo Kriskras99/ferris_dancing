@@ -50,9 +50,11 @@ impl TryFrom<u32> for Language {
             0xE => Ok(Self::Norwegian),
             0xF => Ok(Self::Swedish),
             0x10 => Ok(Self::Finnish),
+            0x12 | 0x17 => Ok(Self::DevReference),
             0x16 => Ok(Self::GavChinese),
-            0x17 => Ok(Self::DevReference),
-            _ => Err(ParserError::custom(format!("Unknown language: {value:x}"))),
+            _ => Err(ParserError::custom(format!(
+                "Unknown language: 0x{value:x}"
+            ))),
         }
     }
 }

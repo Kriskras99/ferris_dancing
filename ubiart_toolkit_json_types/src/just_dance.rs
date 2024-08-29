@@ -613,8 +613,8 @@ pub struct PathCreationFormat<'a> {
     // Can be all caps on WiiU
     #[serde(alias = "FX")]
     pub fx: Cow<'a, str>,
-    // Can be all caps on WiiU
-    #[serde(alias = "AUTODANCE")]
+    // Can be all caps or capitalized on WiiU
+    #[serde(alias = "AUTODANCE", alias = "Autodance")]
     pub autodance: Cow<'a, str>,
 }
 
@@ -658,6 +658,8 @@ pub struct SongDescription<'a> {
     /// Only in nx2017, always 1
     #[serde(skip_serializing_if = "Option::is_none")]
     pub energy: Option<u8>,
+    /// Not in 2016
+    #[serde(default)]
     pub tags: Vec<Cow<'a, str>>,
     /// Only in nx2017
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -676,6 +678,10 @@ pub struct SongDescription<'a> {
     /// Only in versions before nx2020
     #[serde(skip_serializing_if = "Option::is_none")]
     pub paths: Option<Paths>,
+}
+
+impl SongDescription<'_> {
+    pub const CLASS: &'static str = "JD_SongDescTemplate";
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -704,8 +710,4 @@ pub struct DefaultColors {
     pub songcolor_2a: Option<Color>,
     #[serde(alias = "songColor_2B", skip_serializing_if = "Option::is_none")]
     pub songcolor_2b: Option<Color>,
-}
-
-impl SongDescription<'_> {
-    pub const CLASS: &'static str = "JD_SongDescTemplate";
 }

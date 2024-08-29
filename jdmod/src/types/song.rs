@@ -229,6 +229,8 @@ pub enum Tag {
     BikeTutorial,
     /// Song that uses a (wheel)chair
     Chair2Tutorial,
+    /// Song that uses a sofa?
+    SofaTutorial,
 }
 
 impl Tag {
@@ -257,6 +259,7 @@ impl Tag {
             Self::Sweat => Cow::Borrowed("sweat"),
             Self::BikeTutorial => Cow::Borrowed("biketutorial"),
             Self::Chair2Tutorial => Cow::Borrowed("chair2tutorial"),
+            Self::SofaTutorial => Cow::Borrowed("SofaTutorial"),
         }
     }
 }
@@ -287,6 +290,7 @@ impl TryFrom<&str> for Tag {
             "sweat" => Ok(Self::Sweat),
             "biketutorial" => Ok(Self::BikeTutorial),
             "chair2tutorial" => Ok(Self::Chair2Tutorial),
+            "SofaTutorial" => Ok(Self::SofaTutorial),
             _ => Err(anyhow!("Unknown tag!: {value}")),
         }
     }
@@ -1012,6 +1016,12 @@ impl<'a> TryFrom<json_types::tape::Clip<'a>> for Clip<'a> {
             )),
             json_types::tape::Clip::Translation(data) => Ok(Self::Translation(data.into())),
             json_types::tape::Clip::Vibration(data) => Ok(Self::Vibration(data.into())),
+            json_types::tape::Clip::CameraFeed(_) => Err(anyhow!(
+                "Converting CameraFeed clip through the Clip enum is not supported!"
+            )),
+            json_types::tape::Clip::CommunityDancer(_) => Err(anyhow!(
+                "Converting CommunityDancer clip through the Clip enum is not supported!"
+            )),
         }
     }
 }

@@ -32,6 +32,8 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
                 0x0,
                 0x3D23_D70A,
                 0x3DCC_CCCD,
+                0x3EE6_6666,
+                0x3F00_0000,
                 0x3F66_6C4C,
                 0x3F80_0000,
                 0x4000_0000,
@@ -42,23 +44,31 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         test_any!(
             unk2,
             [
+                0x3E99_999A,
                 0x3EE7_720D,
                 0x3F00_0000,
                 0x3F4C_CCCD,
                 0x3F80_0000,
                 0x4240_0000,
                 0x42F0_0000,
+                0x42FA_0000,
                 0x4320_0000,
                 0x43AF_0000,
                 0x43C8_0000,
+                0x4407_0000,
                 0x4420_0000,
                 0x4422_8000,
+                0x4425_0000,
+                0x4461_0000,
+                0x446D_8000,
+                0x447A_0000,
             ],
         )?;
         let unk2_5 = reader.read_at::<u32be>(position)?;
         test_any!(
             unk2_5,
             [
+                0x3E99_999A,
                 0x3EE7_720D,
                 0x3F00_0000,
                 0x3F4C_CCCD,
@@ -67,14 +77,20 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
                 0x4180_0000,
                 0x4240_0000,
                 0x42F0_0000,
+                0x42FA_0000,
                 0x4316_0000,
                 0x4320_0000,
+                0x4397_8000,
+                0x43B9_8000,
+                0x4405_8000,
+                0x440C_8000,
+                0x4425_0000,
             ],
         )?;
         let unk3 = reader.read_at::<u64be>(position)?;
         test_eq!(unk3, 0u64)?;
         let unk3_5 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk3_5, 0u32)?;
+        test_any!(unk3_5, [0, 0xFFFF_FFFF])?;
         match ugi.game {
             Game::JustDance2022
             | Game::JustDance2021
@@ -258,7 +274,7 @@ impl<'de> BinaryDeserialize<'de> for CreditsComponent<'de> {
     ) -> Result<Self::Output, ReadError> {
         let unk11 = reader.read_at::<u32be>(position)?;
         test_any!(unk11, [0xDu32, 0x17])?;
-        let i = if ugi.game == Game::JustDance2017 {
+        let i = if ugi.game == Game::JustDance2017 || ugi.game == Game::JustDance2016 {
             6u32
         } else {
             10
@@ -511,7 +527,10 @@ impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
         }
 
         match ugi.game {
-            Game::JustDance2019 | Game::JustDance2018 | Game::JustDance2017 => {
+            Game::JustDance2019
+            | Game::JustDance2018
+            | Game::JustDance2017
+            | Game::JustDance2016 => {
                 let _unk20: u64 = reader.read_at::<u64be>(position)?;
             }
             _ => {
@@ -546,7 +565,7 @@ impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
 
         // <ENUM NAME="oldAnchor" SEL="[0-9]" /> ?
         let unk26 = reader.read_at::<u32be>(position)?;
-        test_any!(unk26, [0x1, 0x2, 0x3, 0x6, 0x9])?;
+        test_ge!(unk26, 0).and(test_le!(unk26, 9))?;
 
         if is_pleo {
             let unk27 = reader.read_at::<u32be>(position)?;
@@ -690,7 +709,10 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
         test_any!(unk26, [0u32, 0xFFFF_FFFF])?;
         let unk27 = reader.read_at::<u32be>(position)?;
         test_any!(unk27, [0u32, 0xBF80_0000])?;
-        let i = if ugi.game == Game::JustDance2018 || ugi.game == Game::JustDance2017 {
+        let i = if ugi.game == Game::JustDance2018
+            || ugi.game == Game::JustDance2017
+            || ugi.game == Game::JustDance2016
+        {
             6
         } else {
             7
@@ -704,9 +726,10 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
         if ugi.game == Game::JustDance2019
             || ugi.game == Game::JustDance2018
             || ugi.game == Game::JustDance2017
+            || ugi.game == Game::JustDance2016
         {
             let unk30 = reader.read_at::<u32be>(position)?;
-            test_eq!(unk30, 0u32)?;
+            test_any!(unk30, [0, 1])?;
         } else {
             let unk30 = reader.read_at::<u64be>(position)?;
             test_eq!(unk30, 0u64)?;

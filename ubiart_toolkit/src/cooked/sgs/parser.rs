@@ -1,12 +1,20 @@
 use dotstar_toolkit_utils::{test_eq, testing::TestError};
 
-use super::Sgs;
+use super::{SceneConfigManager, Sgs};
 use crate::utils::errors::ParserError;
 
 /// Parse a sgs file
 pub fn parse(src: &[u8]) -> Result<Sgs<'_>, ParserError> {
     let src = clean_buffer_sgs(src)?;
     let sgs: Sgs = serde_json::from_slice(src)?;
+
+    Ok(sgs)
+}
+
+/// Parse a sgs file
+pub fn parse_sgscontainer(src: &[u8]) -> Result<SceneConfigManager<'_>, ParserError> {
+    let src = clean_buffer_sgs(src)?;
+    let sgs: SceneConfigManager = serde_json::from_slice(src)?;
 
     Ok(sgs)
 }

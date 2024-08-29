@@ -53,7 +53,7 @@ pub fn main() {
         let left_sample = left_sample.unwrap();
         let right_sample = right_sample.unwrap();
         trace!("{index:08}: {left_sample} {right_sample}");
-        if index as u32 == SAMPLES_PER_FRAME * 4 {
+        if u32::try_from(index).unwrap() == SAMPLES_PER_FRAME * 4 {
             break;
         }
     }

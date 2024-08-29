@@ -213,7 +213,10 @@ pub struct Fmt<'a> {
     pub channel_count: u16,
     /// Sample rate in Hz
     pub sample_rate: u32,
-    pub unk2: u32,
+    /// Total samples played per second
+    ///
+    /// `sample_rate` * `channel_count`
+    pub total_samples_hz: u32,
     pub block_align: u16,
     pub bits_per_sample: u16,
     // Only on WiiU

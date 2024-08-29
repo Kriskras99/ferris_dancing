@@ -4,6 +4,11 @@ use std::path::Path;
 use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit::{cooked::png::Png, utils::UniqueGameId};
 
+fn png_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Png::deserialize_with(&data, UniqueGameId::WIIU2016)?;
+    Ok(())
+}
+
 fn png_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     Png::deserialize_with(&data, UniqueGameId::NX2017)?;
     Ok(())
@@ -45,6 +50,9 @@ fn png_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 }
 
 datatest_stable::harness!(
+    png_parse_wiiu2016,
+    "files/wiiu2016",
+    r".*/png.ckd/.*",
     png_parse_nx2017,
     "files/nx2017",
     r".*/png.ckd/.*",

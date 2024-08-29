@@ -4,6 +4,11 @@ use std::path::Path;
 
 use ubiart_toolkit::cooked::json;
 
+fn ktape_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    json::parse_v16(&data, false)?;
+    Ok(())
+}
+
 fn ktape_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     json::parse_v17(&data, false)?;
     Ok(())
@@ -45,6 +50,9 @@ fn ktape_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()
 }
 
 datatest_stable::harness!(
+    ktape_parse_wiiu2016,
+    "files/wiiu2016",
+    r".*/ktape.ckd/.*",
     ktape_parse_nx2017,
     "files/nx2017",
     r".*/ktape.ckd/.*",

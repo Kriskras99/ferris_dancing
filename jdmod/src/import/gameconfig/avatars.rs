@@ -14,8 +14,8 @@ use dotstar_toolkit_utils::{
 use ubiart_toolkit::{
     cooked,
     json_types::{
-        v17::AvatarDescription17, v1819::AvatarDescription1819, v22::AvatarDescription2022,
-        AvatarsObjectives,
+        v16::AvatarDescription16, v17::AvatarDescription17, v1819::AvatarDescription1819,
+        v22::AvatarDescription2022, AvatarsObjectives,
     },
     utils::Game,
 };
@@ -145,6 +145,19 @@ impl<'a> From<AvatarDescription17<'a>> for MinAvatarDesc<'a> {
     }
 }
 
+impl<'a> From<AvatarDescription16<'a>> for MinAvatarDesc<'a> {
+    fn from(value: AvatarDescription16<'a>) -> Self {
+        Self {
+            avatar_id: value.avatar_id,
+            sound_family: Cow::default(),
+            status: value.status,
+            unlock_type: value.unlock_type,
+            actor_path: value.actor_path,
+            phone_image: value.phone_image,
+        }
+    }
+}
+
 /// Parse the avatar database scene for v20-v22
 fn parse_actor_v20v22<'a>(
     is: &ImportState,
@@ -181,6 +194,21 @@ fn parse_actor_v17<'a>(
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
     let template = cooked::json::parse_v17(file, is.lax)?;
+    let mut actor_template = template.into_actor()?;
+    test_eq!(actor_template.components.len(), 2)?;
+    let avatar_desc = actor_template
+        .components
+        .remove(1)
+        .into_avatar_description()?;
+    Ok(avatar_desc.into())
+}
+
+/// Parse the avatar database for v16
+fn parse_actor_v16<'a>(
+    is: &ImportState,
+    file: &'a VirtualFile,
+) -> Result<MinAvatarDesc<'a>, Error> {
+    let template = cooked::json::parse_v16(file, is.lax)?;
     let mut actor_template = template.into_actor()?;
     test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
@@ -227,6 +255,7 @@ pub fn import(
             | Game::JustDanceChina => parse_actor_v20v22(is, file)?,
             Game::JustDance2019 | Game::JustDance2018 => parse_actor_v18v19(is, file)?,
             Game::JustDance2017 => parse_actor_v17(is, file)?,
+            Game::JustDance2016 => parse_actor_v16(is, file)?,
             _ => todo!(),
         };
 

@@ -26,13 +26,13 @@ use super::{
 };
 use super::{
     isg::{
-        AutoDanceEffectData, ChallengerScoreEvolutionTemplate1719, ChatMessagesParams1718,
+        AutoDanceEffectData, ChallengerScoreEvolutionTemplate1619, ChatMessagesParams1618,
         ClubRewardConfig, CoopTweakedText17, CountryEntry, CustomizableItemConfig,
         DanceMachineGlobalConfig1719, DanceMachineRandomSetup17, ItemColorLookUp,
         MenuAssetsCacheParams, MenuMultiTrackItem, MenuMusicConfig, MenuMusicParams,
-        PopupConfigList, QuestChallengerEntry1718, QuestConfig1718, QuestEntry17, RankDescriptor,
-        RemoteSoundParams, ScoringCameraParams, ScoringParams, SearchConfig1719, ShortcutSetup1719,
-        SweatRandomizeConfig1719, TutorialContent, TutorialDesc, UnlimitedUpsellSongList,
+        PopupConfigList, QuestChallengerEntry1618, QuestConfig1618, QuestEntry1617, RankDescriptor,
+        RemoteSoundParams, ScoringCameraParams, ScoringParams, SearchConfig1719, ShortcutSetup1619,
+        SweatRandomizeConfig1619, TutorialContent, TutorialDesc, UnlimitedUpsellSongList,
         VideoLoopSetup, WDFBossEntry,
     },
     just_dance::{AutodanceComponent, SongDatabase},
@@ -413,7 +413,7 @@ pub struct GameManagerConfig17<'a> {
     // Only on WiiU
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub song_tags: Option<Vec<Cow<'a, str>>>,
-    pub short_cut_configs: HashMap<Cow<'a, str>, ShortcutSetup1719<'a>>,
+    pub short_cut_configs: HashMap<Cow<'a, str>, ShortcutSetup1619<'a>>,
     pub default_phone_images: HashMap<Cow<'a, str>, Cow<'a, str>>,
     pub max_controller_sleep_time: f32,
     pub audio_package_name: Cow<'a, str>,
@@ -441,11 +441,11 @@ pub struct GameManagerConfig17<'a> {
     pub mojoprices: HashMap<Cow<'a, str>, u32>,
     pub rankdescriptor: RankDescriptor<'a>,
     pub slave_phone_loc_ids: HashMap<Cow<'a, str>, Vec<u32>>,
-    pub questdataentries: Vec<QuestEntry17<'a>>,
+    pub questdataentries: Vec<QuestEntry1617<'a>>,
     pub questplayercamslot: HashMap<Cow<'a, str>, Vec<u32>>,
     pub unlimitedupsellsonglist: Vec<UnlimitedUpsellSongList<'a>>,
-    pub questconfig: QuestConfig1718<'a>,
-    pub questchallengerentries: Vec<QuestChallengerEntry1718<'a>>,
+    pub questconfig: QuestConfig1618<'a>,
+    pub questchallengerentries: Vec<QuestChallengerEntry1618<'a>>,
     // Only on WiiU
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub customizableitemconfig: Option<CustomizableItemConfig<'a>>,
@@ -454,14 +454,14 @@ pub struct GameManagerConfig17<'a> {
     // Only on WiiU
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dancemachinedebugconfig: Option<DanceMachineDebugConfig<'a>>,
-    pub sweatrandomizeconfig: SweatRandomizeConfig1719<'a>,
+    pub sweatrandomizeconfig: SweatRandomizeConfig1619<'a>,
     pub searchconfig: SearchConfig1719<'a>,
-    pub challenger_evolution_template_list: Vec<ChallengerScoreEvolutionTemplate1719<'a>>,
+    pub challenger_evolution_template_list: Vec<ChallengerScoreEvolutionTemplate1619<'a>>,
     pub countryentries: Vec<CountryEntry<'a>>,
     pub credits_textbox_path: Cow<'a, str>,
     pub avatar_min_anim_hud_duration: u32,
     pub b2b_maps: Vec<Cow<'a, str>>,
-    pub chatmessagesparams: ChatMessagesParams1718<'a>,
+    pub chatmessagesparams: ChatMessagesParams1618<'a>,
     pub chat_messages: HashMap<Cow<'a, str>, Vec<u32>>,
     // Only on WiiU
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -29,6 +29,7 @@ pub fn import(is: &ImportState<'_>) -> Result<(), Error> {
     )?;
 
     match is.ugi.game {
+        Game::JustDance2016 => import_v16(is, &gameconfig_path)?,
         Game::JustDance2017 => import_v17(is, &gameconfig_path)?,
         Game::JustDance2018 => import_v18(is, &gameconfig_path)?,
         Game::JustDance2019 => import_v19(is, &gameconfig_path)?,
@@ -311,6 +312,21 @@ fn import_v18(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> 
 fn import_v17(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
     let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
     let parsed_json = cooked::json::parse_v17(&gameconfig_file, is.lax)?;
+    let gameconfig = parsed_json.into_game_manager_config()?;
+
+    // Parse the avatars
+    avatars::import(is, &gameconfig.avatardb_scene, None)?;
+
+    // Parse the songdb
+    songdb::import(is, &gameconfig.songdb_scene)?;
+
+    Ok(())
+}
+
+/// Import anything supported in the enginedata/gameconfig folder (Just Dance 2016)
+fn import_v16(is: &ImportState<'_>, gameconfig_path: &str) -> Result<(), Error> {
+    let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
+    let parsed_json = cooked::json::parse_v16(&gameconfig_file, is.lax)?;
     let gameconfig = parsed_json.into_game_manager_config()?;
 
     // Parse the avatars

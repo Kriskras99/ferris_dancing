@@ -256,7 +256,12 @@ pub struct UIBannerSceneConfig<'a> {
         skip_serializing_if = "Vec::is_empty"
     )]
     pub param_bindings: Vec<WrappedParamBinding<'a>>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -271,7 +276,12 @@ pub struct UIItemTextField<'a> {
     pub dialog_name_raw: Cow<'a, str>,
     #[serde(rename = "@dialogNameLoc")]
     pub dialog_name_loc: u32,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -287,7 +297,12 @@ pub struct TransitionSceneConfig<'a> {
         skip_serializing_if = "Vec::is_empty"
     )]
     pub param_bindings: Vec<WrappedParamBinding<'a>>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -341,14 +356,20 @@ pub struct MapSceneConfig<'a> {
         skip_serializing_if = "Option::is_none"
     )]
     pub phone_image: Option<Cow<'a, str>>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct SongDatabaseSceneConfig<'a> {
-    #[serde(rename = "@name")]
+    /// Not in 2016, always empty string
+    #[serde(rename = "@name", default)]
     pub name: Cow<'a, str>,
     #[serde(rename = "@SKU")]
     pub sku: Cow<'a, str>,
@@ -356,7 +377,12 @@ pub struct SongDatabaseSceneConfig<'a> {
     pub territory: Cow<'a, str>,
     #[serde(rename = "@RatingUI")]
     pub rating_ui: Cow<'a, str>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(
         borrow,
@@ -502,7 +528,12 @@ pub struct Bind<'a> {
     pub use_parent_color: bool,
     #[serde(rename = "@removeWithParent", serialize_with = "ser_bool")]
     pub remove_with_parent: bool,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -782,7 +813,12 @@ pub struct UIWidgetElementDesc<'a> {
     pub flag: Cow<'a, str>,
     #[serde(rename = "@parentIndex")]
     pub parent_index: i32,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -803,14 +839,24 @@ pub struct UIItemSlot {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIHudSweatCounter<'a> {
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIHudVersusPlayerComponent<'a> {
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -955,6 +1001,21 @@ pub struct UICountdown {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
+pub struct CameraFeedComponent<'a> {
+    #[serde(rename = "@Picture_Beat")]
+    pub picture_beat: f32,
+    #[serde(rename = "@Record_StartBeat")]
+    pub record_start_beat: f32,
+    #[serde(rename = "@Record_Duration")]
+    pub record_duration: f32,
+    #[serde(rename = "@Replay_StartBeat")]
+    pub replay_start_beat: f32,
+    #[serde(rename = "ENUM", default, skip_serializing_if = "Vec::is_empty")]
+    pub enums: Vec<Enum<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct AFXPostProcessComponent {
     pub blur: Blur,
 }
@@ -1093,7 +1154,12 @@ pub struct UIScreenComponent<'a> {
     pub shortcuts: Option<Cow<'a, str>>,
     #[serde(rename = "@shortcutShift")]
     pub shortcut_shift: Option<u32>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(borrow, rename = "phoneSetupUiData")]
     pub phone_setup_ui_data: PhoneSetupUIData<'a>,
@@ -1113,7 +1179,12 @@ pub struct PhoneSetupData<'a> {
     pub is_popup: bool,
     #[serde(rename = "@hasVisibleActions", serialize_with = "ser_bool")]
     pub has_visible_actions: bool,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(
         borrow,
@@ -1471,7 +1542,12 @@ pub struct CarouselBehaviourNavigation<'a> {
     pub decel_tape_label: Cow<'a, str>,
     #[serde(rename = "@timeBetweenStep")]
     pub time_between_step: f32,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(
         borrow,
@@ -1527,7 +1603,12 @@ pub struct CarouselBehaviourNavigationGoToElement<'a> {
     pub time_between_steps: f32,
     #[serde(rename = "@idxToReach")]
     pub idx_to_reach: i32,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(
         borrow,
@@ -1583,7 +1664,12 @@ pub struct CarouselBehaviourNavigationAutoScroll<'a> {
     pub time_between_steps: f32,
     #[serde(rename = "@activeOnDisabledCarousel")]
     pub active_on_disabled_carousel: u32,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(
         borrow,
@@ -1638,7 +1724,12 @@ pub struct StopCondition<'a> {
     pub count_to_reach: u32,
     #[serde(rename = "@nextBehaviour")]
     pub next_behaviour: Cow<'a, str>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -1736,34 +1827,127 @@ pub struct UIHudRacelineDM {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UICarousel<'a> {
+    #[serde(
+        rename = "@acceleration",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub acceleration: Option<f32>,
+    #[serde(
+        rename = "@deceleration",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub deceleration: Option<f32>,
+    #[serde(rename = "@minSpeed", default, skip_serializing_if = "Option::is_none")]
+    pub min_speed: Option<f32>,
+    #[serde(rename = "@maxSpeed", default, skip_serializing_if = "Option::is_none")]
+    pub max_speed: Option<f32>,
     #[serde(rename = "@mainAnchor")]
     pub main_anchor: u32,
+    #[serde(
+        rename = "@minDecelerationStartRatio",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub min_deceleration_start_ratio: Option<f32>,
+    #[serde(
+        rename = "@maxDecelerationStartRatio",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub max_deceleration_start_ratio: Option<f32>,
     #[serde(rename = "@validateAction")]
     pub validate_action: Cow<'a, str>,
     #[serde(rename = "@carouselDataID")]
     pub carousel_data_id: Cow<'a, str>,
-    #[serde(rename = "@minNbItemsToLoop")]
-    pub min_nb_items_to_loop: u32,
-    #[serde(rename = "@forceLoop", serialize_with = "ser_bool")]
-    pub force_loop: bool,
-    #[serde(rename = "@manageCarouselHistory", serialize_with = "ser_bool")]
-    pub manage_carousel_history: bool,
-    #[serde(rename = "@initialBehaviour")]
-    pub initial_behaviour: Cow<'a, str>,
+    #[serde(
+        rename = "@timeBetweenStep",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub time_between_step: Option<f32>,
     #[serde(rename = "@soundContext")]
     pub sound_context: Cow<'a, str>,
+    #[serde(
+        rename = "@soundNotifGoNext",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub sound_notif_go_next: Option<Cow<'a, str>>,
+    #[serde(
+        rename = "@soundNotifGoPrev",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub sound_notif_go_prev: Option<Cow<'a, str>>,
+    #[serde(rename = "@forceLoop", serialize_with = "ser_bool")]
+    pub force_loop: bool,
+    #[serde(
+        rename = "@focusAnimsOnDisabledItems",
+        serialize_with = "ser_option_bool",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub focus_anims_on_disabled_items: Option<bool>,
+    #[serde(rename = "@manageCarouselHistory", serialize_with = "ser_bool")]
+    pub manage_carousel_history: bool,
+    #[serde(rename = "@minNbItemsToLoop")]
+    pub min_nb_items_to_loop: u32,
+    #[serde(
+        rename = "@autoScroll",
+        serialize_with = "ser_option_bool",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub auto_scroll: Option<bool>,
+    #[serde(
+        rename = "@autoScrollPauseTime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub auto_scroll_pause_time: Option<f32>,
+    #[serde(
+        rename = "@autoScrollMaxSpeedRatio",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub auto_scroll_max_speed_ratio: Option<f32>,
+    #[serde(
+        borrow,
+        rename = "nextActions",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    pub next_actions: Vec<Value<'a>>,
+    #[serde(
+        borrow,
+        rename = "prevActions",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    pub prev_actions: Vec<Value<'a>>,
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    pub enums: Vec<Enum<'a>>,
+    #[serde(borrow, rename = "animItemsDesc")]
+    pub anim_items_desc: WrappedAnimItemsDesc<'a>,
+    #[serde(
+        rename = "@initialBehaviour",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub initial_behaviour: Option<Cow<'a, str>>,
     #[serde(
         rename = "@switchSpeed",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub switch_speed: Option<f32>,
-    #[serde(
-        rename = "animItemsDesc",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub anim_item_desc: Option<WrappedAnimItemsDesc<'a>>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub behaviours: Vec<ValWrappedCarouselBehaviour<'a>>,
 }
@@ -1809,7 +1993,12 @@ pub struct UINineSliceComponent<'a> {
     pub right_slice_scale: f32,
     #[serde(borrow, rename = "PrimitiveParameters")]
     pub primitive_parameters: PrimitiveParameters<'a>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(borrow)]
     pub material: Material<'a>,
@@ -1856,7 +2045,12 @@ pub struct UINineSliceMaskComponent<'a> {
     pub right_slice_scale: f32,
     #[serde(borrow, rename = "PrimitiveParameters")]
     pub primitive_parameters: PrimitiveParameters<'a>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(borrow)]
     pub material: Material<'a>,
@@ -1934,7 +2128,12 @@ pub struct UITextBox<'a> {
         skip_serializing_if = "Option::is_none"
     )]
     pub colorize_icons: Option<bool>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -1992,7 +2191,12 @@ pub struct MaterialGraphicComponent<'a> {
     pub angle_y: f32,
     #[serde(borrow, rename = "PrimitiveParameters")]
     pub primitive_parameters: PrimitiveParameters<'a>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(borrow)]
     pub material: Material<'a>,
@@ -2013,7 +2217,12 @@ pub struct TextureGraphicComponent<'a> {
     pub sprite_index: u32,
     #[serde(borrow, rename = "PrimitiveParameters")]
     pub primitive_parameters: PrimitiveParameters<'a>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(borrow)]
     pub material: Material<'a>,
@@ -2097,7 +2306,12 @@ pub struct PleoTextureGraphicComponent<'a> {
     pub channel_id: Cow<'a, str>,
     #[serde(borrow, rename = "PrimitiveParameters")]
     pub primitive_parameters: PrimitiveParameters<'a>,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(borrow, rename = "material")]
     pub material: Material<'a>,
@@ -2115,7 +2329,12 @@ pub struct PrimitiveParameters<'a> {
 pub struct GFXPrimitiveParam<'a> {
     #[serde(rename = "@colorFactor")]
     pub color_factor: Color,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -2301,7 +2520,12 @@ pub struct SubSceneActor<'a> {
     pub direct_picking: bool,
     #[serde(rename = "@IGNORE_SAVE", serialize_with = "ser_bool")]
     pub ignore_save: bool,
-    #[serde(borrow, rename = "ENUM")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
     #[serde(borrow, rename = "SCENE")]
     pub wrapped_scene: WrappedScene<'a>,
@@ -2838,6 +3062,8 @@ mod wrapped_component {
         BoxInterpolator(WrappedBoxInterpolatorComponent),
         #[serde(rename = "JD_Carousel")]
         Carousel(WrappedCarousel<'a>),
+        #[serde(rename = "JD_CameraFeedComponent")]
+        CameraFeedComponent(WrappedCameraFeedComponent<'a>),
         #[serde(rename = "CameraGraphicComponent")]
         CameraGraphic(WrappedCameraGraphicComponent<'a>),
         #[serde(rename = "ClearColorComponent")]
@@ -2930,6 +3156,8 @@ mod wrapped_component {
         UIHudRacelineWDFSpotlight(UIHudRacelineWDFSpotlight),
         #[serde(rename = "JD_UIHudRacelineWDFTeamBattleComponent")]
         UIHudRaceLineWDFTeamBattle(UIHudRaceLineWDFTeamBattle),
+        #[serde(rename = "JD_UIHudShowtimePhotoFeedbackComponent")]
+        UIHudShowtimePhotoFeedbackComponent(UIHudShowtimePhotoFeedbackComponent),
         #[serde(rename = "JD_UIHudStarvingComponent")]
         UIHudStarving(UIHudStarving),
         #[serde(rename = "JD_UIHudSweatTimer")]
@@ -3102,6 +3330,7 @@ mod wrapped_component {
         "BoxInterpolatorComponent"
     );
     wrap!(WrappedCarousel, Carousel, "JD_Carousel", 'a);
+    wrap!(WrappedCameraFeedComponent, CameraFeedComponent, "JD_CameraFeedComponent", 'a);
     wrap!(WrappedCameraGraphicComponent, MaterialGraphicComponent, "CameraGraphicComponent", 'a);
     wrap!(
         WrappedClearColorComponent,
@@ -3165,6 +3394,10 @@ mod wrapped_component {
     wrap!(
         UIHudRaceLineWDFTeamBattle,
         "JD_UIHudRacelineWDFTeamBattleComponent"
+    );
+    wrap!(
+        UIHudShowtimePhotoFeedbackComponent,
+        "JD_UIHudShowtimePhotoFeedbackComponent"
     );
     wrap!(UIHudStarving, "JD_UIHudStarvingComponent");
     wrap!(UIHudSweatTimer, "JD_UIHudSweatTimer");
@@ -3279,6 +3512,7 @@ mod wrapped_component {
         ("JD_AvatarDescComponent" => AvatarDesc(AvatarDesc)),
         ("JD_BlockFlowComponent" => BlockFlowComponent(BlockFlowComponent)),
         ("JD_Carousel" => Carousel(WrappedCarousel)),
+        ("JD_CameraFeedComponent" => CameraFeedComponent(WrappedCameraFeedComponent)),
         ("JD_CMU_GenericStage_Component" => CMUGenericStage(CMUGenericStage)),
         ("JD_CreditsComponent" => Credits(WrappedCreditsComponent)),
         ("JD_FixedCameraComponent" => FixedCamera(WrappedFixedCameraComponent)),
@@ -3322,6 +3556,7 @@ mod wrapped_component {
         ("JD_UIHudRacelineWDFRankComponent" => UIHudRacelineWDFRank(UIHudRacelineWDFRank)),
         ("JD_UIHudRacelineWDFSpotlightComponent" => UIHudRacelineWDFSpotlight(UIHudRacelineWDFSpotlight)),
         ("JD_UIHudRacelineWDFTeamBattleComponent" => UIHudRaceLineWDFTeamBattle(UIHudRaceLineWDFTeamBattle)),
+        ("JD_UIHudShowtimePhotoFeedbackComponent" => UIHudShowtimePhotoFeedbackComponent(UIHudShowtimePhotoFeedbackComponent)),
         ("JD_UIHudStarvingComponent" => UIHudStarving(UIHudStarving)),
         ("JD_UIHudSweatCounter" => UIHudSweatCounter(WrappedUIHudSweatCounter)),
         ("JD_UIHudSweatTimer" => UIHudSweatTimer(UIHudSweatTimer)),

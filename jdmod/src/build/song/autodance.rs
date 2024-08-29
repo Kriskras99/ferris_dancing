@@ -149,6 +149,8 @@ fn autodance_template(ses: &SongExportState<'_>, autodance: &Autodance) -> Resul
                         prop_events: Vec::new(),
                         props: Vec::new(),
                         props_players_config: Vec::new(),
+                        game_mode: None,
+                        animated_frame_path: None,
                     },
                     autodance_sound_path: Cow::Owned(format!(
                         "world/maps/{lower_map_name}/autodance/{lower_map_name}.ogg"

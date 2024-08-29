@@ -57,13 +57,23 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         // TODO: Support dance machine/dance lab
         println!("Warning! {map_name} is a dance machine map! Skipping!");
         return Ok(());
-    } else if songdesc.tags.contains(&Cow::Borrowed("MASHUP")) {
+    } else if songdesc.tags.contains(&Cow::Borrowed("MASHUP"))
+        || songdesc.tags.contains(&Cow::Borrowed("COMMUNITYMASHUP"))
+    {
         // TODO: Support mashups
         println!("Warning! {map_name} is a mashup! Skipping!");
         return Ok(());
     } else if songdesc.tags.contains(&Cow::Borrowed("doublescoring")) {
         // TODO: Support double rumble
         println!("Warning! {map_name} is a double rumble map! Skipping!");
+        return Ok(());
+    } else if songdesc.tags.contains(&Cow::Borrowed("JUSTSHINE")) {
+        // TODO: Support showtime maps
+        println!("Warning! {map_name} is a showtime map! Skipping!");
+        return Ok(());
+    } else if songdesc.tags.contains(&Cow::Borrowed("PARTYMASTER")) {
+        // TODO: Support party master maps
+        println!("Warning! {map_name} is a party (puppet) master map! Skipping!");
         return Ok(());
     }
 

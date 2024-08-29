@@ -50,7 +50,7 @@ fn main() {
     let source = &cli.source;
 
     if cli.compress {
-        let destination = cli.destination.unwrap_or({
+        let destination = cli.destination.unwrap_or_else(|| {
             let mut temp = source.to_str().unwrap().to_owned();
             temp.push_str(".ipk");
             PathBuf::from(temp)

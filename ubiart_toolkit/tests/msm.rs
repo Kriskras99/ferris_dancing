@@ -5,6 +5,11 @@ use std::path::Path;
 use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt as _;
 use ubiart_toolkit::msm::MovementSpaceMove;
 
+fn msm_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    MovementSpaceMove::deserialize(&data)?;
+    Ok(())
+}
+
 fn msm_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     MovementSpaceMove::deserialize(&data)?;
     Ok(())
@@ -46,6 +51,9 @@ fn msm_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 }
 
 datatest_stable::harness!(
+    msm_parse_wiiu2016,
+    "files/wiiu2016",
+    r".*/msm/.*",
     msm_parse_nx2017,
     "files/nx2017",
     r".*/msm/.*",
