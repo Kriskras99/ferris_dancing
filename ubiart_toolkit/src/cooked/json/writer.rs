@@ -1,33 +1,35 @@
 use std::io::{Cursor, Write};
 
+use serde::Serialize;
+
 use crate::{json_types::v22::Template22, utils::errors::WriterError};
 
-/// Write the template file to the writer.
-pub fn create<W: Write>(mut writer: W, tpl: &Template22<'_>) -> Result<(), WriterError> {
-    serde_json::to_writer(&mut writer, tpl)?;
+/// Write the json structure to the writer, appending a null byte.
+pub fn create(mut writer: impl Write, value: &impl Serialize) -> Result<(), WriterError> {
+    serde_json::to_writer(&mut writer, value)?;
     writer.write_all(&[0x0])?;
 
     Ok(())
 }
 
-/// Create the template file in a newly allocated `Vec`.
-pub fn create_vec(tpl: &Template22<'_>) -> Result<Vec<u8>, WriterError> {
+/// Create the json structure in a newly allocated `Vec`, appending a null byte.
+pub fn create_vec(value: &impl Serialize) -> Result<Vec<u8>, WriterError> {
     let mut vec = Vec::with_capacity(1000);
     let cursor = Cursor::new(&mut vec);
-    serde_json::to_writer(cursor, tpl)?;
+    serde_json::to_writer(cursor, value)?;
     vec.push(0);
     vec.shrink_to_fit();
     Ok(vec)
 }
 
-/// Create the template file in a newly allocated `Vec` with initial capacity `capacity`.
+/// Create the json structure in a newly allocated `Vec` with initial capacity `capacity`, appending a null byte.
 pub fn create_vec_with_capacity_hint(
-    tpl: &Template22<'_>,
+    value: &impl Serialize,
     capacity: usize,
 ) -> Result<Vec<u8>, WriterError> {
     let mut vec = Vec::with_capacity(capacity);
     let cursor = Cursor::new(&mut vec);
-    serde_json::to_writer(cursor, tpl)?;
+    serde_json::to_writer(cursor, value)?;
     vec.push(0);
     vec.shrink_to_fit();
     Ok(vec)

@@ -39,7 +39,6 @@ use super::{
         WhatsNewConfigs,
     },
     just_dance::{AutodanceComponent, SongDatabase},
-    tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
     v22::AvatarDescription2022,
     AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
@@ -76,8 +75,6 @@ pub enum Template20<'a> {
     MusicTrackComponent(MusicTrackComponent<'a>),
     #[serde(borrow, rename = "SoundComponent_Template")]
     SoundComponent(SoundComponent<'a>),
-    #[serde(borrow, rename = "Tape")]
-    Tape(Tape<'a>),
     #[serde(borrow, rename = "TapeCase_Template")]
     TapeCase(MasterTape<'a>),
     #[cfg(feature = "full_json_types")]

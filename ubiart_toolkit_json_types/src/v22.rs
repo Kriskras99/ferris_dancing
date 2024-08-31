@@ -37,7 +37,6 @@ use super::{
         WhatsNewConfigs,
     },
     just_dance::{AutodanceComponent, SongDescription},
-    tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
     AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
 };
@@ -77,8 +76,6 @@ pub enum Template22<'a> {
     MusicTrackComponent(MusicTrackComponent<'a>),
     #[serde(borrow, rename = "SoundComponent_Template")]
     SoundComponent(SoundComponent<'a>),
-    #[serde(borrow, rename = "Tape")]
-    Tape(Tape<'a>),
     #[serde(borrow, rename = "TapeCase_Template")]
     TapeCase(MasterTape<'a>),
     #[cfg(feature = "full_json_types")]
@@ -474,17 +471,6 @@ impl<'a> Template22<'a> {
         } else {
             Err(ParserError::custom(format!(
                 "CarouselRules not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `Tape`.
-    pub fn into_tape(self) -> Result<Tape<'a>, ParserError> {
-        if let Template22::Tape(tape) = self {
-            Ok(tape)
-        } else {
-            Err(ParserError::custom(format!(
-                "Tape not found in template: {self:?}"
             )))
         }
     }

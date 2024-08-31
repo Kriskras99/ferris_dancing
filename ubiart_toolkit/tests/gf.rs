@@ -4,6 +4,11 @@ use std::path::Path;
 use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt as _;
 use ubiart_toolkit::secure_fat::SecureFat;
 
+fn secure_fat_parse_wiiu2015(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    SecureFat::deserialize(&data)?;
+    Ok(())
+}
+
 fn secure_fat_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     SecureFat::deserialize(&data)?;
     Ok(())
@@ -50,6 +55,9 @@ fn secure_fat_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Resu
 }
 
 datatest_stable::harness!(
+    secure_fat_parse_wiiu2015,
+    "files/wiiu2016",
+    r".*/gf/.*",
     secure_fat_parse_wiiu2016,
     "files/wiiu2016",
     r".*/gf/.*",

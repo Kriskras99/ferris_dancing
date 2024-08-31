@@ -93,7 +93,7 @@ pub struct UVModifier<'a> {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct GFXMaterialShader1718<'a> {
+pub struct GFXMaterialShader1618<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
     class: Option<&'a str>,
     pub flags: u32,

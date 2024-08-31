@@ -62,6 +62,7 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
                 0x4461_0000,
                 0x446D_8000,
                 0x447A_0000,
+                0x4489_8000,
             ],
         )?;
         let unk2_5 = reader.read_at::<u32be>(position)?;
@@ -84,6 +85,7 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
                 0x43B9_8000,
                 0x4405_8000,
                 0x440C_8000,
+                0x441A_8000,
                 0x4425_0000,
             ],
         )?;

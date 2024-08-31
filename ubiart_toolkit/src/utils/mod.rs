@@ -268,6 +268,11 @@ pub struct UniqueGameId {
 }
 
 impl UniqueGameId {
+    pub const WIIU2015: Self = Self {
+        game: Game::JustDance2015,
+        platform: Platform::WiiU,
+        id: 0xC563_9F58,
+    };
     pub const WIIU2016: Self = Self {
         game: Game::JustDance2016,
         platform: Platform::WiiU,

@@ -73,26 +73,6 @@ impl BinaryDeserialize<'_> for Language {
         _ctx: (),
     ) -> Result<Self, ReadError> {
         let value: u32 = reader.read_at::<u32be>(position)?;
-        match value {
-            0x0 => Ok(Self::English),
-            0x1 => Ok(Self::French),
-            0x2 => Ok(Self::Japanese),
-            0x3 => Ok(Self::German),
-            0x4 => Ok(Self::Spanish),
-            0x5 => Ok(Self::Italian),
-            0x6 => Ok(Self::Korean),
-            0x7 => Ok(Self::TradChinese),
-            0x8 => Ok(Self::Portuguese),
-            0x9 => Ok(Self::SimplChinese),
-            0xB => Ok(Self::Russian),
-            0xC => Ok(Self::Dutch),
-            0xD => Ok(Self::Danish),
-            0xE => Ok(Self::Norwegian),
-            0xF => Ok(Self::Swedish),
-            0x10 => Ok(Self::Finnish),
-            0x16 => Ok(Self::GavChinese),
-            0x17 => Ok(Self::DevReference),
-            _ => Err(ReadError::custom(format!("Unknown language: {value:x}"))),
-        }
+        Language::try_from(value).map_err(|e| ReadError::custom(e.to_string()))
     }
 }

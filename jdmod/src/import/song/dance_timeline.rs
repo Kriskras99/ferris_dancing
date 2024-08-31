@@ -4,7 +4,7 @@ use std::{collections::BTreeSet, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::test_eq;
-use ubiart_toolkit::{cooked, json_types};
+use ubiart_toolkit::{cooked, cooked::tape};
 
 use super::{montage, SongImportState};
 use crate::{
@@ -30,8 +30,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
     let dance_tml_path = cook_path(tape_case_path, sis.ugi.platform)?;
 
     let tape_file = sis.vfs.open(dance_tml_path.as_ref())?;
-    let template = cooked::json::parse_v22(&tape_file, sis.lax)?;
-    let tape = template.into_tape()?;
+    let tape = cooked::tape::parse(&tape_file, sis.ugi)?;
 
     let mut timeline = Timeline {
         timeline: BTreeSet::new(),
@@ -49,8 +48,8 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
 
     for clip in tape.clips {
         let new_clip = match clip {
-            json_types::tape::Clip::GoldEffect(goldeffect) => Clip::GoldEffect(goldeffect.into()),
-            json_types::tape::Clip::Motion(motion) => {
+            tape::Clip::GoldEffect(goldeffect) => Clip::GoldEffect(goldeffect.into()),
+            tape::Clip::Motion(motion) => {
                 let classifier_path = motion.classifier_path.clone();
                 let new_motion: MotionClip = motion.try_into()?;
 
@@ -71,7 +70,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                 }
                 Clip::Motion(new_motion)
             }
-            json_types::tape::Clip::Pictogram(pictogram) => {
+            tape::Clip::Pictogram(pictogram) => {
                 let picto_path = pictogram.picto_path.clone();
                 let new_picto: PictogramClip = pictogram.try_into()?;
                 if let Some(ref mut vec) = montage_vec {

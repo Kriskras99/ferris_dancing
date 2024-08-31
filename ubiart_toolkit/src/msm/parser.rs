@@ -58,7 +58,7 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
 
         let unk8 = reader.read_at::<u32be>(position)?;
         let unk9 = reader.read_at::<u32be>(position)?;
-        test_any!(unk9, [0, 30, 45, 50, 55, 60, 85])?;
+        test_any!(unk9, [0, 20, 25, 30, 40, 45, 50, 55, 60, 65, 85])?;
         let unk10 = reader.read_at::<u32be>(position)?;
         test_le!(unk10, 0x3)?;
         let points = reader.read_at::<u32be>(position)?;

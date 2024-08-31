@@ -100,16 +100,32 @@ fn menuart_scene<'a>(
             gridunit: 0.5,
             depth_separator: 0,
             near_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             far_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             view_family: true,
             is_popup: false,
@@ -194,7 +210,7 @@ fn materialgraphiccomponent_scene(
                     angle_x: 0.0,
                     angle_y: 0.0,
                     primitive_parameters: cooked::isc::PrimitiveParameters {
-                        gfx_primitive_param: cooked::isc::GFXPrimitiveParam { color_factor: (0.0, 0.0, 0.0, 0.0), enums: vec![cooked::isc::Enum { name: Cow::Borrowed("gfxOccludeInfo"), selection: 0 }] } 
+                        gfx_primitive_param: cooked::isc::GFXPrimitiveParam { color_factor: ubiart_toolkit::utils::Color::default(), enums: vec![cooked::isc::Enum { name: Cow::Borrowed("gfxOccludeInfo"), selection: 0 }] } 
                     },
                     enums: vec![cooked::isc::Enum { name: Cow::Borrowed("anchor"), selection: texture.anchor }, cooked::isc::Enum { name: Cow::Borrowed("oldAnchor"), selection: texture.anchor }],
                     material: cooked::isc::Material { gfx_material_serializable: cooked::isc::GFXMaterialSerializable {

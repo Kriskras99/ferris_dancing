@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
-use ubiart_toolkit::{cooked, json_types};
+use ubiart_toolkit::{cooked, cooked::tape, json_types};
 
 use super::SongExportState;
 use crate::{
@@ -206,7 +206,7 @@ fn sequence_template() -> Result<Vec<u8>, Error> {
 
 /// Build the sequence tape
 fn sequence_tape(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
-    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
+    let tape = tape::Tape {
         class: None,
         clips: Vec::new(),
         tape_clock: 0,
@@ -215,7 +215,7 @@ fn sequence_tape(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         map_name: ses.song.map_name.clone(),
         soundwich_event: Some(Cow::Borrowed("")),
         actor_paths: Vec::new(),
-    });
+    };
 
-    Ok(cooked::json::create_vec(&template)?)
+    Ok(cooked::json::create_vec(&tape)?)
 }

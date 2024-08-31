@@ -5,6 +5,11 @@ use std::path::Path;
 use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit::{cooked::act::Actor, utils::UniqueGameId};
 
+fn act_parse_wiiu2015(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Actor::deserialize_with(&data, UniqueGameId::WIIU2015)?;
+    Ok(())
+}
+
 fn act_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     Actor::deserialize_with(&data, UniqueGameId::WIIU2016)?;
     Ok(())
@@ -51,6 +56,9 @@ fn act_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 }
 
 datatest_stable::harness!(
+    act_parse_wiiu2015,
+    "files/wiiu2015",
+    r".*/act.ckd/.*",
     act_parse_wiiu2016,
     "files/wiiu2016",
     r".*/act.ckd/.*",

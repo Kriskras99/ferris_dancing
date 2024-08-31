@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
-use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
+use ubiart_toolkit::{cooked, cooked::tape, json_types, utils::SplitPath};
 
 use super::SongExportState;
 use crate::{
@@ -80,16 +80,16 @@ fn cine_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             gridunit: 0.5,
             depth_separator: 0,
             near_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color { color: (1.0, 0.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 1.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 1.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 0.0, 1.0)},
             ],
             far_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color { color: (1.0, 0.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 1.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 1.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 0.0, 1.0)},
             ],
             view_family: false,
             is_popup: false,
@@ -198,7 +198,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
                 // Create the new clip with the proper template path
                 let new_clip = orig_clip.to_tape(template_path);
 
-                Some(json_types::tape::Clip::SoundSet(new_clip))
+                Some(tape::Clip::SoundSet(new_clip))
             }
             x => {
                 println!("Warning! Found non-dance clip in dance_timeline, ignoring! {x:?}");
@@ -210,7 +210,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
         }
     }
 
-    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
+    let tape = tape::Tape {
         class: None,
         clips,
         tape_clock: 0,
@@ -219,9 +219,9 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
         map_name: Cow::Borrowed(lower_map_name),
         soundwich_event: Some(Cow::Borrowed("")),
         actor_paths: Vec::new(),
-    });
+    };
 
-    let mainsequence_tape_vec = cooked::json::create_vec(&template)?;
+    let mainsequence_tape_vec = cooked::json::create_vec(&tape)?;
     bf.generated_files.add_file(
         cache_map_path.join(format!("cinematics/{lower_map_name}_mainsequence.tape.ckd")),
         mainsequence_tape_vec,

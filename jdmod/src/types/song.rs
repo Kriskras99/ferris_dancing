@@ -15,8 +15,8 @@ use hash32::{Hasher, Murmur3Hasher};
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
+    cooked::tape,
     json_types,
-    json_types::tape::BezierCurveFloatValue,
     utils::{LocaleId, Platform},
 };
 
@@ -507,22 +507,24 @@ pub struct Color {
 
 impl From<&Color> for ubiart_toolkit::utils::Color {
     fn from(color: &Color) -> Self {
-        (
-            f32::from(color.transparency) / 255.0,
-            f32::from(color.red) / 255.0,
-            f32::from(color.green) / 255.0,
-            f32::from(color.blue) / 255.0,
-        )
+        Self {
+            color: (
+                f32::from(color.transparency) / 255.0,
+                f32::from(color.red) / 255.0,
+                f32::from(color.green) / 255.0,
+                f32::from(color.blue) / 255.0,
+            ),
+        }
     }
 }
 
 impl From<&ubiart_toolkit::utils::Color> for Color {
     fn from(value: &ubiart_toolkit::utils::Color) -> Self {
         Self {
-            transparency: map_range_to_u8(value.0, 0.0, 1.0),
-            red: map_range_to_u8(value.1, 0.0, 1.0),
-            green: map_range_to_u8(value.2, 0.0, 1.0),
-            blue: map_range_to_u8(value.3, 0.0, 1.0),
+            transparency: map_range_to_u8(value.color.0, 0.0, 1.0),
+            red: map_range_to_u8(value.color.1, 0.0, 1.0),
+            green: map_range_to_u8(value.color.2, 0.0, 1.0),
+            blue: map_range_to_u8(value.color.3, 0.0, 1.0),
         }
     }
 }
@@ -920,28 +922,26 @@ impl<'a> Clip<'a> {
     ///
     /// # Errors
     /// Will return an error if song is a [`Clip::SoundSet`]
-    pub fn into_tape(self, song: &Song) -> Result<json_types::tape::Clip<'a>, Error> {
+    pub fn into_tape(self, song: &Song) -> Result<tape::Clip<'a>, Error> {
         match self {
             Self::SoundSet(_) => Err(anyhow!(
                 "Converting SoundSetClip through the Clip enum is not supported!"
             )),
-            Self::Alpha(data) => Ok(json_types::tape::Clip::Alpha(data.into())),
-            Self::Color(data) => Ok(json_types::tape::Clip::Color(data.into())),
-            Self::GameplayEvent(data) => Ok(json_types::tape::Clip::GameplayEvent(data.into())),
-            Self::GoldEffect(data) => Ok(json_types::tape::Clip::GoldEffect(data.into())),
-            Self::HideUserInterface(data) => {
-                Ok(json_types::tape::Clip::HideUserInterface(data.into()))
+            Self::Alpha(data) => Ok(tape::Clip::Alpha(data.into())),
+            Self::Color(data) => Ok(tape::Clip::Color(data.into())),
+            Self::GameplayEvent(data) => Ok(tape::Clip::GameplayEvent(data.into())),
+            Self::GoldEffect(data) => Ok(tape::Clip::GoldEffect(data.into())),
+            Self::HideUserInterface(data) => Ok(tape::Clip::HideUserInterface(data.into())),
+            Self::Karaoke(data) => Ok(tape::Clip::Karaoke(data.into())),
+            Self::MaterialGraphicEnableLayer(data) => {
+                Ok(tape::Clip::MaterialGraphicEnableLayer(data.into()))
             }
-            Self::Karaoke(data) => Ok(json_types::tape::Clip::Karaoke(data.into())),
-            Self::MaterialGraphicEnableLayer(data) => Ok(
-                json_types::tape::Clip::MaterialGraphicEnableLayer(data.into()),
-            ),
-            Self::Motion(data) => Ok(json_types::tape::Clip::Motion(data.to_tape(song))),
-            Self::Pictogram(data) => Ok(json_types::tape::Clip::Pictogram(data.to_tape(song))),
-            Self::Proportion(data) => Ok(json_types::tape::Clip::Proportion(data.into())),
-            Self::Rotation(data) => Ok(json_types::tape::Clip::Rotation(data.into())),
-            Self::Translation(data) => Ok(json_types::tape::Clip::Translation(data.into())),
-            Self::Vibration(data) => Ok(json_types::tape::Clip::Vibration(data.into())),
+            Self::Motion(data) => Ok(tape::Clip::Motion(data.to_tape(song))),
+            Self::Pictogram(data) => Ok(tape::Clip::Pictogram(data.to_tape(song))),
+            Self::Proportion(data) => Ok(tape::Clip::Proportion(data.into())),
+            Self::Rotation(data) => Ok(tape::Clip::Rotation(data.into())),
+            Self::Translation(data) => Ok(tape::Clip::Translation(data.into())),
+            Self::Vibration(data) => Ok(tape::Clip::Vibration(data.into())),
         }
     }
 
@@ -988,40 +988,27 @@ impl<'a> Clip<'a> {
     }
 }
 
-impl<'a> TryFrom<json_types::tape::Clip<'a>> for Clip<'a> {
+impl<'a> TryFrom<tape::Clip<'a>> for Clip<'a> {
     type Error = Error;
 
-    fn try_from(value: json_types::tape::Clip<'a>) -> Result<Self, Self::Error> {
+    fn try_from(value: tape::Clip<'a>) -> Result<Self, Self::Error> {
         match value {
-            json_types::tape::Clip::Alpha(data) => Ok(Self::Alpha(data.into())),
-            json_types::tape::Clip::Color(data) => Ok(Self::Color(data.into())),
-            json_types::tape::Clip::GameplayEvent(data) => Ok(Self::GameplayEvent(data.into())),
-            json_types::tape::Clip::GoldEffect(data) => Ok(Self::GoldEffect(data.into())),
-            json_types::tape::Clip::HideUserInterface(data) => {
-                Ok(Self::HideUserInterface(data.into()))
-            }
-            json_types::tape::Clip::Karaoke(data) => Ok(Self::Karaoke(data.into())),
-            json_types::tape::Clip::MaterialGraphicEnableLayer(data) => {
+            tape::Clip::Alpha(data) => Ok(Self::Alpha(data.into())),
+            tape::Clip::Color(data) => Ok(Self::Color(data.into())),
+            tape::Clip::GameplayEvent(data) => Ok(Self::GameplayEvent(data.into())),
+            tape::Clip::GoldEffect(data) => Ok(Self::GoldEffect(data.into())),
+            tape::Clip::HideUserInterface(data) => Ok(Self::HideUserInterface(data.into())),
+            tape::Clip::Karaoke(data) => Ok(Self::Karaoke(data.into())),
+            tape::Clip::MaterialGraphicEnableLayer(data) => {
                 Ok(Self::MaterialGraphicEnableLayer(data.into()))
             }
-            json_types::tape::Clip::Motion(data) => Ok(Self::Motion(data.try_into()?)),
-            json_types::tape::Clip::Pictogram(data) => Ok(Self::Pictogram(data.try_into()?)),
-            json_types::tape::Clip::Proportion(data) => Ok(Self::Proportion(data.into())),
-            json_types::tape::Clip::Rotation(data) => Ok(Self::Rotation(data.into())),
-            json_types::tape::Clip::SoundSet(_) => Err(anyhow!(
-                "Converting SoundSet clip through the Clip enum is not supported!"
-            )),
-            json_types::tape::Clip::TapeReference(_) => Err(anyhow!(
-                "Converting TapeReference clip through the Clip enum is not supported!"
-            )),
-            json_types::tape::Clip::Translation(data) => Ok(Self::Translation(data.into())),
-            json_types::tape::Clip::Vibration(data) => Ok(Self::Vibration(data.into())),
-            json_types::tape::Clip::CameraFeed(_) => Err(anyhow!(
-                "Converting CameraFeed clip through the Clip enum is not supported!"
-            )),
-            json_types::tape::Clip::CommunityDancer(_) => Err(anyhow!(
-                "Converting CommunityDancer clip through the Clip enum is not supported!"
-            )),
+            tape::Clip::Motion(data) => Ok(Self::Motion(data.try_into()?)),
+            tape::Clip::Pictogram(data) => Ok(Self::Pictogram(data.try_into()?)),
+            tape::Clip::Proportion(data) => Ok(Self::Proportion(data.into())),
+            tape::Clip::Rotation(data) => Ok(Self::Rotation(data.into())),
+            tape::Clip::Translation(data) => Ok(Self::Translation(data.into())),
+            tape::Clip::Vibration(data) => Ok(Self::Vibration(data.into())),
+            _ => Err(anyhow!("Unsupported clip: {value:?}")),
         }
     }
 }
@@ -1041,7 +1028,7 @@ pub struct AlphaClip {
     pub curve: Option<CurveFloat>,
 }
 
-impl From<AlphaClip> for json_types::tape::AlphaClip<'static> {
+impl From<AlphaClip> for tape::AlphaClip<'static> {
     fn from(value: AlphaClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1058,14 +1045,14 @@ impl From<AlphaClip> for json_types::tape::AlphaClip<'static> {
             curve: value
                 .curve
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
         }
     }
 }
 
-impl From<json_types::tape::AlphaClip<'_>> for AlphaClip {
-    fn from(value: json_types::tape::AlphaClip<'_>) -> Self {
+impl From<tape::AlphaClip<'_>> for AlphaClip {
+    fn from(value: tape::AlphaClip<'_>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1095,7 +1082,7 @@ pub struct ColorClip {
     pub curve_blue: Option<CurveFloat>,
 }
 
-impl From<ColorClip> for json_types::tape::ColorClip<'static> {
+impl From<ColorClip> for tape::ColorClip<'static> {
     fn from(value: ColorClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1111,24 +1098,24 @@ impl From<ColorClip> for json_types::tape::ColorClip<'static> {
             curve_red: value
                 .curve_red
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
             curve_green: value
                 .curve_green
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
             curve_blue: value
                 .curve_blue
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
         }
     }
 }
 
-impl From<json_types::tape::ColorClip<'_>> for ColorClip {
-    fn from(value: json_types::tape::ColorClip<'_>) -> Self {
+impl From<tape::ColorClip<'_>> for ColorClip {
+    fn from(value: tape::ColorClip<'_>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1158,7 +1145,7 @@ pub struct GameplayEventClip<'a> {
     pub custom_param: Cow<'a, str>,
 }
 
-impl<'a> From<GameplayEventClip<'a>> for json_types::tape::GameplayEventClip<'a> {
+impl<'a> From<GameplayEventClip<'a>> for tape::GameplayEventClip<'a> {
     fn from(value: GameplayEventClip<'a>) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1178,8 +1165,8 @@ impl<'a> From<GameplayEventClip<'a>> for json_types::tape::GameplayEventClip<'a>
     }
 }
 
-impl<'a> From<json_types::tape::GameplayEventClip<'a>> for GameplayEventClip<'a> {
-    fn from(value: json_types::tape::GameplayEventClip<'a>) -> Self {
+impl<'a> From<tape::GameplayEventClip<'a>> for GameplayEventClip<'a> {
+    fn from(value: tape::GameplayEventClip<'a>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1204,7 +1191,7 @@ pub struct GoldEffectClip {
     pub effect_type: u8,
 }
 
-impl From<GoldEffectClip> for json_types::tape::GoldEffectClip<'static> {
+impl From<GoldEffectClip> for tape::GoldEffectClip<'static> {
     fn from(value: GoldEffectClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1221,8 +1208,8 @@ impl From<GoldEffectClip> for json_types::tape::GoldEffectClip<'static> {
     }
 }
 
-impl From<json_types::tape::GoldEffectClip<'_>> for GoldEffectClip {
-    fn from(value: json_types::tape::GoldEffectClip) -> Self {
+impl From<tape::GoldEffectClip<'_>> for GoldEffectClip {
+    fn from(value: tape::GoldEffectClip) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1245,7 +1232,7 @@ pub struct HideUserInterfaceClip {
     pub event_type: u32,
 }
 
-impl From<HideUserInterfaceClip> for json_types::tape::HideUserInterfaceClip<'static> {
+impl From<HideUserInterfaceClip> for tape::HideUserInterfaceClip<'static> {
     fn from(value: HideUserInterfaceClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1263,8 +1250,8 @@ impl From<HideUserInterfaceClip> for json_types::tape::HideUserInterfaceClip<'st
     }
 }
 
-impl From<json_types::tape::HideUserInterfaceClip<'_>> for HideUserInterfaceClip {
-    fn from(value: json_types::tape::HideUserInterfaceClip) -> Self {
+impl From<tape::HideUserInterfaceClip<'_>> for HideUserInterfaceClip {
+    fn from(value: tape::HideUserInterfaceClip) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1335,7 +1322,7 @@ impl Hash for KaraokeClip<'_> {
     }
 }
 
-impl<'a> From<KaraokeClip<'a>> for json_types::tape::KaraokeClip<'a> {
+impl<'a> From<KaraokeClip<'a>> for tape::KaraokeClip<'a> {
     fn from(value: KaraokeClip<'a>) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1358,8 +1345,8 @@ impl<'a> From<KaraokeClip<'a>> for json_types::tape::KaraokeClip<'a> {
     }
 }
 
-impl<'a> From<json_types::tape::KaraokeClip<'a>> for KaraokeClip<'a> {
-    fn from(value: json_types::tape::KaraokeClip<'a>) -> Self {
+impl<'a> From<tape::KaraokeClip<'a>> for KaraokeClip<'a> {
+    fn from(value: tape::KaraokeClip<'a>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1391,9 +1378,7 @@ pub struct MaterialGraphicEnableLayerClip {
     pub layer_enabled: bool,
 }
 
-impl From<MaterialGraphicEnableLayerClip>
-    for json_types::tape::MaterialGraphicEnableLayerClip<'static>
-{
+impl From<MaterialGraphicEnableLayerClip> for tape::MaterialGraphicEnableLayerClip<'static> {
     fn from(value: MaterialGraphicEnableLayerClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1414,8 +1399,8 @@ impl From<MaterialGraphicEnableLayerClip>
     }
 }
 
-impl From<json_types::tape::MaterialGraphicEnableLayerClip<'_>> for MaterialGraphicEnableLayerClip {
-    fn from(value: json_types::tape::MaterialGraphicEnableLayerClip<'_>) -> Self {
+impl From<tape::MaterialGraphicEnableLayerClip<'_>> for MaterialGraphicEnableLayerClip {
+    fn from(value: tape::MaterialGraphicEnableLayerClip<'_>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1450,7 +1435,7 @@ pub struct MotionClip<'a> {
 impl MotionClip<'_> {
     /// Convert this clip to the UbiArt representation
     #[must_use]
-    pub fn to_tape(&self, song: &Song) -> json_types::tape::MotionClip<'static> {
+    pub fn to_tape(&self, song: &Song) -> tape::MotionClip<'static> {
         let mut hasher = Murmur3Hasher::default();
         self.hash(&mut hasher);
         let id = hasher.finish32();
@@ -1458,7 +1443,7 @@ impl MotionClip<'_> {
         let lower_map_name = song.map_name.to_lowercase();
         let filename = self.classifier_filename.as_ref();
 
-        json_types::tape::MotionClip {
+        tape::MotionClip {
             class: None,
             id,
             track_id: 4_094_799_440,
@@ -1497,10 +1482,10 @@ impl MotionClip<'_> {
     }
 }
 
-impl<'a> TryFrom<json_types::tape::MotionClip<'a>> for MotionClip<'a> {
+impl<'a> TryFrom<tape::MotionClip<'a>> for MotionClip<'a> {
     type Error = Error;
 
-    fn try_from(value: json_types::tape::MotionClip<'a>) -> Result<Self, Self::Error> {
+    fn try_from(value: tape::MotionClip<'a>) -> Result<Self, Self::Error> {
         let regex = regex!(r".*/[a-z0-9]*_(.*\.msm|.*\.gesture)$");
         let classifier_filename = cow_regex_single_capture(regex, value.classifier_path)?;
 
@@ -1532,7 +1517,7 @@ pub struct PictogramClip<'a> {
 impl PictogramClip<'_> {
     /// Convert this clip to the UbiArt representation
     #[must_use]
-    pub fn to_tape(&self, song: &Song) -> json_types::tape::PictogramClip<'static> {
+    pub fn to_tape(&self, song: &Song) -> tape::PictogramClip<'static> {
         let mut hasher = Murmur3Hasher::default();
         self.hash(&mut hasher);
         let id = hasher.finish32();
@@ -1540,7 +1525,7 @@ impl PictogramClip<'_> {
         let lower_map_name = song.map_name.to_lowercase();
         let filename = self.picto_filename.as_ref();
 
-        json_types::tape::PictogramClip {
+        tape::PictogramClip {
             class: None,
             id,
             track_id: 4_094_799_440,
@@ -1557,10 +1542,10 @@ impl PictogramClip<'_> {
     }
 }
 
-impl<'a> TryFrom<json_types::tape::PictogramClip<'a>> for PictogramClip<'a> {
+impl<'a> TryFrom<tape::PictogramClip<'a>> for PictogramClip<'a> {
     type Error = Error;
 
-    fn try_from(value: json_types::tape::PictogramClip<'a>) -> Result<Self, Self::Error> {
+    fn try_from(value: tape::PictogramClip<'a>) -> Result<Self, Self::Error> {
         let regex = regex!(r".*/(.*\.png)$");
         let picto_filename = cow_regex_single_capture(regex, value.picto_path)?;
 
@@ -1590,7 +1575,7 @@ pub struct ProportionClip {
     pub curve_y: Option<CurveFloat>,
 }
 
-impl From<ProportionClip> for json_types::tape::ProportionClip<'static> {
+impl From<ProportionClip> for tape::ProportionClip<'static> {
     fn from(value: ProportionClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1606,19 +1591,19 @@ impl From<ProportionClip> for json_types::tape::ProportionClip<'static> {
             curve_x: value
                 .curve_x
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
             curve_y: value
                 .curve_y
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
         }
     }
 }
 
-impl From<json_types::tape::ProportionClip<'_>> for ProportionClip {
-    fn from(value: json_types::tape::ProportionClip<'_>) -> Self {
+impl From<tape::ProportionClip<'_>> for ProportionClip {
+    fn from(value: tape::ProportionClip<'_>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1649,7 +1634,7 @@ pub struct RotationClip {
     pub curve_z: Option<CurveFloat>,
 }
 
-impl From<RotationClip> for json_types::tape::RotationClip<'static> {
+impl From<RotationClip> for tape::RotationClip<'static> {
     fn from(value: RotationClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1665,24 +1650,24 @@ impl From<RotationClip> for json_types::tape::RotationClip<'static> {
             curve_x: value
                 .curve_x
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
             curve_y: value
                 .curve_y
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
             curve_z: value
                 .curve_z
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
         }
     }
 }
 
-impl From<json_types::tape::RotationClip<'_>> for RotationClip {
-    fn from(value: json_types::tape::RotationClip<'_>) -> Self {
+impl From<tape::RotationClip<'_>> for RotationClip {
+    fn from(value: tape::RotationClip<'_>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1713,12 +1698,12 @@ pub struct SoundSetClip<'a> {
 impl SoundSetClip<'_> {
     /// Convert the SoundSetClip to the UbiArt representation with `sound_set_path`
     #[must_use]
-    pub fn to_tape<'a>(&self, sound_set_path: Cow<'a, str>) -> json_types::tape::SoundSetClip<'a> {
+    pub fn to_tape<'a>(&self, sound_set_path: Cow<'a, str>) -> tape::SoundSetClip<'a> {
         let mut hasher = Murmur3Hasher::default();
         self.hash(&mut hasher);
         let id = hasher.finish32();
 
-        json_types::tape::SoundSetClip {
+        tape::SoundSetClip {
             class: None,
             id,
             track_id: 1_369_275_280,
@@ -1753,7 +1738,7 @@ pub struct TranslationClip {
     pub curve_z: Option<CurveFloat>,
 }
 
-impl From<TranslationClip> for json_types::tape::TranslationClip<'static> {
+impl From<TranslationClip> for tape::TranslationClip<'static> {
     fn from(value: TranslationClip) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1769,24 +1754,24 @@ impl From<TranslationClip> for json_types::tape::TranslationClip<'static> {
             curve_x: value
                 .curve_x
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
             curve_y: value
                 .curve_y
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
             curve_z: value
                 .curve_z
                 .as_ref()
-                .map(json_types::tape::Curve::from)
+                .map(tape::Curve::from)
                 .unwrap_or_default(),
         }
     }
 }
 
-impl From<json_types::tape::TranslationClip<'_>> for TranslationClip {
-    fn from(value: json_types::tape::TranslationClip<'_>) -> Self {
+impl From<tape::TranslationClip<'_>> for TranslationClip {
+    fn from(value: tape::TranslationClip<'_>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1812,7 +1797,7 @@ pub struct VibrationClip<'a> {
     pub vibration: Cow<'a, str>,
 }
 
-impl<'a> From<VibrationClip<'a>> for json_types::tape::VibrationClip<'a> {
+impl<'a> From<VibrationClip<'a>> for tape::VibrationClip<'a> {
     fn from(value: VibrationClip<'a>) -> Self {
         let mut hasher = Murmur3Hasher::default();
         value.hash(&mut hasher);
@@ -1835,8 +1820,8 @@ impl<'a> From<VibrationClip<'a>> for json_types::tape::VibrationClip<'a> {
     }
 }
 
-impl<'a> From<json_types::tape::VibrationClip<'a>> for VibrationClip<'a> {
-    fn from(value: json_types::tape::VibrationClip<'a>) -> Self {
+impl<'a> From<tape::VibrationClip<'a>> for VibrationClip<'a> {
+    fn from(value: tape::VibrationClip<'a>) -> Self {
         Self {
             is_active: value.is_active == 1,
             start_time: value.start_time,
@@ -1858,28 +1843,28 @@ pub enum CurveFloat {
 }
 
 impl CurveFloat {
-    /// Convert a [`json_types::tape::Curve`] into a `Option<CurveFloat>`
+    /// Convert a [`tape::Curve`] into a `Option<CurveFloat>`
     #[must_use]
-    pub fn from_curve(value: &json_types::tape::Curve<'_>) -> Option<Self> {
-        let json_types::tape::Curve::BezierCurveFloat(value) = value;
+    pub fn from_curve(value: &tape::Curve<'_>) -> Option<Self> {
+        let tape::Curve::BezierCurveFloat(value) = value;
         match &value.value {
-            BezierCurveFloatValue::Empty => None,
-            BezierCurveFloatValue::Constant(value) => Some(Self::Constant(value.into())),
-            BezierCurveFloatValue::Linear(value) => Some(Self::Linear(value.into())),
-            BezierCurveFloatValue::Multi(value) => Some(Self::Multi(value.into())),
+            tape::BezierCurveFloatValue::Empty => None,
+            tape::BezierCurveFloatValue::Constant(value) => Some(Self::Constant(value.into())),
+            tape::BezierCurveFloatValue::Linear(value) => Some(Self::Linear(value.into())),
+            tape::BezierCurveFloatValue::Multi(value) => Some(Self::Multi(value.into())),
         }
     }
 }
 
-impl From<&CurveFloat> for json_types::tape::Curve<'static> {
+impl From<&CurveFloat> for tape::Curve<'static> {
     fn from(value: &CurveFloat) -> Self {
         let value = match value {
-            CurveFloat::Constant(value) => BezierCurveFloatValue::Constant(value.into()),
-            CurveFloat::Linear(value) => BezierCurveFloatValue::Linear(value.into()),
-            CurveFloat::Multi(value) => BezierCurveFloatValue::Multi(value.into()),
+            CurveFloat::Constant(value) => tape::BezierCurveFloatValue::Constant(value.into()),
+            CurveFloat::Linear(value) => tape::BezierCurveFloatValue::Linear(value.into()),
+            CurveFloat::Multi(value) => tape::BezierCurveFloatValue::Multi(value.into()),
         };
 
-        Self::BezierCurveFloat(json_types::tape::BezierCurveFloat { class: None, value })
+        Self::BezierCurveFloat(tape::BezierCurveFloat { class: None, value })
     }
 }
 
@@ -1887,13 +1872,13 @@ impl From<&CurveFloat> for json_types::tape::Curve<'static> {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CurveFloatConstant(pub f64);
 
-impl From<&json_types::tape::BezierCurveFloatConstant<'_>> for CurveFloatConstant {
-    fn from(value: &json_types::tape::BezierCurveFloatConstant) -> Self {
+impl From<&tape::BezierCurveFloatConstant<'_>> for CurveFloatConstant {
+    fn from(value: &tape::BezierCurveFloatConstant) -> Self {
         Self(value.value)
     }
 }
 
-impl From<&CurveFloatConstant> for json_types::tape::BezierCurveFloatConstant<'static> {
+impl From<&CurveFloatConstant> for tape::BezierCurveFloatConstant<'static> {
     fn from(value: &CurveFloatConstant) -> Self {
         Self {
             class: None,
@@ -1941,8 +1926,8 @@ pub struct CurveFloatLinear {
     pub normal_right_in: (f64, f64),
 }
 
-impl From<&json_types::tape::BezierCurveFloatLinear<'_>> for CurveFloatLinear {
-    fn from(value: &json_types::tape::BezierCurveFloatLinear) -> Self {
+impl From<&tape::BezierCurveFloatLinear<'_>> for CurveFloatLinear {
+    fn from(value: &tape::BezierCurveFloatLinear) -> Self {
         Self {
             value_left: value.value_left,
             normal_left_out: value.normal_left_out,
@@ -1952,7 +1937,7 @@ impl From<&json_types::tape::BezierCurveFloatLinear<'_>> for CurveFloatLinear {
     }
 }
 
-impl From<&CurveFloatLinear> for json_types::tape::BezierCurveFloatLinear<'static> {
+impl From<&CurveFloatLinear> for tape::BezierCurveFloatLinear<'static> {
     fn from(value: &CurveFloatLinear) -> Self {
         Self {
             class: None,
@@ -2020,23 +2005,19 @@ pub struct CurveFloatMulti {
     pub keys: Vec<KeyFloat>,
 }
 
-impl From<&json_types::tape::BezierCurveFloatMulti<'_>> for CurveFloatMulti {
-    fn from(value: &json_types::tape::BezierCurveFloatMulti) -> Self {
+impl From<&tape::BezierCurveFloatMulti<'_>> for CurveFloatMulti {
+    fn from(value: &tape::BezierCurveFloatMulti) -> Self {
         Self {
             keys: value.keys.iter().map(KeyFloat::from).collect(),
         }
     }
 }
 
-impl From<&CurveFloatMulti> for json_types::tape::BezierCurveFloatMulti<'static> {
+impl From<&CurveFloatMulti> for tape::BezierCurveFloatMulti<'static> {
     fn from(value: &CurveFloatMulti) -> Self {
         Self {
             class: None,
-            keys: value
-                .keys
-                .iter()
-                .map(json_types::tape::KeyFloat::from)
-                .collect(),
+            keys: value.keys.iter().map(tape::KeyFloat::from).collect(),
         }
     }
 }
@@ -2052,8 +2033,8 @@ pub struct KeyFloat {
     pub normal_in: (f64, f64),
 }
 
-impl From<&json_types::tape::KeyFloat<'_>> for KeyFloat {
-    fn from(value: &json_types::tape::KeyFloat) -> Self {
+impl From<&tape::KeyFloat<'_>> for KeyFloat {
+    fn from(value: &tape::KeyFloat) -> Self {
         Self {
             value: value.value,
             normal_out: value.normal_out,
@@ -2062,7 +2043,7 @@ impl From<&json_types::tape::KeyFloat<'_>> for KeyFloat {
     }
 }
 
-impl From<&KeyFloat> for json_types::tape::KeyFloat<'static> {
+impl From<&KeyFloat> for tape::KeyFloat<'static> {
     fn from(value: &KeyFloat) -> Self {
         Self {
             class: Some("KeyFloat"),

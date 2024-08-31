@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
-use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
+use ubiart_toolkit::{cooked, cooked::tape, json_types, utils::SplitPath};
 
 use super::SongExportState;
 use crate::{
@@ -92,8 +92,8 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
 
     for orig_clip in timeline.timeline {
         let some = match orig_clip {
-            Clip::GoldEffect(orig_clip) => Some(json_types::tape::Clip::GoldEffect(
-                json_types::tape::GoldEffectClip::from(orig_clip),
+            Clip::GoldEffect(orig_clip) => Some(tape::Clip::GoldEffect(
+                tape::GoldEffectClip::from(orig_clip),
             )),
             Clip::Motion(orig_clip) => {
                 let new_clip = orig_clip.to_tape(&ses.song);
@@ -115,7 +115,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                     );
                 }
 
-                Some(json_types::tape::Clip::Motion(new_clip))
+                Some(tape::Clip::Motion(new_clip))
             }
             Clip::Pictogram(orig_clip) => {
                 let new_clip = orig_clip.to_tape(&ses.song);
@@ -137,7 +137,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                     }
                 }
 
-                Some(json_types::tape::Clip::Pictogram(new_clip))
+                Some(tape::Clip::Pictogram(new_clip))
             }
             x => {
                 println!("Warning! Found non-dance clip in dance_timeline, ignoring! {x:?}");
@@ -149,7 +149,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
         }
     }
 
-    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
+    let tape = tape::Tape {
         class: None,
         clips,
         tape_clock: 0,
@@ -158,9 +158,9 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
         map_name: ses.song.map_name.clone(),
         soundwich_event: Some(Cow::Borrowed("")),
         actor_paths: Vec::new(),
-    });
+    };
 
-    let dance_dtape_vec = cooked::json::create_vec(&template)?;
+    let dance_dtape_vec = cooked::json::create_vec(&tape)?;
 
     bf.generated_files.add_file(
         timeline_cache_dir.join(format!("{lower_map_name}_tml_dance.act.ckd")),
@@ -196,7 +196,7 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
     let tml_actor_vec = tml_actor(ses, k)?;
     let tml_template_vec = tml_template(ses, k)?;
 
-    let template = json_types::v22::Template22::Tape(json_types::tape::Tape {
+    let tape = tape::Tape {
         class: None,
         clips: timeline
             .timeline
@@ -217,9 +217,9 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
         map_name: ses.song.map_name.clone(),
         soundwich_event: Some(Cow::Borrowed("")),
         actor_paths: Vec::new(),
-    });
+    };
 
-    let ktape_vec = cooked::json::create_vec(&template)?;
+    let ktape_vec = cooked::json::create_vec(&tape)?;
 
     bf.generated_files.add_file(
         timeline_cache_dir.join(format!("{lower_map_name}_tml_karaoke.act.ckd")),
@@ -247,16 +247,32 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             gridunit: 0.5,
             depth_separator: 0,
             near_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             far_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             view_family: false,
             is_popup: false,

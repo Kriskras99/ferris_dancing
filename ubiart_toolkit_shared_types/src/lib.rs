@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use dotstar_toolkit_utils::bytes::{
-    primitives::u32be,
+    primitives::{f32be, u32be},
     read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use serde::{Deserialize, Serialize};
@@ -9,7 +9,32 @@ use serde::{Deserialize, Serialize};
 pub mod errors;
 
 /// A RGBA color encoded in f32 (0.0 is black, 1.0 is white)
-pub type Color = (f32, f32, f32, f32);
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[repr(transparent)]
+#[serde(transparent)]
+pub struct Color {
+    pub color: (f32, f32, f32, f32),
+}
+
+impl BinaryDeserialize<'_> for Color {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let four = reader.read_at::<f32be>(position)?;
+        let three = reader.read_at::<f32be>(position)?;
+        let two = reader.read_at::<f32be>(position)?;
+        let one = reader.read_at::<f32be>(position)?;
+
+        Ok(Self {
+            color: (one, two, three, four),
+        })
+    }
+}
 
 /// Represents the id of a localised string
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

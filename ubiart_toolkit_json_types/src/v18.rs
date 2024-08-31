@@ -14,7 +14,7 @@ use super::{
     just_dance::{
         AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
     },
-    msh::GFXMaterialShader1718,
+    msh::GFXMaterialShader1618,
     tfn::FontTemplate,
     tpl::{
         BezierTreeComponent, FxBankComponent, FxControllerComponent, ModeType, PleoComponent,
@@ -37,7 +37,6 @@ use super::{
         VideoLoopSetup, WDFBossEntry,
     },
     just_dance::{AutodanceComponent, SongDatabase},
-    tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
     v1819::{AvatarDescription1819, ScheduledQuestDesc1819},
 };
@@ -63,8 +62,6 @@ pub enum Template18<'a> {
     MusicTrackComponent(MusicTrackComponent<'a>),
     #[serde(borrow, rename = "SoundComponent_Template")]
     SoundComponent(SoundComponent<'a>),
-    #[serde(borrow, rename = "Tape")]
-    Tape(Tape<'a>),
     #[serde(borrow, rename = "TapeCase_Template")]
     TapeCase(MasterTape<'a>),
     #[cfg(feature = "full_json_types")]
@@ -105,7 +102,7 @@ pub enum Template18<'a> {
     FxControllerComponent(FxControllerComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "GFXMaterialShader_Template")]
-    GFXMaterialShader(GFXMaterialShader1718<'a>),
+    GFXMaterialShader(GFXMaterialShader1618<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_AgingBot_BehaviourAllTrees")]
     AgingBotBehaviourAllTrees(AgingBotBehaviourAllTrees<'a>),

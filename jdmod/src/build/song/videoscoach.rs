@@ -126,16 +126,16 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             gridunit: 0.5,
             depth_separator: 0,
             near_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color { color: (1.0, 0.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 1.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 1.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 0.0, 1.0)},
             ],
             far_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color { color: (1.0, 0.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 1.0, 0.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 1.0, 0.0)},
+                ubiart_toolkit::utils::Color { color: (0.0, 0.0, 0.0, 1.0)},
             ],
             view_family: false,
             is_popup: false,
@@ -186,7 +186,7 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                 channel_id: Cow::Borrowed(""),
                                 primitive_parameters: cooked::isc::PrimitiveParameters {
                                     gfx_primitive_param: cooked::isc::GFXPrimitiveParam {
-                                        color_factor: (1.0, 1.0, 1.0, 1.0),
+                                        color_factor: ubiart_toolkit::utils::Color { color: (1.0, 1.0, 1.0, 1.0) },
                                         enums: vec![cooked::isc::Enum {
                                             name: Cow::Borrowed("gfxOccludeInfo"),
                                             selection: 1,
@@ -220,8 +220,8 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                                 cooked::isc::OutlinedMaskParams {
                                                     outline_mask_material_params:
                                                         cooked::isc::OutlinedMaskMaterialParams {
-                                                            mask_color: (0.0, 0.0, 0.0, 0.0),
-                                                            outline_color: (0.0, 0.0, 0.0, 0.0),
+                                                            mask_color: ubiart_toolkit::utils::Color::default(),
+                                                            outline_color: ubiart_toolkit::utils::Color::default(),
                                                             thickness: 1.0,
                                                         },
                                                 },
@@ -254,16 +254,32 @@ fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'
             gridunit: 0.5,
             depth_separator: 0,
             near_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             far_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             view_family: false,
             is_popup: false,

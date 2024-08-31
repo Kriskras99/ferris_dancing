@@ -2,54 +2,62 @@
 
 use std::path::Path;
 
-use ubiart_toolkit::cooked::json;
+use ubiart_toolkit::{cooked::tape, utils::UniqueGameId};
+
+fn tape_parse_wiiu2015(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    tape::parse(&data, UniqueGameId::WIIU2015)?;
+    Ok(())
+}
 
 fn tape_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v16(&data, false)?;
+    tape::parse(&data, UniqueGameId::WIIU2016)?;
     Ok(())
 }
 
 fn tape_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v17(&data, false)?;
+    tape::parse(&data, UniqueGameId::NX2017)?;
     Ok(())
 }
 
 fn tape_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v17(&data, false)?;
+    tape::parse(&data, UniqueGameId::WIIU2017)?;
     Ok(())
 }
 
 fn tape_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v18(&data, false)?;
+    tape::parse(&data, UniqueGameId::NX2018)?;
     Ok(())
 }
 
 fn tape_parse_nx2019(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v19(&data, false)?;
+    tape::parse(&data, UniqueGameId::NX2019)?;
     Ok(())
 }
 
 fn tape_parse_nx2020(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v20(&data, false)?;
+    tape::parse(&data, UniqueGameId::NX2020)?;
     Ok(())
 }
 
 fn tape_parse_nx2020_china(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v20c(&data, false)?;
+    tape::parse(&data, UniqueGameId::NX_CHINA)?;
     Ok(())
 }
 
 fn tape_parse_nx2021(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v21(&data, false)?;
+    tape::parse(&data, UniqueGameId::NX2022)?;
     Ok(())
 }
 
 fn tape_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v22(&data, false)?;
+    tape::parse(&data, UniqueGameId::NX2022)?;
     Ok(())
 }
 
 datatest_stable::harness!(
+    tape_parse_wiiu2015,
+    "files/wiiu2015",
+    r".*/tape.ckd/.*",
     tape_parse_wiiu2016,
     "files/wiiu2016",
     r".*/tape.ckd/.*",

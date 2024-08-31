@@ -784,7 +784,9 @@ impl Default for MaterialGraphicComponent<'static> {
             shadow_offset_pos: Default::default(),
             angle_limit: Default::default(),
             material: Box::<GFXMaterialSerializable<'_>>::default(),
-            default_color: (1.0, 1.0, 1.0, 1.0),
+            default_color: Color {
+                color: (1.0, 1.0, 1.0, 1.0),
+            },
             z_offset: Default::default(),
         }
     }

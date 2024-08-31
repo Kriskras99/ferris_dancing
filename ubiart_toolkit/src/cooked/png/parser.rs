@@ -41,7 +41,7 @@ impl BinaryDeserialize<'_> for Png {
         test_eq!(unk4, 0x0001)?;
 
         let unk5 = reader.read_at::<u16be>(position)?;
-        test_any!(unk5, [0x1800, 0x1801, 0x2000, 0x2002])?;
+        test_any!(unk5, [0x1800, 0x1801, 0x2000, 0x2002, 0x1000, 0x0800])?;
 
         let unk6 = reader.read_at::<u32be>(position)?;
         test_eq!(unk2, unk6)?;
@@ -55,7 +55,7 @@ impl BinaryDeserialize<'_> for Png {
 
         let unk10 = reader.read_at::<u16be>(position)?;
         // montage is always 0x0202
-        test_any!(unk10, [0x0202, 0x0])?;
+        test_any!(unk10, [0x0202, 0x0, 0x0101])?;
 
         // Always zero for just dance 2022
         let _unk11 = reader.read_at::<u16be>(position)?;

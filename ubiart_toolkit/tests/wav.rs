@@ -5,6 +5,11 @@ use std::path::Path;
 use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt as _;
 use ubiart_toolkit::cooked::wav::Wav;
 
+fn wav_parse_wiiu2015(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Wav::deserialize(&data)?;
+    Ok(())
+}
+
 fn wav_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     Wav::deserialize(&data)?;
     Ok(())
@@ -51,6 +56,9 @@ fn wav_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 }
 
 datatest_stable::harness!(
+    wav_parse_wiiu2015,
+    "files/wiiu2015",
+    r".*/wav.ckd/.*",
     wav_parse_wiiu2016,
     "files/wiiu2016",
     r".*/wav.ckd/.*",

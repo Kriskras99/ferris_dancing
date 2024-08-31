@@ -69,16 +69,32 @@ impl Default for Scene<'_> {
             gridunit: 0.5,
             depth_separator: Default::default(),
             near_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             far_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             view_family: Default::default(),
             is_popup: Default::default(),
@@ -2341,7 +2357,9 @@ pub struct GFXPrimitiveParam<'a> {
 impl Default for GFXPrimitiveParam<'static> {
     fn default() -> Self {
         Self {
-            color_factor: (1.0, 1.0, 1.0, 1.0),
+            color_factor: Color {
+                color: (1.0, 1.0, 1.0, 1.0),
+            },
             enums: vec![Enum {
                 name: Cow::Borrowed("gfxOccludeInfo"),
                 selection: 0,
@@ -2659,7 +2677,7 @@ where
     S: Serializer,
 {
     ser.serialize_str(&format!("{:.6} {:.6} {:.6} {:.6}, {:.6} {:.6} {:.6} {:.6}, {:.6} {:.6} {:.6} {:.6}, {:.6} {:.6} {:.6} {:.6}",
-        data[0].0, data[0].1, data[0].2, data[0].3, data[1].0, data[1].1, data[1].2, data[1].3, data[2].0, data[2].1, data[2].2, data[2].3, data[3].0, data[3].1, data[3].2, data[3].3))
+        data[0].color.0, data[0].color.1, data[0].color.2, data[0].color.3, data[1].color.0, data[1].color.1, data[1].color.2, data[1].color.3, data[2].color.0, data[2].color.1, data[2].color.2, data[2].color.3, data[3].color.0, data[3].color.1, data[3].color.2, data[3].color.3))
 }
 
 /// Deserialize the separator from a string
@@ -2669,32 +2687,32 @@ where
 {
     use serde::de::Error;
     let s: &str = Deserialize::deserialize(deser)?;
-    let mut result: [Color; 4] = [(0.0, 0.0, 0.0, 0.0); 4];
+    let mut result: [Color; 4] = [Color::default(); 4];
     let mut max_i = 0;
     for (i, split) in s.split(", ").enumerate() {
         let mut second_split = split.split(' ');
         let first = second_split
             .next()
             .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
-        result[i].0 = first
+        result[i].color.0 = first
             .parse::<f32>()
             .map_err(|_| D::Error::custom(format!("Could not parse '{first}' as a float!")))?;
         let second = second_split
             .next()
             .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
-        result[i].1 = second
+        result[i].color.1 = second
             .parse::<f32>()
             .map_err(|_| D::Error::custom(format!("Could not parse '{second}' as a float!")))?;
         let third = second_split
             .next()
             .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
-        result[i].2 = third
+        result[i].color.2 = third
             .parse::<f32>()
             .map_err(|_| D::Error::custom(format!("Could not parse '{third}' as a float!")))?;
         let fourth = second_split
             .next()
             .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
-        result[i].3 = fourth
+        result[i].color.3 = fourth
             .parse::<f32>()
             .map_err(|_| D::Error::custom(format!("Could not parse '{fourth}' as a float!")))?;
         max_i = i;

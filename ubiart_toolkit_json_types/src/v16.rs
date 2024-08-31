@@ -12,10 +12,8 @@ use super::{
         RewardContainer, SoundConfig, StatsContainer, TRCLocalisation, UITextManager, ZInputConfig,
         ZInputManager,
     },
-    just_dance::{
-        AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDescription,
-    },
-    msh::GFXMaterialShader1718,
+    just_dance::{AgingBotBehaviourAllTrees, FixedCameraComponent, SongDescription},
+    msh::GFXMaterialShader1618,
     tfn::FontTemplate,
     tpl::{
         BezierTreeComponent, FxBankComponent, FxControllerComponent, ModeType, PleoComponent,
@@ -33,7 +31,6 @@ use super::{
         SweatRandomizeConfig1619, TutorialContent, TutorialDesc, UnlimitedUpsellSongList,
     },
     just_dance::{AutodanceComponent, SongDatabase},
-    tape::Tape,
     tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
 };
 use crate::tpl::{AsyncPlayerDescTemplate, BlockFlowTemplate};
@@ -63,8 +60,6 @@ pub enum Template16<'a> {
     MusicTrackComponent(MusicTrackComponent<'a>),
     #[serde(borrow, rename = "SoundComponent_Template")]
     SoundComponent(SoundComponent<'a>),
-    #[serde(borrow, rename = "Tape")]
-    Tape(Tape<'a>),
     #[serde(borrow, rename = "TapeCase_Template")]
     TapeCase(MasterTape<'a>),
     #[cfg(feature = "full_json_types")]
@@ -103,6 +98,9 @@ pub enum Template16<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "FXControllerComponent_Template")]
     FxControllerComponent(FxControllerComponent<'a>),
+    #[cfg(feature = "full_json_types")]
+    #[serde(borrow, rename = "GFXMaterialShader_Template")]
+    GFXMaterialShader(GFXMaterialShader1618<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_AgingBot_BehaviourAllTrees")]
     AgingBotBehaviourAllTrees(AgingBotBehaviourAllTrees<'a>),

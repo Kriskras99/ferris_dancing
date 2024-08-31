@@ -137,16 +137,32 @@ fn graph_scene(
             gridunit: 0.5,
             depth_separator: 0,
             near_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             far_separator: [
-                (1.0, 0.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0, 0.0),
-                (0.0, 0.0, 1.0, 0.0),
-                (0.0, 0.0, 0.0, 1.0),
+                ubiart_toolkit::utils::Color {
+                    color: (1.0, 0.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 1.0, 0.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 1.0, 0.0),
+                },
+                ubiart_toolkit::utils::Color {
+                    color: (0.0, 0.0, 0.0, 1.0),
+                },
             ],
             view_family: false,
             is_popup: false,
