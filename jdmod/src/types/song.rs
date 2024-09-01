@@ -1246,6 +1246,7 @@ impl From<HideUserInterfaceClip> for tape::HideUserInterfaceClip<'static> {
             event_type: value.event_type,
             custom_param: Cow::Borrowed(""),
             is_active: u8::from(value.is_active),
+            actor_indices: Vec::new(),
         }
     }
 }

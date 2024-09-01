@@ -372,12 +372,34 @@ impl<'a> BinaryDeserialize<'a> for ColorClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
+    #[instrument(skip(reader, position, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xf61b_3a75)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        trace!("Unk1: 0x{unk1:x}");
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let actor_indices: Vec<_> = reader.read_len_type_at::<u32be, u32be>(position)?.collect::<Result<_,_>>()?;
+
         todo!()
+
+        // Ok(Self {
+        //     class: None,
+        //     id,
+        //     track_id,
+        //     is_active: u8::try_from(is_active)?,
+        //     start_time,
+        //     duration,
+        //     actor_indices,
+        // })
     }
 }
 
@@ -610,7 +632,7 @@ pub struct MaterialGraphicDiffuseAlphaClip<'a> {
     pub start_time: i32,
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
+    pub actor_indices: Vec<ActorIndex<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
@@ -621,12 +643,52 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicDiffuseAlphaClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
+    #[instrument(skip(reader, position, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xE684_12CA)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        trace!("Unk1: 0x{unk1:x}");
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let actor_indices = reader.read_len_type_at_with::<u32be, ActorIndex>(position, ctx)?;
         todo!()
+    }
+}
+
+// TODO: Different serialize implementation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ActorIndex<'a> {
+    String(Cow<'a, str>),
+    Index(u8),
+}
+
+impl<'a> BinaryDeserialize<'a> for ActorIndex<'a> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    #[instrument(skip(reader, position, ctx))]
+    fn deserialize_at_with(
+        reader: &'a (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        trace!("Unk1: 0x{unk1:x}");
+        let unk2 = reader.read_at::<u32be>(position)?;
+        trace!("Unk2: 0x{unk2:x}");
+        let actor = reader.read_len_string_at::<u32be>(position)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        trace!("Unk3: 0x{unk3:x}");
+        
+        Ok(Self::String(actor))
     }
 }
 
@@ -899,8 +961,8 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
         let coach_id = reader.read_at::<u32be>(position)?;
         let move_type = reader.read_at::<u32be>(position)?;
         let color = reader.read_at::<Color>(position)?;
-        let unk2 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk2, 0x3F80_0000)?;
+        let unk2 = reader.read_at::<f32be>(position)?;
+        trace!("Unk2: {unk2}");
         let mut motion_platform_specifics = HashMap::new();
         for _ in 0..reader.read_at::<u32be>(position)? {
             let platform = reader.read_at::<u32be>(position)?;
@@ -1383,12 +1445,35 @@ impl<'a> BinaryDeserialize<'a> for TapeReferenceClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
+    #[instrument(skip(reader, position, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x0e1e_8158)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        trace!("Unk1: 0x{unk1:x}");
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let path = reader.read_at::<SplitPath>(position)?;
+        let loop_it = reader.read_at::<u32be>(position)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        trace!("Unk2: 0x{unk2:x}");
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            path: path.to_string().into(),
+            loop_it
+        })
     }
 }
 
@@ -1472,11 +1557,22 @@ impl<'a> BinaryDeserialize<'a> for TranslationClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
+    #[instrument(skip(reader, position, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x36A3_12DC)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        trace!("Unk1: 0x{unk1:x}");
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        
         todo!()
     }
 }
