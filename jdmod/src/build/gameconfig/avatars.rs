@@ -142,7 +142,7 @@ pub fn build(
 /// Build the avatar description
 fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
     let actor = cooked::act::Actor {
-        tpl: SplitPath::new(Cow::Borrowed(avatar_dir), Cow::Borrowed("desc.tpl"))?,
+        lua: SplitPath::new(Cow::Borrowed(avatar_dir), Cow::Borrowed("desc.tpl"))?,
         unk1: 0,
         unk2: 0x3F80_0000,
         unk2_5: 0x3F80_0000,

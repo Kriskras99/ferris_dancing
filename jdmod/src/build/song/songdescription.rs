@@ -79,7 +79,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     });
 
     let song_desc_act = cooked::act::Actor {
-        tpl: SplitPath::new(
+        lua: SplitPath::new(
             Cow::Borrowed(ses.map_path.as_str()),
             Cow::Borrowed("songdesc.tpl"),
         )?,

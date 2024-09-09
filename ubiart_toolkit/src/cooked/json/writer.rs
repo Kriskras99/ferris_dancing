@@ -2,7 +2,7 @@ use std::io::{Cursor, Write};
 
 use serde::Serialize;
 
-use crate::{json_types::v22::Template22, utils::errors::WriterError};
+use crate::utils::errors::WriterError;
 
 /// Write the json structure to the writer, appending a null byte.
 pub fn create(mut writer: impl Write, value: &impl Serialize) -> Result<(), WriterError> {

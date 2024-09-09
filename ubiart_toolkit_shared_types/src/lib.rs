@@ -4,12 +4,13 @@ use dotstar_toolkit_utils::bytes::{
     primitives::{f32be, u32be},
     read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 
 pub mod errors;
 
 /// A RGBA color encoded in f32 (0.0 is black, 1.0 is white)
-#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(IntoOwned, Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[repr(transparent)]
 #[serde(transparent)]
 pub struct Color {
@@ -23,12 +24,12 @@ impl BinaryDeserialize<'_> for Color {
     fn deserialize_at_with(
         reader: &'_ (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        let four = reader.read_at::<f32be>(position)?;
-        let three = reader.read_at::<f32be>(position)?;
-        let two = reader.read_at::<f32be>(position)?;
         let one = reader.read_at::<f32be>(position)?;
+        let two = reader.read_at::<f32be>(position)?;
+        let three = reader.read_at::<f32be>(position)?;
+        let four = reader.read_at::<f32be>(position)?;
 
         Ok(Self {
             color: (one, two, three, four),

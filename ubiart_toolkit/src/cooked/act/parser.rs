@@ -1,16 +1,18 @@
 //! Contains the parser implementation
 
-#[cfg(not(feature = "fuzz"))]
 use dotstar_toolkit_utils::{
     bytes::{
-        primitives::{u32be, u64be},
+        primitives::{f32be, u32be, u64be},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
     test_any, test_eq, test_ge, test_le,
 };
+use ubiart_toolkit_shared_types::Color;
 
 use super::{
-    Actor, Component, CreditsComponent, MaterialGraphicComponent, PleoComponent, UITextBox,
+    AaBb, Actor, BoxInterpolatorComponent, Carousel, ClearColorComponent, Component,
+    ConvertedTmlTapeComponent, CreditsComponent, FXControllerComponent, FixedCameraComponent,
+    MaterialGraphicComponent, PleoComponent, UITextBox,
 };
 use crate::utils::{Game, SplitPath, UniqueGameId};
 
@@ -25,70 +27,9 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
     ) -> Result<Self::Output, ReadError> {
         let unk0 = reader.read_at::<u32be>(position)?;
         test_eq!(unk0, 1u32)?;
-        let unk1 = reader.read_at::<u32be>(position)?;
-        test_any!(
-            unk1,
-            [
-                0x0,
-                0x3D23_D70A,
-                0x3DCC_CCCD,
-                0x3EE6_6666,
-                0x3F00_0000,
-                0x3F66_6C4C,
-                0x3F80_0000,
-                0x4000_0000,
-                0x4040_0000,
-            ],
-        )?;
-        let unk2 = reader.read_at::<u32be>(position)?;
-        test_any!(
-            unk2,
-            [
-                0x3E99_999A,
-                0x3EE7_720D,
-                0x3F00_0000,
-                0x3F4C_CCCD,
-                0x3F80_0000,
-                0x4240_0000,
-                0x42F0_0000,
-                0x42FA_0000,
-                0x4320_0000,
-                0x43AF_0000,
-                0x43C8_0000,
-                0x4407_0000,
-                0x4420_0000,
-                0x4422_8000,
-                0x4425_0000,
-                0x4461_0000,
-                0x446D_8000,
-                0x447A_0000,
-                0x4489_8000,
-            ],
-        )?;
-        let unk2_5 = reader.read_at::<u32be>(position)?;
-        test_any!(
-            unk2_5,
-            [
-                0x3E99_999A,
-                0x3EE7_720D,
-                0x3F00_0000,
-                0x3F4C_CCCD,
-                0x3F80_0000,
-                0x4120_0000,
-                0x4180_0000,
-                0x4240_0000,
-                0x42F0_0000,
-                0x42FA_0000,
-                0x4316_0000,
-                0x4320_0000,
-                0x4397_8000,
-                0x43B9_8000,
-                0x4405_8000,
-                0x440C_8000,
-                0x441A_8000,
-                0x4425_0000,
-            ],
-        )?;
+        let unk1 = reader.read_at::<f32be>(position)?;
+        let unk2 = reader.read_at::<f32be>(position)?;
+        let unk2_5 = reader.read_at::<f32be>(position)?;
         let unk3 = reader.read_at::<u64be>(position)?;
         test_eq!(unk3, 0u64)?;
         let unk3_5 = reader.read_at::<u32be>(position)?;
@@ -119,11 +60,8 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         let unk8 = reader.read_at::<u32be>(position)?;
         test_eq!(unk8, 0u32)?;
 
-        let tpl = reader.read_at::<SplitPath>(position)?;
-        #[cfg(not(feature = "fuzz"))]
-        {
-            test_eq!(tpl.is_empty(), false)?;
-        }
+        let lua = reader.read_at::<SplitPath>(position)?;
+        test_eq!(lua.is_empty(), false)?;
         let unk9 = reader.read_at::<u32be>(position)?;
         test_eq!(unk9, 0u32)?;
 
@@ -132,10 +70,11 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
             .collect::<Result<_, _>>()?;
 
         Ok(Actor {
-            tpl,
+            lua,
             unk1,
             unk2,
             unk2_5,
+            unk3_5,
             components,
         })
     }
@@ -160,31 +99,45 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
             0x7184_37A8 => todo!("BeatPulseComponent"),
             // BoxInterpolatorComponent
             0xF513_60DA => {
-                parse_box_interpolator_component(reader, position)?;
-                Component::BoxInterpolatorComponent
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::BoxInterpolatorComponent(
+                    reader.read_at_with::<BoxInterpolatorComponent>(position, ugi)?,
+                )
             }
             // CameraGraphicComponent
             0xC760_4FA1 => todo!("CameraGraphicComponent"),
             // ClearColorComponent
-            0xAEBB_218B => todo!("ClearColorComponent"),
+            0xAEBB_218B => {
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::ClearColorComponent(
+                    reader.read_at_with::<ClearColorComponent>(position, ugi)?,
+                )
+            }
             // ConvertedTmlTape_Component
             0xCD07_BB76 => {
-                parse_converted_tml_tape(reader, position)?;
-                Component::ConvertedTmlTapeComponent
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::ConvertedTmlTapeComponent(
+                    reader.read_at_with::<ConvertedTmlTapeComponent>(position, ugi)?,
+                )
             }
             // JD_CreditsComponent
             0x342E_A4FC => {
+                *position -= 4; // the deserialize implementation also checks the magic
                 Component::CreditsComponent(reader.read_at_with::<CreditsComponent>(position, ugi)?)
             }
             // JD_FixedCameraComponent
             0x3D5D_EBA2 => {
-                parse_fixed_camera_component(reader, position)?;
-                Component::FixedCameraComponent
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::FixedCameraComponent(
+                    reader.read_at_with::<FixedCameraComponent>(position, ugi)?,
+                )
             }
             // FXControllerComponent
             0x8D4F_FFB6 => {
-                parse_fx_controller(reader, position)?;
-                Component::FXControllerComponent
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::FXControllerComponent(
+                    reader.read_at_with::<FXControllerComponent>(position, ugi)?,
+                )
             }
             // MasterTape
             0x677B_269B => Component::MasterTape,
@@ -193,7 +146,7 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
                 reader.read_at_with::<MaterialGraphicComponent>(position, (ugi, false))?,
             ),
             // JD_Carousel
-            0x27E4_80C0 => todo!("Carousel"),
+            0x27E4_80C0 => Component::Carousel(reader.read_at_with::<Carousel>(position, ugi)?),
             // JD_PictoComponent
             0xC316_BF34 => Component::PictoComponent,
             // PleoComponent
@@ -265,50 +218,6 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
     }
 }
 
-impl<'de> BinaryDeserialize<'de> for CreditsComponent<'de> {
-    type Ctx = UniqueGameId;
-    type Output = Self;
-
-    fn deserialize_at_with(
-        reader: &'de (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ugi: Self::Ctx,
-    ) -> Result<Self::Output, ReadError> {
-        let unk11 = reader.read_at::<u32be>(position)?;
-        test_any!(unk11, [0xDu32, 0x17])?;
-        let i = if ugi.game == Game::JustDance2017 || ugi.game == Game::JustDance2016 {
-            6u32
-        } else {
-            10
-        };
-        for _ in 0..i {
-            let unk12 = reader.read_at::<u32be>(position)?;
-            test_any!(
-                unk12,
-                [
-                    0x41C8_0000u32,
-                    0x41F0_0000,
-                    0x4220_0000,
-                    0x4248_0000,
-                    0x3F00_0000,
-                    0x3DCC_CCCD,
-                    0x4170_0000,
-                    0x4404_4000,
-                ],
-            )?;
-        }
-
-        let number_of_lines = usize::try_from(reader.read_at::<u32be>(position)?)?;
-        let mut lines = Vec::with_capacity(number_of_lines);
-        for _ in 0..number_of_lines {
-            let line = reader.read_len_string_at::<u32be>(position)?;
-            lines.push(line);
-        }
-
-        Ok(CreditsComponent { lines })
-    }
-}
-
 /// Parse the registration component of an actor
 fn parse_registration_component(
     reader: &(impl ReadAtExt + ?Sized),
@@ -321,134 +230,235 @@ fn parse_registration_component(
     Ok(())
 }
 
-/// Parse the box interpolator component of an actor
-fn parse_box_interpolator_component(
-    reader: &(impl ReadAtExt + ?Sized),
-    position: &mut u64,
-) -> Result<(), ReadError> {
-    for _ in 0..2 {
-        let unk11 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk11, 0xBF00_0000u32)?;
+impl BinaryDeserialize<'_> for AaBb {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let min_left = reader.read_at::<f32be>(position)?;
+        let min_right = reader.read_at::<f32be>(position)?;
+        let max_left = reader.read_at::<f32be>(position)?;
+        let max_right = reader.read_at::<f32be>(position)?;
+        Ok(Self {
+            min: (min_left, min_right),
+            max: (max_left, max_right),
+        })
     }
-    for _ in 0..2 {
-        let unk12 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk12, 0x3F00_0000u32)?;
-    }
-    for _ in 0..2 {
-        let unk13 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk13, 0xBF80_0000u32)?;
-    }
-    for _ in 0..2 {
-        let unk14 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk14, 0x3F80_0000u32)?;
-    }
-    Ok(())
 }
 
-/// Parse the AFX post process component of an actor
-fn parse_afx_post_process_component(
-    reader: &(impl ReadAtExt + ?Sized),
-    position: &mut u64,
-) -> Result<(), ReadError> {
-    let unk16 = reader.read_at::<u64be>(position)?;
-    test_eq!(unk16, 8u64)?;
-    let unk17 = reader.read_at::<u32be>(position)?;
-    test_eq!(unk17, 1u32)?;
-    Ok(())
+impl BinaryDeserialize<'_> for BoxInterpolatorComponent {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xF513_60DA)?;
+        let inner_box = reader.read_at_with::<AaBb>(position, ctx)?;
+        let outer_box = reader.read_at_with::<AaBb>(position, ctx)?;
+
+        Ok(Self {
+            inner_box,
+            outer_box,
+        })
+    }
 }
 
-/// Parse the converted tml tape component of an actor
-fn parse_converted_tml_tape(
-    reader: &(impl ReadAtExt + ?Sized),
-    position: &mut u64,
-) -> Result<(), ReadError> {
-    let unk11 = reader.read_at::<u32be>(position)?;
-    test_eq!(unk11, 0u32)?;
-    Ok(())
+impl<'de> BinaryDeserialize<'de> for Carousel<'de> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let main_anchor = reader.read_at::<u32be>(position)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_any!(unk1, [0x40A1_5156, 0xFFFF_FFFF])?;
+        let carousel_data_id = reader.read_len_string_at::<u32be>(position)?;
+        let manage_carousel_history = reader.read_at::<u32be>(position)?;
+        let switch_speed = reader.read_at::<f32be>(position)?;
+        let shortcuts_config_default = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_config_switch = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_config_ps4 = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_config_xb1 = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_config_pc = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_config_ggp = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_config_prospero = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_config_scarlett = reader.read_len_string_at::<u32be>(position)?;
+        let shortcuts_from_center_instead_from_left = reader.read_at::<u32be>(position)?;
+        test_eq!(shortcuts_from_center_instead_from_left, 0)?;
+        let unk2 = reader.read_at::<u8>(position)?;
+        test_eq!(unk2, 0)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk2, 0x4C55_6308)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk3, 0x0800_0000)?;
+        let sound_context = reader.read_len_string_at::<u32be>(position)?;
+        let min_nb_items_to_loop = reader.read_at::<u32be>(position)?;
+
+        todo!()
+    }
 }
 
-/// Parse the fixed camera component of an actor
-fn parse_fixed_camera_component(
-    reader: &(impl ReadAtExt + ?Sized),
-    position: &mut u64,
-) -> Result<(), ReadError> {
-    let unk11 = reader.read_at::<u32be>(position)?;
-    test_any!(unk11, [0x0u32, 0x1])?;
-    let unk12 = reader.read_at::<u64be>(position)?;
-    test_eq!(unk12, 0u64)?;
-    let unk13 = reader.read_at::<u32be>(position)?;
-    test_eq!(unk13, 0x4120_0000u32)?;
-    let unk14 = reader.read_at::<u32be>(position)?;
-    test_any!(unk14, [0x0u32, 0x1])?;
-    Ok(())
+impl BinaryDeserialize<'_> for ClearColorComponent {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xAEBB_218B)?;
+        let clear_color = reader.read_at::<Color>(position)?;
+        let clear_front_light_color = reader.read_at::<Color>(position)?;
+        let clear_back_light_color = reader.read_at::<Color>(position)?;
+
+        Ok(Self {
+            clear_color,
+            clear_front_light_color,
+            clear_back_light_color,
+        })
+    }
 }
 
-/// Parse the fx controller component of an actor
-fn parse_fx_controller(
-    reader: &(impl ReadAtExt + ?Sized),
-    position: &mut u64,
-) -> Result<(), ReadError> {
-    let unk11 = reader.read_at::<u64be>(position)?;
-    test_eq!(unk11, 0u64)?;
-    Ok(())
+impl<'de> BinaryDeserialize<'de> for ConvertedTmlTapeComponent<'de> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xCD07_BB76)?;
+        let map_name = reader.read_len_string_at::<u32be>(position)?;
+
+        Ok(Self { map_name })
+    }
 }
 
-/// Parse the fx bank component of an actor
-fn parse_fx_bank_component(
-    reader: &(impl ReadAtExt + ?Sized),
-    position: &mut u64,
-) -> Result<(), ReadError> {
-    for _ in 0..4 {
-        let unk11 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk11, 0x3F80_0000u32)?;
+impl<'de> BinaryDeserialize<'de> for CreditsComponent<'de> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ugi: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x342E_A4FC)?;
+        let lines_number = reader.read_at::<u32be>(position)?;
+        let name_font_size = reader.read_at::<f32be>(position)?;
+        let title_font_size = reader.read_at::<f32be>(position)?;
+        let big_title_font_size = reader.read_at::<f32be>(position)?;
+        let very_big_title_font_size = reader.read_at::<f32be>(position)?;
+        let anim_duration = reader.read_at::<f32be>(position)?;
+        let lines_pos_offset = reader.read_at::<f32be>(position)?;
+        if ugi.game <= Game::JustDance2017 {
+            let number_of_lines = usize::try_from(reader.read_at::<u32be>(position)?)?;
+            let mut credits_lines = Vec::with_capacity(number_of_lines);
+            for _ in 0..number_of_lines {
+                let line = reader.read_len_string_at::<u32be>(position)?;
+                credits_lines.push(line);
+            }
+            Ok(CreditsComponent {
+                lines_number,
+                name_font_size,
+                title_font_size,
+                big_title_font_size,
+                very_big_title_font_size,
+                anim_duration,
+                lines_pos_offset,
+                min_anim_duration: None,
+                speed_steps: None,
+                bottom_spawn_y: None,
+                top_spawn_y: None,
+                credits_lines,
+            })
+        } else {
+            let min_anim_duration = Some(reader.read_at::<f32be>(position)?);
+            let speed_steps = Some(reader.read_at::<f32be>(position)?);
+            let bottom_spawn_y = Some(reader.read_at::<f32be>(position)?);
+            let top_spawn_y = Some(reader.read_at::<f32be>(position)?);
+            let number_of_lines = usize::try_from(reader.read_at::<u32be>(position)?)?;
+            let mut credits_lines = Vec::with_capacity(number_of_lines);
+            for _ in 0..number_of_lines {
+                let line = reader.read_len_string_at::<u32be>(position)?;
+                credits_lines.push(line);
+            }
+            Ok(CreditsComponent {
+                lines_number,
+                name_font_size,
+                title_font_size,
+                big_title_font_size,
+                very_big_title_font_size,
+                anim_duration,
+                lines_pos_offset,
+                min_anim_duration,
+                speed_steps,
+                bottom_spawn_y,
+                top_spawn_y,
+                credits_lines,
+            })
+        }
     }
-    for _ in 0..3 {
-        let unk12 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk12, 0u32)?;
-    }
-    let unk13 = reader.read_at::<u32be>(position)?;
-    test_any!(unk13, [0x0u32, 0xFFFF_FFFF])?;
-    let unk14 = reader.read_at::<u32be>(position)?;
-    test_eq!(unk14, 0xFFFF_FFFFu32)?;
-    Ok(())
 }
 
-/// Parse the bezier tree component of an actor
-fn parse_bezier_tree_component(
-    reader: &(impl ReadAtExt + ?Sized),
-    position: &mut u64,
-) -> Result<(), ReadError> {
-    let unk18 = reader.read_at::<u32be>(position)?;
-    test_eq!(unk18, 2u32)?;
-    for _ in 0..4 {
-        let unk19 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk19, 0u32)?;
+impl BinaryDeserialize<'_> for FixedCameraComponent {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x3D5D_EBA2)?;
+        let remote = reader.read_at::<u32be>(position)?;
+        let offset_1 = reader.read_at::<f32be>(position)?;
+        let offset_2 = reader.read_at::<f32be>(position)?;
+        let offset_3 = reader.read_at::<f32be>(position)?;
+        let start_as_main_cam = reader.read_at::<u32be>(position)?;
+        Ok(Self {
+            remote,
+            offset: (offset_1, offset_2, offset_3),
+            start_as_main_cam,
+        })
     }
-    for _ in 0..2 {
-        let unk20 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk20, 0x3F80_0000u32)?;
+}
+
+impl BinaryDeserialize<'_> for FXControllerComponent {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x8D4F_FFB6)?;
+        let allow_bus_mix_events = reader.read_at::<u32be>(position)?;
+        let allow_music_events = reader.read_at::<u32be>(position)?;
+        Ok(Self {
+            allow_bus_mix_events,
+            allow_music_events,
+        })
     }
-    for _ in 0..2 {
-        let unk21 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk21, 0u32)?;
-    }
-    let unk22 = reader.read_at::<u32be>(position)?;
-    test_eq!(unk22, 0x4040_0000u32)?;
-    for _ in 0..2 {
-        let unk23 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk23, 0u32)?;
-    }
-    for _ in 0..2 {
-        let unk24 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk24, 0x3F80_0000u32)?;
-    }
-    for _ in 0..3 {
-        let unk25 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk25, 0u32)?;
-    }
-    let unk26 = reader.read_at::<u32be>(position)?;
-    test_eq!(unk26, 1u32)?;
-    Ok(())
 }
 
 impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
@@ -583,6 +593,86 @@ impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
             unk26,
         })
     }
+}
+
+/// Parse the AFX post process component of an actor
+fn parse_afx_post_process_component(
+    reader: &(impl ReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk16 = reader.read_at::<u64be>(position)?;
+    test_eq!(unk16, 8u64)?;
+    let unk17 = reader.read_at::<u32be>(position)?;
+    test_eq!(unk17, 1u32)?;
+    Ok(())
+}
+
+/// Parse the fx controller component of an actor
+fn parse_fx_controller(
+    reader: &(impl ReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk11 = reader.read_at::<u64be>(position)?;
+    test_eq!(unk11, 0u64)?;
+    Ok(())
+}
+
+/// Parse the fx bank component of an actor
+fn parse_fx_bank_component(
+    reader: &(impl ReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    for _ in 0..4 {
+        let unk11 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk11, 0x3F80_0000u32)?;
+    }
+    for _ in 0..3 {
+        let unk12 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk12, 0u32)?;
+    }
+    let unk13 = reader.read_at::<u32be>(position)?;
+    test_any!(unk13, [0x0u32, 0xFFFF_FFFF])?;
+    let unk14 = reader.read_at::<u32be>(position)?;
+    test_eq!(unk14, 0xFFFF_FFFFu32)?;
+    Ok(())
+}
+
+/// Parse the bezier tree component of an actor
+fn parse_bezier_tree_component(
+    reader: &(impl ReadAtExt + ?Sized),
+    position: &mut u64,
+) -> Result<(), ReadError> {
+    let unk18 = reader.read_at::<u32be>(position)?;
+    test_eq!(unk18, 2u32)?;
+    for _ in 0..4 {
+        let unk19 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk19, 0u32)?;
+    }
+    for _ in 0..2 {
+        let unk20 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk20, 0x3F80_0000u32)?;
+    }
+    for _ in 0..2 {
+        let unk21 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk21, 0u32)?;
+    }
+    let unk22 = reader.read_at::<u32be>(position)?;
+    test_eq!(unk22, 0x4040_0000u32)?;
+    for _ in 0..2 {
+        let unk23 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk23, 0u32)?;
+    }
+    for _ in 0..2 {
+        let unk24 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk24, 0x3F80_0000u32)?;
+    }
+    for _ in 0..3 {
+        let unk25 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk25, 0u32)?;
+    }
+    let unk26 = reader.read_at::<u32be>(position)?;
+    test_eq!(unk26, 1u32)?;
+    Ok(())
 }
 
 impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {

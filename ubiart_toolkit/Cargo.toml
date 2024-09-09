@@ -42,6 +42,9 @@ wiiu_swizzle = { workspace = true }
 xtx = { path = "../xtx" }
 yoke = { workspace = true }
 zopfli = { workspace = true, optional = true }
+hipstr.workspace = true
+ownable.workspace = true
+simdutf8.workspace = true
 
 [dev-dependencies]
 datatest-stable = { workspace = true }
@@ -62,6 +65,10 @@ harness = false
 
 [[test]]
 name = "alias8"
+harness = false
+
+[[test]]
+name = "dlcdescriptor"
 harness = false
 
 [[test]]

@@ -36,7 +36,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
 
             for _ in 0..string_count {
                 let id = reader.read_at::<LocaleId>(position)?;
-                let string = reader.read_len_string_at::<u32be>(position)?;
+                let string = reader.read_len_string_lossy_at::<u32be>(position)?;
 
                 if i == 0 {
                     strings.insert(id, string);

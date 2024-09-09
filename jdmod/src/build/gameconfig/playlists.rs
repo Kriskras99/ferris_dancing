@@ -143,7 +143,7 @@ fn build_carousel(
 /// Build the cover actor
 fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
     let actor = cooked::act::Actor {
-        tpl: SplitPath::new(
+        lua: SplitPath::new(
             Cow::Borrowed("enginedata/actortemplates/"),
             Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
         )?,

@@ -41,7 +41,9 @@ fn main() {
     let data = File::open(&cli.source).unwrap();
     let actors = Actor::deserialize_with(&data, gp).unwrap();
 
-    for component in &actors.components {
-        println!("{component:#?}");
-    }
+    println!("{actors:?}");
+
+    // for component in &actors.components {
+    //     println!("{component:#?}");
+    // }
 }

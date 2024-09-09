@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use dotstar_toolkit_utils::bytes::{
-    primitives::{u32be, u64be},
+    primitives::{f32be, u32be, u64be},
     write::{BinarySerialize, BinarySerializeExt, WriteAt, WriteError},
 };
 
@@ -19,9 +19,9 @@ impl BinarySerialize for Actor<'_> {
         _ctx: (),
     ) -> Result<(), WriteError> {
         writer.write_at::<u32be>(position, 1)?; // unk0
-        writer.write_at::<u32be>(position, input.unk1)?;
-        writer.write_at::<u32be>(position, input.unk2)?;
-        writer.write_at::<u32be>(position, input.unk2_5)?;
+        writer.write_at::<f32be>(position, input.unk1)?;
+        writer.write_at::<f32be>(position, input.unk2)?;
+        writer.write_at::<f32be>(position, input.unk2_5)?;
         writer.write_at::<u64be>(position, 0)?; // unk3
         writer.write_at::<u32be>(position, 0)?; // unk3_5
         writer.write_at::<u64be>(position, 0x1_0000_0000)?; // unk4
@@ -29,7 +29,7 @@ impl BinarySerialize for Actor<'_> {
         writer.write_at::<u64be>(position, 0)?; // unk6
         writer.write_at::<u64be>(position, 0xFFFF_FFFF)?; // unk7
         writer.write_at::<u32be>(position, 0)?; // unk8
-        writer.write_at::<SplitPath>(position, input.tpl)?;
+        writer.write_at::<SplitPath>(position, input.lua)?;
         writer.write_at::<u32be>(position, 0)?; // unk9
         writer.write_at::<u32be>(position, u32::try_from(input.components.len())?)?;
         for component in input.components {

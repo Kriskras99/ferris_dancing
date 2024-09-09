@@ -25,14 +25,21 @@ pub mod v22;
 
 use std::{borrow::Cow, collections::HashMap};
 
+use hipstr::HipStr;
 use isg::Rarity;
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(IntoOwned, Default, Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Empty<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    class: Option<HipStr<'a>>,
 }
 
 pub type AliasesObjectives<'a> = HashMap<u16, Cow<'a, str>>;

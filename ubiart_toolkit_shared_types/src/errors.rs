@@ -49,6 +49,13 @@ pub enum ParserError {
         #[from]
         utf8_error: Utf8Error,
     },
+    /// String conversion failed
+    #[error("Converting bytes to string failed: {utf8_error:?}")]
+    SimdUtf8Error {
+        /// The orginal string conversion error
+        #[from]
+        utf8_error: simdutf8::basic::Utf8Error,
+    },
     /// XML deserialization failed
     #[error("XML deserialization failed: {xml_error:?}")]
     XmlError {

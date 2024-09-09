@@ -3308,9 +3308,9 @@ mod wrapped_component {
         WDFThemePresentation(WrappedWDFThemePresentationComponent<'a>),
     }
 
-    impl<'a> WrappedComponent<'a> {
+    impl<'b> WrappedComponent<'b> {
         /// Convert this component to a `PleoComponent`.
-        pub fn pleo_component(&'a self) -> Result<&'a PleoComponent, ParserError> {
+        pub fn pleo_component<'a>(&'a self) -> Result<&'a PleoComponent<'b>, ParserError> {
             if let Self::Pleo(pleo_component) = self {
                 Ok(&pleo_component.wrapped)
             } else {
@@ -3321,9 +3321,9 @@ mod wrapped_component {
         }
 
         /// Convert this component to a `MaterialGraphicComponent`.
-        pub fn material_graphic_component(
+        pub fn material_graphic_component<'a>(
             &'a self,
-        ) -> Result<&'a MaterialGraphicComponent, ParserError> {
+        ) -> Result<&'a MaterialGraphicComponent<'b>, ParserError> {
             if let Self::MaterialGraphic(material_graphic_component) = self {
                 Ok(&material_graphic_component.wrapped)
             } else {

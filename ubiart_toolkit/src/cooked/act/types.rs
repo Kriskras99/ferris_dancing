@@ -2,62 +2,44 @@
 
 use std::borrow::Cow;
 
+use ubiart_toolkit_shared_types::Color;
+
 use crate::utils::{errors::ParserError, SplitPath};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Actor<'a> {
-    pub tpl: SplitPath<'a>,
-    pub unk1: u32,
-    pub unk2: u32,
-    pub unk2_5: u32,
+    pub lua: SplitPath<'a>,
+    pub unk1: f32,
+    pub unk2: f32,
+    pub unk2_5: f32,
+    pub unk3_5: u32,
     pub components: Vec<Component<'a>>,
 }
 
-#[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for Actor<'a> {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Actor {
-            tpl: u.arbitrary()?,
-            unk1: *u.choose(&[
-                0x0,
-                0x3D23_D70A,
-                0x3DCC_CCCD,
-                0x3F66_6C4C,
-                0x3F80_0000,
-                0x4000_0000,
-            ])?,
-            unk2: *u.choose(&[
-                0x3F00_0000,
-                0x3F80_0000,
-                0x4240_0000,
-                0x4320_0000,
-                0x4420_0000,
-                0x4422_8000,
-            ])?,
-            unk2_5: *u.choose(&[
-                0x3F00_0000,
-                0x3F80_0000,
-                0x4120_0000,
-                0x4240_0000,
-                0x4320_0000,
-            ])?,
-            components: u.arbitrary()?,
-        })
+impl PartialEq for Actor<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.unk1 == other.unk1
+            && self.unk2 == other.unk2
+            && self.lua == other.lua
+            && self.unk2_5 == other.unk2_5
+            && self.components == other.components
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+impl Eq for Actor<'_> {}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Component<'a> {
     AutodanceComponent,
     BeatPulseComponent,
-    BoxInterpolatorComponent,
+    BoxInterpolatorComponent(BoxInterpolatorComponent),
     CameraGraphicComponent,
-    Carousel,
-    ClearColorComponent,
-    ConvertedTmlTapeComponent,
+    Carousel(Carousel<'a>),
+    ClearColorComponent(ClearColorComponent),
+    ConvertedTmlTapeComponent(ConvertedTmlTapeComponent<'a>),
     CreditsComponent(CreditsComponent<'a>),
-    FixedCameraComponent,
-    FXControllerComponent,
+    FixedCameraComponent(FixedCameraComponent),
+    FXControllerComponent(FXControllerComponent),
     MasterTape,
     MaterialGraphicComponent(MaterialGraphicComponent<'a>),
     PictoComponent,
@@ -92,25 +74,25 @@ impl Component<'_> {
             // JD_BeatPulseComponent
             Component::BeatPulseComponent => 0x7184_37A8,
             // BoxInterpolatorComponent
-            Component::BoxInterpolatorComponent => 0xF513_60DA,
+            Component::BoxInterpolatorComponent(_) => 0xF513_60DA,
             // CameraGraphicComponent
             Component::CameraGraphicComponent => 0xC760_4FA1,
             // ClearColorComponent
-            Component::ClearColorComponent => 0xAEBB_218B,
+            Component::ClearColorComponent(_) => 0xAEBB_218B,
             // ConvertedTmlTape_Component
-            Component::ConvertedTmlTapeComponent => 0xCD07_BB76,
+            Component::ConvertedTmlTapeComponent(_) => 0xCD07_BB76,
             // JD_CreditsComponent
             Component::CreditsComponent(_) => 0x342E_A4FC,
             // JD_FixedCameraComponent
-            Component::FixedCameraComponent => 0x3D5D_EBA2,
+            Component::FixedCameraComponent(_) => 0x3D5D_EBA2,
             // FXControllerComponent
-            Component::FXControllerComponent => 0x8D4F_FFB6,
+            Component::FXControllerComponent(_) => 0x8D4F_FFB6,
             // MasterTape
             Component::MasterTape => 0x677B_269B,
             // MaterialGraphicComponent
             Component::MaterialGraphicComponent(_) => 0x72B6_1FC5,
             // JD_Carousel
-            Component::Carousel => 0x27E4_80C0,
+            Component::Carousel(_) => 0x27E4_80C0,
             // JD_PictoComponent
             Component::PictoComponent => 0xC316_BF34,
             // PleoComponent
@@ -167,49 +149,66 @@ impl Component<'_> {
     }
 }
 
-#[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for Component<'a> {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        let id = *u.choose(&[
-            0x67B8_BB77u32,
-            0x677B_269B,
-            0xC316_BF34,
-            0x4055_79FB,
-            0xE07F_CC3F,
-            0x231F_27DE,
-            0x1759_E29D,
-            0x84EA_AE82,
-            0x72B6_1FC5,
-            0x1263_DAD9,
-            0x0579_E81B,
-        ])?;
-        let component = match id {
-            0x67B8_BB77 => Component::AutodanceComponent,
-            0x677B_269B => Component::MasterTape,
-            0xC316_BF34 => Component::PictoComponent,
-            0x4055_79FB => Component::SongDatabaseComponent,
-            0xE07F_CC3F => Component::SongDescComponent,
-            0x231F_27DE => Component::TapeCaseComponent,
-            0x1759_E29D => Component::AvatarDescComponent,
-            0x84EA_AE82 => Component::SkinDescComponent,
-            0x72B6_1FC5 => Component::MaterialGraphicComponent(u.arbitrary()?),
-            0x1263_DAD9 => Component::PleoComponent(u.arbitrary()?),
-            0x0579_E81B => Component::PleoTextureGraphicComponent(u.arbitrary()?),
-            _ => unreachable!(),
-        };
-        Ok(component)
-    }
+#[derive(Debug, Clone, PartialEq)]
+pub struct AaBb {
+    pub min: (f32, f32),
+    pub max: (f32, f32),
 }
 
-/// The data for the main video player
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
+#[derive(Debug, Clone, PartialEq)]
+pub struct BoxInterpolatorComponent {
+    pub inner_box: AaBb,
+    pub outer_box: AaBb,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Carousel<'a> {
+    pub validate_action: Cow<'a, str>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClearColorComponent {
+    pub clear_color: Color,
+    pub clear_front_light_color: Color,
+    pub clear_back_light_color: Color,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConvertedTmlTapeComponent<'a> {
+    pub map_name: Cow<'a, str>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CreditsComponent<'a> {
-    pub lines: Vec<Cow<'a, str>>,
+    pub lines_number: u32,
+    pub name_font_size: f32,
+    pub title_font_size: f32,
+    pub big_title_font_size: f32,
+    pub very_big_title_font_size: f32,
+    pub anim_duration: f32,
+    pub lines_pos_offset: f32,
+    pub min_anim_duration: Option<f32>,
+    pub speed_steps: Option<f32>,
+    pub bottom_spawn_y: Option<f32>,
+    pub top_spawn_y: Option<f32>,
+    pub credits_lines: Vec<Cow<'a, str>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FixedCameraComponent {
+    pub remote: u32,
+    pub offset: (f32, f32, f32),
+    pub start_as_main_cam: u32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FXControllerComponent {
+    pub allow_bus_mix_events: u32,
+    pub allow_music_events: u32,
 }
 
 /// The data for the main video player
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PleoComponent<'a> {
     /// The filename of the video to play
     pub video: SplitPath<'a>,
@@ -218,25 +217,8 @@ pub struct PleoComponent<'a> {
     pub channel_id: Option<Cow<'a, str>>,
 }
 
-#[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for PleoComponent<'a> {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        let channel_id = u.arbitrary::<Cow<str>>()?;
-        let channel_id = if channel_id.is_empty() {
-            None
-        } else {
-            Some(channel_id)
-        };
-        Ok(Self {
-            video: u.arbitrary()?,
-            dash_mpd: u.arbitrary()?,
-            channel_id,
-        })
-    }
-}
-
 /// Data for textures
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MaterialGraphicComponent<'a> {
     pub files: [SplitPath<'a>; 11],
     pub unk11_5: u32,
@@ -245,26 +227,6 @@ pub struct MaterialGraphicComponent<'a> {
     pub unk14: u64,
     pub unk15: u64,
     pub unk26: u32,
-}
-
-#[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for MaterialGraphicComponent<'a> {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self {
-            files: u.arbitrary()?,
-            unk11_5: *u.choose(&[0x3F80_0000u32, 0x0])?,
-            unk13: *u.choose(&[0xFFFF_FFFFu32, 0x1])?,
-            unk14: *u.choose(&[0x1u64, 0x2, 0x3, 0x6, 0x9])?,
-            unk15: *u.choose(&[
-                0x0u64,
-                0x3E2E_147B,
-                0xC080_0000,
-                0x3E99_999A_BDCC_CCCD,
-                0xBDE1_47AE_3E61_47AE,
-            ])?,
-            unk26: *u.choose(&[0x1, 0x2, 0x3, 0x6, 0x9])?,
-        })
-    }
 }
 
 impl Default for MaterialGraphicComponent<'static> {
@@ -281,8 +243,7 @@ impl Default for MaterialGraphicComponent<'static> {
 }
 
 /// The data for the main video player
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UITextBox<'a> {
     pub string1: Option<Cow<'a, str>>,
     pub string2: Option<Cow<'a, str>>,

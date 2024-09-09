@@ -194,6 +194,44 @@ pub trait ReadAtExt: ReadAt {
         result
     }
 
+    /// Read a lossy string at `position`
+    ///
+    /// This will replace any invalid UTF-8 sequences with U+FFFD REPLACEMENT CHARACTER, which looks like this: �.
+    ///
+    /// It will first read the length of the string as a [`Len`]
+    /// This function increments `position` with the size of the string + the size of `Len` if successful
+    /// otherwise will remain the same.
+    ///
+    /// # Errors
+    /// This function will return an error when the string would be (partially) outside the source.
+    #[inline]
+    fn read_len_string_lossy_at<'rf, L>(
+        &'rf self,
+        position: &mut u64,
+    ) -> Result<Cow<'rf, str>, ReadError>
+    where
+        L: Len<'rf>,
+        <L as BinaryDeserialize<'rf>>::Ctx: Default,
+        <L as BinarySerialize>::Ctx: Default,
+        L::Output: TryInto<usize>,
+        L::Input: TryFrom<usize>,
+    {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let len = L::read_len_at(self, position)?;
+            match self.read_slice_at(position, len)? {
+                Cow::Borrowed(slice) => String::from_utf8_lossy(slice),
+                Cow::Owned(vec) => String::from_utf8(vec)
+                    .map(Cow::Owned)
+                    .map_err(ReadError::from)?,
+            }
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
+
     /// Read a byte slice at `position`
     ///
     /// It will first read the length of the byte slice as a [`Len`] with byteorder `B`

@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Remove the '\0' from the end of the `buffer`
-fn clean_buffer_tpl(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
+pub(crate) fn clean_buffer_json(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
     let result = test_eq!(buffer[buffer.len() - 1], 0x0);
     match (result, lax) {
         (TestResult::Ok, _) => Ok(&buffer[..buffer.len() - 1]),
@@ -26,19 +26,19 @@ fn clean_buffer_tpl(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
     }
 }
 
-/// Parse a cooked json file from Just Dance 2016
+/// Parse a json-like file as T
 pub fn parse<'a, T>(src: &'a [u8], lax: bool) -> Result<T, ParserError>
 where
     T: Deserialize<'a>,
 {
-    let src = clean_buffer_tpl(src, lax)?;
-
-    Ok(serde_json::from_slice(src)?)
+    let src = clean_buffer_json(src, lax)?;
+    let src = simdutf8::basic::from_utf8(src)?;
+    Ok(serde_json::from_str(src)?)
 }
 
 /// Parse a cooked json file from Just Dance 2016
 pub fn parse_v16(src: &[u8], lax: bool) -> Result<Template16<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template16 = serde_json::from_slice(src)?;
 
@@ -47,7 +47,7 @@ pub fn parse_v16(src: &[u8], lax: bool) -> Result<Template16<'_>, ParserError> {
 
 /// Parse a cooked json file from Just Dance 2017
 pub fn parse_v17(src: &[u8], lax: bool) -> Result<Template17<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template17 = serde_json::from_slice(src)?;
 
@@ -56,7 +56,7 @@ pub fn parse_v17(src: &[u8], lax: bool) -> Result<Template17<'_>, ParserError> {
 
 /// Parse a cooked json file from Just Dance 2018
 pub fn parse_v18(src: &[u8], lax: bool) -> Result<Template18<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template18 = serde_json::from_slice(src)?;
 
@@ -65,7 +65,7 @@ pub fn parse_v18(src: &[u8], lax: bool) -> Result<Template18<'_>, ParserError> {
 
 /// Parse a cooked json file from Just Dance 2019
 pub fn parse_v19(src: &[u8], lax: bool) -> Result<Template19<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template19 = serde_json::from_slice(src)?;
 
@@ -74,7 +74,7 @@ pub fn parse_v19(src: &[u8], lax: bool) -> Result<Template19<'_>, ParserError> {
 
 /// Parse a cooked json file from Just Dance 2020
 pub fn parse_v20(src: &[u8], lax: bool) -> Result<Template20<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template20 = serde_json::from_slice(src)?;
 
@@ -83,7 +83,7 @@ pub fn parse_v20(src: &[u8], lax: bool) -> Result<Template20<'_>, ParserError> {
 
 /// Parse a cooked json file from Just Dance 2020C
 pub fn parse_v20c(src: &[u8], lax: bool) -> Result<Template20C<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template20C = serde_json::from_slice(src)?;
 
@@ -92,7 +92,7 @@ pub fn parse_v20c(src: &[u8], lax: bool) -> Result<Template20C<'_>, ParserError>
 
 /// Parse a cooked json file from Just Dance 2021
 pub fn parse_v21(src: &[u8], lax: bool) -> Result<Template21<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template21 = serde_json::from_slice(src)?;
 
@@ -101,7 +101,7 @@ pub fn parse_v21(src: &[u8], lax: bool) -> Result<Template21<'_>, ParserError> {
 
 /// Parse a cooked json file from Just Dance 2022
 pub fn parse_v22(src: &[u8], lax: bool) -> Result<Template22<'_>, ParserError> {
-    let src = clean_buffer_tpl(src, lax)?;
+    let src = clean_buffer_json(src, lax)?;
 
     let template: Template22 = serde_json::from_slice(src)
         .map_err(ParserError::from)

@@ -4,7 +4,10 @@ use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use dotstar_toolkit_utils::bytes::read_to_vec;
-use ubiart_toolkit::{cooked, utils::Game};
+use ubiart_toolkit::{
+    cooked,
+    utils::{Game, UniqueGameId},
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -25,6 +28,8 @@ fn main() {
         "2019" => Game::JustDance2019,
         "2018" => Game::JustDance2018,
         "2017" => Game::JustDance2017,
+        "2016" => Game::JustDance2016,
+        "2015" => Game::JustDance2015,
         _ => panic!("Unrecognized game version: {}", cli.game),
     };
 
@@ -32,6 +37,12 @@ fn main() {
     let data = read_to_vec(path).unwrap();
 
     match game {
+        Game::JustDance2015 => {
+            cooked::tape::parse(&data, UniqueGameId::WIIU2015).unwrap();
+        }
+        Game::JustDance2016 => {
+            cooked::json::parse_v16(&data, false).unwrap();
+        }
         Game::JustDance2017 => {
             cooked::json::parse_v17(&data, false).unwrap();
         }

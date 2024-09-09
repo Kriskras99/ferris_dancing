@@ -4,6 +4,7 @@ use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
+use hipstr::HipStr;
 use ubiart_toolkit::{cooked, cooked::tape, json_types, utils::SplitPath};
 
 use super::SongExportState;
@@ -155,9 +156,8 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
         tape_clock: 0,
         tape_bar_count: 1,
         free_resources_after_play: 0,
-        map_name: ses.song.map_name.clone(),
-        soundwich_event: Some(Cow::Borrowed("")),
-        actor_paths: Vec::new(),
+        map_name: ses.song.map_name.as_ref().into(),
+        soundwich_event: Some(HipStr::new()),
     };
 
     let dance_dtape_vec = cooked::json::create_vec(&tape)?;
@@ -214,9 +214,8 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
         tape_clock: 0,
         tape_bar_count: 1,
         free_resources_after_play: 0,
-        map_name: ses.song.map_name.clone(),
-        soundwich_event: Some(Cow::Borrowed("")),
-        actor_paths: Vec::new(),
+        map_name: ses.song.map_name.as_ref().into(),
+        soundwich_event: Some(HipStr::new()),
     };
 
     let ktape_vec = cooked::json::create_vec(&tape)?;
@@ -326,7 +325,7 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
     let lower_map_name = ses.lower_map_name;
     let k_or_d = k_or_d.to_str();
     let actor = cooked::act::Actor {
-        tpl: SplitPath::new(
+        lua: SplitPath::new(
             Cow::Owned(map_path.join("timeline/").into_string()),
             Cow::Owned(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
         )?,

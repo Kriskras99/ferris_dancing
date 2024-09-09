@@ -87,7 +87,7 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
     let map_path = ses.map_path;
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
-        tpl: SplitPath::new(
+        lua: SplitPath::new(
             Cow::Borrowed("world/_common/videoscreen/"),
             if map_preview {
                 Cow::Borrowed("video_player_map_preview.tpl")

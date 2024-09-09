@@ -12,6 +12,7 @@ use std::{
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
 use hash32::{Hasher, Murmur3Hasher};
+use hipstr::string::HipStr;
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
@@ -1042,10 +1043,11 @@ impl From<AlphaClip> for tape::AlphaClip<'static> {
             start_time: value.start_time,
             duration: value.duration,
             actor_indices: value.actor_indices,
+            target_actors: Vec::new(),
             curve: value
                 .curve
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
         }
     }
@@ -1095,20 +1097,21 @@ impl From<ColorClip> for tape::ColorClip<'static> {
             start_time: value.start_time,
             duration: value.duration,
             actor_indices: value.actor_indices,
+            target_actors: Vec::new(),
             curve_red: value
                 .curve_red
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
             curve_green: value
                 .curve_green
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
             curve_blue: value
                 .curve_blue
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
         }
     }
@@ -1159,8 +1162,9 @@ impl<'a> From<GameplayEventClip<'a>> for tape::GameplayEventClip<'a> {
             start_time: value.start_time,
             duration: value.duration,
             actor_indices: value.actor_indices,
+            target_actors: Vec::new(),
             event_type: value.event_type,
-            custom_param: value.custom_param,
+            custom_param: value.custom_param.into(),
         }
     }
 }
@@ -1173,7 +1177,7 @@ impl<'a> From<tape::GameplayEventClip<'a>> for GameplayEventClip<'a> {
             duration: value.duration,
             actor_indices: value.actor_indices,
             event_type: value.event_type,
-            custom_param: value.custom_param,
+            custom_param: value.custom_param.into(),
         }
     }
 }
@@ -1244,9 +1248,10 @@ impl From<HideUserInterfaceClip> for tape::HideUserInterfaceClip<'static> {
             start_time: value.start_time,
             duration: value.duration,
             event_type: value.event_type,
-            custom_param: Cow::Borrowed(""),
+            custom_param: HipStr::new(),
             is_active: u8::from(value.is_active),
             actor_indices: Vec::new(),
+            target_actors: Vec::new(),
         }
     }
 }
@@ -1278,7 +1283,7 @@ pub struct KaraokeClip<'a> {
     /// Should the next lyric be on a new line
     pub is_end_of_line: bool,
     /// Unknown
-    pub content_type: u8,
+    pub content_type: u32,
 }
 
 impl PartialEq for KaraokeClip<'_> {
@@ -1336,7 +1341,7 @@ impl<'a> From<KaraokeClip<'a>> for tape::KaraokeClip<'a> {
             start_time: value.start_time,
             duration: value.duration,
             pitch: value.pitch,
-            lyrics: value.lyrics,
+            lyrics: value.lyrics.into(),
             is_end_of_line: u8::from(value.is_end_of_line),
             content_type: value.content_type,
             start_time_tolerance: 4,
@@ -1353,7 +1358,7 @@ impl<'a> From<tape::KaraokeClip<'a>> for KaraokeClip<'a> {
             start_time: value.start_time,
             duration: value.duration,
             pitch: value.pitch,
-            lyrics: value.lyrics,
+            lyrics: value.lyrics.into(),
             is_end_of_line: value.is_end_of_line == 1,
             content_type: value.content_type,
         }
@@ -1372,9 +1377,9 @@ pub struct MaterialGraphicEnableLayerClip {
     /// Unknown
     pub actor_indices: Vec<u8>,
     /// Unknown
-    pub layer_idx: u8,
+    pub layer_idx: u32,
     /// Unknown
-    pub uv_modifier_idx: u8,
+    pub uv_modifier_idx: u32,
     /// Unknown
     pub layer_enabled: bool,
 }
@@ -1393,6 +1398,7 @@ impl From<MaterialGraphicEnableLayerClip> for tape::MaterialGraphicEnableLayerCl
             start_time: value.start_time,
             duration: value.duration,
             actor_indices: value.actor_indices,
+            target_actors: Vec::new(),
             layer_idx: value.layer_idx,
             uv_modifier_idx: value.uv_modifier_idx,
             layer_enabled: u8::from(value.layer_enabled),
@@ -1451,7 +1457,7 @@ impl MotionClip<'_> {
             is_active: u8::from(self.is_active),
             start_time: self.start_time,
             duration: self.duration,
-            classifier_path: Cow::Owned(format!(
+            classifier_path: HipStr::from(format!(
                 "world/maps/{lower_map_name}/timeline/moves/{lower_map_name}_{filename}"
             )),
             gold_move: u8::from(self.gold_move),
@@ -1488,7 +1494,7 @@ impl<'a> TryFrom<tape::MotionClip<'a>> for MotionClip<'a> {
 
     fn try_from(value: tape::MotionClip<'a>) -> Result<Self, Self::Error> {
         let regex = regex!(r".*/[a-z0-9]*_(.*\.msm|.*\.gesture)$");
-        let classifier_filename = cow_regex_single_capture(regex, value.classifier_path)?;
+        let classifier_filename = cow_regex_single_capture(regex, value.classifier_path.into())?;
 
         Ok(Self {
             is_active: value.is_active == 1,
@@ -1533,7 +1539,7 @@ impl PictogramClip<'_> {
             is_active: u8::from(self.is_active),
             start_time: self.start_time,
             duration: self.duration,
-            picto_path: Cow::Owned(format!(
+            picto_path: HipStr::from(format!(
                 "world/maps/{lower_map_name}/timeline/pictos/{filename}"
             )),
             coach_count: 4_294_967_295,
@@ -1548,7 +1554,7 @@ impl<'a> TryFrom<tape::PictogramClip<'a>> for PictogramClip<'a> {
 
     fn try_from(value: tape::PictogramClip<'a>) -> Result<Self, Self::Error> {
         let regex = regex!(r".*/(.*\.png)$");
-        let picto_filename = cow_regex_single_capture(regex, value.picto_path)?;
+        let picto_filename = cow_regex_single_capture(regex, value.picto_path.into())?;
 
         Ok(Self {
             is_active: value.is_active == 1,
@@ -1589,15 +1595,16 @@ impl From<ProportionClip> for tape::ProportionClip<'static> {
             start_time: value.start_time,
             duration: value.duration,
             actor_indices: value.actor_indices,
+            target_actors: Vec::new(),
             curve_x: value
                 .curve_x
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
             curve_y: value
                 .curve_y
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
         }
     }
@@ -1648,20 +1655,21 @@ impl From<RotationClip> for tape::RotationClip<'static> {
             start_time: value.start_time,
             duration: value.duration,
             actor_indices: value.actor_indices,
+            target_actors: Vec::new(),
             curve_x: value
                 .curve_x
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
             curve_y: value
                 .curve_y
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
             curve_z: value
                 .curve_z
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
         }
     }
@@ -1711,7 +1719,7 @@ impl SoundSetClip<'_> {
             is_active: u8::from(self.is_active),
             start_time: self.start_time,
             duration: self.duration,
-            sound_set_path,
+            sound_set_path: sound_set_path.into(),
             sound_channel: 0,
             start_offset: 0,
             stops_on_end: 0,
@@ -1752,20 +1760,21 @@ impl From<TranslationClip> for tape::TranslationClip<'static> {
             start_time: value.start_time,
             duration: value.duration,
             actor_indices: value.actor_indices,
+            target_actors: Vec::new(),
             curve_x: value
                 .curve_x
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
             curve_y: value
                 .curve_y
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
             curve_z: value
                 .curve_z
                 .as_ref()
-                .map(tape::Curve::from)
+                .map(tape::BezierCurveFloat::from)
                 .unwrap_or_default(),
         }
     }
@@ -1810,7 +1819,7 @@ impl<'a> From<VibrationClip<'a>> for tape::VibrationClip<'a> {
             is_active: u8::from(value.is_active),
             start_time: value.start_time,
             duration: value.duration,
-            vibration_file_path: value.vibration,
+            vibration_file_path: value.vibration.into(),
             loop_it: 0,
             device_side: 0,
             player_id: -1,
@@ -1827,7 +1836,7 @@ impl<'a> From<tape::VibrationClip<'a>> for VibrationClip<'a> {
             is_active: value.is_active == 1,
             start_time: value.start_time,
             duration: value.duration,
-            vibration: value.vibration_file_path.clone(),
+            vibration: value.vibration_file_path.into(),
         }
     }
 }
@@ -1846,10 +1855,9 @@ pub enum CurveFloat {
 impl CurveFloat {
     /// Convert a [`tape::Curve`] into a `Option<CurveFloat>`
     #[must_use]
-    pub fn from_curve(value: &tape::Curve<'_>) -> Option<Self> {
-        let tape::Curve::BezierCurveFloat(value) = value;
+    pub fn from_curve(value: &tape::BezierCurveFloat<'_>) -> Option<Self> {
         match &value.value {
-            tape::BezierCurveFloatValue::Empty => None,
+            tape::BezierCurveFloatValue::Empty(_) => None,
             tape::BezierCurveFloatValue::Constant(value) => Some(Self::Constant(value.into())),
             tape::BezierCurveFloatValue::Linear(value) => Some(Self::Linear(value.into())),
             tape::BezierCurveFloatValue::Multi(value) => Some(Self::Multi(value.into())),
@@ -1857,7 +1865,7 @@ impl CurveFloat {
     }
 }
 
-impl From<&CurveFloat> for tape::Curve<'static> {
+impl From<&CurveFloat> for tape::BezierCurveFloat<'static> {
     fn from(value: &CurveFloat) -> Self {
         let value = match value {
             CurveFloat::Constant(value) => tape::BezierCurveFloatValue::Constant(value.into()),
@@ -1865,13 +1873,13 @@ impl From<&CurveFloat> for tape::Curve<'static> {
             CurveFloat::Multi(value) => tape::BezierCurveFloatValue::Multi(value.into()),
         };
 
-        Self::BezierCurveFloat(tape::BezierCurveFloat { class: None, value })
+        Self { class: None, value }
     }
 }
 
 /// Constant value for the 'curve'
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct CurveFloatConstant(pub f64);
+pub struct CurveFloatConstant(pub f32);
 
 impl From<&tape::BezierCurveFloatConstant<'_>> for CurveFloatConstant {
     fn from(value: &tape::BezierCurveFloatConstant) -> Self {
@@ -1918,13 +1926,13 @@ impl PartialOrd for CurveFloatConstant {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CurveFloatLinear {
     /// Unknown
-    pub value_left: (f64, f64),
+    pub value_left: (f32, f32),
     /// Unknown
-    pub normal_left_out: (f64, f64),
+    pub normal_left_out: (f32, f32),
     /// Unknown
-    pub value_right: (f64, f64),
+    pub value_right: (f32, f32),
     /// Unknown
-    pub normal_right_in: (f64, f64),
+    pub normal_right_in: (f32, f32),
 }
 
 impl From<&tape::BezierCurveFloatLinear<'_>> for CurveFloatLinear {
@@ -2027,11 +2035,11 @@ impl From<&CurveFloatMulti> for tape::BezierCurveFloatMulti<'static> {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct KeyFloat {
     /// Unknown
-    pub value: (f64, f64),
+    pub value: (f32, f32),
     /// Unknown
-    pub normal_out: (f64, f64),
+    pub normal_out: (f32, f32),
     /// Unknown
-    pub normal_in: (f64, f64),
+    pub normal_in: (f32, f32),
 }
 
 impl From<&tape::KeyFloat<'_>> for KeyFloat {
@@ -2047,7 +2055,7 @@ impl From<&tape::KeyFloat<'_>> for KeyFloat {
 impl From<&KeyFloat> for tape::KeyFloat<'static> {
     fn from(value: &KeyFloat) -> Self {
         Self {
-            class: Some("KeyFloat"),
+            class: Some(HipStr::from("KeyFloat")),
             value: value.value,
             normal_out: value.normal_out,
             normal_in: value.normal_in,

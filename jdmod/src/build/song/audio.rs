@@ -4,6 +4,7 @@ use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use hipstr::string::HipStr;
 use ubiart_toolkit::{cooked, cooked::tape, json_types};
 
 use super::SongExportState;
@@ -212,9 +213,8 @@ fn sequence_tape(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
         tape_clock: 0,
         tape_bar_count: 1,
         free_resources_after_play: 0,
-        map_name: ses.song.map_name.clone(),
-        soundwich_event: Some(Cow::Borrowed("")),
-        actor_paths: Vec::new(),
+        map_name: HipStr::from(ses.song.map_name.as_ref()),
+        soundwich_event: Some(HipStr::new()),
     };
 
     Ok(cooked::json::create_vec(&tape)?)

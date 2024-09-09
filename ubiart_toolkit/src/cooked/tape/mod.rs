@@ -2,18 +2,22 @@ use std::{borrow::Cow, collections::HashMap};
 
 use dotstar_toolkit_utils::{
     bytes::{
-        primitives::{f32be, i32be, u32be, u64be},
+        primitives::{f32be, i32be, u32be},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    test_eq,
+    test_any, test_eq,
 };
+use hipstr::HipStr;
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use tracing::{instrument, trace};
+use ubiart_toolkit_json_types::Empty;
 use ubiart_toolkit_shared_types::{errors::ParserError, Color};
 
+use super::json;
 use crate::utils::{Game, SplitPath, UniqueGameId};
 
-pub fn parse(data: &[u8], ugi: UniqueGameId) -> Result<Tape<'_>, ParserError> {
+pub fn parse<'a>(data: &'a [u8], ugi: UniqueGameId) -> Result<Tape<'a>, ParserError> {
     let tape = match ugi.game {
         Game::JustDance2022
         | Game::JustDance2021
@@ -22,33 +26,37 @@ pub fn parse(data: &[u8], ugi: UniqueGameId) -> Result<Tape<'_>, ParserError> {
         | Game::JustDance2018
         | Game::JustDance2017
         | Game::JustDance2016
-        | Game::JustDanceChina => crate::cooked::json::parse(&data, false)?,
+        | Game::JustDanceChina => json::parse(data, false)?,
         Game::JustDance2015 => Tape::deserialize_with(data, ugi)?,
         _ => todo!(),
     };
     Ok(tape)
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Tape<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub clips: Vec<Clip<'a>>,
     pub tape_clock: u32,
     pub tape_bar_count: u32,
     pub free_resources_after_play: u32,
-    pub map_name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub map_name: HipStr<'a>,
     /// Not present in nx2017
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub soundwich_event: Option<Cow<'a, str>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_paths: Vec<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub soundwich_event: Option<HipStr<'a>>,
 }
 
 impl Tape<'_> {
-    pub const CLASS: &'static str = "Tape";
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("Tape");
 }
 
 impl<'a> BinaryDeserialize<'a> for Tape<'a> {
@@ -76,12 +84,17 @@ impl<'a> BinaryDeserialize<'a> for Tape<'a> {
             .read_len_type_at_with::<u32be, Clip>(position, ugi)?
             .collect::<Result<Vec<_>, _>>()?;
 
-        let unk4 = reader.read_at::<u64be>(position)?;
+        let unk4 = reader.read_at::<u32be>(position)?;
         test_eq!(unk4, 0)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_any!(unk5, [0x0, 0x1])?;
+        if unk5 == 1 {
+            let _unk6 = reader.read_at_with::<Unknown9BC67FC4>(position, ugi)?;
+        }
         let tape_clock = reader.read_at::<u32be>(position)?;
         let tape_bar_count = reader.read_at::<u32be>(position)?;
         let free_resources_after_play = reader.read_at::<u32be>(position)?;
-        let map_name = reader.read_len_string_at::<u32be>(position)?;
+        let map_name = reader.read_len_string_at::<u32be>(position)?.into();
 
         Ok(Self {
             class: None,
@@ -91,12 +104,11 @@ impl<'a> BinaryDeserialize<'a> for Tape<'a> {
             free_resources_after_play,
             map_name,
             soundwich_event: None,
-            actor_paths: Vec::new(),
         })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(tag = "__class")]
 pub enum Clip<'a> {
     #[serde(borrow, rename = "ActorEnableClip")]
@@ -171,6 +183,12 @@ pub enum Clip<'a> {
     Translation(TranslationClip<'a>),
     #[serde(borrow, rename = "VibrationClip")]
     Vibration(VibrationClip<'a>),
+    #[serde(borrow, rename = "Unknown59FCC733Clip")]
+    Unknown59FCC733(Unknown59FCC733Clip<'a>),
+    #[serde(borrow, rename = "UnknownCBB7C029Clip")]
+    UnknownCBB7C029(UnknownCBB7C029Clip<'a>),
+    #[serde(borrow, rename = "Unknown5C944B01Clip")]
+    Unknown5C944B01(Unknown5C944B01Clip<'a>),
 }
 
 impl<'a> BinaryDeserialize<'a> for Clip<'a> {
@@ -259,17 +277,31 @@ impl<'a> BinaryDeserialize<'a> for Clip<'a> {
                 Clip::Translation(reader.read_at_with::<TranslationClip>(position, ugi)?)
             }
             0x101F_9D2B => Clip::Vibration(reader.read_at_with::<VibrationClip>(position, ugi)?),
+            0x59FC_C733 => {
+                Clip::Unknown59FCC733(reader.read_at_with::<Unknown59FCC733Clip>(position, ugi)?)
+            }
+            0xCBB7_C029 => {
+                Clip::UnknownCBB7C029(reader.read_at_with::<UnknownCBB7C029Clip>(position, ugi)?)
+            }
+            0x5C94_4B01 => {
+                Clip::Unknown5C944B01(reader.read_at_with::<Unknown5C944B01Clip>(position, ugi)?)
+            }
             _ => return Err(ReadError::custom(format!("Unknown magic: 0x{magic:08x}"))),
         };
         Ok(clip)
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ActorEnableClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -277,6 +309,8 @@ pub struct ActorEnableClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub actor_enable: u32,
 }
 
@@ -285,19 +319,24 @@ impl<'a> BinaryDeserialize<'a> for ActorEnableClip<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct AlphaClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -305,7 +344,10 @@ pub struct AlphaClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for AlphaClip<'a> {
@@ -317,15 +359,44 @@ impl<'a> BinaryDeserialize<'a> for AlphaClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x8607_D582)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x2C)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let curve = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            curve,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct CameraFeedClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -333,6 +404,8 @@ pub struct CameraFeedClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub capture_type: u32,
     pub record_beat: u32,
     pub feed_type: u32,
@@ -343,19 +416,24 @@ impl<'a> BinaryDeserialize<'a> for CameraFeedClip<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ColorClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -363,59 +441,77 @@ pub struct ColorClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_red: Curve<'a>,
-    pub curve_green: Curve<'a>,
-    pub curve_blue: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve_red: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_green: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_blue: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for ColorClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    #[instrument(skip(reader, position, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq!(magic, 0xf61b_3a75)?;
+        test_eq!(magic, 0xF61B_3A75)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        trace!("Unk1: 0x{unk1:x}");
+        test_eq!(unk1, 0x34)?;
         let id = reader.read_at::<u32be>(position)?;
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
-        let actor_indices: Vec<_> = reader.read_len_type_at::<u32be, u32be>(position)?.collect::<Result<_,_>>()?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let curve_red = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_green = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_blue = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
 
-        todo!()
-
-        // Ok(Self {
-        //     class: None,
-        //     id,
-        //     track_id,
-        //     is_active: u8::try_from(is_active)?,
-        //     start_time,
-        //     duration,
-        //     actor_indices,
-        // })
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            curve_red,
+            curve_green,
+            curve_blue,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct CommunityDancerClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub dancer_country_code: Cow<'a, str>,
+    #[serde(borrow)]
+    pub dancer_country_code: HipStr<'a>,
     pub dancer_avatar_id: u32,
-    pub dancer_name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub dancer_name: HipStr<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for CommunityDancerClip<'a> {
@@ -425,17 +521,45 @@ impl<'a> BinaryDeserialize<'a> for CommunityDancerClip<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x0F95_B841)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x34)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let dancer_country_code = reader.read_len_string_at::<u32be>(position)?.into();
+        let dancer_avatar_id = reader.read_at::<u32be>(position)?;
+        let dancer_name = reader.read_len_string_at::<u32be>(position)?.into();
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            dancer_country_code,
+            dancer_avatar_id,
+            dancer_name,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct FXClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -443,7 +567,10 @@ pub struct FXClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub fx_name: Cow<'a, str>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub fx_name: StringOrId<'a>,
     pub kill_particles_on_end: u32,
 }
 
@@ -456,15 +583,46 @@ impl<'a> BinaryDeserialize<'a> for FXClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x0F19_B038)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x34)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let fx_name_stringid = reader.read_at::<u32be>(position)?;
+        let kill_particles_on_end = reader.read_at::<u32be>(position)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            fx_name: StringOrId::Id(fx_name_stringid),
+            kill_particles_on_end,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct GameplayEventClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -472,8 +630,11 @@ pub struct GameplayEventClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub event_type: u32,
-    pub custom_param: Cow<'a, str>,
+    #[serde(borrow)]
+    pub custom_param: HipStr<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for GameplayEventClip<'a> {
@@ -485,15 +646,45 @@ impl<'a> BinaryDeserialize<'a> for GameplayEventClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xCE73_233E)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x38)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let event_type = reader.read_at::<u32be>(position)?;
+        let custom_param = reader.read_len_string_at::<u32be>(position)?.into();
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            event_type,
+            custom_param,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct GoldEffectClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -510,7 +701,7 @@ impl<'a> BinaryDeserialize<'a> for GoldEffectClip<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0xFD69_B110)?;
@@ -534,11 +725,16 @@ impl<'a> BinaryDeserialize<'a> for GoldEffectClip<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct HideUserInterfaceClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -546,34 +742,36 @@ pub struct HideUserInterfaceClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u32>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub event_type: u32,
-    pub custom_param: Cow<'a, str>,
+    #[serde(borrow)]
+    pub custom_param: HipStr<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for HideUserInterfaceClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    #[instrument(skip(reader, position, _ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: Self::Ctx,
+        ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0x52E0_6A9A)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        trace!("Unk1: 0x{unk1:x}");
+        test_eq!(unk1, 0x38)?;
         let id = reader.read_at::<u32be>(position)?;
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
-        let actor_indices = reader
-            .read_len_type_at::<u32be, u32be>(position)?
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
         let event_type = reader.read_at::<u32be>(position)?;
-        let custom_param = reader.read_len_string_at::<u32be>(position)?;
+        let custom_param = reader.read_len_string_at::<u32be>(position)?.into();
 
         Ok(Self {
             class: None,
@@ -582,29 +780,36 @@ impl<'a> BinaryDeserialize<'a> for HideUserInterfaceClip<'a> {
             is_active: u8::try_from(is_active)?,
             start_time,
             duration,
-            actor_indices,
+            actor_indices: Vec::new(),
+            target_actors,
             event_type,
             custom_param,
         })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct KaraokeClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
     pub pitch: f32,
-    pub lyrics: Cow<'a, str>,
+    #[serde(borrow)]
+    pub lyrics: HipStr<'a>,
     pub is_end_of_line: u8,
-    pub content_type: u8,
-    pub start_time_tolerance: u8,
-    pub end_time_tolerance: u8,
+    pub content_type: u32,
+    pub start_time_tolerance: u32,
+    pub end_time_tolerance: u32,
     pub semitone_tolerance: f32,
 }
 
@@ -615,35 +820,73 @@ impl<'a> BinaryDeserialize<'a> for KaraokeClip<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x6855_2A41)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x50)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let pitch = reader.read_at::<f32be>(position)?;
+        let lyrics = reader.read_len_string_at::<u32be>(position)?.into();
+        let is_end_of_line = reader.read_at::<u32be>(position)?;
+        let content_type = reader.read_at::<u32be>(position)?;
+        let start_time_tolerance = reader.read_at::<u32be>(position)?;
+        let end_time_tolerance = reader.read_at::<u32be>(position)?;
+        let semitone_tolerance = reader.read_at::<f32be>(position)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            pitch,
+            lyrics,
+            is_end_of_line: u8::try_from(is_end_of_line)?,
+            content_type,
+            start_time_tolerance,
+            end_time_tolerance,
+            semitone_tolerance,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicDiffuseAlphaClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<ActorIndex<'a>>,
+    pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_a: Curve<'a>,
+    #[serde(borrow)]
+    pub curve_a: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MaterialGraphicDiffuseAlphaClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    #[instrument(skip(reader, position, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -652,51 +895,45 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicDiffuseAlphaClip<'a> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0xE684_12CA)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        trace!("Unk1: 0x{unk1:x}");
+        test_eq!(unk1, 0x34)?;
         let id = reader.read_at::<u32be>(position)?;
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
-        let actor_indices = reader.read_len_type_at_with::<u32be, ActorIndex>(position, ctx)?;
-        todo!()
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let layer_idx = reader.read_at::<u32be>(position)?;
+        let uv_modifier_idx = reader.read_at::<u32be>(position)?;
+        let curve_a = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            layer_idx,
+            uv_modifier_idx,
+            curve_a,
+        })
     }
 }
 
-// TODO: Different serialize implementation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ActorIndex<'a> {
-    String(Cow<'a, str>),
-    Index(u8),
-}
-
-impl<'a> BinaryDeserialize<'a> for ActorIndex<'a> {
-    type Ctx = UniqueGameId;
-    type Output = Self;
-
-    #[instrument(skip(reader, position, ctx))]
-    fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
-    ) -> Result<Self::Output, ReadError> {
-        let unk1 = reader.read_at::<u32be>(position)?;
-        trace!("Unk1: 0x{unk1:x}");
-        let unk2 = reader.read_at::<u32be>(position)?;
-        trace!("Unk2: 0x{unk2:x}");
-        let actor = reader.read_len_string_at::<u32be>(position)?;
-        let unk3 = reader.read_at::<u32be>(position)?;
-        trace!("Unk3: 0x{unk3:x}");
-        
-        Ok(Self::String(actor))
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicDiffuseColorClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -704,12 +941,17 @@ pub struct MaterialGraphicDiffuseColorClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_r: Curve<'a>,
-    pub curve_g: Curve<'a>,
-    pub curve_b: Curve<'a>,
+    #[serde(borrow)]
+    pub curve_r: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_g: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_b: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MaterialGraphicDiffuseColorClip<'a> {
@@ -721,15 +963,52 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicDiffuseColorClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xC6FE_D58E)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x3C)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let layer_idx = reader.read_at::<u32be>(position)?;
+        let uv_modifier_idx = reader.read_at::<u32be>(position)?;
+        let curve_r = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_g = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_b = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            layer_idx,
+            uv_modifier_idx,
+            curve_r,
+            curve_g,
+            curve_b,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicEnableLayerClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -737,9 +1016,11 @@ pub struct MaterialGraphicEnableLayerClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub layer_idx: u8,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
-    pub uv_modifier_idx: u8,
+    pub uv_modifier_idx: u32,
     pub layer_enabled: u8,
 }
 
@@ -752,15 +1033,48 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicEnableLayerClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x4D30_9320)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x34)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let layer_idx = reader.read_at::<u32be>(position)?;
+        let uv_modifier_idx = reader.read_at::<u32be>(position)?;
+        let layer_enabled = reader.read_at::<u32be>(position)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            layer_idx,
+            uv_modifier_idx,
+            layer_enabled: u8::try_from(layer_enabled)?,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicUVAnimRotationClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -768,12 +1082,17 @@ pub struct MaterialGraphicUVAnimRotationClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_anim_angle: Curve<'a>,
-    pub curve_pivot_x: Curve<'a>,
-    pub curve_pivot_y: Curve<'a>,
+    #[serde(borrow)]
+    pub curve_anim_angle: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_pivot_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_pivot_y: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVAnimRotationClip<'a> {
@@ -781,19 +1100,24 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVAnimRotationClip<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicUVRotationClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -801,12 +1125,17 @@ pub struct MaterialGraphicUVRotationClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_angle: Curve<'a>,
-    pub curve_pivot_x: Curve<'a>,
-    pub curve_pivot_y: Curve<'a>,
+    #[serde(borrow)]
+    pub curve_angle: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_pivot_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_pivot_y: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVRotationClip<'a> {
@@ -818,15 +1147,52 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVRotationClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xDD4A_9D55)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x3C)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let layer_idx = reader.read_at::<u32be>(position)?;
+        let uv_modifier_idx = reader.read_at::<u32be>(position)?;
+        let curve_angle = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_pivot_x = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_pivot_y = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            layer_idx,
+            uv_modifier_idx,
+            curve_angle,
+            curve_pivot_x,
+            curve_pivot_y,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicUVScaleClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -834,13 +1200,19 @@ pub struct MaterialGraphicUVScaleClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_scale_u: Curve<'a>,
-    pub curve_scale_v: Curve<'a>,
-    pub curve_pivot_x: Curve<'a>,
-    pub curve_pivot_y: Curve<'a>,
+    #[serde(borrow)]
+    pub curve_scale_u: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_scale_v: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_pivot_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_pivot_y: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVScaleClip<'a> {
@@ -852,15 +1224,54 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVScaleClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x511F_C7A5)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x40)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let layer_idx = reader.read_at::<u32be>(position)?;
+        let uv_modifier_idx = reader.read_at::<u32be>(position)?;
+        let curve_scale_u = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_scale_v = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_pivot_x = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_pivot_y = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            layer_idx,
+            uv_modifier_idx,
+            curve_scale_u,
+            curve_scale_v,
+            curve_pivot_x,
+            curve_pivot_y,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicUVScrollClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -868,11 +1279,15 @@ pub struct MaterialGraphicUVScrollClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_scroll_u: Curve<'a>,
-    pub curve_scroll_v: Curve<'a>,
+    #[serde(borrow)]
+    pub curve_scroll_u: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_scroll_v: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVScrollClip<'a> {
@@ -884,15 +1299,50 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVScrollClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x57E2_6726)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x38)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let layer_idx = reader.read_at::<u32be>(position)?;
+        let uv_modifier_idx = reader.read_at::<u32be>(position)?;
+        let curve_scroll_u = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_scroll_v = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            layer_idx,
+            uv_modifier_idx,
+            curve_scroll_u,
+            curve_scroll_v,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MaterialGraphicUVTranslationClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -900,11 +1350,15 @@ pub struct MaterialGraphicUVTranslationClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub layer_idx: u32,
     #[serde(rename = "UVModifierIdx")]
     pub uv_modifier_idx: u32,
-    pub curve_u: Curve<'a>,
-    pub curve_v: Curve<'a>,
+    #[serde(borrow)]
+    pub curve_u: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_v: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVTranslationClip<'a> {
@@ -916,33 +1370,70 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVTranslationClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xC411_5B2E)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x38)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let layer_idx = reader.read_at::<u32be>(position)?;
+        let uv_modifier_idx = reader.read_at::<u32be>(position)?;
+        let curve_u = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_v = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            layer_idx,
+            uv_modifier_idx,
+            curve_u,
+            curve_v,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MotionClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub classifier_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub classifier_path: HipStr<'a>,
     pub gold_move: u8,
     pub coach_id: u8,
     pub move_type: u8,
     pub color: Color,
-    #[serde(default)]
-    pub motion_platform_specifics: HashMap<Cow<'a, str>, MotionPlatformSpecific<'a>>,
+    #[serde(borrow, default)]
+    pub motion_platform_specifics: HashMap<HipStr<'a>, MotionPlatformSpecific<'a>>,
 }
 
 impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
+    #[instrument(skip(reader, position, ugi))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -951,6 +1442,7 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0x9553_84A1)?;
         let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x6C)?;
         let id = reader.read_at::<u32be>(position)?;
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
@@ -960,11 +1452,13 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
         let gold_move = reader.read_at::<u32be>(position)?;
         let coach_id = reader.read_at::<u32be>(position)?;
         let move_type = reader.read_at::<u32be>(position)?;
+        // let unk2 = reader.read_at::<u32be>(position)?;
+        // test_eq!(unk2, 0)?;
         let color = reader.read_at::<Color>(position)?;
-        let unk2 = reader.read_at::<f32be>(position)?;
-        trace!("Unk2: {unk2}");
-        let mut motion_platform_specifics = HashMap::new();
-        for _ in 0..reader.read_at::<u32be>(position)? {
+        let n_motion_platform_specifics = reader.read_at::<u32be>(position)?;
+        let mut motion_platform_specifics =
+            HashMap::with_capacity(usize::try_from(n_motion_platform_specifics)?);
+        for _ in 0..n_motion_platform_specifics {
             let platform = reader.read_at::<u32be>(position)?;
             let platform = match platform {
                 0x1 => Cow::Borrowed("X360"),
@@ -972,13 +1466,13 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
                 0xA => Cow::Borrowed("DURANGO"),
                 _ => {
                     return Err(ReadError::custom(format!(
-                        "Unknown platform: 0x{platform:x}"
+                        "Unknown platform: 0x{platform:x}, position: {position}"
                     )))
                 }
             };
             let motion_platform_specific =
                 reader.read_at_with::<MotionPlatformSpecific>(position, ugi)?;
-            motion_platform_specifics.insert(platform, motion_platform_specific);
+            motion_platform_specifics.insert(platform.into(), motion_platform_specific);
         }
         Ok(Self {
             class: None,
@@ -997,11 +1491,16 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MotionPlatformSpecific<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub score_scale: f32,
     pub score_smoothing: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1021,11 +1520,13 @@ impl<'a> BinaryDeserialize<'a> for MotionPlatformSpecific<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0xC)?;
         let score_scale = reader.read_at::<f32be>(position)?;
-        let score_smoothing = reader.read_at::<u32be>(position)?;
         let scoring_mode = reader.read_at::<u32be>(position)?;
+        let score_smoothing = reader.read_at::<u32be>(position)?;
         Ok(Self {
             class: None,
             score_scale,
@@ -1037,20 +1538,26 @@ impl<'a> BinaryDeserialize<'a> for MotionPlatformSpecific<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct PictogramClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub picto_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub picto_path: HipStr<'a>,
     /// Only in nx2017-nx2018, only has non-empty values in nx2018
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub montage_path: Option<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub montage_path: Option<HipStr<'a>>,
     /// Only in nx2017-nx2018
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub atl_index: Option<u32>,
@@ -1064,7 +1571,7 @@ impl<'a> BinaryDeserialize<'a> for PictogramClip<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0x52EC_8962)?;
@@ -1092,11 +1599,16 @@ impl<'a> BinaryDeserialize<'a> for PictogramClip<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ProportionClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1104,8 +1616,12 @@ pub struct ProportionClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_y: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for ProportionClip<'a> {
@@ -1117,15 +1633,46 @@ impl<'a> BinaryDeserialize<'a> for ProportionClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x5477_75BC)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x30)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let curve_x = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_y = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            curve_x,
+            curve_y,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Proportion3DClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1133,9 +1680,14 @@ pub struct Proportion3DClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-    pub curve_z: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_y: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_z: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for Proportion3DClip<'a> {
@@ -1143,19 +1695,24 @@ impl<'a> BinaryDeserialize<'a> for Proportion3DClip<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct RotationClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1163,9 +1720,14 @@ pub struct RotationClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-    pub curve_z: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_y: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_z: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for RotationClip<'a> {
@@ -1177,15 +1739,48 @@ impl<'a> BinaryDeserialize<'a> for RotationClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x7A9C_58B3)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x34)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let curve_x = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_y = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_z = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            curve_x,
+            curve_y,
+            curve_z,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct SizeClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1193,8 +1788,12 @@ pub struct SizeClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_y: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for SizeClip<'a> {
@@ -1206,25 +1805,56 @@ impl<'a> BinaryDeserialize<'a> for SizeClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x52B8_9D18)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x30)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let curve_x = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_y = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            curve_x,
+            curve_y,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct SlotClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actor_indices: Vec<u8>,
     pub bpm: f32,
-    pub signature: Cow<'a, str>,
-    pub guid: Cow<'a, str>,
+    #[serde(borrow)]
+    pub signature: HipStr<'a>,
+    #[serde(borrow)]
+    pub guid: HipStr<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for SlotClip<'a> {
@@ -1234,26 +1864,57 @@ impl<'a> BinaryDeserialize<'a> for SlotClip<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x896A_96B0)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x34)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let bpm = reader.read_at::<f32be>(position)?;
+        let signature = reader.read_len_string_at::<u32be>(position)?.into();
+        let guid = reader.read_len_string_at::<u32be>(position)?.into();
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            bpm,
+            signature,
+            guid,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct SpawnActorClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub actor_path: Cow<'a, str>,
-    pub actor_name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub actor_path: HipStr<'a>,
+    #[serde(borrow)]
+    pub actor_name: HipStr<'a>,
     pub spawn_position: (f32, f32, f32),
-    pub parent_actor: Cow<'a, str>,
+    #[serde(borrow)]
+    pub parent_actor: HipStr<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for SpawnActorClip<'a> {
@@ -1263,23 +1924,63 @@ impl<'a> BinaryDeserialize<'a> for SpawnActorClip<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xA247_B5D3)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x70)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let actor_path = reader.read_at::<SplitPath>(position)?.to_string().into();
+        let actor_name = reader.read_len_string_at::<u32be>(position)?.into();
+        let spawn_x = reader.read_at::<f32be>(position)?;
+        let spawn_y = reader.read_at::<f32be>(position)?;
+        let spawn_z = reader.read_at::<f32be>(position)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk2, 0x24)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk3, 0)?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk4, 0)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_path,
+            actor_name,
+            spawn_position: (spawn_x, spawn_y, spawn_z),
+            parent_actor: HipStr::new(),
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct SoundSetClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub sound_set_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub sound_set_path: HipStr<'a>,
     pub sound_channel: i32,
     #[serde(default)]
     pub start_offset: u32,
@@ -1327,11 +2028,16 @@ impl<'a> BinaryDeserialize<'a> for SoundSetClip<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct SoundwichClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1339,9 +2045,11 @@ pub struct SoundwichClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     /// Not present in nx2017
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub soundwich_event: Option<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub soundwich_event: Option<HipStr<'a>>,
 }
 
 impl<'a> BinaryDeserialize<'a> for SoundwichClip<'a> {
@@ -1349,19 +2057,24 @@ impl<'a> BinaryDeserialize<'a> for SoundwichClip<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct SoundwichClipWithId<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1369,9 +2082,11 @@ pub struct SoundwichClipWithId<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     /// Not present in nx2017
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub soundwich_event: Option<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub soundwich_event: Option<HipStr<'a>>,
     pub soundwich_id: i32,
 }
 
@@ -1380,20 +2095,25 @@ impl<'a> BinaryDeserialize<'a> for SoundwichClipWithId<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
 }
 
 #[allow(clippy::module_name_repetitions, reason = "Name is enforced by UbiArt")]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct TapeLauncherClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1401,24 +2121,55 @@ pub struct TapeLauncherClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub action: u32,
     /// Not in WiiU 2016
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tape_choice: Option<u32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tape_labels: Vec<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub tape_labels: Vec<HipStr<'a>>,
 }
 
 impl<'a> BinaryDeserialize<'a> for TapeLauncherClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
+    #[instrument(skip(reader, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x115F_128D)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x34)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let action = reader.read_at::<u32be>(position)?;
+        let unk2 = reader.read_at::<f32be>(position)?;
+        trace!("Unk2: {unk2}");
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            action,
+            tape_choice: None,
+            tape_labels: Vec::new(),
+        })
     }
 }
 
@@ -1426,17 +2177,23 @@ impl<'a> BinaryDeserialize<'a> for TapeLauncherClip<'a> {
     clippy::module_name_repetitions,
     reason = "Name is required by the engine"
 )]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct TapeReferenceClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub path: HipStr<'a>,
     #[serde(rename = "Loop")]
     pub loop_it: u32,
 }
@@ -1445,14 +2202,14 @@ impl<'a> BinaryDeserialize<'a> for TapeReferenceClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    #[instrument(skip(reader, position, ctx))]
+    #[instrument(skip(reader, position, _ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq!(magic, 0x0e1e_8158)?;
+        test_eq!(magic, 0x0E1E_8158)?;
         let unk1 = reader.read_at::<u32be>(position)?;
         trace!("Unk1: 0x{unk1:x}");
         let id = reader.read_at::<u32be>(position)?;
@@ -1472,16 +2229,21 @@ impl<'a> BinaryDeserialize<'a> for TapeReferenceClip<'a> {
             start_time,
             duration,
             path: path.to_string().into(),
-            loop_it
+            loop_it,
         })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct TextClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1489,6 +2251,8 @@ pub struct TextClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     pub localization_key: u32,
 }
 
@@ -1501,15 +2265,44 @@ impl<'a> BinaryDeserialize<'a> for TextClip<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xE5B3_34C8)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x2C)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let localization_key = reader.read_at::<u32be>(position)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            localization_key,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct TextAreaSizeClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1517,10 +2310,16 @@ pub struct TextAreaSizeClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_max_width: Curve<'a>,
-    pub curve_max_height: Curve<'a>,
-    pub curve_area_x: Curve<'a>,
-    pub curve_area_y: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve_max_width: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_max_height: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_area_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_area_y: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for TextAreaSizeClip<'a> {
@@ -1528,19 +2327,24 @@ impl<'a> BinaryDeserialize<'a> for TextAreaSizeClip<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct TranslationClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
@@ -1548,16 +2352,20 @@ pub struct TranslationClip<'a> {
     pub duration: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
-    pub curve_x: Curve<'a>,
-    pub curve_y: Curve<'a>,
-    pub curve_z: Curve<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    #[serde(borrow)]
+    pub curve_x: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_y: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_z: BezierCurveFloat<'a>,
 }
 
 impl<'a> BinaryDeserialize<'a> for TranslationClip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
-    #[instrument(skip(reader, position, ctx))]
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
@@ -1566,28 +2374,52 @@ impl<'a> BinaryDeserialize<'a> for TranslationClip<'a> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0x36A3_12DC)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        trace!("Unk1: 0x{unk1:x}");
+        test_eq!(unk1, 0x34)?;
         let id = reader.read_at::<u32be>(position)?;
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
-        
-        todo!()
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let curve_x = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_y = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_z = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            actor_indices: Vec::new(),
+            target_actors,
+            curve_x,
+            curve_y,
+            curve_z,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct VibrationClip<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     pub id: u32,
     pub track_id: u32,
     pub is_active: u8,
     pub start_time: i32,
     pub duration: u32,
-    pub vibration_file_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub vibration_file_path: HipStr<'a>,
     #[serde(rename = "Loop")]
     pub loop_it: u8,
     pub device_side: u8,
@@ -1602,9 +2434,9 @@ impl<'a> BinaryDeserialize<'a> for VibrationClip<'a> {
     type Output = Self;
 
     fn deserialize_at_with(
-        reader: &'a (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        ctx: Self::Ctx,
+        _reader: &'a (impl ReadAtExt + ?Sized),
+        _position: &mut u64,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         todo!()
     }
@@ -1614,7 +2446,7 @@ impl VibrationClip<'_> {
     #[must_use]
     pub fn to_owned(self) -> VibrationClip<'static> {
         let class = None;
-        let vibration_file_path = Cow::Owned(self.vibration_file_path.into_owned());
+        let vibration_file_path = self.vibration_file_path.into_owned();
         VibrationClip {
             class,
             id: self.id,
@@ -1633,14 +2465,34 @@ impl VibrationClip<'_> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "__class")]
-pub enum Curve<'a> {
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct Unknown59FCC733Clip<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
     #[serde(borrow)]
-    BezierCurveFloat(BezierCurveFloat<'a>),
+    pub curve_one: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_two: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_three: BezierCurveFloat<'a>,
+    #[serde(borrow)]
+    pub curve_four: BezierCurveFloat<'a>,
 }
 
-impl<'a> BinaryDeserialize<'a> for Curve<'a> {
+impl<'a> BinaryDeserialize<'a> for Unknown59FCC733Clip<'a> {
     type Ctx = UniqueGameId;
     type Output = Self;
 
@@ -1649,22 +2501,218 @@ impl<'a> BinaryDeserialize<'a> for Curve<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x59FC_C733)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x38)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let curve_one = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_two = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_three = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+        let curve_four = reader.read_at_with::<BezierCurveFloat>(position, ctx)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            target_actors,
+            curve_one,
+            curve_two,
+            curve_three,
+            curve_four,
+        })
     }
 }
 
-impl Default for Curve<'static> {
-    fn default() -> Self {
-        Self::BezierCurveFloat(BezierCurveFloat::default())
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct UnknownCBB7C029Clip<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub target_actors: Vec<TargetActor<'a>>,
+    pub unk2_stringid: u32,
+    pub unk3: u32,
+    pub unk4: f32,
+    pub unk5: u32,
+}
+
+impl<'a> BinaryDeserialize<'a> for UnknownCBB7C029Clip<'a> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'a (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xCBB7_C029)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x3C)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let target_actors = reader
+            .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        let unk2_stringid = reader.read_at::<u32be>(position)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        let unk4 = reader.read_at::<f32be>(position)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            target_actors,
+            unk2_stringid,
+            unk3,
+            unk4,
+            unk5,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct Unknown5C944B01Clip<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub id: u32,
+    pub track_id: u32,
+    pub is_active: u8,
+    pub start_time: i32,
+    pub duration: u32,
+    pub string: HipStr<'a>,
+}
+
+impl<'a> BinaryDeserialize<'a> for Unknown5C944B01Clip<'a> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'a (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x5C94_4B01)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x24)?;
+        let id = reader.read_at::<u32be>(position)?;
+        let track_id = reader.read_at::<u32be>(position)?;
+        let is_active = reader.read_at::<u32be>(position)?;
+        let start_time = reader.read_at::<i32be>(position)?;
+        let duration = reader.read_at::<u32be>(position)?;
+        let string = reader.read_len_string_at::<u32be>(position)?.into();
+
+        Ok(Self {
+            class: None,
+            id,
+            track_id,
+            is_active: u8::try_from(is_active)?,
+            start_time,
+            duration,
+            string,
+        })
+    }
+}
+
+pub struct Unknown9BC67FC4;
+
+impl BinaryDeserialize<'_> for Unknown9BC67FC4 {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    #[instrument(skip(reader, _ctx))]
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x9BC6_7FC4)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x3C)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        trace!("Unk2: {unk2}");
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_any!(unk3, [0x100, 0x0400])?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_any!(unk4, [0x100, 0x0400])?;
+        let unk5 = reader.read_at::<f32be>(position)?;
+        test_any!(unk5, [100.0, 500.0])?;
+        let unk6 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk6, 0.70)?;
+        let unk7 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk7, 0.90)?;
+        let unk8 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk8, 0.75)?;
+        let unk9 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk9, 90.0)?;
+        let unk10 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk10, 900.0)?;
+        let unk11 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk11, 0x0A)?;
+        let unk12 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk12, 0x07)?;
+        let unk13 = reader.read_at::<f32be>(position)?;
+        test_any!(unk13, [0.80, 0.90])?;
+        let unk14 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk14, 0x0)?;
+        let unk15 = reader.read_at::<u32be>(position)?;
+        test_any!(unk15, [0xA, 0x75_6C00])?;
+
+        Ok(Self)
+    }
+}
+
+#[derive(IntoOwned, Serialize, Deserialize, Debug, Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct BezierCurveFloat<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    #[serde(rename = "Curve", deserialize_with = "deser_bezier_curve_float_value")]
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(
+        borrow,
+        rename = "Curve",
+        deserialize_with = "deser_bezier_curve_float_value"
+    )]
     pub value: BezierCurveFloatValue<'a>,
 }
 
@@ -1677,21 +2725,30 @@ impl<'a> BinaryDeserialize<'a> for BezierCurveFloat<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x4)?;
+        let value = reader.read_at_with::<BezierCurveFloatValue>(position, ctx)?;
+        Ok(Self { class: None, value })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
-#[serde(tag = "__class")]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
+#[serde(untagged)]
 pub enum BezierCurveFloatValue<'a> {
-    #[default]
-    Empty,
+    #[serde(borrow)]
+    Empty(Empty<'a>),
     #[serde(borrow, rename = "BezierCurveFloatConstant")]
     Constant(BezierCurveFloatConstant<'a>),
     #[serde(borrow, rename = "BezierCurveFloatLinear")]
     Linear(BezierCurveFloatLinear<'a>),
     #[serde(borrow, rename = "BezierCurveFloatMulti")]
     Multi(BezierCurveFloatMulti<'a>),
+}
+
+impl Default for BezierCurveFloatValue<'_> {
+    fn default() -> Self {
+        BezierCurveFloatValue::Empty(Empty::default())
+    }
 }
 
 impl<'a> BinaryDeserialize<'a> for BezierCurveFloatValue<'a> {
@@ -1703,16 +2760,38 @@ impl<'a> BinaryDeserialize<'a> for BezierCurveFloatValue<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let mut temp_position = *position;
+        let magic = reader.read_at::<u32be>(&mut temp_position)?;
+        match magic {
+            0xE2BC_4FB2 => Ok(Self::Multi(
+                reader.read_at_with::<BezierCurveFloatMulti>(position, ctx)?,
+            )),
+            0x4DE6_D871 => Ok(Self::Linear(
+                reader.read_at_with::<BezierCurveFloatLinear>(position, ctx)?,
+            )),
+            0xB791_4191 => Ok(Self::Constant(
+                reader.read_at_with::<BezierCurveFloatConstant>(position, ctx)?,
+            )),
+            0xFFFF_FFFF => {
+                *position = temp_position;
+                Ok(BezierCurveFloatValue::Empty(Empty::default()))
+            }
+            _ => Err(ReadError::custom(format!("Unknown magic: 0x{magic:08x}"))),
+        }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct BezierCurveFloatConstant<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub value: f64,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub value: f32,
 }
 
 impl<'a> BinaryDeserialize<'a> for BezierCurveFloatConstant<'a> {
@@ -1722,30 +2801,40 @@ impl<'a> BinaryDeserialize<'a> for BezierCurveFloatConstant<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xB791_4191)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x8)?;
+        let value = reader.read_at::<f32be>(position)?;
+        Ok(Self { class: None, value })
     }
 }
 
 impl Default for BezierCurveFloatConstant<'static> {
     fn default() -> Self {
         Self {
-            class: Some("BezierCurveFloatConstant"),
+            class: Some(HipStr::borrowed("BezierCurveFloatConstant")),
             value: Default::default(),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct BezierCurveFloatLinear<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub value_left: (f64, f64),
-    pub normal_left_out: (f64, f64),
-    pub value_right: (f64, f64),
-    pub normal_right_in: (f64, f64),
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub value_left: (f32, f32),
+    pub normal_left_out: (f32, f32),
+    pub value_right: (f32, f32),
+    pub normal_right_in: (f32, f32),
 }
 
 impl<'a> BinaryDeserialize<'a> for BezierCurveFloatLinear<'a> {
@@ -1755,17 +2844,42 @@ impl<'a> BinaryDeserialize<'a> for BezierCurveFloatLinear<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x4DE6_D871)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x24)?;
+        let value_left_left = reader.read_at::<f32be>(position)?;
+        let value_left_right = reader.read_at::<f32be>(position)?;
+        let normal_left_out_left = reader.read_at::<f32be>(position)?;
+        let normal_left_out_right = reader.read_at::<f32be>(position)?;
+        let value_right_left = reader.read_at::<f32be>(position)?;
+        let value_right_right = reader.read_at::<f32be>(position)?;
+        let normal_right_in_left = reader.read_at::<f32be>(position)?;
+        let normal_right_in_right = reader.read_at::<f32be>(position)?;
+
+        Ok(Self {
+            class: None,
+            value_left: (value_left_left, value_left_right),
+            normal_left_out: (normal_left_out_left, normal_left_out_right),
+            value_right: (value_right_left, value_right_right),
+            normal_right_in: (normal_right_in_left, normal_right_in_right),
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct BezierCurveFloatMulti<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
     pub keys: Vec<KeyFloat<'a>>,
 }
 
@@ -1778,18 +2892,30 @@ impl<'a> BinaryDeserialize<'a> for BezierCurveFloatMulti<'a> {
         position: &mut u64,
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xE2BC_4FB2)?;
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x14)?;
+        let keys = reader
+            .read_len_type_at_with::<u32be, KeyFloat>(position, ctx)?
+            .collect::<Result<_, _>>()?;
+        Ok(Self { class: None, keys })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct KeyFloat<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub value: (f64, f64),
-    pub normal_in: (f64, f64),
-    pub normal_out: (f64, f64),
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub value: (f32, f32),
+    pub normal_in: (f32, f32),
+    pub normal_out: (f32, f32),
 }
 
 impl<'a> BinaryDeserialize<'a> for KeyFloat<'a> {
@@ -1799,9 +2925,23 @@ impl<'a> BinaryDeserialize<'a> for KeyFloat<'a> {
     fn deserialize_at_with(
         reader: &'a (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        ctx: Self::Ctx,
+        _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        todo!()
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x18)?;
+        let value_left = reader.read_at::<f32be>(position)?;
+        let value_right = reader.read_at::<f32be>(position)?;
+        let normal_in_left = reader.read_at::<f32be>(position)?;
+        let normal_in_right = reader.read_at::<f32be>(position)?;
+        let normal_out_left = reader.read_at::<f32be>(position)?;
+        let normal_out_right = reader.read_at::<f32be>(position)?;
+
+        Ok(Self {
+            class: None,
+            value: (value_left, value_right),
+            normal_in: (normal_in_left, normal_in_right),
+            normal_out: (normal_out_left, normal_out_right),
+        })
     }
 }
 
@@ -1815,10 +2955,106 @@ where
         Ok(something) => Ok(something),
         Err(err) => {
             if err.to_string().as_str() == "missing field `__class`" {
-                Ok(BezierCurveFloatValue::Empty)
+                Ok(BezierCurveFloatValue::Empty(Empty::default()))
             } else {
                 Err(err)
             }
         }
+    }
+}
+
+pub struct ActorPaths;
+impl<'de> BinaryDeserialize<'de> for ActorPaths {
+    type Ctx = UniqueGameId;
+    type Output = Vec<HipStr<'de>>;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let n_actors = reader.read_at::<u32be>(position)?;
+        let mut actor_paths = Vec::with_capacity(usize::try_from(n_actors)?);
+        for _ in 0..n_actors {
+            let unk2 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk2, 0x24)?;
+            let unk3 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk3, 0x0)?;
+            let actor_path = reader.read_len_string_at::<u32be>(position)?.into();
+            actor_paths.push(actor_path);
+            let unk4 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk4, 0x0)?;
+        }
+        Ok(actor_paths)
+    }
+}
+
+#[derive(Debug, IntoOwned, Serialize, Deserialize)]
+pub struct TargetActor<'a> {
+    #[serde(borrow)]
+    pub path: HipStr<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub scenes: Vec<HipStr<'a>>,
+}
+
+impl<'de> BinaryDeserialize<'de> for TargetActor<'de> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x24)?;
+        let n_scenes = reader.read_at::<u32be>(position)?;
+        let mut scenes = Vec::with_capacity(usize::try_from(n_scenes)?);
+        for _ in 0..n_scenes {
+            let unk2 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk2, 0x10, "unk2 is wrong at {position}")?;
+            let scene = reader.read_len_string_at::<u32be>(position)?.into();
+            scenes.push(scene);
+            let unk3 = reader.read_at::<u32be>(position)?;
+            test_any!(unk3, [0x0, 0x1], "Padding is wrong at {position}")?;
+        }
+        let path = reader.read_len_string_at::<u32be>(position)?.into();
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_any!(unk4, [0x0, 0x1], "Padding is wrong at {position}")?;
+
+        Ok(Self { path, scenes })
+    }
+}
+
+#[derive(IntoOwned, Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum StringOrId<'a> {
+    #[serde(borrow)]
+    String(HipStr<'a>),
+    Id(u32),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const EMPTY_JSON: &str = r#"{"__class": "BezierCurveFloat","Curve": {}}"#;
+    #[test]
+    fn test_empty_bezier_curve_float_value() {
+        let curve: BezierCurveFloat = serde_json::from_str(EMPTY_JSON).unwrap();
+        assert!(matches!(curve.value, BezierCurveFloatValue::Empty(_)));
+    }
+
+    const CONSTANT_JSON: &str = r#"{"__class":"BezierCurveFloat","Curve":{"__class":"BezierCurveFloatConstant","Value":0}}"#;
+    #[test]
+    fn test_constant_bezier_curve_float_value() {
+        let curve: BezierCurveFloat = serde_json::from_str(CONSTANT_JSON).unwrap();
+        assert!(matches!(curve.value, BezierCurveFloatValue::Constant(_)));
+    }
+
+    const MIXED_JSON: &str = r#"[{"__class": "BezierCurveFloat","Curve": {}},{"__class":"BezierCurveFloat","Curve":{"__class":"BezierCurveFloatConstant","Value":0}}]"#;
+    #[test]
+    fn test_mix_bezier_curve_float_value() {
+        let _: Vec<BezierCurveFloat> = serde_json::from_str(MIXED_JSON).unwrap();
     }
 }

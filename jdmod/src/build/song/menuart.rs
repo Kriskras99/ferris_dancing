@@ -140,7 +140,7 @@ fn menuart_scene<'a>(
 fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Result<Vec<u8>, Error> {
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
-        tpl: SplitPath::new(
+        lua: SplitPath::new(
             Cow::Borrowed("enginedata/actortemplates/"),
             Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
         )?,
