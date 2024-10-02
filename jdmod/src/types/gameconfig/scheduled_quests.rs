@@ -59,7 +59,7 @@ pub struct QuestDescription<'a> {
 }
 
 /// Contains the last id used for quests
-static mut QUEST_ID: AtomicU32 = AtomicU32::new(1);
+static QUEST_ID: AtomicU32 = AtomicU32::new(1);
 
 /// Generate a new id for a quest
 ///
@@ -67,7 +67,7 @@ static mut QUEST_ID: AtomicU32 = AtomicU32::new(1);
 /// Will panic if if incrementing the id would overflow
 fn generate_quest_id() -> u32 {
     // SAFETY: The atomic u16 will make sure every call gets a different value
-    let id = unsafe { QUEST_ID.fetch_add(1, Ordering::SeqCst) };
+    let id = QUEST_ID.fetch_add(1, Ordering::SeqCst);
     assert!(id != u32::MAX, "Ran out of IDs for quests!");
     id
 }

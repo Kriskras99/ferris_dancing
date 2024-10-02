@@ -143,9 +143,10 @@ pub fn build(
 fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
     let actor = cooked::act::Actor {
         lua: SplitPath::new(Cow::Borrowed(avatar_dir), Cow::Borrowed("desc.tpl"))?,
-        unk1: 0,
-        unk2: 0x3F80_0000,
-        unk2_5: 0x3F80_0000,
+        unk1: 0.0,
+        unk2: 1.0,
+        unk2_5: 1.0,
+        unk3_5: 0,
         components: vec![
             cooked::act::Component::MaterialGraphicComponent(
                 cooked::act::MaterialGraphicComponent {

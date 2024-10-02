@@ -31,9 +31,9 @@ impl Eq for Actor<'_> {}
 #[derive(Debug, Clone, PartialEq)]
 pub enum Component<'a> {
     AutodanceComponent,
-    BeatPulseComponent,
+    BeatPulseComponent(BeatPulseComponent<'a>),
     BoxInterpolatorComponent(BoxInterpolatorComponent),
-    CameraGraphicComponent,
+    CameraGraphicComponent(CameraGraphicComponent<'a>),
     Carousel(Carousel<'a>),
     ClearColorComponent(ClearColorComponent),
     ConvertedTmlTapeComponent(ConvertedTmlTapeComponent<'a>),
@@ -43,21 +43,24 @@ pub enum Component<'a> {
     MasterTape,
     MaterialGraphicComponent(MaterialGraphicComponent<'a>),
     PictoComponent,
+    PictoTimeline(PictoTimeline<'a>),
     PleoComponent(PleoComponent<'a>),
     PleoTextureGraphicComponent(MaterialGraphicComponent<'a>),
     PropertyPatcher,
-    RegistrationComponent,
-    SingleInstanceMesh3DComponent,
+    RegistrationComponent(RegistrationComponent<'a>),
+    SingleInstanceMesh3DComponent(SingleInstanceMesh3DComponent<'a>),
     SongDatabaseComponent,
     SongDescComponent,
     SoundComponent,
     TapeCaseComponent,
-    TextureGraphicComponent,
-    UICarousel,
+    TextureGraphicComponent(TextureGraphicComponent<'a>),
+    UICarousel(UICarousel<'a>),
     UITextBox(UITextBox<'a>),
-    UIWdigetGroupHUDAutodanceRecorder,
-    UIWidgetGroupHUDLyrics,
-    ViewportUIComponent,
+    UIWidgetGroupHUD(UIWidgetGroupHUD<'a>),
+    UIWidgetGroupHUDAutodanceRecorder(UIWidgetGroupHUDAutodanceRecorder<'a>),
+    UIWidgetGroupHUDLyrics(UIWidgetGroupHUDLyrics<'a>),
+    UIWidgetGroupHUDPauseIcon(UIWidgetGroupHUDPauseIcon<'a>),
+    ViewportUIComponent(ViewportUIComponent),
     AvatarDescComponent,
     SkinDescComponent,
     FxBankComponent,
@@ -72,11 +75,11 @@ impl Component<'_> {
             // JD_AutoDanceComponent
             Component::AutodanceComponent => 0x67B8_BB77,
             // JD_BeatPulseComponent
-            Component::BeatPulseComponent => 0x7184_37A8,
+            Component::BeatPulseComponent(_) => 0x7184_37A8,
             // BoxInterpolatorComponent
             Component::BoxInterpolatorComponent(_) => 0xF513_60DA,
             // CameraGraphicComponent
-            Component::CameraGraphicComponent => 0xC760_4FA1,
+            Component::CameraGraphicComponent(_) => 0xC760_4FA1,
             // ClearColorComponent
             Component::ClearColorComponent(_) => 0xAEBB_218B,
             // ConvertedTmlTape_Component
@@ -95,6 +98,8 @@ impl Component<'_> {
             Component::Carousel(_) => 0x27E4_80C0,
             // JD_PictoComponent
             Component::PictoComponent => 0xC316_BF34,
+            // JD_PictoTimeline
+            Component::PictoTimeline(_) => 0xFA24_128D,
             // PleoComponent
             Component::PleoComponent(_) => 0x1263_DAD9,
             // PleoTextureGraphicComponent
@@ -102,9 +107,9 @@ impl Component<'_> {
             // PropertyPatcher
             Component::PropertyPatcher => 0xF719_B524,
             // JD_RegistrationComponent
-            Component::RegistrationComponent => 0xE0A2_4B6D,
+            Component::RegistrationComponent(_) => 0xE0A2_4B6D,
             // SingleInstanceMesh3DComponent
-            Component::SingleInstanceMesh3DComponent => 0x53E3_2AF7,
+            Component::SingleInstanceMesh3DComponent(_) => 0x53E3_2AF7,
             // JD_SongDatabaseComponent
             Component::SongDatabaseComponent => 0x4055_79FB,
             // JD_SongDescComponent
@@ -114,17 +119,21 @@ impl Component<'_> {
             // TapeCase_Component
             Component::TapeCaseComponent => 0x231F_27DE,
             // TextureGraphicComponent
-            Component::TextureGraphicComponent => 0x7B48_A9AE,
+            Component::TextureGraphicComponent(_) => 0x7B48_A9AE,
             // UICarousel
-            Component::UICarousel => 0x8782_FE60,
+            Component::UICarousel(_) => 0x8782_FE60,
             // UITextBox
             Component::UITextBox(_) => 0xD10C_BEED,
-            // JD_UIWidgetGroupHUD_AutodanceRecorder
-            Component::UIWdigetGroupHUDAutodanceRecorder => 0x9F87_350C,
             // JD_UIWidgetGroupHUD_Lyrics
-            Component::UIWidgetGroupHUDLyrics => 0xF22C_9426,
+            Component::UIWidgetGroupHUD(_) => 0x1528D94A,
+            // JD_UIWidgetGroupHUD_AutodanceRecorder
+            Component::UIWidgetGroupHUDAutodanceRecorder(_) => 0x9F87_350C,
+            // JD_UIWidgetGroupHUD_Lyrics
+            Component::UIWidgetGroupHUDLyrics(_) => 0xF22C_9426,
+            // JD_UIWidgetGroupHUD_PauseIcon
+            Component::UIWidgetGroupHUDPauseIcon(_) => 0x4866_6BB2,
             // ViewportUIComponent
-            Component::ViewportUIComponent => 0x6990_834C,
+            Component::ViewportUIComponent(_) => 0x6990_834C,
             // JD_AvatarDescComponent
             Component::AvatarDescComponent => 0x1759_E29D,
             // JD_SkinDescComponent
@@ -156,14 +165,98 @@ pub struct AaBb {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct BeatPulseComponent<'a> {
+    pub text: Cow<'a, str>,
+    pub loc_id: u32,
+    pub model_name: &'static str,
+    pub flag: Cow<'a, str>,
+    pub elements: Vec<UIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct BoxInterpolatorComponent {
     pub inner_box: AaBb,
     pub outer_box: AaBb,
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CameraGraphicComponent<'a> {
+    pub primitive_parameters: GFXPrimitiveParam,
+    pub color_computer_tag_id: u32,
+    pub render_in_target: u32,
+    pub disable_light: u32,
+    pub disable_shadow: u32,
+    pub atlas_index: u32,
+    pub custom_anchor: (f32, f32),
+    pub sinus_amplitude: (f32, f32, f32),
+    pub sinus_speed: f32,
+    pub angle_x: f32,
+    pub angle_y: f32,
+    pub anchor: u32,
+    pub old_anchor: u32,
+    pub material: GFXMaterialSerializable<'a>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Carousel<'a> {
-    pub validate_action: Cow<'a, str>,
+    pub main_anchor: u32,
+    pub validate_action: &'static str,
+    pub carousel_data_id: Cow<'a, str>,
+    pub manage_carousel_history: u32,
+    pub switch_speed: f32,
+    pub shortcuts_config_default: Cow<'a, str>,
+    pub shortcuts_config_switch: Cow<'a, str>,
+    pub shortcuts_config_ps4: Cow<'a, str>,
+    pub shortcuts_config_xb1: Cow<'a, str>,
+    pub shortcuts_config_pc: Cow<'a, str>,
+    pub shortcuts_config_ggp: Cow<'a, str>,
+    pub shortcuts_config_prospero: Option<Cow<'a, str>>,
+    pub shortcuts_config_scarlett: Option<Cow<'a, str>>,
+    pub shortcuts_from_center_instead_from_left: u32,
+    pub initial_behaviour: &'static str,
+    pub sound_context: Cow<'a, str>,
+    pub behaviours: Vec<CarouselBehaviour<'a>>,
+    pub anim_items_desc: CarouselAnimItemsDesc,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CarouselAnimItemsDesc {
+    pub enable: u32,
+    pub show_items_at_init: u32,
+    pub enable_carousel_on_anim_ends: u32,
+    pub check_items_visibility_on_anim_ends: u32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CarouselBehaviour<'a> {
+    Navigation(CarouselBehaviourNavigation<'a>),
+    GoToElement(CarouselBehaviourGoToElement<'a>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CarouselBehaviourNavigation<'a> {
+    pub key: &'static str,
+    pub sound_context: Cow<'a, str>,
+    pub sound_notif_go_next: Cow<'a, str>,
+    pub sound_notif_go_prev: Cow<'a, str>,
+    pub stop_conditions: Vec<StopCondition>,
+    pub decel_tape_label: &'static str,
+    pub scroll_mode: u32,
+    pub time_between_steps: f32,
+    pub next_actions: Vec<&'static str>,
+    pub prev_actions: Vec<&'static str>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CarouselBehaviourGoToElement<'a> {
+    pub key: &'static str,
+    pub sound_context: Cow<'a, str>,
+    pub sound_notif_go_next: Cow<'a, str>,
+    pub sound_notif_go_prev: Cow<'a, str>,
+    pub stop_conditions: Vec<StopCondition>,
+    pub decel_tape_label: &'static str,
+    pub scroll_mode: u32,
+    pub time_between_steps: f32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -207,14 +300,40 @@ pub struct FXControllerComponent {
     pub allow_music_events: u32,
 }
 
-/// The data for the main video player
 #[derive(Debug, Clone, PartialEq)]
-pub struct PleoComponent<'a> {
-    /// The filename of the video to play
-    pub video: SplitPath<'a>,
-    /// Manifest filename of the video
-    pub dash_mpd: SplitPath<'a>,
-    pub channel_id: Option<Cow<'a, str>>,
+pub struct GFXMaterialSerializable<'a> {
+    pub atl_channel: u32,
+    pub atl_path: SplitPath<'a>,
+    pub shader_path: SplitPath<'a>,
+    pub stencil_test: u32,
+    pub alpha_test: u32,
+    pub alpha_ref: u32,
+    pub texture_set: GFXMaterialTexturePathSet<'a>,
+    pub material_params: GFXMaterialSerializableParam,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GFXMaterialSerializableParam {
+    pub reflector_factor: f32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GFXMaterialTexturePathSet<'a> {
+    pub diffuse: SplitPath<'a>,
+    pub back_light: SplitPath<'a>,
+    pub normal: SplitPath<'a>,
+    pub separate_alpha: SplitPath<'a>,
+    pub diffuse_2: SplitPath<'a>,
+    pub back_light_2: SplitPath<'a>,
+    pub anim_impostor: SplitPath<'a>,
+    pub diffuse_3: SplitPath<'a>,
+    pub diffuse_4: SplitPath<'a>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GFXPrimitiveParam {
+    pub color_factor: Color,
+    pub gfx_occlude_info: u32,
 }
 
 /// Data for textures
@@ -242,9 +361,192 @@ impl Default for MaterialGraphicComponent<'static> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct PictoTimeline<'a> {
+    pub text: Cow<'a, str>,
+    pub loc_id: u32,
+    pub model_name: &'static str,
+    pub flag: Cow<'a, str>,
+    pub relative_start_position_solo: (f32, f32, f32),
+    pub relative_start_position_duo: (f32, f32, f32),
+    pub relative_start_position_trio: (f32, f32, f32),
+    pub relative_start_position_quatro: (f32, f32, f32),
+    pub relative_start_position_sextet: (f32, f32, f32),
+    pub shifting_position_solo: (f32, f32, f32),
+    pub shifting_position_duo: (f32, f32, f32),
+    pub shifting_position_trio: (f32, f32, f32),
+    pub shifting_position_quatro: (f32, f32, f32),
+    pub shifting_position_sextet: (f32, f32, f32),
+    pub picto_track_offset: u32,
+    pub picto_scale: (f32, f32),
+}
+
 /// The data for the main video player
 #[derive(Debug, Clone, PartialEq)]
+pub struct PleoComponent<'a> {
+    /// The filename of the video to play
+    pub video: SplitPath<'a>,
+    /// Manifest filename of the video
+    pub dash_mpd: SplitPath<'a>,
+    pub channel_id: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RegistrationComponent<'a> {
+    pub tag: &'static str,
+    pub user_data: Cow<'a, str>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SingleInstanceMesh3DComponent<'a> {
+    pub color_computer_tag_id: u32,
+    pub render_in_target: u32,
+    pub disable_light: u32,
+    pub disable_shadow: u32,
+    pub scale_z: f32,
+    pub mesh_3d: SplitPath<'a>,
+    pub skeleton_3d: SplitPath<'a>,
+    pub animation_3d: SplitPath<'a>,
+    pub animation_node: SplitPath<'a>,
+    pub orientation: [Color; 4],
+    pub primitive_parameters: GFXPrimitiveParam,
+    pub material: GFXMaterialSerializable<'a>,
+    pub animation_player_mode: u32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SoundComponent;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StopCondition {
+    pub waiting_time: f32,
+    pub count_to_reach: u32,
+    pub next_behaviour: &'static str,
+    pub condition: u32,
+    pub anim_state: u32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextureGraphicComponent<'a> {
+    pub primitive_parameters: GFXPrimitiveParam,
+    pub color_computer_tag_id: u32,
+    pub render_in_target: u32,
+    pub disable_light: u32,
+    pub disable_shadow: u32,
+    pub sprite_index: u32,
+    pub anchor: u32,
+    pub material: GFXMaterialSerializable<'a>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UICarousel<'a> {
+    pub main_anchor: u32,
+    pub validate_action: &'static str,
+    pub carousel_data_id: Cow<'a, str>,
+    // Only in nx2018 and earlier
+    pub min_nb_items_to_loop: Option<u32>,
+    // Only in nx2018 and earlier
+    pub force_loop: Option<u32>,
+    pub manage_carousel_history: u32,
+    pub initial_behaviour: &'static str,
+    pub sound_context: Cow<'a, str>,
+    pub behaviours: Vec<CarouselBehaviour<'a>>,
+    pub anim_items_desc: CarouselAnimItemsDesc,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct UITextBox<'a> {
-    pub string1: Option<Cow<'a, str>>,
-    pub string2: Option<Cow<'a, str>>,
+    pub style: u32,
+    pub overriding_font_size: f32,
+    pub offset: (f32, f32),
+    pub scale: (f32, f32),
+    pub alpha: f32,
+    pub max_width: f32,
+    pub max_height: f32,
+    pub area: (f32, f32),
+    pub raw_text: Cow<'a, str>,
+    pub use_lines_max_count: u32,
+    pub lines_max_count: u32,
+    pub loc_id: u32,
+    pub auto_scroll_speed: f32,
+    pub auto_scroll_speed_y: f32,
+    pub auto_scroll_wait_time: f32,
+    pub auto_scroll_wait_time_y: f32,
+    pub auto_scroll_font_effect_name: Cow<'a, str>,
+    pub auto_scroll_reset_on_inactive: u32,
+    pub scroll_once: u32,
+    pub overriding_shadow_color: (f32, f32, f32, f32),
+    pub overriding_shadow_offset: (f32, f32),
+    pub overriding_line_spacing: f32,
+    pub overriding_font_size_min: f32,
+    pub ending_dots: u32,
+    /// Not in 2019 and earlier
+    pub colorize_icons: Option<u32>,
+    pub overriding_anchor: i32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UIWidgetElementDesc<'a> {
+    pub element_path: SplitPath<'a>,
+    pub name: Cow<'a, str>,
+    pub flag: Cow<'a, str>,
+    pub parent_index: i32,
+    pub bind_mode: u32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UIWidgetGroupHUD<'a> {
+    pub text: Cow<'a, str>,
+    pub loc_id: u32,
+    pub model_name: &'static str,
+    pub flag: Cow<'a, str>,
+    pub elements: Vec<UIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
+    pub text: Cow<'a, str>,
+    pub loc_id: u32,
+    pub model_name: &'static str,
+    pub flag: Cow<'a, str>,
+    pub icon_default_position: (f32, f32, f32),
+    pub icon_relative_start_position_solo: (f32, f32, f32),
+    pub icon_relative_start_position_duo: (f32, f32, f32),
+    pub icon_relative_start_position_trio: (f32, f32, f32),
+    pub icon_relative_start_position_quatro: (f32, f32, f32),
+    pub icon_relative_start_position_sextet: (f32, f32, f32),
+    pub icon_shifting_position_solo: (f32, f32, f32),
+    pub icon_shifting_position_duo: (f32, f32, f32),
+    pub icon_shifting_position_trio: (f32, f32, f32),
+    pub icon_shifting_position_quatro: (f32, f32, f32),
+    pub icon_shifting_position_sextet: (f32, f32, f32),
+    pub elements: Vec<UIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UIWidgetGroupHUDLyrics<'a> {
+    pub text: Cow<'a, str>,
+    pub loc_id: u32,
+    pub model_name: &'static str,
+    pub flag: Cow<'a, str>,
+    pub elements: Vec<UIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UIWidgetGroupHUDPauseIcon<'a> {
+    pub text: Cow<'a, str>,
+    pub loc_id: u32,
+    pub model_name: &'static str,
+    pub flag: Cow<'a, str>,
+    pub elements: Vec<UIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ViewportUIComponent {
+    pub active: u32,
+    pub focale: f32,
+    pub far_plane: f32,
+    pub position: (f32, f32),
+    pub size: (f32, f32),
+    pub view_mask: u32,
 }

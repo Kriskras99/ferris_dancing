@@ -30,7 +30,7 @@ fn tape_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()>
 }
 
 fn tape_parse_nx2019(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX2019)?;
+    tape::parse(&data, UniqueGameId::NX2019V2)?;
     Ok(())
 }
 

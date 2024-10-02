@@ -2,10 +2,11 @@
 
 use dotstar_toolkit_utils::{
     bytes::{
+        endian::Endian,
         primitives::u32be,
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    test_any, test_eq, test_le,
+    test_any, test_eq,
 };
 
 use super::MovementSpaceMove;
@@ -17,13 +18,21 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
     fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: (),
+        _ctx: Self::Ctx,
     ) -> Result<Self, ReadError> {
         // Check the magic
         let unk1 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk1, 0x1)?;
-        let unk2 = reader.read_at::<u32be>(position)?;
-        test_any!(unk2, [0x5, 0x6, 0x7])?;
+        test_any!(unk1, [0x1, 0x0100_0000])?;
+
+        let endianness = if unk1 == 1 {
+            Endian::Big
+        } else {
+            Endian::Little
+        };
+
+        // Version is 0x7 for JD2017 and newer
+        let version = reader.read_at_with::<u32>(position, endianness)?;
+        test_any!(version, [0x5, 0x6, 0x7])?;
 
         // There are always 64 bytes for the string, so we read untill the null byte.
         // If the null byte is past 64 bytes there's something wrong and we error.
@@ -50,28 +59,89 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
 
         test_any!(device.as_ref(), ["Acc_Dev_Dir_NP", "Acc_Dev_Dir_10P"])?;
 
-        let unk3 = reader.read_at::<u32be>(position)?;
-        let unk4 = reader.read_at::<u32be>(position)?;
-        let unk5 = reader.read_at::<u32be>(position)?;
-        let unk6 = reader.read_at::<u32be>(position)?;
-        let unk7 = reader.read_at::<u32be>(position)?;
+        let unk3 = reader.read_at_with::<f32>(position, endianness)?;
+        test_any!(unk3, 0.0..=3.5039997)?;
+        let unk4 = reader.read_at_with::<f32>(position, endianness)?;
+        test_any!(
+            unk4,
+            [-1.0, 0.4, 0.7, 0.79999995, 0.8, 0.9, 1.0, 1.1, 1.1999999, 1.2, 1.3, 1.3000001, 1.4]
+        )?;
+        let unk5 = reader.read_at_with::<f32>(position, endianness)?;
+        test_any!(
+            unk5,
+            [-1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
+        )?;
 
-        let unk8 = reader.read_at::<u32be>(position)?;
-        let unk9 = reader.read_at::<u32be>(position)?;
-        test_any!(unk9, [0, 20, 25, 30, 40, 45, 50, 55, 60, 65, 85])?;
-        let unk10 = reader.read_at::<u32be>(position)?;
-        test_le!(unk10, 0x3)?;
-        let points = reader.read_at::<u32be>(position)?;
-        let unk12 = reader.read_at::<u32be>(position)?;
-        let unk13 = reader.read_at::<u32be>(position)?;
+        let (unk6, unk7) = if version == 0x7 {
+            let unk6 = reader.read_at_with::<f32>(position, endianness)?;
+            test_any!(
+                unk6,
+                [-1.0, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]
+            )?;
+            let unk7 = reader.read_at_with::<f32>(position, endianness)?;
+            test_any!(
+                unk7,
+                [-1.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.90000004, 1.0]
+            )?;
+            (Some(unk6), Some(unk7))
+        } else {
+            (None, None)
+        };
 
-        let unk14 = reader.read_at::<u32be>(position)?;
-        let unk15 = reader.read_at::<u32be>(position)?;
+        if endianness == Endian::Little {
+            let unk7_5 = reader.read_at_with::<u32>(position, endianness)?;
+            test_eq!(unk7_5, 0)?;
+        }
 
-        let mut data = Vec::with_capacity(usize::try_from(points)?);
-        for _ in 0..points {
-            let x = reader.read_at::<u32be>(position)?;
-            let y = reader.read_at::<u32be>(position)?;
+        let unk8 = reader.read_at_with::<u32>(position, endianness)?;
+        test_eq!(unk8, 0x211C_0000)?;
+        let unk9 = reader.read_at_with::<u32>(position, endianness)?;
+        test_eq!(unk9, 0)?;
+
+        let unk10 = if endianness == Endian::Big {
+            let unk10 = reader.read_at_with::<u32>(position, endianness)?;
+            test_any!(unk10, 0x0..=0x3)?;
+            Some(unk10)
+        } else {
+            None
+        };
+
+        let unk11 = reader.read_at_with::<u32>(position, endianness)?;
+        // In steps of 5
+        test_any!(unk11, 10..=210).and(test_eq!(unk11 % 5, 0))?;
+        let unk12 = reader.read_at_with::<u32>(position, endianness)?;
+        test_eq!(unk12, 2)?;
+        let unk13 = reader.read_at_with::<u32>(position, endianness)?;
+        // Only two in WiiU 2015 Bundle_0_WIIU.ipk/world/jd2015/loveisall/timeline/moves/wiiu/loveisall_transmutation.msm
+        test_any!(unk13, [0, 2])?;
+
+        let unk14 = reader.read_at_with::<f32>(position, endianness)?;
+        test_any!(unk14, -212.42326..=156.8287)?;
+        let unk15 = reader.read_at_with::<f32>(position, endianness)?;
+        test_any!(unk15, -115.59964..=54.538467)?;
+
+        let size = (reader.len()? - *position) / 4;
+        assert!(size % 2 == 0);
+
+        if unk13 == 0 {
+            test_eq!(u64::from(unk11), size / 2)?;
+        } else {
+            // unk13 indicates a second movement pattern?
+            // this includes a second unk14 and unk15
+            // so we subtract the already parsed unk14 and unk15 from the calculation
+            test_eq!(u64::from(unk11 * unk13 + unk13) - 1, size / 2)?;
+        }
+
+        let mut data = Vec::with_capacity(usize::try_from(unk11)?);
+        for _ in 0..unk11 {
+            let x = reader.read_at_with::<f32>(position, endianness)?;
+            // Most of the time x is quite small, but sometimes very big
+            test_any!(x, -295.96005..=20007.822)
+                .or(test_any!(x, 172796720000.0..=1133755800000.0))?;
+            let y = reader.read_at_with::<f32>(position, endianness)?;
+            // Most of the time y is quite small, but sometimes very big
+            test_any!(y, -337.18118..=69163.67)
+                .or(test_any!(y, 49857210000.0..=1716389200000.0))?;
             data.push((x, y));
         }
 
@@ -80,16 +150,14 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
             map,
             device,
             data,
-            points,
+            version,
             unk3,
             unk4,
             unk5,
             unk6,
             unk7,
-            unk8,
-            unk9,
             unk10,
-            unk12,
+            unk11,
             unk13,
             unk14,
             unk15,

@@ -62,9 +62,10 @@ fn mainsequence_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
             Cow::Owned(format!("world/maps/{lower_map_name}/cinematics/")),
             Cow::Owned(format!("{lower_map_name}_mainsequence.tpl")),
         )?,
-        unk1: 0,
-        unk2: 0x3F80_0000,
-        unk2_5: 0x3F80_0000,
+        unk1: 0.0,
+        unk2: 1.0,
+        unk2_5: 1.0,
+        unk3_5: 0,
         components: vec![cooked::act::Component::MasterTape],
     };
 

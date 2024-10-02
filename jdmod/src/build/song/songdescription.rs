@@ -83,9 +83,10 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
             Cow::Borrowed(ses.map_path.as_str()),
             Cow::Borrowed("songdesc.tpl"),
         )?,
-        unk1: 0,
-        unk2: 0x3F80_0000,
-        unk2_5: 0x3F80_0000,
+        unk1: 0.0,
+        unk2: 1.0,
+        unk2_5: 1.0,
+        unk3_5: 0,
         components: vec![cooked::act::Component::SongDescComponent],
     };
 

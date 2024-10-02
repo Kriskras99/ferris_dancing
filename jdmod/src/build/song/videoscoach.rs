@@ -95,9 +95,10 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
                 Cow::Borrowed("video_player_main.tpl")
             },
         )?,
-        unk1: 0,
-        unk2: 0x3F80_0000,
-        unk2_5: 0x3F80_0000,
+        unk1: 0.0,
+        unk2: 1.0,
+        unk2_5: 1.0,
+        unk3_5: 0,
         components: vec![cooked::act::Component::PleoComponent(
             cooked::act::PleoComponent {
                 video: SplitPath::new(

@@ -20,6 +20,40 @@
 /// ```
 #[macro_export]
 macro_rules! test_eq {
+    ($left:expr, $right:literal $(,)?) => {{
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(left_val == right_val) {
+                    // "[src/main:2:5]: Test failed: a * 2 != b * 5"
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($left), " != ", ::std::stringify!($right));
+
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_one_ident(message, ::std::stringify!($left), &*left_val, ::std::option::Option::None))
+                } else {
+                    $crate::testing::TestResult::Ok
+                }
+            }
+        }
+    }};
+    ($left:literal, $right:expr $(,)?) => {{
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(left_val == right_val) {
+                    // "[src/main:2:5]: Test failed: a * 2 != b * 5"
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($left), " != ", ::std::stringify!($right));
+
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_one_ident(message, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                } else {
+                    $crate::testing::TestResult::Ok
+                }
+            }
+        }
+    }};
     ($left:expr, $right:expr $(,)?) => {{
         match (&$left, &$right) {
             (left_val, right_val) => {
@@ -30,7 +64,39 @@ macro_rules! test_eq {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                } else {
+                    $crate::testing::TestResult::Ok
+                }
+            }
+        }
+    }};
+    ($left:literal, $right:expr, $($arg:tt)+) => {{
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(left_val == right_val) {
+                    // "[src/main:2:5]: Test failed: a * 2 != b * 5"
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($left), " != ", ::std::stringify!($right));
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_one_ident(message, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
+                } else {
+                    $crate::testing::TestResult::Ok
+                }
+            }
+        }
+    }};
+    ($left:expr, $right:literal, $($arg:tt)+) => {{
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(left_val == right_val) {
+                    // "[src/main:2:5]: Test failed: a * 2 != b * 5"
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($left), " != ", ::std::stringify!($right));
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_one_ident(message, ::std::stringify!($left), &*left_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -46,7 +112,7 @@ macro_rules! test_eq {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -87,7 +153,7 @@ macro_rules! test_ne {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -103,7 +169,7 @@ macro_rules! test_ne {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -112,7 +178,9 @@ macro_rules! test_ne {
     }};
 }
 
-/// Tests that the expression is any of the values in the slice (using [`PartialEq`]).
+/// Tests that the left expression is any of the values in the right expression.
+/// The right expression can be anything that results in an item that has a `.contains()` function.
+/// For example, slices, [`Vec`]s, ranges, ...
 ///
 /// This macro returns a [`TestResult`] and hints the compiler that the failure
 /// case is unlikely to happen.
@@ -133,17 +201,50 @@ macro_rules! test_ne {
 /// ```
 #[macro_export]
 macro_rules! test_any {
-    ($left:expr, $right:expr $(,)?) => {{
+    ($left:expr, $right:literal $(,)?) => {{
         match (&$left, &$right) {
             (left_val, right_val) => {
-                if !(right_val.contains(left_val)) {
+                if !((right_val).contains(left_val)) {
                     // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
                     let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
 
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_one_ident(message, ::std::stringify!($left), &*left_val, ::std::option::Option::None))
+                } else {
+                    $crate::testing::TestResult::Ok
+                }
+            }
+        }
+    }};
+    ($left:expr, $right:expr $(,)?) => {{
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !((right_val).contains(left_val)) {
+                    // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
+
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                } else {
+                    $crate::testing::TestResult::Ok
+                }
+            }
+        }
+    }};
+    ($left:expr, $right:literal, $($arg:tt)+) => {{
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !((right_val).contains(left_val)) {
+                    // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
+                    let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_one_ident(message, ::std::stringify!($left), &*left_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -153,13 +254,13 @@ macro_rules! test_any {
     ($left:expr, $right:expr, $($arg:tt)+) => {{
         match (&$left, &$right) {
             (left_val, right_val) => {
-                if !(right_val.contains(left_val)) {
+                if !((right_val).contains(left_val)) {
                     // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
                     let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: !", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -168,7 +269,7 @@ macro_rules! test_any {
     }};
 }
 
-/// Tests that the expression is not any of the values in the slice (using [`PartialEq`]).
+/// Tests that the expression is not any of the values in the slice (using `.contains()` on the right expression).
 ///
 /// This macro returns a [`TestResult`] and hints the compiler that the failure
 /// case is unlikely to happen.
@@ -192,14 +293,14 @@ macro_rules! test_not_any {
     ($left:expr, $right:expr $(,)?) => {{
         match (&$left, &$right) {
             (left_val, right_val) => {
-                if (right_val.contains(left_val)) {
+                if ((right_val).contains(left_val)) {
                     // "[src/main:2:5]: Test failed: [5, 10, 15].contains(unk1)"
                     let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
 
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -209,13 +310,13 @@ macro_rules! test_not_any {
     ($left:expr, $right:expr, $($arg:tt)+) => {{
         match (&$left, &$right) {
             (left_val, right_val) => {
-                if (right_val.contains(left_val)) {
+                if ((right_val).contains(left_val)) {
                     // "[src/main:2:5]: Test failed: ![5, 10, 15].contains(unk1)"
                     let message = ::std::concat!('[', ::std::file!(), ':', ::std::line!(), ':', ::std::column!(), "]: Test failed: ", ::std::stringify!($right), ".contains(", ::std::stringify!($left), ')');
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -256,7 +357,7 @@ macro_rules! test_le {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -272,7 +373,7 @@ macro_rules! test_le {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -313,7 +414,7 @@ macro_rules! test_ge {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::None))
                 } else {
                     $crate::testing::TestResult::Ok
                 }
@@ -329,7 +430,7 @@ macro_rules! test_ge {
                     // The reborrows below are intentional. Without them, the stack slot for the
                     // borrow is initialized even before the values are compared, leading to a
                     // noticeable slow down.
-                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
+                    $crate::testing::TestResult::Err($crate::testing::TestError::test_failed_two_idents(message, ::std::stringify!($left), &*left_val, ::std::stringify!($right), &*right_val, ::std::option::Option::Some(::std::format_args!($($arg)+))))
                 } else {
                     $crate::testing::TestResult::Ok
                 }

@@ -1,5 +1,5 @@
 pub mod plumbing;
-use std::{borrow::Cow, ffi::OsStr, fmt::Display, ops::Deref};
+use std::{borrow::Cow, cmp::Ordering, ffi::OsStr, fmt::Display, ops::Deref};
 
 use clap::ValueEnum;
 use dotstar_toolkit_utils::{
@@ -293,10 +293,15 @@ impl UniqueGameId {
         platform: Platform::Nx,
         id: 0x032E_71C5,
     };
-    pub const NX2019: Self = Self {
+    pub const NX2019V1: Self = Self {
         game: Game::JustDance2019,
         platform: Platform::Nx,
         id: 0x57A7_053C,
+    };
+    pub const NX2019V2: Self = Self {
+        game: Game::JustDance2019,
+        platform: Platform::Nx,
+        id: 0xC781_A65B,
     };
     pub const NX2020: Self = Self {
         game: Game::JustDance2020,
@@ -318,6 +323,16 @@ impl UniqueGameId {
         platform: Platform::Nx,
         id: 0x1DDB_2268,
     };
+}
+
+impl PartialOrd for UniqueGameId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        // Order by game first, if games are the same order by ID
+        // A newer ID means a newer version of that game
+        self.game
+            .partial_cmp(&other.game)
+            .map(|order| order.then(self.id.cmp(&other.id)))
+    }
 }
 
 impl Display for UniqueGameId {

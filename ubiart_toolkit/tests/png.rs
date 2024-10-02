@@ -30,7 +30,7 @@ fn png_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 }
 
 fn png_parse_nx2019(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    Png::deserialize_with(&data, UniqueGameId::NX2019)?;
+    Png::deserialize_with(&data, UniqueGameId::NX2019V2)?;
     Ok(())
 }
 

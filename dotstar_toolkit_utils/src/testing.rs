@@ -2,11 +2,9 @@
 //! Contains functions like `assert!` but they return an `Error` instead of panicking.
 use std::{
     convert::Infallible,
-    fmt::Debug,
+    fmt::{Debug, Display, Formatter},
     ops::{ControlFlow, FromResidual, Try},
 };
-
-use thiserror::Error;
 
 /// The result of a test
 #[derive(Debug)]
@@ -118,20 +116,46 @@ impl Try for TestResult {
     }
 }
 
-#[derive(Error, Debug)]
 pub enum TestError {
-    #[error("{0}")]
+    // #[error("{0}")]
     Normal(String),
-    #[error("Both tests failed:\n1: {left}\n2: {right}")]
+    // #[error("Both tests failed:\n1: {left}\n2: {right}")]
     And { left: Box<Self>, right: Box<Self> },
-    #[error("One of the tests failed:\n{0}")]
+    // #[error("One of the tests failed:\n{0}")]
     Or(Box<Self>),
+}
+
+impl std::error::Error for TestError {}
+
+impl Display for TestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            TestError::Normal(error) => f.write_str(&error)?,
+            TestError::And { left, right } => {
+                f.write_str("Both tests failed:\n1: ")?;
+                f.write_str(&left.to_string())?;
+                f.write_str("\n2: ")?;
+                f.write_str(&right.to_string())?;
+            }
+            TestError::Or(error) => {
+                f.write_str("One of the tests failed:\n")?;
+                f.write_str(&error.to_string())?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Debug for TestError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        <Self as Display>::fmt(self, f)
+    }
 }
 
 impl TestError {
     #[inline(never)]
     #[cold]
-    pub fn test_failed<T, U>(
+    pub fn test_failed_two_idents<T, U>(
         message: &'static str,
         left_ident: &'static str,
         left_val: &T,
@@ -143,34 +167,72 @@ impl TestError {
         T: std::fmt::Debug + ?Sized,
         U: std::fmt::Debug + ?Sized,
     {
-        Self::test_failed_inner(
+        Self::test_failed_inner_two_idents(
             message,
-            &left_val,
             left_ident,
-            &right_val,
+            &left_val,
             right_ident,
+            &right_val,
             args,
         )
     }
 
-    fn test_failed_inner(
+    fn test_failed_inner_two_idents(
         message: &'static str,
-        left_val: &dyn std::fmt::Debug,
         left_ident: &'static str,
-        right_val: &dyn std::fmt::Debug,
+        left_val: &dyn std::fmt::Debug,
         right_ident: &'static str,
+        right_val: &dyn std::fmt::Debug,
         args: Option<std::fmt::Arguments<'_>>,
     ) -> Self {
         let msg = match args {
             Some(args) => format!(
                 r#"{message}: {args}
 {left_ident}: {left_val:?}
-{right_ident}: {right_val:?}"#
+{right_ident}: {right_val:?}
+"#
             ),
             None => format!(
                 r#"{message}
 {left_ident}: {left_val:?}
-{right_ident}: {right_val:?}"#
+{right_ident}: {right_val:?}
+"#
+            ),
+        };
+
+        Self::Normal(msg)
+    }
+
+    #[inline(never)]
+    #[cold]
+    pub fn test_failed_one_ident<T>(
+        message: &'static str,
+        ident: &'static str,
+        val: &T,
+        args: Option<std::fmt::Arguments<'_>>,
+    ) -> Self
+    where
+        T: std::fmt::Debug + ?Sized,
+    {
+        Self::test_failed_inner_one_ident(message, ident, &val, args)
+    }
+
+    fn test_failed_inner_one_ident(
+        message: &'static str,
+        ident: &'static str,
+        val: &dyn std::fmt::Debug,
+        args: Option<std::fmt::Arguments<'_>>,
+    ) -> Self {
+        let msg = match args {
+            Some(args) => format!(
+                r#"{message}: {args}
+{ident}: {val:?}
+"#
+            ),
+            None => format!(
+                r#"{message}
+{ident}: {val:?}
+"#
             ),
         };
 

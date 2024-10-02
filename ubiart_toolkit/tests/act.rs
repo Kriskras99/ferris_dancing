@@ -30,8 +30,13 @@ fn act_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
     Ok(())
 }
 
-fn act_parse_nx2019(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    Actor::deserialize_with(&data, UniqueGameId::NX2019)?;
+fn act_parse_nx2019v1(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Actor::deserialize_with(&data, UniqueGameId::NX2019V1)?;
+    Ok(())
+}
+
+fn act_parse_nx2019v2(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Actor::deserialize_with(&data, UniqueGameId::NX2019V2)?;
     Ok(())
 }
 
@@ -71,9 +76,15 @@ datatest_stable::harness!(
     act_parse_nx2018,
     "files/nx2018",
     r".*/act.ckd/.*",
-    act_parse_nx2019,
+    act_parse_nx2019v1, // 284652.419607  286387.428726  287166.431935
     "files/nx2019",
-    r".*/act.ckd/.*",
+    r"28[467][0-9]{3}\.[0-9]{6}/act.ckd/.*",
+    act_parse_nx2019v2, // 288327.434641  290003.438003  290004.438004  290809.446516  292406.455024
+    "files/nx2019",
+    r"2((88)|(9[0-9]))[0-9]{3}\.[0-9]{6}/act.ckd/.*",
+    // act_parse_nx2019v2,
+    // "files/nx2019",
+    // r"29[0-9]{4}\.[0-9]{6}/act.ckd/.*",
     act_parse_nx2020,
     "files/nx2020",
     r".*/act.ckd/.*",

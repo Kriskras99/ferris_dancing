@@ -147,9 +147,10 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
             Cow::Borrowed("enginedata/actortemplates/"),
             Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
         )?,
-        unk1: 0,
-        unk2: 0x3F80_0000,
-        unk2_5: 0x3F80_0000,
+        unk1: 0.0,
+        unk2: 1.0,
+        unk2_5: 1.0,
+        unk3_5: 0,
         components: vec![cooked::act::Component::MaterialGraphicComponent(
             cooked::act::MaterialGraphicComponent {
                 // TODO: Check values!

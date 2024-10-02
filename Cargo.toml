@@ -36,8 +36,8 @@ debug = "line-tables-only"
 #codegen-backend = "cranelift"
 #[profile.dev.package.ubiart_toolkit]
 #opt-level = 3
-[profile.dev.package.dotstar_toolkit_utils]
-opt-level = 3
+#[profile.dev.package.dotstar_toolkit_utils]
+#opt-level = 3
 
 # [profile.dev.package."*"]
 # opt-level = 3
@@ -70,18 +70,18 @@ struct_field_names = "allow"
 
 [workspace.dependencies]
 aes = { version = "0.8.4", default-features = false }
-anyhow = { version = "1.0.87", default-features = false, features = ["std", "backtrace"] }
+anyhow = { version = "1.0.89", default-features = false, features = ["std", "backtrace"] }
 arbitrary = { version = "1.3.2", default-features = false, features = ["derive"] }
 bindgen = { version = "0.70.1", default-features = false}
 bitflags = { version = "2.6.0", default-features = false, features = ["std"] }
 bit-vec = { version = "0.8.0", default-features = false }
 cbc = { version = "0.1.2", default-features = false, features = ["std", "block-padding"] }
 cipher = { version = "0.4.4", default-features = false, features = ["std"] }
-clap = { version = "4.5.16", default-features = false, features = ["std", "help", "usage", "suggestions", "derive"] }
+clap = { version = "4.5.19", default-features = false, features = ["std", "help", "usage", "suggestions", "derive"] }
 crossbeam = { version = "0.8.4", default-features = false, features = ["std", "crossbeam-channel"] }
 datatest-stable = { version = "0.2.9", default-features = false }
 dotstar_toolkit_utils = { path = "dotstar_toolkit_utils" }
-flate2 = { version = "1.0.33", default-features = false, features = ["rust_backend"] }
+flate2 = { version = "1.0.34", default-features = false, features = ["rust_backend"] }
 gc_adpcm = { path = "gc_adpcm" }
 gtx = { path = "gtx" }
 hash32 = { version = "0.3.1", default-features = false }
@@ -89,7 +89,7 @@ hipstr= { path = "hipstr", default-features = false, features = ["std", "serde"]
 hound = { version = "3.5.1", default-features = false }
 image = { version = "0.25.2", default-features = false, features = ["png"] }
 itertools = { version = "0.13.0", default-features = false }
-memmap2 = { version = "0.9.4", default-features = false, features = ["stable_deref_trait"] }
+memmap2 = { version = "0.9.5", default-features = false, features = ["stable_deref_trait"] }
 nx_opus = { path = "nx_opus" }
 nohash-hasher = { version = "0.2.0", default-features = false, features = ["std"] }
 ogg = { version = "0.9.1", default-features = false }
@@ -97,19 +97,20 @@ opus = { version = "0.3.0", default-features = false }
 ownable = { version = "0.6.2", default-features = false, features = ["std"]}
 path-clean = { version = "1.0.1", default-features = false }
 positioned-io = { version = "0.3.3", default-features = false }
-quick-xml = { version = "0.36.1", default-features = false, features = ["serialize", "overlapped-lists"] }
-regex = { version = "1.10.6", default-features = false, features = ["std", "perf"] }
+quick-xml = { version = "0.36.2", default-features = false, features = ["serialize", "overlapped-lists"] }
+regex = { version = "1.11.0", default-features = false, features = ["std", "perf"] }
 rgbcx = { path = "rgbcx" }
 rgbcx-sys = { path = "rgbcx-sys" }
 rgbcx-rs = { path = "rgbcx-rs" }
 serde = { version = "1.0.210", default-features = false, features = ["std", "derive"] }
-serde_json = { version = "1.0.127", default-features = false, features = ["std"] }
-serde_with = { version = "3.9.0", default-features = false, features = ["std", "macros"] }
-simdutf8 = { version = "0.1.4", default-features = false, features = ["std", "aarch64_neon"]}
+serde_json = { version = "1.0.128", default-features = false, features = ["std"] }
+serde_with = { version = "3.10.0", default-features = false, features = ["std", "macros"] }
+simd-json = { version = "0.14.0", default-features = false, features = ["runtime-detection", "swar-number-parsing"]}
+simdutf8 = { version = "0.1.5", default-features = false, features = ["std", "aarch64_neon"]}
 stable_deref_trait = { version = "1.2.0", default-features = false, features = ["std"] }
 tegra_swizzle = { version = "0.4.0", default-features = false, features = ["std"]}
 texpresso = { version = "2.0.1", default-features = false }
-thiserror = { version = "1.0.63", default-features = false }
+thiserror = { version = "1.0.64", default-features = false }
 tracing = { version = "0.1.40", default-features = false, features = ["std", "attributes"] }
 tracing-subscriber = { version = "0.3.18", features = ["std", "fmt", "ansi", "local-time", "time", "env-filter"] }
 ubiart_toolkit = { path = "ubiart_toolkit" }

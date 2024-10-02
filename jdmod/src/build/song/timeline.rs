@@ -329,9 +329,10 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
             Cow::Owned(map_path.join("timeline/").into_string()),
             Cow::Owned(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
         )?,
-        unk1: 0,
-        unk2: 0x3F80_0000,
-        unk2_5: 0x3F80_0000,
+        unk1: 0.0,
+        unk2: 1.0,
+        unk2_5: 1.0,
+        unk3_5: 0,
         components: vec![cooked::act::Component::TapeCaseComponent],
     };
 
