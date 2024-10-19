@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 
+use superstruct::superstruct;
 use ubiart_toolkit_shared_types::Color;
 
 use crate::utils::{errors::ParserError, SplitPath};
@@ -32,6 +33,7 @@ impl Eq for Actor<'_> {}
 pub enum Component<'a> {
     AutodanceComponent,
     BeatPulseComponent(BeatPulseComponent<'a>),
+    BlockFlowComponent,
     BoxInterpolatorComponent(BoxInterpolatorComponent),
     CameraGraphicComponent(CameraGraphicComponent<'a>),
     Carousel(Carousel<'a>),
@@ -40,6 +42,7 @@ pub enum Component<'a> {
     CreditsComponent(CreditsComponent<'a>),
     FixedCameraComponent(FixedCameraComponent),
     FXControllerComponent(FXControllerComponent),
+    GoldMoveComponent,
     MasterTape,
     MaterialGraphicComponent(MaterialGraphicComponent<'a>),
     PictoComponent,
@@ -60,6 +63,7 @@ pub enum Component<'a> {
     UIWidgetGroupHUDAutodanceRecorder(UIWidgetGroupHUDAutodanceRecorder<'a>),
     UIWidgetGroupHUDLyrics(UIWidgetGroupHUDLyrics<'a>),
     UIWidgetGroupHUDPauseIcon(UIWidgetGroupHUDPauseIcon<'a>),
+    Unknown77F7D66C(Unknown77F7D66C<'a>),
     ViewportUIComponent(ViewportUIComponent),
     AvatarDescComponent,
     SkinDescComponent,
@@ -76,6 +80,8 @@ impl Component<'_> {
             Component::AutodanceComponent => 0x67B8_BB77,
             // JD_BeatPulseComponent
             Component::BeatPulseComponent(_) => 0x7184_37A8,
+            // JD_BlockFlowComponent
+            Component::BlockFlowComponent => 0x8DA9_E375,
             // BoxInterpolatorComponent
             Component::BoxInterpolatorComponent(_) => 0xF513_60DA,
             // CameraGraphicComponent
@@ -90,6 +96,8 @@ impl Component<'_> {
             Component::FixedCameraComponent(_) => 0x3D5D_EBA2,
             // FXControllerComponent
             Component::FXControllerComponent(_) => 0x8D4F_FFB6,
+            // JD_GoldMoveComponent
+            Component::GoldMoveComponent => 0x5632_1EA5,
             // MasterTape
             Component::MasterTape => 0x677B_269B,
             // MaterialGraphicComponent
@@ -132,6 +140,7 @@ impl Component<'_> {
             Component::UIWidgetGroupHUDLyrics(_) => 0xF22C_9426,
             // JD_UIWidgetGroupHUD_PauseIcon
             Component::UIWidgetGroupHUDPauseIcon(_) => 0x4866_6BB2,
+            Component::Unknown77F7D66C(_) => 0x77F7_D66C,
             // ViewportUIComponent
             Component::ViewportUIComponent(_) => 0x6990_834C,
             // JD_AvatarDescComponent
@@ -438,19 +447,57 @@ pub struct TextureGraphicComponent<'a> {
     pub material: GFXMaterialSerializable<'a>,
 }
 
+#[superstruct(
+    variants(V16, V1718, V1922),
+    variant_attributes(derive(Debug, PartialEq, Clone))
+)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct UICarousel<'a> {
+    #[superstruct(only(V16))]
+    pub acceleration: f32,
+    #[superstruct(only(V16))]
+    pub deceleration: f32,
+    #[superstruct(only(V16))]
+    pub min_speed: f32,
+    #[superstruct(only(V16))]
+    pub max_speed: f32,
     pub main_anchor: u32,
+    #[superstruct(only(V16))]
+    pub min_deceleration_start_ratio: f32,
+    #[superstruct(only(V16))]
+    pub max_deceleration_start_ratio: f32,
     pub validate_action: &'static str,
     pub carousel_data_id: Cow<'a, str>,
-    // Only in nx2018 and earlier
-    pub min_nb_items_to_loop: Option<u32>,
-    // Only in nx2018 and earlier
-    pub force_loop: Option<u32>,
+    #[superstruct(only(V16))]
+    pub time_between_step: f32,
+    #[superstruct(only(V16))]
+    pub sound_notif_go_next: Cow<'a, str>,
+    #[superstruct(only(V16))]
+    pub sound_notif_go_prev: Cow<'a, str>,
+    #[superstruct(only(V16, V1718))]
+    pub force_loop: u32,
+    #[superstruct(only(V16))]
+    pub focus_anims_on_disabled_items: u32,
     pub manage_carousel_history: u32,
+    #[superstruct(only(V16, V1718))]
+    pub min_nb_items_to_loop: u32,
+    #[superstruct(only(V16))]
+    pub auto_scroll: u32,
+    #[superstruct(only(V16))]
+    pub auto_scroll_pause_time: f32,
+    #[superstruct(only(V16))]
+    pub auto_scroll_max_speed_ratio: f32,
+    #[superstruct(only(V1718, V1922))]
     pub initial_behaviour: &'static str,
     pub sound_context: Cow<'a, str>,
+    #[superstruct(only(V1718, V1922))]
     pub behaviours: Vec<CarouselBehaviour<'a>>,
+    #[superstruct(only(V16))]
+    pub mode: i32,
+    #[superstruct(only(V16))]
+    pub next_actions: Vec<&'static str>,
+    #[superstruct(only(V16))]
+    pub prev_actions: Vec<&'static str>,
     pub anim_items_desc: CarouselAnimItemsDesc,
 }
 
@@ -539,6 +586,12 @@ pub struct UIWidgetGroupHUDPauseIcon<'a> {
     pub model_name: &'static str,
     pub flag: Cow<'a, str>,
     pub elements: Vec<UIWidgetElementDesc<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Unknown77F7D66C<'a> {
+    pub mapname: Cow<'a, str>,
+    pub unk5: Cow<'a, [u8]>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

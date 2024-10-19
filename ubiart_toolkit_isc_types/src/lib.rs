@@ -687,7 +687,7 @@ pub struct PictoTimeline<'a> {
     #[serde(rename = "@ShiftingPositionSextet")]
     pub shifting_position_sextet: (f32, f32, f32),
     #[serde(rename = "@PictoTrackOffset")]
-    pub picto_track_offset: Cow<'a, str>,
+    pub picto_track_offset: u32,
     #[serde(rename = "@PictoScale")]
     pub picto_scale: (f32, f32),
 }
