@@ -35,7 +35,7 @@ pub enum Component<'a> {
     BeatPulseComponent(BeatPulseComponent<'a>),
     BlockFlowComponent,
     BoxInterpolatorComponent(BoxInterpolatorComponent),
-    CameraGraphicComponent(CameraGraphicComponent<'a>),
+    CameraGraphicComponent(Box<CameraGraphicComponent<'a>>),
     Carousel(Carousel<'a>),
     ClearColorComponent(ClearColorComponent),
     ConvertedTmlTapeComponent(ConvertedTmlTapeComponent<'a>),
@@ -51,7 +51,7 @@ pub enum Component<'a> {
     PleoTextureGraphicComponent(MaterialGraphicComponent<'a>),
     PropertyPatcher,
     RegistrationComponent(RegistrationComponent<'a>),
-    SingleInstanceMesh3DComponent(SingleInstanceMesh3DComponent<'a>),
+    SingleInstanceMesh3DComponent(Box<SingleInstanceMesh3DComponent<'a>>),
     SongDatabaseComponent,
     SongDescComponent,
     SoundComponent,
@@ -133,7 +133,7 @@ impl Component<'_> {
             // UITextBox
             Component::UITextBox(_) => 0xD10C_BEED,
             // JD_UIWidgetGroupHUD_Lyrics
-            Component::UIWidgetGroupHUD(_) => 0x1528D94A,
+            Component::UIWidgetGroupHUD(_) => 0x1528_D94A,
             // JD_UIWidgetGroupHUD_AutodanceRecorder
             Component::UIWidgetGroupHUDAutodanceRecorder(_) => 0x9F87_350C,
             // JD_UIWidgetGroupHUD_Lyrics
@@ -173,7 +173,7 @@ pub struct AaBb {
     pub max: (f32, f32),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BeatPulseComponent<'a> {
     pub text: Cow<'a, str>,
     pub loc_id: u32,
@@ -228,7 +228,7 @@ pub struct Carousel<'a> {
     pub anim_items_desc: CarouselAnimItemsDesc,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CarouselAnimItemsDesc {
     pub enable: u32,
     pub show_items_at_init: u32,
@@ -275,7 +275,7 @@ pub struct ClearColorComponent {
     pub clear_back_light_color: Color,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConvertedTmlTapeComponent<'a> {
     pub map_name: Cow<'a, str>,
 }
@@ -303,7 +303,7 @@ pub struct FixedCameraComponent {
     pub start_as_main_cam: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FXControllerComponent {
     pub allow_bus_mix_events: u32,
     pub allow_music_events: u32,
@@ -326,7 +326,7 @@ pub struct GFXMaterialSerializableParam {
     pub reflector_factor: f32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GFXMaterialTexturePathSet<'a> {
     pub diffuse: SplitPath<'a>,
     pub back_light: SplitPath<'a>,
@@ -346,7 +346,7 @@ pub struct GFXPrimitiveParam {
 }
 
 /// Data for textures
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MaterialGraphicComponent<'a> {
     pub files: [SplitPath<'a>; 11],
     pub unk11_5: u32,
@@ -391,7 +391,7 @@ pub struct PictoTimeline<'a> {
 }
 
 /// The data for the main video player
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PleoComponent<'a> {
     /// The filename of the video to play
     pub video: SplitPath<'a>,
@@ -400,7 +400,7 @@ pub struct PleoComponent<'a> {
     pub channel_id: Option<Cow<'a, str>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RegistrationComponent<'a> {
     pub tag: &'static str,
     pub user_data: Cow<'a, str>,
@@ -423,7 +423,7 @@ pub struct SingleInstanceMesh3DComponent<'a> {
     pub animation_player_mode: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SoundComponent;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -532,7 +532,7 @@ pub struct UITextBox<'a> {
     pub overriding_anchor: i32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetElementDesc<'a> {
     pub element_path: SplitPath<'a>,
     pub name: Cow<'a, str>,
@@ -541,7 +541,7 @@ pub struct UIWidgetElementDesc<'a> {
     pub bind_mode: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetGroupHUD<'a> {
     pub text: Cow<'a, str>,
     pub loc_id: u32,
@@ -570,7 +570,7 @@ pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetGroupHUDLyrics<'a> {
     pub text: Cow<'a, str>,
     pub loc_id: u32,
@@ -579,7 +579,7 @@ pub struct UIWidgetGroupHUDLyrics<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetGroupHUDPauseIcon<'a> {
     pub text: Cow<'a, str>,
     pub loc_id: u32,
@@ -588,7 +588,7 @@ pub struct UIWidgetGroupHUDPauseIcon<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unknown77F7D66C<'a> {
     pub mapname: Cow<'a, str>,
     pub unk5: Cow<'a, [u8]>,

@@ -12,7 +12,18 @@ use tracing::{instrument, trace};
 use ubiart_toolkit_json_types::Empty;
 use ubiart_toolkit_shared_types::Color;
 
-use super::*;
+use super::{
+    AlphaClip, BezierCurveFloat, BezierCurveFloatConstant, BezierCurveFloatLinear,
+    BezierCurveFloatMulti, BezierCurveFloatValue, Clip, ColorClip, CommunityDancerClip, FXClip,
+    GameplayEventClip, GoldEffectClip, HideUserInterfaceClip, KaraokeClip, KeyFloat,
+    MaterialGraphicDiffuseAlphaClip, MaterialGraphicDiffuseColorClip,
+    MaterialGraphicEnableLayerClip, MaterialGraphicUVRotationClip, MaterialGraphicUVScaleClip,
+    MaterialGraphicUVScrollClip, MaterialGraphicUVTranslationClip, MotionClip,
+    MotionPlatformSpecific, PictogramClip, ProportionClip, RotationClip, SizeClip, SlotClip,
+    SoundSetClip, SpawnActorClip, StringOrId, Tape, TapeLauncherClip, TapeReferenceClip,
+    TargetActor, TextClip, TranslationClip, Unknown59FCC733Clip, Unknown5C944B01Clip,
+    UnknownCBB7C029Clip,
+};
 use crate::utils::{Game, SplitPath, UniqueGameId};
 
 impl<'a> BinaryDeserialize<'a> for Tape<'a> {

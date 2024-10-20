@@ -45,25 +45,25 @@ fn main() {
             .data
             .iter()
             .map(|point| point.0)
-            .reduce(|a, b| a.min(b))
+            .reduce(f32::min)
             .unwrap();
         let x_max = msm
             .data
             .iter()
             .map(|point| point.0)
-            .reduce(|a, b| a.max(b))
+            .reduce(f32::max)
             .unwrap();
         let y_min = msm
             .data
             .iter()
             .map(|point| point.1)
-            .reduce(|a, b| a.min(b))
+            .reduce(f32::min)
             .unwrap();
         let y_max = msm
             .data
             .iter()
             .map(|point| point.1)
-            .reduce(|a, b| a.max(b))
+            .reduce(f32::max)
             .unwrap();
         println!("x_min: {} (0x{:x})", x_min, x_min.to_bits());
         println!("x_max: {} (0x{:x})", x_max, x_max.to_bits());

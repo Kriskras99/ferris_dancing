@@ -46,7 +46,7 @@ impl<'fs> IpkFilesystem<'fs> {
     }
 }
 
-impl<'fs> VirtualFileSystem for IpkFilesystem<'fs> {
+impl VirtualFileSystem for IpkFilesystem<'_> {
     #[allow(
         clippy::significant_drop_in_scrutinee,
         reason = "Guard is needed in the entire match"

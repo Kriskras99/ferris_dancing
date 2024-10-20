@@ -15,7 +15,7 @@ impl BundleId {
     /// # Panics
     /// Will panic if the increment would overflow the bundle id
     #[must_use]
-    pub fn increment(&self) -> Self {
+    pub const fn increment(&self) -> Self {
         Self(
             self.0
                 .checked_add(1)

@@ -23,9 +23,10 @@ fn main() {
     let have_string = cli.string.is_some();
     let total = u8::from(is_pipe) + u8::from(have_file) + u8::from(have_string);
 
-    if total != 1 {
-        panic!("You need to do only one of the following: use --file, specify a string, or pipe to stdin!");
-    }
+    assert_eq!(
+        total, 1,
+        "Only do one of the following: use --file, specify a string, or pipe to stdin!"
+    );
 
     if let Some(file) = cli.file {
         let file = File::open(file).unwrap();

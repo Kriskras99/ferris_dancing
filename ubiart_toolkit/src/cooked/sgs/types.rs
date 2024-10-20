@@ -90,7 +90,7 @@ pub struct MapSceneConfig<'a> {
     pub phone_image: Option<Cow<'a, str>>,
 }
 
-impl<'a> Default for MapSceneConfig<'a> {
+impl Default for MapSceneConfig<'_> {
     fn default() -> Self {
         Self {
             class: None,
@@ -175,6 +175,6 @@ pub struct CoverflowSong<'a> {
     pub cover_path: Cow<'a, str>,
 }
 
-impl<'a> CoverflowSong<'a> {
+impl CoverflowSong<'_> {
     pub const CLASS: &'static str = "CoverflowSong";
 }

@@ -13,7 +13,7 @@ pub fn create_vec(loc8: Loc8) -> Result<Vec<u8>, WriteError> {
     Ok(vec)
 }
 
-impl<'a> BinarySerialize for Loc8<'a> {
+impl BinarySerialize for Loc8<'_> {
     type Ctx = ();
     type Input = Self;
 

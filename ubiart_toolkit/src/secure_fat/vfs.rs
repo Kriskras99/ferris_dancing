@@ -93,7 +93,7 @@ impl<'f> SfatFilesystem<'f> {
     }
 }
 
-impl<'fs> VirtualFileSystem for SfatFilesystem<'fs> {
+impl VirtualFileSystem for SfatFilesystem<'_> {
     fn open<'f>(&'f self, path: &VirtualPath) -> std::io::Result<VirtualFile<'f>> {
         let mut path = path.clean();
         if path.as_str().starts_with('/') {

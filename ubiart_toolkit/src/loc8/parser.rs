@@ -73,6 +73,6 @@ impl BinaryDeserialize<'_> for Language {
         _ctx: (),
     ) -> Result<Self, ReadError> {
         let value: u32 = reader.read_at::<u32be>(position)?;
-        Language::try_from(value).map_err(|e| ReadError::custom(e.to_string()))
+        Self::try_from(value).map_err(|e| ReadError::custom(e.to_string()))
     }
 }

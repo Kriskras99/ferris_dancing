@@ -128,9 +128,9 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
             // CameraGraphicComponent
             0xC760_4FA1 => {
                 *position -= 4; // the deserialize implementation also checks the magic
-                Component::CameraGraphicComponent(
+                Component::CameraGraphicComponent(Box::new(
                     reader.read_at_with::<CameraGraphicComponent>(position, ugi)?,
-                )
+                ))
             }
             // ClearColorComponent
             0xAEBB_218B => {
@@ -202,9 +202,9 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
             // SingleInstanceMesh3DComponent
             0x53E3_2AF7 => {
                 *position -= 4; // the deserialize implementation also checks the magic
-                Component::SingleInstanceMesh3DComponent(
+                Component::SingleInstanceMesh3DComponent(Box::new(
                     reader.read_at_with::<SingleInstanceMesh3DComponent>(position, ugi)?,
-                )
+                ))
             }
             // JD_SongDatabaseComponent
             0x4055_79FB => Component::SongDatabaseComponent,
@@ -558,10 +558,10 @@ impl<'de> BinaryDeserialize<'de> for CarouselBehaviour<'de> {
         let mut temp_position = *position;
         let magic = reader.read_at::<u32be>(&mut temp_position)?;
         match magic {
-            0xD6F6A73E => Ok(CarouselBehaviour::Navigation(
+            0xD6F6_A73E => Ok(CarouselBehaviour::Navigation(
                 reader.read_at_with::<CarouselBehaviourNavigation>(position, ctx)?,
             )),
-            0xB45CB89D => Ok(CarouselBehaviour::GoToElement(
+            0xB45C_B89D => Ok(CarouselBehaviour::GoToElement(
                 reader.read_at_with::<CarouselBehaviourGoToElement>(position, ctx)?,
             )),
             _ => Err(ReadError::custom(format!("Unknown magic: 0x{magic:08x}"))),
@@ -579,7 +579,7 @@ impl<'de> BinaryDeserialize<'de> for CarouselBehaviourNavigation<'de> {
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq!(magic, 0xD6F6A73E)?;
+        test_eq!(magic, 0xD6F6_A73E)?;
         let key = reader.read_at::<InternedString>(position)?;
         let sound_context = reader.read_len_string_at::<u32be>(position)?;
         let sound_notif_go_next = reader.read_len_string_at::<u32be>(position)?;
@@ -633,7 +633,7 @@ impl<'de> BinaryDeserialize<'de> for CarouselBehaviourGoToElement<'de> {
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq!(magic, 0xB45CB89D)?;
+        test_eq!(magic, 0xB45C_B89D)?;
         let key = reader.read_at::<InternedString>(position)?;
         let sound_context = reader.read_len_string_at::<u32be>(position)?;
         let sound_notif_go_next = reader.read_len_string_at::<u32be>(position)?;
@@ -1518,7 +1518,7 @@ impl<'de> BinaryDeserialize<'de> for UICarouselV1922<'de> {
         let unk2 = reader.read_at::<u32be>(position)?;
         test_eq!(unk2, 0x7FFF_FFFF)?;
 
-        let anim_items_desc = Some(reader.read_at_with::<CarouselAnimItemsDesc>(position, ugi)?);
+        let anim_items_desc = reader.read_at_with::<CarouselAnimItemsDesc>(position, ugi)?;
         let unk8 = reader.read_at::<u32be>(position)?;
         test_any!(unk8, [0x0, 0x7, 0x9])?;
         let unk9 = reader.read_at::<u32be>(position)?;
@@ -1528,9 +1528,6 @@ impl<'de> BinaryDeserialize<'de> for UICarouselV1922<'de> {
             let unk10 = reader.read_at::<u32be>(position)?;
             test_any!(unk10, [0x4000_0000, 0x9000_0000])?;
         }
-
-        assert!(anim_items_desc.is_some());
-        let anim_items_desc = anim_items_desc.unwrap_or_else(|| unreachable!());
 
         Ok(Self {
             main_anchor,
@@ -1671,8 +1668,6 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
         let overriding_anchor = reader.read_at::<i32be>(position)?;
         test_any!(overriding_anchor, -1..=8)?;
         Ok(UITextBox {
-            raw_text,
-            auto_scroll_font_effect_name,
             style,
             overriding_font_size,
             offset,
@@ -1681,6 +1676,7 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
             max_width,
             max_height,
             area,
+            raw_text,
             use_lines_max_count,
             lines_max_count,
             loc_id,
@@ -1688,6 +1684,7 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
             auto_scroll_speed_y,
             auto_scroll_wait_time,
             auto_scroll_wait_time_y,
+            auto_scroll_font_effect_name,
             auto_scroll_reset_on_inactive,
             scroll_once,
             overriding_shadow_color,
@@ -1736,7 +1733,7 @@ impl<'de> BinaryDeserialize<'de> for UIWidgetGroupHUD<'de> {
         ugi: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
-        test_eq!(magic, 0x1528D94A)?;
+        test_eq!(magic, 0x1528_D94A)?;
         let text = reader.read_len_string_at::<u32be>(position)?;
         let loc_id = reader.read_at::<u32be>(position)?;
         let elements = reader

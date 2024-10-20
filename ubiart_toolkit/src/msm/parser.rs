@@ -121,7 +121,7 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
         test_any!(unk15, -115.59964..=54.538467)?;
 
         let size = (reader.len()? - *position) / 4;
-        assert!(size % 2 == 0);
+        assert_eq!(size % 2, 0, "Size should be a multiple of two");
 
         if unk13 == 0 {
             test_eq!(u64::from(unk11), size / 2)?;
