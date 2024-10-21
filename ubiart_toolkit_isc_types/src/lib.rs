@@ -105,7 +105,7 @@ impl Default for Scene<'_> {
     }
 }
 
-impl<'a> Scene<'a> {
+impl Scene<'_> {
     /// Get an `SubSceneActor` from `self.actors` matching `userfriendly`
     pub fn get_subscene_by_userfriendly(
         &self,
@@ -2483,8 +2483,8 @@ pub struct OutlinedMaskMaterialParams {
 impl Default for OutlinedMaskMaterialParams {
     fn default() -> Self {
         Self {
-            mask_color: Default::default(),
-            outline_color: Default::default(),
+            mask_color: Color::default(),
+            outline_color: Color::default(),
             thickness: 1.0,
         }
     }

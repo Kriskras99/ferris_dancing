@@ -179,6 +179,7 @@ macro_rules! test_ne {
 }
 
 /// Tests that the left expression is any of the values in the right expression.
+///
 /// The right expression can be anything that results in an item that has a `.contains()` function.
 /// For example, slices, [`Vec`]s, ranges, ...
 ///

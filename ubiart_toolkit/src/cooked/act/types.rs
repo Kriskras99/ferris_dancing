@@ -35,6 +35,7 @@ pub enum Component<'a> {
     BeatPulseComponent(BeatPulseComponent<'a>),
     BlockFlowComponent,
     BoxInterpolatorComponent(BoxInterpolatorComponent),
+    CameraFeedComponent(CameraFeedComponent),
     CameraGraphicComponent(Box<CameraGraphicComponent<'a>>),
     Carousel(Carousel<'a>),
     ClearColorComponent(ClearColorComponent),
@@ -57,6 +58,7 @@ pub enum Component<'a> {
     SoundComponent,
     TapeCaseComponent,
     TextureGraphicComponent(TextureGraphicComponent<'a>),
+    TexturePatcherComponent(TexturePatcherComponent<'a>),
     UICarousel(UICarousel<'a>),
     UITextBox(UITextBox<'a>),
     UIWidgetGroupHUD(UIWidgetGroupHUD<'a>),
@@ -64,6 +66,10 @@ pub enum Component<'a> {
     UIWidgetGroupHUDLyrics(UIWidgetGroupHUDLyrics<'a>),
     UIWidgetGroupHUDPauseIcon(UIWidgetGroupHUDPauseIcon<'a>),
     Unknown77F7D66C(Unknown77F7D66C<'a>),
+    UnknownA6E4EFBA(UnknownA6E4EFBA),
+    Unknown2CB3C8E8(Unknown2CB3C8E8),
+    UnknownA97634C7(UnknownA97634C7),
+    Unknown8C76D717,
     ViewportUIComponent(ViewportUIComponent),
     AvatarDescComponent,
     SkinDescComponent,
@@ -84,6 +90,8 @@ impl Component<'_> {
             Component::BlockFlowComponent => 0x8DA9_E375,
             // BoxInterpolatorComponent
             Component::BoxInterpolatorComponent(_) => 0xF513_60DA,
+            // JD_CameraFeedComponent
+            Component::CameraFeedComponent(_) => 0x499C_BAA4,
             // CameraGraphicComponent
             Component::CameraGraphicComponent(_) => 0xC760_4FA1,
             // ClearColorComponent
@@ -128,6 +136,8 @@ impl Component<'_> {
             Component::TapeCaseComponent => 0x231F_27DE,
             // TextureGraphicComponent
             Component::TextureGraphicComponent(_) => 0x7B48_A9AE,
+            // TexturePatcherComponent
+            Component::TexturePatcherComponent(_) => 0x6F32_8BC1,
             // UICarousel
             Component::UICarousel(_) => 0x8782_FE60,
             // UITextBox
@@ -141,6 +151,10 @@ impl Component<'_> {
             // JD_UIWidgetGroupHUD_PauseIcon
             Component::UIWidgetGroupHUDPauseIcon(_) => 0x4866_6BB2,
             Component::Unknown77F7D66C(_) => 0x77F7_D66C,
+            Component::UnknownA6E4EFBA(_) => 0xA6E4_EFBA,
+            Component::Unknown2CB3C8E8(_) => 0x2CB3_C8E8,
+            Component::UnknownA97634C7(_) => 0xA976_34C7,
+            Component::Unknown8C76D717 => 0x8C76_D717,
             // ViewportUIComponent
             Component::ViewportUIComponent(_) => 0x6990_834C,
             // JD_AvatarDescComponent
@@ -187,6 +201,9 @@ pub struct BoxInterpolatorComponent {
     pub inner_box: AaBb,
     pub outer_box: AaBb,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraFeedComponent;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraGraphicComponent<'a> {
@@ -346,26 +363,28 @@ pub struct GFXPrimitiveParam {
 }
 
 /// Data for textures
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MaterialGraphicComponent<'a> {
     pub files: [SplitPath<'a>; 11],
-    pub unk11_5: u32,
-    pub unk13: u32,
+    pub unk4: f32,
+    pub unk9: u32,
     /// Unknown value, 6 for tga with coach, 1 for tga without
-    pub unk14: u64,
-    pub unk15: u64,
-    pub unk26: u32,
+    pub anchor: i32,
+    pub unk11: f32,
+    pub unk12: f32,
+    pub old_anchor: i32,
 }
 
 impl Default for MaterialGraphicComponent<'static> {
     fn default() -> Self {
         Self {
             files: Default::default(),
-            unk11_5: 0x3F80_0000,
-            unk13: u32::MAX,
-            unk14: 1,
-            unk15: Default::default(),
-            unk26: 1,
+            unk4: 1.0,
+            unk9: u32::MAX,
+            anchor: 1,
+            unk11: 0.0,
+            unk12: 0.0,
+            old_anchor: 1,
         }
     }
 }
@@ -445,6 +464,12 @@ pub struct TextureGraphicComponent<'a> {
     pub sprite_index: u32,
     pub anchor: u32,
     pub material: GFXMaterialSerializable<'a>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TexturePatcherComponent<'a> {
+    pub unk1: SplitPath<'a>,
+    pub unk2: SplitPath<'a>,
 }
 
 #[superstruct(
@@ -588,11 +613,23 @@ pub struct UIWidgetGroupHUDPauseIcon<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Unknown77F7D66C<'a> {
-    pub mapname: Cow<'a, str>,
-    pub unk5: Cow<'a, [u8]>,
+    pub map_name: Cow<'a, str>,
+    pub jd_version: u32,
+    pub unk2: u32,
+    pub unk3: Cow<'a, [u8]>,
+    pub unk4: f32,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UnknownA6E4EFBA;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Unknown2CB3C8E8;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UnknownA97634C7;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ViewportUIComponent {

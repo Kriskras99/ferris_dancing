@@ -169,7 +169,7 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
                         Cow::Borrowed("multitexture_1layer.msh"),
                     )?,
                 ],
-                unk14: if tga.ends_with("_albumcoach.tga") || tga.contains("_coach_") {
+                anchor: if tga.ends_with("_albumcoach.tga") || tga.contains("_coach_") {
                     6
                 } else {
                     1

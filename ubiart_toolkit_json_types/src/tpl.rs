@@ -772,7 +772,7 @@ impl Default for MaterialGraphicComponent<'static> {
             angle_offset: Default::default(),
             blendmode: 2,
             materialtype: Default::default(),
-            self_illum_color: Default::default(),
+            self_illum_color: Color::default(),
             disable_light: Default::default(),
             force_disable_light: Default::default(),
             use_shadow: Default::default(),
@@ -988,8 +988,8 @@ impl Default for OutlinedMaskMaterialParams<'_> {
     fn default() -> Self {
         Self {
             class: Some(Self::CLASS),
-            mask_color: Default::default(),
-            outline_color: Default::default(),
+            mask_color: Color::default(),
+            outline_color: Color::default(),
             thickness: 1,
         }
     }

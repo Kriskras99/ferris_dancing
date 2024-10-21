@@ -189,6 +189,11 @@ pub fn import_vfs(
         let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
 
         let songdb_scene = match ugi.game {
+            Game::JustDance2016 => {
+                let parsed_json =
+                    cooked::json::parse_v16(&gameconfig_file, true)?.into_game_manager_config()?;
+                parsed_json.songdb_scene.into_owned()
+            }
             Game::JustDance2017 => {
                 let parsed_json =
                     cooked::json::parse_v17(&gameconfig_file, true)?.into_game_manager_config()?;

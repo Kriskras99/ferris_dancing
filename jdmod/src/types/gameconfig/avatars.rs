@@ -55,6 +55,8 @@ pub enum UnlockType<'a> {
     Unknown6,
     /// only in 2017
     Unknown9,
+    /// only in 2016
+    Unknown10,
     /// only in 2017-2018 so maybe Dance Quest?
     Unknown11,
     /// only on WiiU
@@ -79,6 +81,7 @@ impl From<&UnlockType<'_>> for u8 {
             UnlockType::Unknown3 => 3,
             UnlockType::Unknown6 => 6,
             UnlockType::Unknown9 => 9,
+            UnlockType::Unknown10 => 10,
             UnlockType::Unknown11 => 11,
             UnlockType::Unknown16 => 16,
             UnlockType::GiftMachine => 18,
@@ -109,6 +112,7 @@ impl<'a> UnlockType<'a> {
             3 => Ok(Self::Unknown3),
             6 => Ok(Self::Unknown6),
             9 => Ok(Self::Unknown9),
+            10 => Ok(Self::Unknown10),
             11 => Ok(Self::Unknown11),
             16 => Ok(Self::Unknown16),
             18 => Ok(Self::GiftMachine),
@@ -137,6 +141,7 @@ impl<'a> UnlockType<'a> {
             | Self::Unknown3
             | Self::Unknown6
             | Self::Unknown9
+            | Self::Unknown10
             | Self::Unknown11
             | Self::Unknown16 => Self::Unlocked,
             Self::Quest(s) => Self::Quest(s),

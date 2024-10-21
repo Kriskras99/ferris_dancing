@@ -5,21 +5,22 @@ use dotstar_toolkit_utils::{
         primitives::{f32be, i32be, u32be, u64be},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
     },
-    test_any, test_eq, test_ge, test_le,
+    test_any, test_eq, test_le,
 };
 use ubiart_toolkit_shared_types::Color;
 
 use super::{
-    AaBb, Actor, BeatPulseComponent, BoxInterpolatorComponent, CameraGraphicComponent, Carousel,
-    CarouselAnimItemsDesc, CarouselBehaviour, CarouselBehaviourGoToElement,
-    CarouselBehaviourNavigation, ClearColorComponent, Component, ConvertedTmlTapeComponent,
-    CreditsComponent, FXControllerComponent, FixedCameraComponent, GFXMaterialSerializable,
-    GFXMaterialSerializableParam, GFXMaterialTexturePathSet, GFXPrimitiveParam,
-    MaterialGraphicComponent, PictoTimeline, PleoComponent, RegistrationComponent,
-    SingleInstanceMesh3DComponent, SoundComponent, StopCondition, TextureGraphicComponent,
-    UICarousel, UICarouselV16, UICarouselV1718, UICarouselV1922, UITextBox, UIWidgetElementDesc,
-    UIWidgetGroupHUD, UIWidgetGroupHUDAutodanceRecorder, UIWidgetGroupHUDLyrics,
-    UIWidgetGroupHUDPauseIcon, Unknown77F7D66C, ViewportUIComponent,
+    AaBb, Actor, BeatPulseComponent, BoxInterpolatorComponent, CameraFeedComponent,
+    CameraGraphicComponent, Carousel, CarouselAnimItemsDesc, CarouselBehaviour,
+    CarouselBehaviourGoToElement, CarouselBehaviourNavigation, ClearColorComponent, Component,
+    ConvertedTmlTapeComponent, CreditsComponent, FXControllerComponent, FixedCameraComponent,
+    GFXMaterialSerializable, GFXMaterialSerializableParam, GFXMaterialTexturePathSet,
+    GFXPrimitiveParam, MaterialGraphicComponent, PictoTimeline, PleoComponent,
+    RegistrationComponent, SingleInstanceMesh3DComponent, SoundComponent, StopCondition,
+    TextureGraphicComponent, TexturePatcherComponent, UICarousel, UICarouselV16, UICarouselV1718,
+    UICarouselV1922, UITextBox, UIWidgetElementDesc, UIWidgetGroupHUD,
+    UIWidgetGroupHUDAutodanceRecorder, UIWidgetGroupHUDLyrics, UIWidgetGroupHUDPauseIcon,
+    Unknown2CB3C8E8, Unknown77F7D66C, UnknownA6E4EFBA, UnknownA97634C7, ViewportUIComponent,
 };
 use crate::utils::{Game, SplitPath, UniqueGameId};
 
@@ -125,6 +126,13 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
                     reader.read_at_with::<BoxInterpolatorComponent>(position, ugi)?,
                 )
             }
+            // JD_CameraFeedComponent
+            0x499C_BAA4 => {
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::CameraFeedComponent(
+                    reader.read_at_with::<CameraFeedComponent>(position, ugi)?,
+                )
+            }
             // CameraGraphicComponent
             0xC760_4FA1 => {
                 *position -= 4; // the deserialize implementation also checks the magic
@@ -184,7 +192,9 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
                 Component::PictoTimeline(reader.read_at_with::<PictoTimeline>(position, ugi)?)
             }
             // PleoComponent
-            0x1263_DAD9 => Component::PleoComponent(reader.read_at::<PleoComponent>(position)?),
+            0x1263_DAD9 => {
+                Component::PleoComponent(reader.read_at_with::<PleoComponent>(position, ugi)?)
+            }
             // PleoTextureGraphicComponent
             0x0579_E81B => Component::PleoTextureGraphicComponent(
                 reader.read_at_with::<MaterialGraphicComponent>(position, (ugi, true))?,
@@ -223,6 +233,13 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
                 *position -= 4; // the deserialize implementation also checks the magic
                 Component::TextureGraphicComponent(
                     reader.read_at_with::<TextureGraphicComponent>(position, ugi)?,
+                )
+            }
+            // TexturePatcherComponent
+            0x6F32_8BC1 => {
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::TexturePatcherComponent(
+                    reader.read_at_with::<TexturePatcherComponent>(position, ugi)?,
                 )
             }
             // UICarousel
@@ -291,14 +308,23 @@ impl<'de> BinaryDeserialize<'de> for Component<'de> {
             0x8DA9_E375 => Component::BlockFlowComponent,
             // JD_GoldMoveComponent
             0x5632_1EA5 => Component::GoldMoveComponent,
-            // JD_CameraFeedComponent
-            0x499C_BAA4 => todo!("CameraFeedComponent"),
-            // Something that looks like a graphic component
-            0xA976_34C7 => todo!("Something that looks like a graphic component"),
             0x77F7_D66C => {
                 *position -= 4; // the deserialize implementation also checks the magic
                 Component::Unknown77F7D66C(reader.read_at_with::<Unknown77F7D66C>(position, ugi)?)
             }
+            0xA6E4_EFBA => {
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::UnknownA6E4EFBA(reader.read_at_with::<UnknownA6E4EFBA>(position, ugi)?)
+            }
+            0x2CB3_C8E8 => {
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::Unknown2CB3C8E8(reader.read_at_with::<Unknown2CB3C8E8>(position, ugi)?)
+            }
+            0xA976_34C7 => {
+                *position -= 4; // the deserialize implementation also checks the magic
+                Component::UnknownA97634C7(reader.read_at_with::<UnknownA97634C7>(position, ugi)?)
+            }
+            0x8C76_D717 => Component::Unknown8C76D717,
             _ => {
                 return Err(ReadError::custom(format!(
                     "Unknown component type: 0x{component_type:x}!"
@@ -377,6 +403,35 @@ impl BinaryDeserialize<'_> for BoxInterpolatorComponent {
             inner_box,
             outer_box,
         })
+    }
+}
+
+impl BinaryDeserialize<'_> for CameraFeedComponent {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x499C_BAA4)?;
+
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x0)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk2, 0x0)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk3, 0x0)?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk4, 0x0)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0x0)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0x0)?;
+
+        Ok(Self)
     }
 }
 
@@ -919,126 +974,145 @@ impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
         ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let (ugi, is_pleo) = ctx;
-        for _ in 0..3 {
-            let unk11 = reader.read_at::<u32be>(position)?;
-            test_eq!(unk11, 0x3F80_0000u32)?;
-        }
-        let unk11_5 = reader.read_at::<u32be>(position)?;
-        test_any!(unk11_5, [0x3F80_0000u32, 0x0])?;
+        let unk1 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk1, 1.0)?;
+        let unk2 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk2, 1.0)?;
+        let unk3 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk3, 1.0)?;
 
-        for _ in 0..2 {
-            let _unk12: u64 = reader.read_at::<u64be>(position)?;
-        }
+        let unk4 = reader.read_at::<f32be>(position)?;
+        test_any!(unk4, [0.0, 1.0])?;
 
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0x0)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0x0)?;
+        let unk7 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk7, 0x0)?;
+        let unk8 = reader.read_at::<u32be>(position)?;
+        test_any!(unk8, [0x0, 0xFFFF_FFFF])?;
+
+        let unk9 = reader.read_at::<u32be>(position)?;
+        test_any!(unk9, [0xFFFF_FFFF, 0x1])?;
+        let unk10 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk10, 0x0)?;
+
+        let anchor = reader.read_at::<i32be>(position)?;
+        test_any!(anchor, 0..=9)?;
+
+        let unk11 = reader.read_at::<f32be>(position)?;
+        test_any!(unk11, [0.0, -0.11, 0.3])?;
+        let unk12 = reader.read_at::<f32be>(position)?;
+        test_any!(unk12, [0.0, -4.0, 0.17, 0.22, -0.1])?;
+
+        let diffuse = reader.read_at::<SplitPath>(position)?;
+        let back_light = reader.read_at::<SplitPath>(position)?;
+        let normal = reader.read_at::<SplitPath>(position)?;
+        let separate_alpha = reader.read_at::<SplitPath>(position)?;
+        let diffuse_2 = reader.read_at::<SplitPath>(position)?;
+        let back_light_2 = reader.read_at::<SplitPath>(position)?;
+        let anim_imposter = reader.read_at::<SplitPath>(position)?;
+        let diffuse_3 = reader.read_at::<SplitPath>(position)?;
+        let diffuse_4 = reader.read_at::<SplitPath>(position)?;
+
+        // only >=2 in jd2015
         let unk13 = reader.read_at::<u32be>(position)?;
-        test_any!(unk13, [0xFFFF_FFFFu32, 0x1])?;
+        test_any!(unk13, [0x0, 0x2, 0x3])?;
 
-        // <ENUM NAME="anchor" SEL="[0-9]" /> ?
-        let unk14 = reader.read_at::<u64be>(position)?;
-        test_ge!(unk14, 0u64).and(test_le!(unk14, 0x9u64))?;
+        let atl_path = reader.read_at::<SplitPath>(position)?;
+        let shader_path = if ugi.game <= Game::JustDance2015 {
+            SplitPath::default()
+        } else {
+            reader.read_at::<SplitPath>(position)?
+        };
 
-        let unk15 = reader.read_at::<u64be>(position)?;
-        test_any!(
-            unk15,
-            [
-                0x0u64,
-                0x3E2E_147B,
-                0xC080_0000,
-                0x3E99_999A_BDCC_CCCD,
-                0xBDE1_47AE_3E61_47AE,
-            ],
-        )?;
-
-        let mut files = [
-            // diffuse
-            SplitPath::default(),
-            // back_light
-            SplitPath::default(),
-            // normal
-            SplitPath::default(),
-            // separateAlpha
-            SplitPath::default(),
-            // diffuse_2
-            SplitPath::default(),
-            // back_light_2
-            SplitPath::default(),
-            // anim_impostor
-            SplitPath::default(),
-            // diffuse_3
-            SplitPath::default(),
-            // diffuse_4
-            SplitPath::default(),
-            // ATL_Path
-            SplitPath::default(),
-            // shaderPath
-            SplitPath::default(),
+        let files = [
+            diffuse,
+            back_light,
+            normal,
+            separate_alpha,
+            diffuse_2,
+            back_light_2,
+            anim_imposter,
+            diffuse_3,
+            diffuse_4,
+            atl_path,
+            shader_path,
         ];
 
-        for item in files.iter_mut().take(9) {
-            let path = reader.read_at::<SplitPath>(position)?;
-            *item = path;
-        }
-
-        let _unk19: u32 = reader.read_at::<u32be>(position)?;
-
-        for item in files.iter_mut().skip(9) {
-            let path = reader.read_at::<SplitPath>(position)?;
-            *item = path;
-        }
-
-        match ugi.game {
-            Game::JustDance2019
-            | Game::JustDance2018
-            | Game::JustDance2017
-            | Game::JustDance2016 => {
-                let _unk20: u64 = reader.read_at::<u64be>(position)?;
-            }
-            _ => {
-                for _ in 0..4 {
-                    let _unk20: u64 = reader.read_at::<u64be>(position)?;
-                }
-
-                let _unk20_5: u32 = reader.read_at::<u32be>(position)?;
-
-                let _unk21: u32 = reader.read_at::<u32be>(position)?;
-            }
+        if ugi.game <= Game::JustDance2019 {
+            let unk14 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk14, 0x0)?;
+            let unk15 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk15, 0x0)?;
+        } else {
+            let unk16 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk16, 0x0)?;
+            let unk17 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk17, 0x0)?;
+            let unk18 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk18, 0x0)?;
+            let unk19 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk19, 0x0)?;
+            let unk20 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk20, 0x0)?;
+            let unk21 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk21, 0x0)?;
+            let unk22 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk22, 0x0)?;
+            let unk23 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk23, 0x0)?;
+            let unk24 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk24, 0x0)?;
+            let unk25 = reader.read_at::<f32be>(position)?;
+            test_eq!(unk25, 1.0)?;
         }
 
         if ugi.game == Game::JustDance2020 {
             // Just Dance 2020 sometimes has a 0u32 inbetween
-            let unk21_5: u32 = reader.read_at::<u32be>(position)?;
-            if unk21_5 != 0 {
+            // in versions 302731.503886 & 305546.520057
+            let unk26: u32 = reader.read_at::<u32be>(position)?;
+            if unk26 != 0 {
                 *position -= 4;
             }
         }
 
-        let unk22 = reader.read_at::<u64be>(position)?;
-        test_eq!(unk22, 0xFFFF_FFFF_FFFF_FFFFu64)?;
+        let unk27 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk27, 0xFFFF_FFFF)?;
+        let unk28 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk28, 0xFFFF_FFFF)?;
 
-        for _ in 0..3 {
-            let _unk23: u32 = reader.read_at::<u32be>(position)?;
-        }
-
-        let _unk24: u32 = reader.read_at::<u32be>(position)?;
-
-        let _unk25: u64 = reader.read_at::<u64be>(position)?;
+        let unk29 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk29, 0x0)?;
+        let unk30 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk30, 0x0)?;
+        let unk31 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk31, 0x0)?;
+        let unk32 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk32, 1.0)?;
+        let unk33 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk33, 0x0)?;
+        let unk34 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk34, 0x0)?;
 
         // <ENUM NAME="oldAnchor" SEL="[0-9]" /> ?
-        let unk26 = reader.read_at::<u32be>(position)?;
-        test_ge!(unk26, 0).and(test_le!(unk26, 9))?;
+        let old_anchor = reader.read_at::<i32be>(position)?;
+        test_any!(old_anchor, 0..=9)?;
 
         if is_pleo {
-            let unk27 = reader.read_at::<u32be>(position)?;
-            test_eq!(unk27, 0x0u32)?;
+            let unk35 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk35, 0x0u32)?;
         }
 
         Ok(MaterialGraphicComponent {
             files,
-            unk11_5,
-            unk13,
-            unk14,
-            unk15,
-            unk26,
+            unk4,
+            unk9,
+            anchor,
+            unk11,
+            unk12,
+            old_anchor,
         })
     }
 }
@@ -1295,6 +1369,42 @@ impl<'de> BinaryDeserialize<'de> for TextureGraphicComponent<'de> {
             anchor,
             material,
         })
+    }
+}
+
+impl<'de> BinaryDeserialize<'de> for TexturePatcherComponent<'de> {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x6F32_8BC1)?;
+
+        let unk1 = reader.read_at_with::<SplitPath>(position, 0x2)?;
+        let unk2 = reader.read_at_with::<SplitPath>(position, 0x2)?;
+
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk3, 0)?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk4, 0)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0xFFFF_FFFF)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0)?;
+        let unk7 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk7, 0)?;
+        let unk8 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk8, 0)?;
+        let unk9 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk9, 0xFFFF_FFFF)?;
+        let unk10 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk10, 0)?;
+
+        Ok(Self { unk1, unk2 })
     }
 }
 
@@ -1912,45 +2022,175 @@ impl<'de> BinaryDeserialize<'de> for Unknown77F7D66C<'de> {
     fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: Self::Ctx,
+        ugi: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0x77F7_D66C)?;
-        let mapname = reader.read_len_string_at::<u32be>(position)?;
+        let map_name = reader.read_len_string_at::<u32be>(position)?;
+        let jd_version = reader.read_at::<u32be>(position)?;
+        test_any!(jd_version, 2015..=2016)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        test_any!(unk1, 2015..=2016)?;
+        test_eq!(unk1, 0)?;
         let unk2 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk2, 0)?;
-        let unk3 = reader.read_at::<u32be>(position)?;
-        test_any!(unk3, [0, 1])?;
-        let unk4 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk4, 7)?;
-        let unk5 = reader.read_slice_at(position, usize::try_from(unk4)?)?;
-        let unk6 = reader.read_at::<f32be>(position)?;
-        test_any!(
-            unk6,
-            [0.112503, 0.225006, 0.337508, 0.450011, 0.675017, 0.750019, 0.825021]
-        )?;
+        // only >=2 in jd2015
+        test_any!(unk2, 0..=3)?;
+        if ugi.game == Game::JustDance2015 {
+            let unk2_5 = reader.read_at::<u32be>(position)?;
+            test_any!(unk2_5, 0..=1)?;
+        }
+        let unk3 = reader.read_len_slice_at::<u32be>(position)?;
+        test_eq!(unk3.len(), 7)?;
+        let unk4 = reader.read_at::<f32be>(position)?;
+        test_any!(unk4, 0.112503..=0.879022)?;
+        if ugi.game == Game::JustDance2016 {
+            let unk5 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk5, 0x0)?;
+            let unk6 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk6, 0x0)?;
+            let unk7 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk7, 0xFFFF_FFFF)?;
+            let unk8 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk8, 0x0)?;
+            let unk9 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk9, 0x0)?;
+            let unk10 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk10, 0x0)?;
+            let unk11 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk11, 0x0)?;
+            let unk12 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk12, 0xFFFF_FFFF)?;
+            let unk13 = reader.read_at::<u32be>(position)?;
+            test_eq!(unk13, 0x0)?;
+        }
+
+        Ok(Self {
+            map_name,
+            jd_version,
+            unk2,
+            unk3,
+            unk4,
+        })
+    }
+}
+
+impl BinaryDeserialize<'_> for UnknownA6E4EFBA {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ugi: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xA6E4_EFBA)?;
+
+        let unk1 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk1, 1.0)?;
+        let unk2 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk2, 1.0)?;
+        let unk3 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk3, 1.0)?;
+        let unk4 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk4, 1.0)?;
+
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0)?;
         let unk7 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk7, 0x0)?;
+        test_eq!(unk7, 0)?;
         let unk8 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk8, 0x0)?;
+        test_eq!(unk8, 0xFFFF_FFFF)?;
         let unk9 = reader.read_at::<u32be>(position)?;
         test_eq!(unk9, 0xFFFF_FFFF)?;
         let unk10 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk10, 0x0)?;
+        test_eq!(unk10, 0)?;
         let unk11 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk11, 0x0)?;
+        test_eq!(unk11, 0)?;
         let unk12 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk12, 0x0)?;
+        test_eq!(unk12, 0)?;
         let unk13 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk13, 0x0)?;
+        test_eq!(unk13, 0)?;
         let unk14 = reader.read_at::<u32be>(position)?;
         test_eq!(unk14, 0xFFFF_FFFF)?;
         let unk15 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk15, 0x0)?;
+        test_eq!(unk15, 0)?;
+        let unk16 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk16, 0)?;
+        let unk17 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk17, 0)?;
+        let unk18 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk18, 0)?;
+        let unk19 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk19, 0)?;
+        let unk20 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk20, 0)?;
+        let unk21 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk21, 0)?;
+        let unk22 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk22, 0)?;
+        let unk23 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk23, 0)?;
+        let unk24 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk24, 0xFFFF_FFFF)?;
+        let unk25 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk25, 0)?;
+        let unk26 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk26, 0xFFFF_FFFF)?;
+        let unk27 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk27, 0xFFFF_FFFF)?;
 
-        Ok(Self { mapname, unk5 })
+        Ok(Self)
+    }
+}
+
+impl BinaryDeserialize<'_> for Unknown2CB3C8E8 {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ugi: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0x2CB3_C8E8)?;
+
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 1)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk2, 1)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk3, 1)?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk4, 1)?;
+
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 1)?;
+
+        Ok(Self)
+    }
+}
+
+impl BinaryDeserialize<'_> for UnknownA97634C7 {
+    type Ctx = UniqueGameId;
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ugi: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let magic = reader.read_at::<u32be>(position)?;
+        test_eq!(magic, 0xA976_34C7)?;
+
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0xFFFF_FFFF)?;
+
+        Ok(Self)
     }
 }
 
@@ -2098,16 +2338,20 @@ fn parse_bezier_tree_component(
 }
 
 impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
-    type Ctx = ();
+    type Ctx = UniqueGameId;
     type Output = Self;
 
     fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: Self::Ctx,
+        ugi: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
         let video = reader.read_at::<SplitPath>(position)?;
-        let dash_mpd = reader.read_at::<SplitPath>(position)?;
+        let dash_mpd = if ugi.game <= Game::JustDance2015 {
+            SplitPath::default()
+        } else {
+            reader.read_at::<SplitPath>(position)?
+        };
         let channel_id = reader.read_len_string_at::<u32be>(position)?;
         let channel_id = if channel_id.is_empty() {
             None

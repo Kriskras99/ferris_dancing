@@ -291,7 +291,7 @@ impl TryFrom<&str> for Tag {
             "sweat" => Ok(Self::Sweat),
             "biketutorial" => Ok(Self::BikeTutorial),
             "chair2tutorial" => Ok(Self::Chair2Tutorial),
-            "SofaTutorial" => Ok(Self::SofaTutorial),
+            "sofatutorial" => Ok(Self::SofaTutorial),
             _ => Err(anyhow!("Unknown tag!: {value}")),
         }
     }

@@ -114,7 +114,7 @@ impl<'de> Deserialize<'de> for Rarity {
     {
         struct RarityVisitor;
 
-        impl<'de> serde::de::Visitor<'de> for RarityVisitor {
+        impl serde::de::Visitor<'_> for RarityVisitor {
             type Value = Rarity;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

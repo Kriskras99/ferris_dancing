@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use dotstar_toolkit_utils::bytes::{
-    primitives::{f32be, u32be, u64be},
+    primitives::{f32be, i32be, u32be, u64be},
     write::{BinarySerialize, BinarySerializeExt, WriteAt, WriteError},
 };
 
@@ -78,7 +78,7 @@ impl BinarySerialize for MaterialGraphicComponent<'_> {
         for _ in 0..3 {
             writer.write_at::<u32be>(position, 0x3F80_0000)?; // unk11
         }
-        writer.write_at::<u32be>(position, input.unk11_5)?;
+        writer.write_at::<f32be>(position, input.unk4)?;
         for _ in 0..2 {
             if is_pleo {
                 writer.write_at::<u64be>(position, 0xFFFF_FFFF)?; // unk12
@@ -86,9 +86,11 @@ impl BinarySerialize for MaterialGraphicComponent<'_> {
                 writer.write_at::<u64be>(position, 0x0)?; // unk12
             }
         }
-        writer.write_at::<u32be>(position, input.unk13)?;
-        writer.write_at::<u64be>(position, input.unk14)?;
-        writer.write_at::<u64be>(position, input.unk15)?;
+        writer.write_at::<u32be>(position, input.unk9)?;
+        writer.write_at::<u32be>(position, 0)?;
+        writer.write_at::<i32be>(position, input.anchor)?;
+        writer.write_at::<f32be>(position, input.unk11)?;
+        writer.write_at::<f32be>(position, input.unk12)?;
 
         for (index, item) in input.files.into_iter().enumerate() {
             if index == 9 {
@@ -108,7 +110,7 @@ impl BinarySerialize for MaterialGraphicComponent<'_> {
         }
         writer.write_at::<u32be>(position, 0x3F80_0000)?;
         writer.write_at::<u64be>(position, 0)?;
-        writer.write_at::<u32be>(position, input.unk26)?;
+        writer.write_at::<i32be>(position, input.old_anchor)?;
         if is_pleo {
             writer.write_at::<u32be>(position, 0)?;
         }

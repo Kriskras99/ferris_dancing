@@ -23,8 +23,12 @@ pub struct SfatFilesystem<'f> {
 impl<'f> SfatFilesystem<'f> {
     /// Get the `GamePlatform` value for this secure_fat.gf file
     #[must_use]
-    pub const fn unique_game_id(&self) -> UniqueGameId {
-        self.sfat.game_platform()
+    pub fn unique_game_id(&self) -> UniqueGameId {
+        if let Some(patch) = &self.patch {
+            patch.unique_game_id()
+        } else {
+            self.sfat.game_platform()
+        }
     }
 
     /// Get the highest engine version from the connected IPKs

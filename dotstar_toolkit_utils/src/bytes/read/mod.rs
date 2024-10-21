@@ -296,7 +296,7 @@ pub trait ReadAtExt: ReadAt {
             }),
             Err(error) => {
                 *position = old_position;
-                return Err(error);
+                Err(error)
             }
         }
     }
@@ -338,7 +338,7 @@ pub trait ReadAtExt: ReadAt {
             }),
             Err(error) => {
                 *position = old_position;
-                return Err(error);
+                Err(error)
             }
         }
     }
@@ -365,7 +365,7 @@ where
     ctx: T::Ctx,
 }
 
-impl<'rf, 'pos, T, R> LenTypeIteratorWithCtx<'rf, 'pos, T, R>
+impl<'rf, T, R> LenTypeIteratorWithCtx<'rf, '_, T, R>
 where
     T: BinaryDeserialize<'rf>,
     R: ReadAtExt + ?Sized,
@@ -380,7 +380,7 @@ where
     }
 }
 
-impl<'rf, 'pos, T, R> Iterator for LenTypeIteratorWithCtx<'rf, 'pos, T, R>
+impl<'rf, T, R> Iterator for LenTypeIteratorWithCtx<'rf, '_, T, R>
 where
     T: BinaryDeserialize<'rf>,
     R: ReadAtExt + ?Sized,

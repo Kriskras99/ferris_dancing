@@ -22,9 +22,8 @@ members = [
 resolver = "2"
 
 [profile.release]
-debug = "full"
+debug = "line-tables-only"
 panic = "abort"
-lto = "fat"
 
 [profile.dev]
 panic = "abort"
@@ -101,6 +100,7 @@ quick-xml = { version = "0.36.2", default-features = false, features = ["seriali
 regex = { version = "1.11.0", default-features = false, features = ["std", "perf"] }
 rgbcx = { path = "rgbcx" }
 rgbcx-sys = { path = "rgbcx-sys" }
+rubato = { version = "0.16.0", default-features = false, features = []}
 serde = { version = "1.0.210", default-features = false, features = ["std", "derive"] }
 serde_json = { version = "1.0.132", default-features = false, features = ["std"] }
 serde_with = { version = "3.11.0", default-features = false, features = ["std", "macros"] }

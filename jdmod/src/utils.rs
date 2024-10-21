@@ -1,5 +1,8 @@
 //! Various utilities like texture encoding/decoding and dealing with paths
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    io::{Seek, Write},
+};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{
@@ -16,6 +19,7 @@ use hound::SampleFormat;
 use image::{imageops, RgbaImage};
 use nx_opus::{mux_from_opus, mux_to_opus};
 use regex::Regex;
+use rubato::Resampler;
 use ubiart_toolkit::{
     cooked::{
         png::Png,
@@ -179,33 +183,6 @@ pub fn decode_audio(
         .as_fmt()?;
 
     match (wav.platform, wav.codec) {
-        (_, Codec::PCM) => {
-            test_eq!(
-                fmt.bits_per_sample,
-                16,
-                "Bits per sample != 16, this is not supported"
-            )?;
-            let data = wav.chunks[&Data::MAGIC].as_data()?;
-
-            let spec = hound::WavSpec {
-                channels: fmt.channel_count,
-                sample_rate: fmt.sample_rate,
-                bits_per_sample: fmt.bits_per_sample,
-                sample_format: hound::SampleFormat::Int,
-            };
-            let buffer = CursorAt::new(writer, 0);
-            let mut writer = hound::WavWriter::new(buffer, spec)?;
-            let mut sample_writer = writer.get_i16_writer(u32::try_from(data.data.len() / 2)?);
-
-            let mut position = 0;
-            for _ in 0..(data.data.len() / 2) {
-                let sample = data.data.read_at::<i16le>(&mut position)?;
-                sample_writer.write_sample(sample);
-            }
-            sample_writer.flush()?;
-            writer.finalize()?;
-            Ok(false)
-        }
         (WavPlatform::Switch, Codec::Nx) => {
             let data = wav.chunks[&Data::MAGIC].as_data()?;
             let mut position = 0;
@@ -222,10 +199,47 @@ pub fn decode_audio(
             )?;
             Ok(true)
         }
+        (_, Codec::PCM) => {
+            test_eq!(
+                fmt.bits_per_sample,
+                16,
+                "Bits per sample != 16, this is not supported"
+            )?;
+            let data = wav.chunks[&Data::MAGIC].as_data()?;
+
+            let spec = hound::WavSpec {
+                channels: fmt.channel_count,
+                sample_rate: 48000,
+                bits_per_sample: fmt.bits_per_sample,
+                sample_format: hound::SampleFormat::Int,
+            };
+            let buffer = CursorAt::new(writer, 0);
+            let mut writer = hound::WavWriter::new(buffer, spec)?;
+
+            if fmt.sample_rate != 48000 {
+                let input = data
+                    .data
+                    .chunks_exact(2)
+                    .map(|chunk| <[u8; 2]>::try_from(chunk).unwrap_or_else(|_| unreachable!()))
+                    .map(i16::from_le_bytes);
+                resample_audio(fmt.sample_rate, 48000, fmt.channel_count, input, writer);
+            } else {
+                let mut sample_writer = writer.get_i16_writer(u32::try_from(data.data.len() / 2)?);
+                let mut position = 0;
+                for _ in 0..(data.data.len() / 2) {
+                    let sample = data.data.read_at::<i16le>(&mut position)?;
+                    sample_writer.write_sample(sample);
+                }
+                sample_writer.flush()?;
+                writer.finalize()?;
+            }
+
+            Ok(false)
+        }
         (WavPlatform::WiiU, Codec::Adpc) => {
             let spec = hound::WavSpec {
                 channels: fmt.channel_count,
-                sample_rate: fmt.sample_rate,
+                sample_rate: 48000,
                 bits_per_sample: 16,
                 sample_format: hound::SampleFormat::Int,
             };
@@ -263,14 +277,20 @@ pub fn decode_audio(
 
                 let mut buffer = CursorAt::new(writer, 0);
                 let mut writer = hound::WavWriter::new(&mut buffer, spec)?;
-                let mut sample_writer = writer.get_i16_writer(dsp_left.sample_count * 2);
 
-                for sample in decoder {
-                    let sample = sample?;
-                    sample_writer.write_sample(sample);
+                if fmt.sample_rate != 48000 {
+                    let decoder = decoder.map(Result::unwrap);
+                    resample_audio(fmt.sample_rate, 48000, fmt.channel_count, decoder, writer);
+                } else {
+                    let mut sample_writer = writer.get_i16_writer(dsp_left.sample_count * 2);
+
+                    for sample in decoder {
+                        let sample = sample?;
+                        sample_writer.write_sample(sample);
+                    }
+                    sample_writer.flush()?;
+                    writer.finalize()?;
                 }
-                sample_writer.flush()?;
-                writer.finalize()?;
                 Ok(false)
             } else if let Some(data_right) = wav.chunks.get(&Data::MAGIC_RIGHT) {
                 // non-interleaved stereo
@@ -308,14 +328,19 @@ pub fn decode_audio(
 
                 let mut buffer = CursorAt::new(writer, 0);
                 let mut writer = hound::WavWriter::new(&mut buffer, spec)?;
-                let mut sample_writer = writer.get_i16_writer(dsp_left.sample_count * 2);
+                if fmt.sample_rate != 48000 {
+                    let decoder = decoder.map(Result::unwrap);
+                    resample_audio(fmt.sample_rate, 48000, fmt.channel_count, decoder, writer);
+                } else {
+                    let mut sample_writer = writer.get_i16_writer(dsp_left.sample_count * 2);
 
-                for sample in decoder {
-                    let sample = sample?;
-                    sample_writer.write_sample(sample);
+                    for sample in decoder {
+                        let sample = sample?;
+                        sample_writer.write_sample(sample);
+                    }
+                    sample_writer.flush()?;
+                    writer.finalize()?;
                 }
-                sample_writer.flush()?;
-                writer.finalize()?;
                 Ok(false)
             } else if let Some(data) = wav.chunks.get(&Data::MAGIC_LEFT) {
                 // mono
@@ -332,14 +357,19 @@ pub fn decode_audio(
 
                 let mut buffer = CursorAt::new(writer, 0);
                 let mut writer = hound::WavWriter::new(&mut buffer, spec)?;
-                let mut sample_writer = writer.get_i16_writer(dsp.sample_count);
+                if fmt.sample_rate != 48000 {
+                    let decoder = decoder.map(Result::unwrap);
+                    resample_audio(fmt.sample_rate, 48000, fmt.channel_count, decoder, writer);
+                } else {
+                    let mut sample_writer = writer.get_i16_writer(dsp.sample_count);
 
-                for sample in decoder {
-                    let sample = sample?;
-                    sample_writer.write_sample(sample);
+                    for sample in decoder {
+                        let sample = sample?;
+                        sample_writer.write_sample(sample);
+                    }
+                    sample_writer.flush()?;
+                    writer.finalize()?;
                 }
-                sample_writer.flush()?;
-                writer.finalize()?;
                 Ok(false)
             } else {
                 Err(anyhow!("Unexpected WiiU/ADPC configuration: {wav:?}"))
@@ -356,15 +386,15 @@ pub fn decode_audio(
 /// Encode a JD audio file
 pub fn encode_audio(
     vfs: &impl VirtualFileSystem,
-    image_path: &VirtualPath,
+    audio_path: &VirtualPath,
     main_song: bool,
 ) -> Result<Vec<u8>, Error> {
-    if image_path.extension() != Some("wav") && image_path.extension() != Some("opus") {
+    if audio_path.extension() != Some("wav") && audio_path.extension() != Some("opus") {
         return Err(anyhow!(
             "This application only supports .wav and .opus files"
         ));
     }
-    let file = vfs.open(image_path)?;
+    let file = vfs.open(audio_path)?;
     let magic = file.read_at::<[u8; 4]>(&mut 0)?;
     match &magic {
         b"OggS" => {
@@ -396,6 +426,11 @@ pub fn encode_audio(
             test_eq!(spec.sample_format, SampleFormat::Int)
                 .and(test_eq!(spec.bits_per_sample, 16))?;
 
+            assert!(
+                !(spec.sample_rate != 48000),
+                "{audio_path} is not 48kHz, please resample!"
+            );
+
             let fmt = Fmt {
                 unk1: 1,
                 channel_count: spec.channels,
@@ -416,4 +451,99 @@ pub fn encode_audio(
             "This application only supports .wav and .opus files"
         )),
     }
+}
+
+/// Resample an audio stream
+///
+/// `input` and `output` are interleaved streams.
+pub fn resample_audio<W: Write + Seek>(
+    sample_rate_in: u32,
+    sample_rate_out: u32,
+    channels: u16,
+    input: impl Iterator<Item = i16>,
+    mut output: hound::WavWriter<W>,
+) {
+    let channels = usize::from(channels);
+    let mut resampler = rubato::SincFixedIn::<f32>::new(
+        sample_rate_out as f64 / sample_rate_in as f64,
+        1.1,
+        rubato::SincInterpolationParameters {
+            sinc_len: 256,
+            f_cutoff: 0.95,
+            oversampling_factor: 128,
+            interpolation: rubato::SincInterpolationType::Cubic,
+            window: rubato::WindowFunction::Blackman,
+        },
+        1024,
+        channels,
+    )
+    .unwrap();
+
+    let mut outbuffer = vec![vec![0.0f32; resampler.output_frames_max()]; channels];
+    let mut inbuffer = vec![vec![0.0f32; resampler.input_frames_max()]; channels];
+    let mut input = input.peekable();
+
+    // amount of frames in one channel of the inbuffer
+    let mut frames_in_inbuffer = 0;
+
+    'outer: loop {
+        let input_frames_next = resampler.input_frames_next();
+        // collect enough frames for processing
+        while input_frames_next > frames_in_inbuffer {
+            if input.peek().is_none() {
+                // no frames left, the remainer will be processed after the loop
+                break 'outer;
+            }
+            // add a sample to every channel
+            for channel in &mut inbuffer {
+                let sample = input
+                    .next()
+                    .expect("There should always be at least {channel} samples in the input");
+                channel[frames_in_inbuffer] = f32::from(sample);
+            }
+            frames_in_inbuffer += 1;
+        }
+
+        // resample the frames in the inbuffer to the outbuffer
+        let (used_input_frames, written_output_frames) = resampler
+            .process_into_buffer(&inbuffer, &mut outbuffer, None)
+            .unwrap();
+
+        // move unused frames to the front of inbuffer
+        for channel in &mut inbuffer {
+            channel.copy_within(used_input_frames..frames_in_inbuffer, 0);
+        }
+        frames_in_inbuffer -= used_input_frames;
+
+        // write the output frames and flush
+        let mut i16_writer = output.get_i16_writer((written_output_frames * channels) as u32);
+        for frame in 0..written_output_frames {
+            for channel in &mut outbuffer {
+                i16_writer.write_sample(channel[frame] as i16);
+            }
+        }
+        i16_writer.flush().unwrap_or_else(|_| unreachable!());
+    }
+
+    // process the remaining frames (if any)
+    // any frame past frames_in_inbuffer needs to be zero
+    let input_frames_next = resampler.input_frames_next();
+    for channel in &mut inbuffer {
+        channel[frames_in_inbuffer..input_frames_next].fill(0.0);
+    }
+
+    // resample the frames in the inbuffer to the outbuffer
+    let (_, written_output_frames) = resampler
+        .process_into_buffer(&inbuffer, &mut outbuffer, None)
+        .unwrap();
+
+    // write the output frames and flush
+    let mut i16_writer = output.get_i16_writer((written_output_frames * channels) as u32);
+    for frame in 0..written_output_frames {
+        for channel in &mut outbuffer {
+            i16_writer.write_sample(channel[frame] as i16);
+        }
+    }
+    i16_writer.flush().unwrap_or_else(|_| unreachable!());
+    output.finalize().unwrap();
 }

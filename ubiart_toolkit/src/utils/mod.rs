@@ -87,13 +87,13 @@ impl<'a> SplitPath<'a> {
 }
 
 impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
-    type Ctx = ();
+    type Ctx = u32;
     type Output = Self;
 
     fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: (),
+        expected_padding: Self::Ctx,
     ) -> Result<Self, ReadError> {
         let old_position = *position;
         let result: Result<_, _> = try {
@@ -103,7 +103,7 @@ impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
             let split_path = SplitPath::new(path, filename)?;
             test_eq!(path_id, split_path.id())?;
             let padding = reader.read_at::<u32be>(position)?;
-            test_eq!(padding, Self::PADDING)?;
+            test_eq!(padding, expected_padding)?;
             split_path
         };
         if result.is_err() {

@@ -131,7 +131,7 @@ impl Deref for VirtualFile<'_> {
     }
 }
 
-impl<'vf> ReadAt for VirtualFile<'vf> {
+impl ReadAt for VirtualFile<'_> {
     fn read_null_terminated_string_at<'de>(
         &'de self,
         position: &mut u64,

@@ -13,7 +13,7 @@ use tracing::instrument;
 use yoke::Yoke;
 
 use super::Bundle;
-use crate::utils::PathId;
+use crate::utils::{PathId, UniqueGameId};
 
 pub struct IpkFilesystem<'fs> {
     bundle: Yoke<Bundle<'static>, VirtualFile<'fs>>,
@@ -25,6 +25,11 @@ impl<'fs> IpkFilesystem<'fs> {
     #[must_use]
     pub fn engine_version(&self) -> u32 {
         self.bundle.get().engine_version
+    }
+
+    #[must_use]
+    pub fn unique_game_id(&self) -> UniqueGameId {
+        self.bundle.get().game_platform
     }
 
     #[must_use]
