@@ -427,7 +427,7 @@ pub fn encode_audio(
                 .and(test_eq!(spec.bits_per_sample, 16))?;
 
             assert!(
-                !(spec.sample_rate != 48000),
+                spec.sample_rate == 48000,
                 "{audio_path} is not 48kHz, please resample!"
             );
 
@@ -465,7 +465,7 @@ pub fn resample_audio<W: Write + Seek>(
 ) {
     let channels = usize::from(channels);
     let mut resampler = rubato::SincFixedIn::<f32>::new(
-        sample_rate_out as f64 / sample_rate_in as f64,
+        f64::from(sample_rate_out) / f64::from(sample_rate_in),
         1.1,
         rubato::SincInterpolationParameters {
             sinc_len: 256,

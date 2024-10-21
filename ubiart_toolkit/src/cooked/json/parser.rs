@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Remove the '\0' from the end of the `buffer`
-pub(crate) fn clean_buffer_json(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
+pub fn clean_buffer_json(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
     let result = test_eq!(buffer[buffer.len() - 1], 0x0);
     match (result, lax) {
         (TestResult::Ok, _) => Ok(&buffer[..buffer.len() - 1]),

@@ -1,4 +1,4 @@
-#![allow(clippy::needless_pass_by_value)]
+#![allow(clippy::needless_pass_by_value, reason = "Needed by test runner")]
 use std::path::Path;
 
 use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt as _;

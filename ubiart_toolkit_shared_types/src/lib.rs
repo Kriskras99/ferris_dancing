@@ -78,7 +78,7 @@ impl LocaleId {
     /// # Panics
     /// Will panic if the increment would cause an overflow
     #[must_use]
-    pub fn increment(&self) -> Self {
+    pub const fn increment(&self) -> Self {
         Self(self.0.checked_add(1).unwrap())
     }
 }

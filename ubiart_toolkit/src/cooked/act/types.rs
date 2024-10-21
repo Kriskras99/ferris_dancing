@@ -202,7 +202,7 @@ pub struct BoxInterpolatorComponent {
     pub outer_box: AaBb,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CameraFeedComponent;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -466,7 +466,7 @@ pub struct TextureGraphicComponent<'a> {
     pub material: GFXMaterialSerializable<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TexturePatcherComponent<'a> {
     pub unk1: SplitPath<'a>,
     pub unk2: SplitPath<'a>,
@@ -622,13 +622,13 @@ pub struct Unknown77F7D66C<'a> {
     pub unk4: f32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnknownA6E4EFBA;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unknown2CB3C8E8;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnknownA97634C7;
 
 #[derive(Debug, Clone, PartialEq)]
