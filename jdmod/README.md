@@ -6,19 +6,19 @@ It can import and export songs, playlists, quests/objectives, avatars, aliases, 
 
 Platform support matrix:
 |        | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 | 2020 | 舞力全开 | 2021 | 2022 |
-|--------|------|------|------|------|------|------|------|------|
+| ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | Switch |      |      |      |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |
-| PS4    |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |      |  ❎   |  ❎   |
-| Wii U  |  ❎   |  ❎   |  ✅   |  ✅   |  ❎   |  ❎   |      |      |      |      |
-| X360   |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |      |      |      |      |
-| PS3    |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |      |      |      |      |      |
-| Win    |      |      |      |  ❎   |      |      |      |      |      |      |
-| Wii    |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |  ❎   |      |      |      |
+| PS4    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |  ❌   |  ❌   |
+| Wii U  |  ❌   |  ❌   |  ✅   |  ✅   |  ❌   |  ❌   |      |      |      |      |
+| X360   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |      |
+| PS3    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |      |      |
+| Win    |      |      |      |  ❌   |      |      |      |      |      |      |
+| Wii    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |
 
 Legend:
 - Empty cell: Game not released on that platform
 - ✅: Supported in JDMod
-- ❎: Not yet supported in JDMod
+- ❌: Not yet supported in JDMod
 
 ## FAQ
 
