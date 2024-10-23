@@ -1481,7 +1481,7 @@ impl MotionClip<'_> {
         let mut classifier_path = String::with_capacity(classifier_path.len() + 5);
         classifier_path.push_str(left);
         match platform {
-            Platform::Nx | Platform::WiiU => classifier_path.push_str("/wiiu"),
+            Platform::Nx | Platform::WiiU | Platform::Win => classifier_path.push_str("/wiiu"),
             _ => unimplemented!("Not implemented for {}", platform),
         }
         classifier_path.push_str(right);

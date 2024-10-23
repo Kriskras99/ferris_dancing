@@ -213,7 +213,7 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
     }
 
     let tape = tape::Tape {
-        class: None,
+        class: Some(tape::Tape::CLASS),
         clips,
         tape_clock: 0,
         tape_bar_count: 1,

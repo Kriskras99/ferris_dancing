@@ -19,6 +19,11 @@ fn tfn_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()
     Ok(())
 }
 
+fn tfn_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    json::parse_v17(&data, false)?;
+    Ok(())
+}
+
 fn tfn_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     json::parse_v18(&data, false)?;
     Ok(())
@@ -58,6 +63,9 @@ datatest_stable::harness!(
     r".*/tfn.ckd/.*",
     tfn_parse_wiiu2017,
     "files/wiiu2017",
+    r".*/tfn.ckd/.*",
+    tfn_parse_win2017,
+    "files/win2017",
     r".*/tfn.ckd/.*",
     tfn_parse_nx2018,
     "files/nx2018",

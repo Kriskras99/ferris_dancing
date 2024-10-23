@@ -25,6 +25,11 @@ fn alias8_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result
     Ok(())
 }
 
+fn alias8_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Alias8::deserialize(&data)?;
+    Ok(())
+}
+
 fn alias8_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     Alias8::deserialize(&data)?;
     Ok(())
@@ -64,6 +69,9 @@ datatest_stable::harness!(
     r".*/alias8/.*",
     alias8_parse_nx2017,
     "files/nx2017",
+    r".*/alias8/.*",
+    alias8_parse_win2017,
+    "files/win2017",
     r".*/alias8/.*",
     alias8_parse_wiiu2017,
     "files/wiiu2017",

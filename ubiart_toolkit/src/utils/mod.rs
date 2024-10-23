@@ -283,6 +283,11 @@ impl UniqueGameId {
         platform: Platform::WiiU,
         id: 0x04A2_5379,
     };
+    pub const WIN2017: Self = Self {
+        game: Game::JustDance2017,
+        platform: Platform::Win,
+        id: 0x1D3A_4C30,
+    };
     pub const NX2017: Self = Self {
         game: Game::JustDance2017,
         platform: Platform::Nx,
@@ -370,6 +375,11 @@ impl TryFrom<u32> for UniqueGameId {
             0x04A2_5379 => Ok(Self {
                 game: Game::JustDance2017,
                 platform: Platform::WiiU,
+                id: value,
+            }),
+            0x1D3A_4C30 => Ok(Self {
+                game: Game::JustDance2017,
+                platform: Platform::Win,
                 id: value,
             }),
             0x415E_6D8C | 0x32F3_512A => Ok(Self {
@@ -498,6 +508,7 @@ impl Display for Game {
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum Platform {
+    Win = 0x0,
     X360 = 0x1,
     Ps4 = 0x3,
     Wii = 0x5,
@@ -508,6 +519,7 @@ pub enum Platform {
 impl Display for Platform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Win => write!(f, "Windows"),
             Self::X360 => std::write!(f, "Xbox 360"),
             Self::Ps4 => std::write!(f, "PlayStation 4"),
             Self::Wii => std::write!(f, "Wii"),
@@ -522,6 +534,7 @@ impl TryFrom<u32> for Platform {
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
+            0x0 => Ok(Self::Win),
             0x1 => Ok(Self::X360),
             0x3 => Ok(Self::Ps4),
             0x5 => Ok(Self::Wii),

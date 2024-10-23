@@ -12,7 +12,7 @@ Platform support matrix:
 | Wii U  |  ❌   |  ❌   |  ✅   |  ✅   |  ❌   |  ❌   |      |      |      |      |
 | X360   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |      |
 | PS3    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |      |      |
-| Win    |      |      |      |  ❌   |      |      |      |      |      |      |
+| Win    |      |      |      |  ✅   |      |      |      |      |      |      |
 | Wii    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |
 
 Legend:
@@ -34,3 +34,5 @@ If you have the programming skills, you're welcome to add support for it.
 
 ### I want to create a mod for a game that is not Just Dance 2022, is this supported?
 **No**, you can only export a mod created in this program for Just Dance 2022. Any other game is not supported.
+
+739

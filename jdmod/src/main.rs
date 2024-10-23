@@ -42,7 +42,7 @@ enum Commands {
     // Check(Check),
     /// Bundle files into a .ipk
     Bundle(Bundle),
-    /// Unlock all songs, avatars, etc...
+    /// Unlock all songs, avatars, etc…
     Unlock(Unlock),
 }
 

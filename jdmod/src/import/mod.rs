@@ -32,7 +32,9 @@ mod song;
 /// Import <game_path> into mod at <mod_path>
 #[derive(Args, Clone)]
 pub struct Import {
-    /// Path of the game to import (secure_fat.gf or a JD Now json file)
+    /// Path of the game to import
+    ///
+    /// Supported files are: secure_fat.gf, dlcdescriptor.ckd
     game_path: PathBuf,
     /// Mod directory
     mod_path: PathBuf,

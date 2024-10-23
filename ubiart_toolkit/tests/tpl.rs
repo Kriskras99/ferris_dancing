@@ -19,6 +19,11 @@ fn tpl_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()
     Ok(())
 }
 
+fn tpl_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    json::parse_v17(&data, false)?;
+    Ok(())
+}
+
 fn tpl_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     json::parse_v18(&data, false)?;
     Ok(())
@@ -55,6 +60,9 @@ datatest_stable::harness!(
     r".*/tpl.ckd/.*",
     tpl_parse_nx2017,
     "files/nx2017",
+    r".*/tpl.ckd/.*",
+    tpl_parse_win2017,
+    "files/win2017",
     r".*/tpl.ckd/.*",
     tpl_parse_wiiu2017,
     "files/wiiu2017",

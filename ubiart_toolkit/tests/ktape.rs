@@ -24,6 +24,11 @@ fn ktape_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<
     Ok(())
 }
 
+fn ktape_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    tape::parse(&data, UniqueGameId::WIN2017)?;
+    Ok(())
+}
+
 fn ktape_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     tape::parse(&data, UniqueGameId::NX2018)?;
     Ok(())
@@ -66,6 +71,9 @@ datatest_stable::harness!(
     r".*/ktape.ckd/.*",
     ktape_parse_wiiu2017,
     "files/wiiu2017",
+    r".*/ktape.ckd/.*",
+    ktape_parse_win2017,
+    "files/win2017",
     r".*/ktape.ckd/.*",
     ktape_parse_nx2018,
     "files/nx2018",

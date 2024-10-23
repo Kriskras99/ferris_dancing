@@ -48,6 +48,7 @@ pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
     match platform {
         Platform::Nx => cooked.push_str("nx/"),
         Platform::WiiU => cooked.push_str("wiiu/"),
+        Platform::Win => cooked.push_str("pc/"),
         _ => Err(anyhow!("Not yet implemented for {path}"))?,
     };
 
@@ -250,17 +251,17 @@ pub fn decode_audio(
                 let dsp_left = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp()?;
                 let dsp_right = wav.chunks[&Dsp::MAGIC_RIGHT].as_dsp()?;
 
-                let left_state = gc_adpcm::DspState {
+                let left_state = gc_adpcm::Dsp {
                     hist1: dsp_left.initial_sample_history_1,
                     hist2: dsp_left.initial_sample_history_2,
                     coefficients: dsp_left.coefficients,
                 };
-                let right_state = gc_adpcm::DspState {
+                let right_state = gc_adpcm::Dsp {
                     hist1: dsp_left.initial_sample_history_1,
                     hist2: dsp_left.initial_sample_history_2,
                     coefficients: dsp_left.coefficients,
                 };
-                let total_frames = dsp_left.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME) * 2;
+                let total_frames = dsp_left.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME);
                 test_eq!(
                     dsp_left.sample_count,
                     dsp_right.sample_count,
@@ -269,7 +270,6 @@ pub fn decode_audio(
 
                 let decoder = gc_adpcm::Decoder::interleaved_stereo(
                     data.data.as_ref(),
-                    0,
                     left_state,
                     right_state,
                     total_frames,
@@ -299,12 +299,12 @@ pub fn decode_audio(
                 let dsp_right = wav.chunks[&Dsp::MAGIC_RIGHT].as_dsp()?;
                 let dsp_left = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp()?;
 
-                let left_state = gc_adpcm::DspState {
+                let left_state = gc_adpcm::Dsp {
                     hist1: dsp_left.initial_sample_history_1,
                     hist2: dsp_left.initial_sample_history_2,
                     coefficients: dsp_left.coefficients,
                 };
-                let right_state = gc_adpcm::DspState {
+                let right_state = gc_adpcm::Dsp {
                     hist1: dsp_right.initial_sample_history_1,
                     hist2: dsp_right.initial_sample_history_2,
                     coefficients: dsp_right.coefficients,
@@ -318,10 +318,8 @@ pub fn decode_audio(
 
                 let decoder = gc_adpcm::Decoder::stereo(
                     data_left.data.as_ref(),
-                    0,
                     left_state,
                     data_right.data.as_ref(),
-                    0,
                     right_state,
                     total_frames,
                 );
@@ -347,13 +345,13 @@ pub fn decode_audio(
                 let data = data.as_data()?;
                 let dsp = wav.chunks[&Dsp::MAGIC_LEFT].as_dsp()?;
 
-                let state = gc_adpcm::DspState {
+                let state = gc_adpcm::Dsp {
                     hist1: dsp.initial_sample_history_1,
                     hist2: dsp.initial_sample_history_2,
                     coefficients: dsp.coefficients,
                 };
                 let total_frames = dsp.sample_count.div_ceil(gc_adpcm::SAMPLES_PER_FRAME);
-                let decoder = gc_adpcm::Decoder::mono(data.data.as_ref(), 0, state, total_frames);
+                let decoder = gc_adpcm::Decoder::mono(data.data.as_ref(), state, total_frames);
 
                 let mut buffer = CursorAt::new(writer, 0);
                 let mut writer = hound::WavWriter::new(&mut buffer, spec)?;

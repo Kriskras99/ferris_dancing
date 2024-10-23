@@ -4,6 +4,7 @@ use dotstar_toolkit_utils::{
     bytes::{
         primitives::{u16be, u32be, u64be},
         read::{BinaryDeserialize, ReadAtExt, ReadError},
+        CursorAt,
     },
     test_any, test_eq,
 };
@@ -76,6 +77,13 @@ impl BinaryDeserialize<'_> for Png {
                 DynamicImage::from_decoder(decoder)
                     .map_err(|e| ReadError::custom(format!("{e:?}")))?
                     .into_rgba8()
+            }
+            Platform::Win => {
+                let mut cursor_at = CursorAt::new(reader, *position);
+                let dds = image_dds::ddsfile::Dds::read(&mut cursor_at)
+                    .map_err(|e| ReadError::custom(format!("{e:?}")))?;
+                image_dds::image_from_dds(&dds, 0)
+                    .map_err(|e| ReadError::custom(format!("{e:?}")))?
             }
             _ => todo!(),
         };

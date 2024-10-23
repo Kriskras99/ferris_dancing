@@ -151,7 +151,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
     }
 
     let tape = tape::Tape {
-        class: None,
+        class: Some(tape::Tape::CLASS),
         clips,
         tape_clock: 0,
         tape_bar_count: 1,
@@ -197,7 +197,7 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
     let tml_template_vec = tml_template(ses, k)?;
 
     let tape = tape::Tape {
-        class: None,
+        class: Some(tape::Tape::CLASS),
         clips: timeline
             .timeline
             .into_iter()

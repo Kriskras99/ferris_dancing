@@ -18,7 +18,7 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let is_pipe = stdin().is_terminal();
+    let is_pipe = !stdin().is_terminal();
     let have_file = cli.file.is_some();
     let have_string = cli.string.is_some();
     let total = u8::from(is_pipe) + u8::from(have_file) + u8::from(have_string);

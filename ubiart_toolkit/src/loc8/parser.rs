@@ -27,7 +27,7 @@ impl<'de> BinaryDeserialize<'de> for Loc8<'de> {
 
         // When unk1 == 2 there's a second version of strings
         // However these alternative strings seem to be riddled with typos, so just use the first one
-        test_any!(unk1, [1, 2])?;
+        test_any!(unk1, [1, 2, 0xF])?;
 
         let mut strings = HashMap::new();
 

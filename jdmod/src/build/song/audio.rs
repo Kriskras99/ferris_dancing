@@ -208,7 +208,7 @@ fn sequence_template() -> Result<Vec<u8>, Error> {
 /// Build the sequence tape
 fn sequence_tape(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
     let tape = tape::Tape {
-        class: None,
+        class: Some(tape::Tape::CLASS),
         clips: Vec::new(),
         tape_clock: 0,
         tape_bar_count: 1,

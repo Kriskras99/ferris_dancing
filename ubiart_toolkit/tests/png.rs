@@ -24,6 +24,11 @@ fn png_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()
     Ok(())
 }
 
+fn png_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Png::deserialize_with(&data, UniqueGameId::WIN2017)?;
+    Ok(())
+}
+
 fn png_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     Png::deserialize_with(&data, UniqueGameId::NX2018)?;
     Ok(())
@@ -63,6 +68,9 @@ datatest_stable::harness!(
     r".*/png.ckd/.*",
     png_parse_nx2017,
     "files/nx2017",
+    r".*/png.ckd/.*",
+    png_parse_win2017,
+    "files/win2017",
     r".*/png.ckd/.*",
     png_parse_wiiu2017,
     "files/wiiu2017",

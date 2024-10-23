@@ -25,6 +25,11 @@ fn loc8_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<(
     Ok(())
 }
 
+fn loc8_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Loc8::deserialize(&data)?;
+    Ok(())
+}
+
 fn loc8_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     Loc8::deserialize(&data)?;
     Ok(())
@@ -67,6 +72,9 @@ datatest_stable::harness!(
     r".*/loc8/.*",
     loc8_parse_wiiu2017,
     "files/wiiu2017",
+    r".*/loc8/.*",
+    loc8_parse_win2017,
+    "files/win2017",
     r".*/loc8/.*",
     loc8_parse_nx2018,
     "files/nx2018",

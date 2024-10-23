@@ -13,6 +13,7 @@ use crate::{
     ipk::vfs::IpkFilesystem,
     utils::{PathId, UniqueGameId},
 };
+use crate::utils::Platform;
 
 pub struct SfatFilesystem<'f> {
     sfat: SecureFat,
@@ -24,10 +25,17 @@ impl<'f> SfatFilesystem<'f> {
     /// Get the `GamePlatform` value for this secure_fat.gf file
     #[must_use]
     pub fn unique_game_id(&self) -> UniqueGameId {
+        let original_unique_game_id = self.sfat.game_platform();
         if let Some(patch) = &self.patch {
-            patch.unique_game_id()
+            let patch_unique_game_id = patch.unique_game_id();
+            // The patch for NX2021 has the same UGI as NX2022. UGH.
+            if patch_unique_game_id.game != original_unique_game_id.game {
+                original_unique_game_id
+            } else {
+                patch_unique_game_id
+            }
         } else {
-            self.sfat.game_platform()
+            original_unique_game_id
         }
     }
 
@@ -85,7 +93,7 @@ impl<'f> SfatFilesystem<'f> {
         let filename = super::bundle_name_to_filename("patch", sfat.game_platform());
         let path = parent.with_file_name(filename);
         let patch = IpkFilesystem::new(fs, &path).ok();
-        if patch.is_none() {
+        if patch.is_none() && sfat.game_platform.platform != Platform::Win {
             println!("Warning! No patch file found!");
         }
 

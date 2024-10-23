@@ -25,6 +25,11 @@ fn wav_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()
     Ok(())
 }
 
+fn wav_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    Wav::deserialize(&data)?;
+    Ok(())
+}
+
 fn wav_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     Wav::deserialize(&data)?;
     Ok(())
@@ -67,6 +72,9 @@ datatest_stable::harness!(
     r".*/wav.ckd/.*",
     wav_parse_wiiu2017,
     "files/wiiu2017",
+    r".*/wav.ckd/.*",
+    wav_parse_win2017,
+    "files/win2017",
     r".*/wav.ckd/.*",
     wav_parse_nx2018,
     "files/nx2018",

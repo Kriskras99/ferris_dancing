@@ -83,7 +83,7 @@ impl<T: ReadAt> Read for CursorAt<T> {
         while len > 0 {
             match self.inner.read_slice_at(&mut self.position, len) {
                 Ok(slice) => {
-                    buf.copy_from_slice(&slice);
+                    buf[0..len].copy_from_slice(&slice);
                     break;
                 }
                 Err(ReadError::IoError {

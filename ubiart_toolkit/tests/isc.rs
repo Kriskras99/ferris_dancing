@@ -19,6 +19,11 @@ fn isc_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()
     Ok(())
 }
 
+fn isc_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    isc::parse(&data)?;
+    Ok(())
+}
+
 fn isc_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     isc::parse(&data)?;
     Ok(())
@@ -55,6 +60,9 @@ datatest_stable::harness!(
     r".*/isc.ckd/.*",
     isc_parse_nx2017,
     "files/nx2017",
+    r".*/isc.ckd/.*",
+    isc_parse_win2017,
+    "files/win2017",
     r".*/isc.ckd/.*",
     isc_parse_wiiu2017,
     "files/wiiu2017",

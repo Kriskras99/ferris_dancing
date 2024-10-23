@@ -182,6 +182,16 @@ pub fn bundle_name_to_filename(name: &str, ugi: UniqueGameId) -> String {
             result
         }
         UniqueGameId {
+            platform: Platform::Win,
+            game: _,
+            id: _,
+        } => {
+            let mut result = String::with_capacity(name.len() + 7);
+            result.push_str(name);
+            result.push_str("_pc.ipk");
+            result
+        }
+        UniqueGameId {
             platform: Platform::Wii,
             game: _,
             id: _,

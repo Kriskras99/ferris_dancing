@@ -24,6 +24,11 @@ fn secure_fat_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Re
     Ok(())
 }
 
+fn secure_fat_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
+    SecureFat::deserialize(&data)?;
+    Ok(())
+}
+
 fn secure_fat_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
     SecureFat::deserialize(&data)?;
     Ok(())
@@ -66,6 +71,9 @@ datatest_stable::harness!(
     r".*/gf/.*",
     secure_fat_parse_wiiu2017,
     "files/wiiu2017",
+    r".*/gf/.*",
+    secure_fat_parse_win2017,
+    "files/win2017",
     r".*/gf/.*",
     secure_fat_parse_nx2018,
     "files/nx2018",

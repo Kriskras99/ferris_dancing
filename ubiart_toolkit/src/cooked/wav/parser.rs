@@ -33,7 +33,7 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, Self::MAGIC)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        test_any!(unk1, [0x0B00_0000, 0x0A, 0x09])?;
+        test_any!(unk1, [0x0A00_0000, 0x0B00_0000, 0x0A, 0x09])?;
         let platform = reader.read_at::<WavPlatform>(position)?;
         let codec = reader.read_at::<Codec>(position)?;
 
@@ -138,7 +138,7 @@ impl<'de> BinaryDeserialize<'de> for Fmt<'de> {
         let offset = reader.read_at_with::<u32>(position, endian)?;
         let size = reader.read_at_with::<u32>(position, endian)?;
 
-        test_any!(size, [Self::NORMAL_SIZE, 18, 40])?;
+        test_any!(size, [Self::NORMAL_SIZE, 18, 40, 50])?;
 
         let mut new_position = start + u64::from(offset);
         let unk1 = reader.read_at_with::<u16>(&mut new_position, endian)?;
@@ -149,12 +149,11 @@ impl<'de> BinaryDeserialize<'de> for Fmt<'de> {
         let bits_per_sample = reader.read_at_with::<u16>(&mut new_position, endian)?;
 
         let unk3 = match size {
-            18 | 40 => Some(reader.read_slice_at(
+            Self::NORMAL_SIZE => None,
+            _ => Some(reader.read_slice_at(
                 &mut new_position,
                 usize::try_from(size - Self::NORMAL_SIZE)?,
             )?),
-            Self::NORMAL_SIZE => None,
-            _ => unreachable!(),
         };
 
         Ok(Self {

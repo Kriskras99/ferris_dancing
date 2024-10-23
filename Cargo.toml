@@ -3,10 +3,10 @@
 
 members = [
     "dotstar_toolkit_utils",
-    "gc_adpcm", 
     "gtx",
     "hipstr",
     "jdmod",
+#    "msadpcm",
     "nx_opus",
     "rgbcx-rs", 
     "rgbcx-sys",
@@ -81,12 +81,13 @@ crossbeam = { version = "0.8.4", default-features = false, features = ["std", "c
 datatest-stable = { version = "0.2.9", default-features = false }
 dotstar_toolkit_utils = { path = "dotstar_toolkit_utils" }
 flate2 = { version = "1.0.34", default-features = false, features = ["rust_backend"] }
-gc_adpcm = { path = "gc_adpcm" }
+gc_adpcm = { version = "0.2.0", default-features = false, features = ["std"] }
 gtx = { path = "gtx" }
 hash32 = { version = "0.3.1", default-features = false }
 hipstr= { path = "hipstr", default-features = false, features = ["std", "serde"]}
 hound = { version = "3.5.1", default-features = false }
 image = { version = "0.25.4", default-features = false, features = ["png"] }
+image_dds = { version = "0.6.0", default-features = false, features = ["ddsfile", "image"]}
 itertools = { version = "0.13.0", default-features = false }
 memmap2 = { version = "0.9.5", default-features = false, features = ["stable_deref_trait"] }
 nx_opus = { path = "nx_opus" }
