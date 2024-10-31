@@ -1,11 +1,8 @@
 use std::{borrow::Cow, collections::VecDeque, num::TryFromIntError};
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u32le, u64le},
-        write::{BinarySerialize, WriteAt, WriteError},
-    },
-    testing::TestError,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u32le, u64le},
+    write::{BinarySerialize, WriteAt, WriteError},
 };
 use image::{
     error::{EncodingError, ImageFormatHint},
@@ -16,6 +13,7 @@ use tegra_swizzle::{
     surface::{swizzle_surface, BlockDim},
     BlockHeight, SwizzleError,
 };
+use test_eq::TestFailure;
 use thiserror::Error;
 
 use crate::types::{
@@ -97,7 +95,7 @@ pub enum EncoderError {
     Read(#[from] WriteError),
     /// Test failure
     #[error("Value test failed")]
-    Test(#[from] TestError),
+    Test(#[from] TestFailure),
     /// Integer conversion failed
     #[error("Integer conversion failed")]
     TryFromInt(#[from] TryFromIntError),

@@ -1,7 +1,9 @@
 //! # Aliases
 //! Types for dealing with aliases
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
+use hipstr::HipStr;
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
     json_types::{
@@ -17,20 +19,23 @@ use super::{
 use crate::types::localisation::LocaleIdMap;
 
 /// Describes an alias
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, IntoOwned)]
 pub struct Aliases<'a> {
     /// Color when locked (RGBA as hex string)
-    pub locked_color: Cow<'a, str>,
+    #[serde(borrow)]
+    pub locked_color: HipStr<'a>,
     /// Map rarity to colors (RGBA as hex string)
-    pub rarity_color: HashMap<Rarity, Cow<'a, str>>,
+    #[serde(borrow)]
+    pub rarity_color: HashMap<Rarity, HipStr<'a>>,
     /// All the aliases
+    #[serde(borrow)]
     pub aliases: Vec<Alias<'a>>,
 }
 
 /// How rare is the alias
 ///
 /// Wrapper type around [`ubiart_toolkit::json_types::isg::Rarity`] that serializes in a more readable way
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Hash, PartialEq, Eq, IntoOwned)]
 pub enum Rarity {
     /// Common
     Common,
@@ -73,10 +78,11 @@ impl From<ubiart_toolkit::json_types::isg::Rarity> for Rarity {
 }
 
 /// Describes an alias
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, IntoOwned)]
 pub struct Alias<'a> {
     /// Placeholder for the name (mostly empty)
-    pub name_placeholder: Cow<'a, str>,
+    #[serde(borrow)]
+    pub name_placeholder: HipStr<'a>,
     /// Name (ungendered or male)
     pub name: LocaleId,
     /// Name (female)
@@ -88,8 +94,8 @@ pub struct Alias<'a> {
     /// How rare is it
     pub rarity: Rarity,
     /// What needs to be done to unlock it (objective name)
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unlock_objective: Option<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub unlock_objective: Option<HipStr<'a>>,
 }
 
 impl<'c> Alias<'c> {
@@ -97,7 +103,7 @@ impl<'c> Alias<'c> {
     #[must_use]
     pub fn from_unlockable_alias_descriptor<'a: 'c, 'b: 'c>(
         descriptor: UnlockableAliasDescriptor<'a>,
-        aliasesobjectives: &HashMap<u16, Cow<'b, str>>,
+        aliasesobjectives: &HashMap<u32, HipStr<'b>>,
         locale_id_map: &LocaleIdMap,
     ) -> Self {
         let unlock_objective = aliasesobjectives.get(&descriptor.id).cloned();
@@ -125,7 +131,7 @@ impl<'c> Alias<'c> {
         locale_id_map: &LocaleIdMap,
         objectives: &mut Objectives<'a>,
     ) -> Self {
-        let unlock_objective = Some(Cow::Owned(objectives.add_objective(
+        let unlock_objective = Some(HipStr::from(objectives.add_objective(
             Objective::from_old_descriptor(
                 &descriptor.unlock_objective,
                 descriptor.restricted_to_unlimited_songs,

@@ -1,13 +1,11 @@
 //! Contains the parser implementation
 
 use cipher::{generic_array::GenericArray, BlockDecryptMut, KeyIvInit};
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u16be, u32be, u64be},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u16be, u32be, u64be},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
+use test_eq::test_eq;
 
 use super::types::{
     AccessRights, Aes128CbcDec, Content, ContentMetadata, ContentType, InstallableArchive, Region,

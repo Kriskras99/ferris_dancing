@@ -1,15 +1,12 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{f32be, i32be, u32be},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_any, test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{f32be, i32be, u32be},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use hipstr::HipStr;
+use test_eq::{test_any, test_eq};
 use tracing::{instrument, trace};
-use ubiart_toolkit_json_types::Empty;
 use ubiart_toolkit_shared_types::Color;
 
 use super::{
@@ -24,7 +21,10 @@ use super::{
     TargetActor, TextClip, TranslationClip, Unknown59FCC733Clip, Unknown5C944B01Clip,
     UnknownCBB7C029Clip,
 };
-use crate::utils::{Game, SplitPath, UniqueGameId};
+use crate::{
+    json_types::Empty,
+    utils::{Game, SplitPath, UniqueGameId},
+};
 
 impl<'a> BinaryDeserialize<'a> for Tape<'a> {
     type Ctx = UniqueGameId;
@@ -61,7 +61,7 @@ impl<'a> BinaryDeserialize<'a> for Tape<'a> {
         let tape_clock = reader.read_at::<u32be>(position)?;
         let tape_bar_count = reader.read_at::<u32be>(position)?;
         let free_resources_after_play = reader.read_at::<u32be>(position)?;
-        let map_name = reader.read_len_string_at::<u32be>(position)?.into();
+        let map_name = reader.read_len_string_at::<u32be>(position)?;
 
         Ok(Self {
             class: None,
@@ -294,9 +294,9 @@ impl<'a> BinaryDeserialize<'a> for CommunityDancerClip<'a> {
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
-        let dancer_country_code = reader.read_len_string_at::<u32be>(position)?.into();
+        let dancer_country_code = reader.read_len_string_at::<u32be>(position)?;
         let dancer_avatar_id = reader.read_at::<u32be>(position)?;
-        let dancer_name = reader.read_len_string_at::<u32be>(position)?.into();
+        let dancer_name = reader.read_len_string_at::<u32be>(position)?;
 
         Ok(Self {
             class: None,
@@ -373,7 +373,7 @@ impl<'a> BinaryDeserialize<'a> for GameplayEventClip<'a> {
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
         let event_type = reader.read_at::<u32be>(position)?;
-        let custom_param = reader.read_len_string_at::<u32be>(position)?.into();
+        let custom_param = reader.read_len_string_at::<u32be>(position)?;
         Ok(Self {
             class: None,
             id,
@@ -442,7 +442,7 @@ impl<'a> BinaryDeserialize<'a> for HideUserInterfaceClip<'a> {
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
         let event_type = reader.read_at::<u32be>(position)?;
-        let custom_param = reader.read_len_string_at::<u32be>(position)?.into();
+        let custom_param = reader.read_len_string_at::<u32be>(position)?;
 
         Ok(Self {
             class: None,
@@ -478,7 +478,7 @@ impl<'a> BinaryDeserialize<'a> for KaraokeClip<'a> {
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
         let pitch = reader.read_at::<f32be>(position)?;
-        let lyrics = reader.read_len_string_at::<u32be>(position)?.into();
+        let lyrics = reader.read_len_string_at::<u32be>(position)?;
         let is_end_of_line = reader.read_at::<u32be>(position)?;
         let content_type = reader.read_at::<u32be>(position)?;
         let start_time_tolerance = reader.read_at::<u32be>(position)?;
@@ -840,9 +840,9 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
         for _ in 0..n_motion_platform_specifics {
             let platform = reader.read_at::<u32be>(position)?;
             let platform = match platform {
-                0x1 => Cow::Borrowed("X360"),
-                0x3 => Cow::Borrowed("ORBIS"),
-                0xA => Cow::Borrowed("DURANGO"),
+                0x1 => HipStr::borrowed("X360"),
+                0x3 => HipStr::borrowed("ORBIS"),
+                0xA => HipStr::borrowed("DURANGO"),
                 _ => {
                     return Err(ReadError::custom(format!(
                         "Unknown platform: 0x{platform:x}, position: {position}"
@@ -851,7 +851,7 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
             };
             let motion_platform_specific =
                 reader.read_at_with::<MotionPlatformSpecific>(position, ugi)?;
-            motion_platform_specifics.insert(platform.into(), motion_platform_specific);
+            motion_platform_specifics.insert(platform, motion_platform_specific);
         }
         Ok(Self {
             class: None,
@@ -1068,8 +1068,8 @@ impl<'a> BinaryDeserialize<'a> for SlotClip<'a> {
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
         let bpm = reader.read_at::<f32be>(position)?;
-        let signature = reader.read_len_string_at::<u32be>(position)?.into();
-        let guid = reader.read_len_string_at::<u32be>(position)?.into();
+        let signature = reader.read_len_string_at::<u32be>(position)?;
+        let guid = reader.read_len_string_at::<u32be>(position)?;
 
         Ok(Self {
             class: None,
@@ -1104,7 +1104,7 @@ impl<'a> BinaryDeserialize<'a> for SpawnActorClip<'a> {
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
         let actor_path = reader.read_at::<SplitPath>(position)?.to_string().into();
-        let actor_name = reader.read_len_string_at::<u32be>(position)?.into();
+        let actor_name = reader.read_len_string_at::<u32be>(position)?;
         let spawn_x = reader.read_at::<f32be>(position)?;
         let spawn_y = reader.read_at::<f32be>(position)?;
         let spawn_z = reader.read_at::<f32be>(position)?;
@@ -1430,7 +1430,7 @@ impl<'a> BinaryDeserialize<'a> for Unknown5C944B01Clip<'a> {
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
         let duration = reader.read_at::<u32be>(position)?;
-        let string = reader.read_len_string_at::<u32be>(position)?.into();
+        let string = reader.read_len_string_at::<u32be>(position)?;
 
         Ok(Self {
             class: None,
@@ -1653,7 +1653,7 @@ impl<'de> BinaryDeserialize<'de> for ActorPaths {
             test_eq!(unk2, 0x24)?;
             let unk3 = reader.read_at::<u32be>(position)?;
             test_eq!(unk3, 0x0)?;
-            let actor_path = reader.read_len_string_at::<u32be>(position)?.into();
+            let actor_path = reader.read_len_string_at::<u32be>(position)?;
             actor_paths.push(actor_path);
             let unk4 = reader.read_at::<u32be>(position)?;
             test_eq!(unk4, 0x0)?;
@@ -1678,12 +1678,12 @@ impl<'de> BinaryDeserialize<'de> for TargetActor<'de> {
         for _ in 0..n_scenes {
             let unk2 = reader.read_at::<u32be>(position)?;
             test_eq!(unk2, 0x10, "unk2 is wrong at {position}")?;
-            let scene = reader.read_len_string_at::<u32be>(position)?.into();
+            let scene = reader.read_len_string_at::<u32be>(position)?;
             scenes.push(scene);
             let unk3 = reader.read_at::<u32be>(position)?;
             test_any!(unk3, [0x0, 0x1], "Padding is wrong at {position}")?;
         }
-        let path = reader.read_len_string_at::<u32be>(position)?.into();
+        let path = reader.read_len_string_at::<u32be>(position)?;
         let unk4 = reader.read_at::<u32be>(position)?;
         test_any!(unk4, [0x0, 0x1], "Padding is wrong at {position}")?;
 

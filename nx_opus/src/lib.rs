@@ -33,23 +33,21 @@
 //!
 //! If the last packet brings the total samples to the expected samples,
 //! one more (empty) packet is written.
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{i16le, u16le, u32be, u32le, u64be, u64le},
-        read::{BinaryDeserialize, BinaryDeserializeExt as _, ReadAtExt, ReadError},
-        write::{BinarySerialize, BinarySerializeExt as _, WriteAt, WriteError},
-        CursorAt,
-    },
-    test_eq, test_ge, test_le,
-    testing::TestError,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{i16le, u16le, u32be, u32le, u64be, u64le},
+    read::{BinaryDeserialize, BinaryDeserializeExt as _, ReadAtExt, ReadError},
+    write::{BinarySerialize, BinarySerializeExt as _, WriteAt, WriteError},
+    CursorAt,
 };
+use hipstr::HipStr;
 use ogg::{
     OggReadError,
     PacketWriteEndInfo::{EndPage, EndStream, NormalPacket},
     PacketWriter,
 };
+use test_eq::{test_and, test_any, test_eq, test_le, test_ne, TestFailure};
 use thiserror::Error;
 use tracing::{instrument, warn};
 
@@ -81,16 +79,16 @@ pub fn mux_to_opus(
     };
     let mut vec = Vec::new();
     OpusHeader::serialize(opus_header, &mut vec)?;
-    writer.write_packet(vec, 0x0D15EA5E, EndPage, 0)?;
+    writer.write_packet(vec, 0x0D15_EA5E, EndPage, 0)?;
 
     // Write the comments to the second page
     let comments = OpusComments {
-        vendor: Cow::Borrowed("UbiArt Toolkit"),
+        vendor: HipStr::borrowed("UbiArt Toolkit"),
         comments: HashMap::new(),
     };
     let mut vec = Vec::new();
     OpusComments::serialize(comments, &mut vec)?;
-    writer.write_packet(vec, 0x0D15EA5E, EndPage, 0)?;
+    writer.write_packet(vec, 0x0D15_EA5E, EndPage, 0)?;
 
     // Write all the opus packets to the third page
     let mut samples_read = 0;
@@ -120,9 +118,9 @@ pub fn mux_to_opus(
 
         // if we've read more samples than are valid, it means this should be the final packet
         if samples_read > num_of_samples {
-            writer.write_packet(data, 0x0D15EA5E, EndStream, u64::from(num_of_samples))?;
+            writer.write_packet(data, 0x0D15_EA5E, EndStream, u64::from(num_of_samples))?;
         } else {
-            writer.write_packet(data, 0x0D15EA5E, NormalPacket, u64::from(samples_read))?;
+            writer.write_packet(data, 0x0D15_EA5E, NormalPacket, u64::from(samples_read))?;
         };
     }
 
@@ -174,11 +172,7 @@ pub fn mux_from_opus(
     let header = OpusHeader::deserialize_at(&data, &mut read_position)?;
     let _comments = OpusComments::deserialize_at(&data, &mut read_position)?;
 
-    test_le!(header.channels, 2, "Only mono and stereo are supported").or(test_eq!(
-        header.channels,
-        0,
-        "Only mono and stereo are supported"
-    ))?;
+    test_any!(header.channels, 1..=2, "Only mono and stereo are supported")?;
 
     // write the nx header
     destination.write_at::<NxOpusHeader>(
@@ -262,7 +256,7 @@ pub enum Error {
     #[error("Integer conversion failed: {0}")]
     IntegerConversionFailed(#[from] std::num::TryFromIntError),
     #[error("Sanity check failed: {0}")]
-    TestError(#[from] TestError),
+    TestError(#[from] TestFailure),
     #[error("Failed to read ogg file: {0}")]
     OggReadError(#[from] OggReadError),
     #[error("Failed to decode the opus stream: {0}")]
@@ -405,11 +399,11 @@ impl BinarySerialize for OpusHeader {
 #[derive(Debug)]
 pub struct OpusComments<'a> {
     /// String identifying the application that created this file
-    pub vendor: Cow<'a, str>,
+    pub vendor: HipStr<'a>,
     /// Metadata comments
     ///
     /// The key cannot contain `=`.
-    pub comments: HashMap<Cow<'a, str>, Cow<'a, str>>,
+    pub comments: HashMap<HipStr<'a>, HipStr<'a>>,
 }
 
 impl<'de> BinaryDeserialize<'de> for OpusComments<'de> {
@@ -428,24 +422,19 @@ impl<'de> BinaryDeserialize<'de> for OpusComments<'de> {
         let mut comments = HashMap::with_capacity(usize::try_from(comment_list_length)?);
         for _ in 0..comment_list_length {
             let comment = reader.read_len_string_at::<u32le>(position)?;
-            let index = comment
-                .find('=')
+            let (key, value) = comment
+                .split_once('=')
                 .ok_or_else(|| ReadError::custom(format!("Invalid comment: {comment}")))?;
-            test_ge!(comment.len(), index + 2)?;
-            let (key, value) = match comment {
-                Cow::Borrowed(comment) => {
-                    let (left, right) = comment.split_at(index);
-                    let right = &right[1..];
-                    (Cow::Borrowed(left), Cow::Borrowed(right))
-                }
-                Cow::Owned(mut comment) => {
-                    let right = comment.split_at(index + 1).1;
-                    let right = right.to_string();
-                    comment.truncate(index);
-                    comment.shrink_to_fit();
-                    (Cow::Owned(comment), Cow::Owned(right))
-                }
-            };
+            test_and!(
+                test_ne!(key.len(), 0),
+                test_ne!(value.len(), 0),
+                "Invalid comment, key or value is empty: {comment}"
+            )?;
+            test_eq!(
+                value.find('='),
+                None,
+                "Invalid comment, value contains '=': {comment}"
+            )?;
             comments.insert(key, value);
         }
         Ok(Self { vendor, comments })

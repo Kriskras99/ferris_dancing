@@ -8,15 +8,13 @@ use std::{
 
 use anyhow::{anyhow, Error};
 use clap::Parser;
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::i16le,
-        read::{BinaryDeserializeExt as _, ReadAtExt},
-    },
-    test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::i16le,
+    read::{BinaryDeserializeExt as _, ReadAtExt},
 };
 use hound::SampleFormat;
 use nx_opus::{mux_from_opus, mux_to_opus};
+use test_eq::test_eq;
 use tracing::{level_filters::LevelFilter, trace};
 use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 use ubiart_toolkit::cooked::wav::{
@@ -111,7 +109,7 @@ pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
                 channels: fmt.channel_count,
                 sample_rate: fmt.sample_rate,
                 bits_per_sample: fmt.bits_per_sample,
-                sample_format: hound::SampleFormat::Int,
+                sample_format: SampleFormat::Int,
             };
             let mut writer = hound::WavWriter::new(writer, spec)?;
             let mut sample_writer = writer.get_i16_writer(u32::try_from(data.data.len() / 2)?);
@@ -148,7 +146,7 @@ pub fn decode_audio(reader: &File, writer: &mut File) -> Result<bool, Error> {
                 channels: fmt.channel_count,
                 sample_rate: fmt.sample_rate,
                 bits_per_sample: fmt.bits_per_sample,
-                sample_format: hound::SampleFormat::Int,
+                sample_format: SampleFormat::Int,
             };
 
             if let Some(data) = wav.chunks.get(&Data::MAGIC_STEREO) {

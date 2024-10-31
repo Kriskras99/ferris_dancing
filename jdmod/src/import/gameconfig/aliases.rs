@@ -1,8 +1,9 @@
 //! # Aliases
 //! Import all the aliases
-use std::{borrow::Cow, collections::HashMap, fs::File};
+use std::{collections::HashMap, fs::File};
 
 use anyhow::Error;
+use hipstr::HipStr;
 use ubiart_toolkit::{
     cooked,
     json_types::{AliasesObjectives, DifficultyColors},
@@ -25,9 +26,7 @@ pub fn import_v20v22(
 ) -> Result<(), Error> {
     println!("Importing aliases...");
 
-    let local_aliases = is
-        .vfs
-        .open(cook_path(alias_db_path, is.ugi.platform)?.as_ref())?;
+    let local_aliases = is.vfs.open(cook_path(alias_db_path, is.ugi)?.as_ref())?;
     let template = cooked::json::parse_v22(&local_aliases, is.lax)?;
     let local_aliases = template.into_local_aliases()?;
 
@@ -64,9 +63,7 @@ pub fn import_v20v22(
 pub fn import_v19(is: &ImportState<'_>, alias_db_path: &str) -> Result<(), Error> {
     println!("Importing aliases...");
 
-    let local_aliases = is
-        .vfs
-        .open(cook_path(alias_db_path, is.ugi.platform)?.as_ref())?;
+    let local_aliases = is.vfs.open(cook_path(alias_db_path, is.ugi)?.as_ref())?;
     let template = cooked::json::parse_v19(&local_aliases, is.lax)?;
     let local_aliases = template.into_local_aliases()?;
 
@@ -105,13 +102,13 @@ pub fn import_v19(is: &ImportState<'_>, alias_db_path: &str) -> Result<(), Error
 /// Load existing aliases in the mod
 fn load_aliases<'a>(
     is: &ImportState<'_>,
-    locked_color: &Cow<'a, str>,
+    locked_color: &HipStr<'a>,
     difficulty_colors: &DifficultyColors<'a>,
 ) -> Result<Aliases<'a>, Error> {
     let aliases_config_path = is.dirs.config().join("aliases.json");
 
-    if let Ok(file) = File::open(aliases_config_path) {
-        Ok(serde_json::from_reader(file)?)
+    if let Ok(file) = std::fs::read(aliases_config_path) {
+        Ok(serde_json::from_slice::<Aliases>(&file)?.into_owned())
     } else {
         let mut rarity_color = HashMap::new();
         for (diff, color) in difficulty_colors {

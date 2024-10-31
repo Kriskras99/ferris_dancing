@@ -1,13 +1,13 @@
 //! # Song building
 //! All the logic for building a song
-use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::{
     path,
     vfs::{native::NativeFs, VirtualFileSystem, VirtualPath, VirtualPathBuf},
 };
-use ubiart_toolkit::{cooked, utils::Platform};
+use hipstr::HipStr;
+use ubiart_toolkit::{cooked, cooked::isc::SongDesc, utils::Platform};
 
 use super::{BuildFiles, BuildState};
 use crate::types::song::{RelativeSongDirectoryTree, Song};
@@ -48,7 +48,7 @@ pub fn build(
 ) -> Result<String, Error> {
     let song_file = bs.native_vfs.open(&dirs.song().join("song.json"))?;
     let song: Song = serde_json::from_slice(&song_file)?;
-    let map_name = song.map_name.as_ref();
+    let map_name = song.map_name.as_str();
     let lower_map_name = map_name.to_lowercase();
     let cache_map_path = path!("cache/itf_cooked/nx/world/maps/{lower_map_name}");
     let map_path = path!("world/maps/{lower_map_name}");
@@ -171,8 +171,8 @@ fn graph_scene(
                 cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
                         relativez: 10.0,
-                        userfriendly: Cow::Borrowed("Camera_JD_Dummy"),
-                        lua: Cow::Borrowed("enginedata/actortemplates/tpl_emptyactor.tpl"),
+                        userfriendly: HipStr::borrowed("Camera_JD_Dummy"),
+                        lua: HipStr::borrowed("enginedata/actortemplates/tpl_emptyactor.tpl"),
                         ..Default::default()
                     }),
                 },
@@ -208,7 +208,7 @@ fn main_scene<'a>(
     autodance_scene: cooked::isc::WrappedScene<'a>,
 ) -> cooked::isc::Root<'a> {
     let lower_map_name = ses.lower_map_name;
-    let map_name = ses.song.map_name.as_ref();
+    let map_name = ses.song.map_name.as_str();
 
     let mut actors = Vec::with_capacity(8);
     for (scene, userfriendly, directory, file, view_type, pos2d) in [
@@ -244,14 +244,14 @@ fn main_scene<'a>(
         actors.push(cooked::isc::WrappedActors::SubSceneActor(
             cooked::isc::WrappedSubSceneActor {
                 sub_scene_actor: Box::new(cooked::isc::SubSceneActor {
-                    userfriendly: Cow::Owned(format!("{map_name}_{userfriendly}")),
+                    userfriendly: HipStr::from(format!("{map_name}_{userfriendly}")),
                     pos2d,
-                    lua: Cow::Borrowed("enginedata/actortemplates/subscene.tpl"),
-                    relativepath: Cow::Owned(format!(
+                    lua: HipStr::borrowed("enginedata/actortemplates/subscene.tpl"),
+                    relativepath: HipStr::from(format!(
                         "world/maps/{lower_map_name}/{directory}/{lower_map_name}_{file}.isc"
                     )),
                     enums: vec![cooked::isc::Enum {
-                        name: Cow::Borrowed("viewType"),
+                        name: HipStr::borrowed("viewType"),
                         selection: view_type,
                     }],
                     wrapped_scene: scene,
@@ -263,10 +263,10 @@ fn main_scene<'a>(
 
     actors.push(cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
         // This is not an oversight, the JDVer, ID, Type, Flags, NbCoach, and Difficulty do not change per map
-        userfriendly: Cow::Owned(format!("{map_name} : Template Artist - Template Title&#10;JDVer = 5, ID = 842776738, Type = 1 (Flags 0x00000000), NbCoach = 2, Difficulty = 2")),
+        userfriendly: HipStr::from(format!("{map_name} : Template Artist - Template Title&#10;JDVer = 5, ID = 842776738, Type = 1 (Flags 0x00000000), NbCoach = 2, Difficulty = 2")),
         pos2d: (-3.531_976, -1.485_322),
-        lua: Cow::Owned(format!("world/maps/{lower_map_name}/songdesc.tpl")),
-        components: vec![cooked::isc::WrappedComponent::SongDesc(Default::default())],
+        lua: HipStr::from(format!("world/maps/{lower_map_name}/songdesc.tpl")),
+        components: vec![cooked::isc::WrappedComponent::SongDesc(SongDesc::default())],
         ..Default::default()
     })}));
 
@@ -280,20 +280,20 @@ fn main_scene<'a>(
                 active_scene_config: 0,
                 jd_scene_config: vec![cooked::isc::WrappedJdSceneConfig::Map(
                     cooked::isc::MapSceneConfig {
-                        name: Cow::Borrowed(""),
-                        sound_context: Cow::Borrowed(""),
+                        name: HipStr::borrowed(""),
+                        sound_context: HipStr::borrowed(""),
                         hud: 0,
                         enums: vec![
                             cooked::isc::Enum {
-                                name: Cow::Borrowed("Pause_Level"),
+                                name: HipStr::borrowed("Pause_Level"),
                                 selection: 6,
                             },
                             cooked::isc::Enum {
-                                name: Cow::Borrowed("type"),
+                                name: HipStr::borrowed("type"),
                                 selection: 1,
                             },
                             cooked::isc::Enum {
-                                name: Cow::Borrowed("musicscore"),
+                                name: HipStr::borrowed("musicscore"),
                                 selection: 2,
                             },
                         ],

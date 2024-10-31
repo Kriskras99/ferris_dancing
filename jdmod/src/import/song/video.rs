@@ -3,7 +3,7 @@
 use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use ubiart_toolkit::cooked;
+use ubiart_toolkit::{cooked, utils::Game};
 
 use super::SongImportState;
 
@@ -22,7 +22,7 @@ pub fn import(
     let to_path = sis.dirs.song().join(filename);
     let mut to = File::create(to_path)?;
 
-    let video_path = pleo.video.as_ref();
+    let video_path = pleo.video.as_str();
 
     if let Ok(from) = sis.vfs.open(video_path.as_ref()) {
         to.write_all(&from)?;
@@ -36,6 +36,13 @@ pub fn import(
         video_path.push_str(".vp9.720");
         video_path.push_str(right);
         to.write_all(&sis.vfs.open(video_path.as_ref())?)?;
+    }
+
+    if sis.ugi.game <= Game::JustDance2015 {
+        println!(
+            "Warning: Video for {} needs to be transcoded",
+            sis.lower_map_name
+        );
     }
 
     Ok(filename)

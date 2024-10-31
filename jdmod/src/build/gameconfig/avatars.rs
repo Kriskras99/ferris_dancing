@@ -1,16 +1,19 @@
 //! # Avatars
 //! Build the avatars
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
+use hipstr::HipStr;
+use ownable::traits::IntoOwned;
 use ubiart_toolkit::{
     cooked,
-    json_types::{
-        self,
-        v22::{AvatarDescription2022, GameManagerConfig22},
+    cooked::{
+        isc::AvatarDesc,
+        tpl::types::{AvatarDescription, AvatarDescription2022},
     },
-    utils::SplitPath,
+    json_types::v22::GameManagerConfig22,
+    utils::{SplitPath, UniqueGameId},
 };
 
 use crate::{
@@ -27,14 +30,15 @@ use crate::{
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &mut GameManagerConfig22<'_>,
+    gameconfig: &mut GameManagerConfig22,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let avatars_file = bs
         .native_vfs
         .open(&bs.rel_tree.avatars().join("avatars.json"))?;
 
-    let avatars: HashMap<Cow<'_, str>, Avatar> = serde_json::from_slice(&avatars_file)?;
+    let avatars =
+        serde_json::from_slice::<HashMap<HipStr<'_>, Avatar>>(&avatars_file)?.into_owned();
 
     // Avatars can refer to other avatars, so the IDs need to be known before we start the conversions
     let mut id_map = HashMap::with_capacity(avatars.len());
@@ -49,7 +53,7 @@ pub fn build(
 
     for (name, avatar) in avatars {
         let id = *id_map
-            .get(name.as_ref())
+            .get(name.as_str())
             .ok_or_else(|| anyhow!("Impossible!"))?;
         let avatar_dir = format!("world/avatars/{id:04}/");
 
@@ -60,21 +64,24 @@ pub fn build(
         // Encode the avatar image
         let cooked_image = encode_texture(
             bs.native_vfs,
-            &bs.rel_tree.avatars().join(avatar.image_path.as_ref()),
+            &bs.rel_tree.avatars().join(avatar.image_path.as_str()),
         )?;
-        let to = cook_path(&format!("world/avatars/{id:04}/avatar.png"), bs.platform)?;
+        let to = cook_path(
+            &format!("world/avatars/{id:04}/avatar.png"),
+            UniqueGameId::NX2022,
+        )?;
         let cooked_image_vec = cooked::png::create_vec(cooked_image)?;
 
         // Add the phone image for copying
         let phone_image = format!("world/avatars/{id:04}/avatar_phone.png");
         bf.static_files.add_file(
-            bs.rel_tree.avatars().join(avatar.image_phone_path.as_ref()),
+            bs.rel_tree.avatars().join(avatar.image_phone_path.as_str()),
             VirtualPathBuf::from(phone_image.clone()),
         )?;
 
         // Add an avatar objective or add it to the gacha items
         let unlock_type = avatar.unlock_type.normalize();
-        let unlock_type_u8 = u8::from(&unlock_type);
+        let unlock_type_u32 = u32::from(&unlock_type);
         if unlock_type == UnlockType::GiftMachine {
             gacha_items.push(GachaItem::Avatar(id));
         } else if let UnlockType::Quest(quest) = unlock_type {
@@ -82,48 +89,56 @@ pub fn build(
         }
 
         // Create the avatar description
-        let tpl = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
+        let tpl = cooked::tpl::types::Actor {
             components: vec![
-                json_types::v22::Template22::MaterialGraphicComponent(
-                    json_types::tpl::MaterialGraphicComponent {
+                cooked::tpl::types::Template::MaterialGraphicComponent(
+                    cooked::tpl::types::MaterialGraphicComponent {
                         shadow_size: (1.8, 0.3),
-                        shadow_dist: 4,
+                        shadow_dist: 4.0,
                         ..Default::default()
                     },
                 ),
-                json_types::v22::Template22::AvatarDescription(AvatarDescription2022 {
-                    relative_song_name: avatar.used_as_coach_map_name.clone(),
-                    sound_family: avatar.sound_family,
-                    status: avatar.status,
-                    unlock_type: unlock_type_u8,
-                    actor_path: Cow::Owned(actor_path.clone()),
-                    phone_image: Cow::Owned(phone_image),
-                    avatar_id: id,
-                    used_as_coach_map_name: avatar.used_as_coach_map_name,
-                    used_as_coach_coach_id: avatar.used_as_coach_coach_id,
-                    special_effect: u8::from(avatar.special_effect),
-                    main_avatar_id: avatar
-                        .main_avatar
-                        .and_then(|name| id_map.get(name.as_ref()))
-                        .copied()
-                        .unwrap_or(u16::MAX),
-                    ..Default::default()
-                }),
+                cooked::tpl::types::Template::AvatarDescription(AvatarDescription::V2022(
+                    AvatarDescription2022 {
+                        relative_song_name: avatar.used_as_coach_map_name.clone(),
+                        sound_family: avatar.sound_family,
+                        status: avatar.status,
+                        unlock_type: unlock_type_u32,
+                        actor_path: HipStr::from(actor_path.clone()),
+                        phone_image: HipStr::from(phone_image),
+                        avatar_id: id,
+                        used_as_coach_map_name: avatar.used_as_coach_map_name,
+                        used_as_coach_coach_id: avatar.used_as_coach_coach_id,
+                        special_effect: u32::from(avatar.special_effect),
+                        main_avatar_id: avatar
+                            .main_avatar
+                            .and_then(|name| id_map.get(name.as_str()))
+                            .copied()
+                            .unwrap_or_else(|| u32::from(u16::MAX)),
+                        ..Default::default()
+                    },
+                )),
             ],
             ..Default::default()
-        });
+        };
 
         let desc_tpl_vec = cooked::json::create_vec_with_capacity_hint(&tpl, 3000)?;
 
         bf.generated_files.add_file(
-            cook_path(&format!("world/avatars/{id:04}/desc.tpl"), bs.platform)?.into(),
+            cook_path(
+                &format!("world/avatars/{id:04}/desc.tpl"),
+                UniqueGameId::NX2022,
+            )?
+            .into(),
             desc_tpl_vec,
         )?;
 
         bf.generated_files.add_file(to.into(), cooked_image_vec)?;
 
-        bf.generated_files
-            .add_file(cook_path(&actor_path, bs.platform)?.into(), actor_vec)?;
+        bf.generated_files.add_file(
+            cook_path(&actor_path, UniqueGameId::NX2022)?.into(),
+            actor_vec,
+        )?;
 
         let scene = desc_scene(id);
         scene_actors.push(scene);
@@ -132,7 +147,7 @@ pub fn build(
     let avatardb_scene_vec =
         cooked::isc::create_vec_with_capacity_hint(&avatardb_scene(bs, scene_actors), 940_000)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.avatardb_scene, bs.platform)?.into(),
+        cook_path(&gameconfig.avatardb_scene, UniqueGameId::NX2022)?.into(),
         avatardb_scene_vec,
     )?;
 
@@ -142,7 +157,7 @@ pub fn build(
 /// Build the avatar description
 fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
     let actor = cooked::act::Actor {
-        lua: SplitPath::new(Cow::Borrowed(avatar_dir), Cow::Borrowed("desc.tpl"))?,
+        lua: SplitPath::new(HipStr::borrowed(avatar_dir), HipStr::borrowed("desc.tpl"))?,
         unk1: 0.0,
         unk2: 1.0,
         unk2_5: 1.0,
@@ -152,7 +167,10 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
                 cooked::act::MaterialGraphicComponent {
                     // TODO: Check values!
                     files: [
-                        SplitPath::new(Cow::Borrowed(avatar_dir), Cow::Borrowed("avatar.png"))?,
+                        SplitPath::new(
+                            HipStr::borrowed(avatar_dir),
+                            HipStr::borrowed("avatar.png"),
+                        )?,
                         SplitPath::default(),
                         SplitPath::default(),
                         SplitPath::default(),
@@ -162,12 +180,12 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
                         SplitPath::default(),
                         SplitPath::default(),
                         SplitPath::new(
-                            Cow::Borrowed("world/ui/atlas/"),
-                            Cow::Borrowed("avatar.atl"),
+                            HipStr::borrowed("world/ui/atlas/"),
+                            HipStr::borrowed("avatar.atl"),
                         )?,
                         SplitPath::new(
-                            Cow::Borrowed("world/ui/materials/_common/"),
-                            Cow::Borrowed("alpha.msh"),
+                            HipStr::borrowed("world/ui/materials/_common/"),
+                            HipStr::borrowed("alpha.msh"),
                         )?,
                     ],
                     ..Default::default()
@@ -181,24 +199,26 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
 }
 
 /// Build the description scene
-fn desc_scene(id: u16) -> cooked::isc::WrappedActors<'static> {
+fn desc_scene(id: u32) -> cooked::isc::WrappedActors<'static> {
     cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
         actor: Box::new(cooked::isc::Actor {
             relativez: 0.000_122,
-            userfriendly: Cow::Owned(format!("{id:04}")),
-            pos2d: (-61.994_202, 37.990_768),
-            lua: Cow::Owned(format!("world/avatars/{id:04}/desc.tpl")),
+            userfriendly: HipStr::from(format!("{id:04}")),
+            pos2d: (-61.994_2, 37.990_77),
+            lua: HipStr::from(format!("world/avatars/{id:04}/desc.tpl")),
             components: vec![
                 cooked::isc::WrappedComponent::MaterialGraphic(
                     cooked::isc::MaterialGraphicComponent {
                         material: cooked::isc::Material {
                             gfx_material_serializable: cooked::isc::GFXMaterialSerializable {
-                                atl_path: Cow::Borrowed("world/ui/atlas/avatar.atl"),
-                                shader_path: Cow::Borrowed("world/ui/materials/_common/alpha.msh"),
+                                atl_path: HipStr::borrowed("world/ui/atlas/avatar.atl"),
+                                shader_path: HipStr::borrowed(
+                                    "world/ui/materials/_common/alpha.msh",
+                                ),
                                 texture_set: cooked::isc::TextureSet {
                                     gfx_material_texture_path_set:
                                         cooked::isc::GFXMaterialTexturePathSet {
-                                            diffuse: Cow::Owned(format!(
+                                            diffuse: HipStr::from(format!(
                                                 "world/avatars/{id:04}/avatar.png"
                                             )),
                                             ..Default::default()
@@ -211,7 +231,7 @@ fn desc_scene(id: u16) -> cooked::isc::WrappedActors<'static> {
                     }
                     .into(),
                 ),
-                cooked::isc::WrappedComponent::AvatarDesc(Default::default()),
+                cooked::isc::WrappedComponent::AvatarDesc(AvatarDesc::default()),
             ],
             ..Default::default()
         }),

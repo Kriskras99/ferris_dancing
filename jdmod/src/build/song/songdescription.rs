@@ -1,9 +1,10 @@
 //! # Song Description Building
 //! Builds the songdesc files
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use anyhow::Error;
-use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
+use hipstr::HipStr;
+use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
 use crate::{build::BuildFiles, types::song::Tag};
@@ -15,17 +16,17 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
     let lower_map_name = ses.lower_map_name;
     let mut phone_images = HashMap::new();
     phone_images.insert(
-        Cow::Borrowed("cover"),
-        Cow::Owned(
+        HipStr::borrowed("cover"),
+        HipStr::from(
             map_path
                 .join(format!("menuart/textures/{lower_map_name}_cover_phone.jpg"))
                 .into_string(),
         ),
     );
-    for i in 1..=(u8::from(ses.song.number_of_coaches)) {
+    for i in 1..=u32::from(ses.song.number_of_coaches) {
         phone_images.insert(
-            Cow::Owned(format!("coach{i}")),
-            Cow::Owned(
+            HipStr::from(format!("coach{i}")),
+            HipStr::from(
                 map_path
                     .join(format!(
                         "menuart/textures/{lower_map_name}_coach_{i}_phone.png"
@@ -35,9 +36,9 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
         );
     }
 
-    let song_desc_tpl = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
-        components: vec![json_types::v22::Template22::SongDescription(
-            json_types::just_dance::SongDescription {
+    let song_desc_tpl = cooked::tpl::types::Actor {
+        components: vec![cooked::tpl::types::Template::SongDescription(
+            cooked::tpl::types::SongDescription {
                 class: None,
                 map_name: ses.song.map_name.clone(),
                 jd_version: 2022,
@@ -55,7 +56,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
                 main_coach: ses
                     .song
                     .main_coach
-                    .and_then(|n| i8::try_from(n).ok())
+                    .and_then(|n| i32::try_from(n).ok())
                     .unwrap_or(-1),
                 difficulty: ses.song.difficulty.into(),
                 sweat_difficulty: ses.song.sweat_difficulty.into(),
@@ -67,7 +68,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
                 mojo_value: 0,
                 count_in_progression: 1,
                 default_colors: (&ses.song.default_colors).into(),
-                video_preview_path: Cow::Borrowed(""),
+                video_preview_path: HipStr::borrowed(""),
                 double_scoring_type: None,
                 paths: None,
                 energy: None,
@@ -76,12 +77,12 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
             },
         )],
         ..Default::default()
-    });
+    };
 
     let song_desc_act = cooked::act::Actor {
         lua: SplitPath::new(
-            Cow::Borrowed(ses.map_path.as_str()),
-            Cow::Borrowed("songdesc.tpl"),
+            HipStr::borrowed(ses.map_path.as_str()),
+            HipStr::borrowed("songdesc.tpl"),
         )?,
         unk1: 0.0,
         unk2: 1.0,

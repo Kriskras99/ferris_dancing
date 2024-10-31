@@ -1,10 +1,11 @@
 //! # Avatars
 //! Types for dealing with avatars
-use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{test_any, test_eq, test_ne, testing::TestResult};
+use hipstr::HipStr;
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
+use test_eq::{test_and, test_any, test_eq, test_ne, test_or};
 
 /// For serde to set a value to default to `false`
 const fn be_false() -> bool {
@@ -12,29 +13,35 @@ const fn be_false() -> bool {
 }
 
 /// Description of an avatar
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, IntoOwned)]
 pub struct Avatar<'a> {
     /// Which map this avatar is based on
-    pub relative_song_name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub relative_song_name: HipStr<'a>,
     /// The sound bites it uses
-    pub sound_family: Cow<'a, str>,
+    #[serde(borrow)]
+    pub sound_family: HipStr<'a>,
     /// Unknown
-    pub status: u8,
+    pub status: u32,
     /// How to unlock
+    #[serde(borrow)]
     pub unlock_type: UnlockType<'a>,
     /// Which map coach is this avatar based on
-    pub used_as_coach_map_name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub used_as_coach_map_name: HipStr<'a>,
     /// Which specific coach in the map
-    pub used_as_coach_coach_id: u8,
+    pub used_as_coach_coach_id: u32,
     /// Should this avatar have the special foil effect
     pub special_effect: bool,
     /// Name of the normal variant of this avatar
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub main_avatar: Option<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub main_avatar: Option<HipStr<'a>>,
     /// Path to the texture
-    pub image_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub image_path: HipStr<'a>,
     /// Path to the phone image
-    pub image_phone_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub image_phone_path: HipStr<'a>,
     /// Are the sound effect and image phone path a guess?
     // if it's missing it's not guessed, don't serialize if false
     #[serde(default = "be_false", skip_serializing_if = "std::ops::Not::not")]
@@ -43,7 +50,7 @@ pub struct Avatar<'a> {
 
 /// How to unlock a avatar
 #[repr(u8)]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, IntoOwned)]
 pub enum UnlockType<'a> {
     /// Information is missing
     Unknown,
@@ -68,12 +75,13 @@ pub enum UnlockType<'a> {
     /// Always unlocked
     Unlocked,
     /// Complete a quest
-    Quest(Cow<'a, str>),
+    #[serde(borrow)]
+    Quest(HipStr<'a>),
     /// Have unlimited
     Unlimited,
 }
 
-impl From<&UnlockType<'_>> for u8 {
+impl From<&UnlockType<'_>> for u32 {
     fn from(value: &UnlockType) -> Self {
         match value {
             UnlockType::Unknown => 0,
@@ -98,10 +106,10 @@ impl<'a> UnlockType<'a> {
     ///
     /// # Errors
     /// Will error if the quest type is unknown or a quest name is required for a quest type but missing
-    pub fn from_unlock_type(n: u8, quest: Option<&Cow<'a, str>>) -> Result<Self, Error> {
-        TestResult::or(
-            TestResult::and(test_eq!(quest.is_some(), true), test_any!(n, [0, 21])),
-            TestResult::and(test_eq!(quest.is_none(), true), test_ne!(n, 21)),
+    pub fn from_unlock_type(n: u32, quest: Option<&HipStr<'a>>) -> Result<Self, Error> {
+        test_or!(
+            test_and!(test_eq!(quest.is_some(), true), test_any!(n, [0, 21])),
+            test_and!(test_eq!(quest.is_none(), true), test_ne!(n, 21)),
         )?;
         match n {
             0 => match quest {

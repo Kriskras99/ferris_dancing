@@ -1,6 +1,7 @@
 use std::{fmt::Debug, num::TryFromIntError, str::Utf8Error};
 
-use dotstar_toolkit_utils::{bytes::read::ReadError, testing::TestError};
+use dotstar_toolkit_utils::bytes::read::ReadError;
+use test_eq::TestFailure;
 use thiserror::Error;
 
 /// Errors returend when parsers fail
@@ -33,7 +34,7 @@ pub enum ParserError {
     Test {
         /// The original test error
         #[from]
-        test: TestError,
+        test: TestFailure,
     },
     /// Integer conversion failed
     #[error("Integer conversion failed: {try_from_int:?}")]
@@ -128,7 +129,7 @@ pub enum WriterError {
     Test {
         /// The original test error
         #[from]
-        test: TestError,
+        test: TestFailure,
     },
     /// Integer conversion failed
     #[error("Integer conversion failed: {try_from_int:?}")]
@@ -142,7 +143,7 @@ pub enum WriterError {
     XmlError {
         /// The orginal XML serialization error
         #[from]
-        xml_error: quick_xml::DeError,
+        xml_error: quick_xml::SeError,
     },
     /// JSON serialization failed
     #[error("JSON serialization failed: {json_error:?}")]

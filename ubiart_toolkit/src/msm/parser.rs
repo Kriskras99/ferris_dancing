@@ -1,13 +1,11 @@
 //! Contains the parser implementation
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        endian::Endian,
-        primitives::u32be,
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_any, test_eq,
+use dotstar_toolkit_utils::bytes::{
+    endian::Endian,
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
+use test_eq::{test_any, test_eq, test_or};
 
 use super::MovementSpaceMove;
 
@@ -60,11 +58,25 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
         test_any!(device.as_ref(), ["Acc_Dev_Dir_NP", "Acc_Dev_Dir_10P"])?;
 
         let unk3 = reader.read_at_with::<f32>(position, endianness)?;
-        test_any!(unk3, 0.0..=3.5039997)?;
+        test_any!(unk3, 0.0..=3.503_999_7)?;
         let unk4 = reader.read_at_with::<f32>(position, endianness)?;
         test_any!(
             unk4,
-            [-1.0, 0.4, 0.7, 0.79999995, 0.8, 0.9, 1.0, 1.1, 1.1999999, 1.2, 1.3, 1.3000001, 1.4]
+            [
+                -1.0,
+                0.4,
+                0.7,
+                0.799_999_95,
+                0.8,
+                0.9,
+                1.0,
+                1.1,
+                1.199_999_9,
+                1.2,
+                1.3,
+                1.300_000_1,
+                1.4
+            ]
         )?;
         let unk5 = reader.read_at_with::<f32>(position, endianness)?;
         test_any!(
@@ -81,7 +93,21 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
             let unk7 = reader.read_at_with::<f32>(position, endianness)?;
             test_any!(
                 unk7,
-                [-1.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.90000004, 1.0]
+                [
+                    -1.0,
+                    0.0,
+                    0.1,
+                    0.2,
+                    0.3,
+                    0.4,
+                    0.5,
+                    0.6,
+                    0.7,
+                    0.8,
+                    0.9,
+                    0.900_000_04,
+                    1.0
+                ]
             )?;
             (Some(unk6), Some(unk7))
         } else {
@@ -116,9 +142,9 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
         test_any!(unk13, [0, 2])?;
 
         let unk14 = reader.read_at_with::<f32>(position, endianness)?;
-        test_any!(unk14, -212.42326..=156.8287)?;
+        test_any!(unk14, -212.423_26..=156.828_7)?;
         let unk15 = reader.read_at_with::<f32>(position, endianness)?;
-        test_any!(unk15, -115.59964..=54.538467)?;
+        test_any!(unk15, -115.599_64..=54.538_467)?;
 
         let size = (reader.len()? - *position) / 4;
         assert_eq!(size % 2, 0, "Size should be a multiple of two");
@@ -136,12 +162,16 @@ impl<'de> BinaryDeserialize<'de> for MovementSpaceMove<'de> {
         for _ in 0..unk11 {
             let x = reader.read_at_with::<f32>(position, endianness)?;
             // Most of the time x is quite small, but sometimes very big
-            test_any!(x, -295.96005..=20007.822)
-                .or(test_any!(x, 172796720000.0..=1133755800000.0))?;
+            test_or!(
+                test_any!(x, -295.96005..=20007.822),
+                test_any!(x, 172_796_720_000.0..=1_133_755_800_000.0)
+            )?;
             let y = reader.read_at_with::<f32>(position, endianness)?;
             // Most of the time y is quite small, but sometimes very big
-            test_any!(y, -337.18118..=69163.67)
-                .or(test_any!(y, 49857210000.0..=1716389200000.0))?;
+            test_or!(
+                test_any!(y, -337.18118..=69163.67),
+                test_any!(y, 49_857_210_000.0..=1_716_389_200_000.0)
+            )?;
             data.push((x, y));
         }
 

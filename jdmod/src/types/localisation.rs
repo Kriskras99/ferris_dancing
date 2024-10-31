@@ -1,10 +1,12 @@
 //! # Localisation
 //! Implements functionality for dealing with translations and locale ids
-use std::{borrow::Cow, collections::HashMap, fs::File};
+use std::{collections::HashMap, fs::File};
 
 use anyhow::{anyhow, Error};
 use bit_vec::BitVec;
 use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem};
+use hipstr::HipStr;
+use ownable::{traits::IntoOwned, IntoOwned};
 use ubiart_toolkit::loc8::Language;
 pub use ubiart_toolkit::utils::LocaleId;
 
@@ -94,9 +96,9 @@ impl Localisation<'_> {
         let mut translations: HashMap<LocaleId, Translation<'_>> = HashMap::new();
         for (lang, file) in LANGUAGE_FILES {
             let path = dir_tree.translations().join(file);
-            if let Ok(file) = File::open(path) {
-                let new_translations: HashMap<LocaleId, Cow<'_, str>> =
-                    serde_json::from_reader(file)?;
+            if let Ok(file) = std::fs::read(path) {
+                let new_translations =
+                    serde_json::from_slice::<HashMap<LocaleId, HipStr<'_>>>(&file)?.into_owned();
                 for (id, translation) in new_translations {
                     translations
                         .entry(id)
@@ -134,8 +136,8 @@ impl Localisation<'_> {
         for (lang, file) in LANGUAGE_FILES {
             let path = rel_tree.translations().join(file);
             if let Ok(file) = native_vfs.open(&path) {
-                let new_translations: HashMap<LocaleId, Cow<'_, str>> =
-                    serde_json::from_slice(&file)?;
+                let new_translations =
+                    serde_json::from_slice::<HashMap<LocaleId, HipStr<'_>>>(&file)?.into_owned();
                 for (id, translation) in new_translations {
                     translations
                         .entry(id)
@@ -271,11 +273,12 @@ impl<'a> Localisation<'a> {
 }
 
 /// Contains all translations for a locale id
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, IntoOwned)]
 pub struct Translation<'a> {
     /// The translations, indexed by [`Language`] as usize
-    inner: [Cow<'a, str>; 0x18],
+    inner: [HipStr<'a>; 0x18],
     /// Keep track of which strings are not empty (performance optimisation)
+    #[ownable(clone)]
     not_empty: BitVec<u32>,
 }
 
@@ -303,12 +306,12 @@ impl Translation<'_> {
         if self.is_empty() && other.is_empty() {
             // Both are empty
             true
-        } else if (non_empty_overlap).none() {
+        } else if non_empty_overlap.none() {
             // They don't overlap, so equality cannot be checked
             false
         } else {
             // They have some overlap
-            for (bit, (left, right)) in (non_empty_overlap)
+            for (bit, (left, right)) in non_empty_overlap
                 .iter()
                 .zip(self.inner.iter().zip(other.inner.iter()))
             {
@@ -341,7 +344,7 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
         if self.is_empty() && other.is_empty() {
             // Both are empty
             Ok(self)
-        } else if (not_empty_overlap).none() {
+        } else if not_empty_overlap.none() {
             // They don't overlap, so equality cannot be checked
             Err(anyhow!("No overlap between translations, can't merge!"))
         } else {
@@ -365,14 +368,14 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
     ///
     /// # Panics
     /// Will panic if a added translation does not match the existing translation for the language
-    pub fn add_translation<'d: 'a>(&mut self, language: Language, string: Cow<'d, str>) {
+    pub fn add_translation<'d: 'a>(&mut self, language: Language, string: HipStr<'d>) {
         // Ignore a translation if it's empty
         if !string.is_empty() {
             let index =
                 usize::try_from(u32::from(language)).expect("Don't run this on a 16-bit machine!");
             if self.not_empty[index] {
-                assert!(
-                    self.inner[index] == string,
+                assert_eq!(
+                    self.inner[index], string,
                     "Translation does not match! {} {string}",
                     self.inner[index]
                 );
@@ -398,9 +401,9 @@ impl<'a: 'c, 'b: 'c, 'c> Translation<'a> {
 /// Will error if both strings are non-empty and are not the same
 #[inline]
 fn merge_string<'a: 'c, 'b: 'c, 'c>(
-    original: Cow<'a, str>,
-    new: Cow<'b, str>,
-) -> Result<Cow<'c, str>, Error> {
+    original: HipStr<'a>,
+    new: HipStr<'b>,
+) -> Result<HipStr<'c>, Error> {
     if original == new {
         Ok(original)
     } else if original.is_empty() {
@@ -425,7 +428,7 @@ mod tests {
         assert!(translation.is_empty());
         translation.add_translation(
             ubiart_toolkit::loc8::Language::English,
-            Cow::Borrowed("Hello World!"),
+            HipStr::borrowed("Hello World!"),
         );
         assert!(!translation.is_empty());
     }

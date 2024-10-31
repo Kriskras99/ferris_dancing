@@ -1,5 +1,6 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::errors::ParserError;
@@ -15,7 +16,7 @@ pub enum Sgs<'a> {
 
 impl<'a> Sgs<'a> {
     /// Use this a `SceneSettings` type
-    pub fn as_scene_settings(self) -> Result<SceneSettings<'a>, ParserError> {
+    pub fn into_scene_settings(self) -> Result<SceneSettings<'a>, ParserError> {
         if let Sgs::SceneSettings(scene_settings) = self {
             Ok(scene_settings)
         } else {
@@ -26,7 +27,7 @@ impl<'a> Sgs<'a> {
     }
 
     /// Use this a `SceneConfigManager` type
-    pub fn as_scene_config_manager(self) -> Result<SceneConfigManager<'a>, ParserError> {
+    pub fn into_scene_config_manager(self) -> Result<SceneConfigManager<'a>, ParserError> {
         if let Sgs::SceneConfigManager(scene_config_manager) = self {
             Ok(scene_config_manager)
         } else {
@@ -55,9 +56,15 @@ pub struct SceneConfigManager<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct SgsKey<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
-    pub keys: HashMap<Cow<'a, str>, Settings<'a>>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub keys: HashMap<HipStr<'a>, Settings<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -74,20 +81,27 @@ pub enum Settings<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MapSceneConfig<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     #[serde(rename = "Pause_Level")]
     pub pause_level: u8,
-    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub name: HipStr<'a>,
     #[serde(rename = "type")]
     pub typed: u8,
     pub musicscore: u8,
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow)]
+    pub sound_context: HipStr<'a>,
     pub hud: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub phone_title_loc_id: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub phone_image: Option<Cow<'a, str>>,
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub phone_image: Option<HipStr<'a>>,
 }
 
 impl Default for MapSceneConfig<'_> {
@@ -95,10 +109,10 @@ impl Default for MapSceneConfig<'_> {
         Self {
             class: None,
             pause_level: 6,
-            name: Cow::Borrowed(""),
+            name: HipStr::borrowed(""),
             typed: 1,
             musicscore: 2,
-            sound_context: Cow::Borrowed(""),
+            sound_context: HipStr::borrowed(""),
             hud: 0,
             phone_title_loc_id: None,
             phone_image: None,
@@ -109,30 +123,49 @@ impl Default for MapSceneConfig<'_> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TransitionSceneConfig<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     #[serde(rename = "Pause_Level")]
     pub pause_level: u64,
-    pub name: Cow<'a, str>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(borrow)]
+    pub name: HipStr<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub param_bindings: Vec<ParamBinding<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParamBinding<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
-    pub param_name: Cow<'a, str>,
-    pub provider_class: Cow<'a, str>,
-    pub patcher_marker: Cow<'a, str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub param_name: HipStr<'a>,
+    #[serde(borrow)]
+    pub provider_class: HipStr<'a>,
+    #[serde(borrow)]
+    pub patcher_marker: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct SongDatabaseSceneConfig<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
     /// Not in JD2016
     #[serde(
         rename = "Pause_Level",
@@ -141,14 +174,15 @@ pub struct SongDatabaseSceneConfig<'a> {
     )]
     pub pause_level: Option<u64>,
     /// Not in JD2016
-    #[serde(rename = "name", default)]
-    pub name: Cow<'a, str>,
-    #[serde(rename = "SKU")]
-    pub sku: Cow<'a, str>,
-    pub territory: Cow<'a, str>,
-    #[serde(rename = "RatingUI")]
-    pub rating_ui: Cow<'a, str>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(borrow, rename = "name", default)]
+    pub name: HipStr<'a>,
+    #[serde(borrow, rename = "SKU")]
+    pub sku: HipStr<'a>,
+    #[serde(borrow)]
+    pub territory: HipStr<'a>,
+    #[serde(borrow, rename = "RatingUI")]
+    pub rating_ui: HipStr<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub coverflow_sku_songs: Vec<CoverflowSong<'a>>,
 }
 
@@ -157,10 +191,10 @@ impl Default for SongDatabaseSceneConfig<'static> {
         Self {
             class: Option::default(),
             pause_level: Some(6),
-            name: Cow::Borrowed(""),
-            sku: Cow::Borrowed("jd2022-nx-all"),
-            territory: Cow::Borrowed("NCSA"),
-            rating_ui: Cow::Borrowed("world/ui/screens/boot_warning/boot_warning_esrb.isc"),
+            name: HipStr::borrowed(""),
+            sku: HipStr::borrowed("jd2022-nx-all"),
+            territory: HipStr::borrowed("NCSA"),
+            rating_ui: HipStr::borrowed("world/ui/screens/boot_warning/boot_warning_esrb.isc"),
             coverflow_sku_songs: Vec::default(),
         }
     }
@@ -169,12 +203,19 @@ impl Default for SongDatabaseSceneConfig<'static> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "snake_case", deny_unknown_fields)]
 pub struct CoverflowSong<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub name: Cow<'a, str>,
-    pub cover_path: Cow<'a, str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub name: HipStr<'a>,
+    #[serde(borrow)]
+    pub cover_path: HipStr<'a>,
 }
 
 impl CoverflowSong<'_> {
-    pub const CLASS: &'static str = "CoverflowSong";
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("CoverflowSong");
 }

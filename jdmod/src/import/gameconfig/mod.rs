@@ -33,7 +33,7 @@ pub fn import(is: &ImportState<'_>) -> Result<(), Error> {
         &is.aliases
             .get_path_for_alias("gameconfig")
             .ok_or_else(|| anyhow!("common.alias8 does not contain gameconfig path!"))?,
-        is.ugi.platform,
+        is.ugi,
     )?;
 
     match is.ugi.game {

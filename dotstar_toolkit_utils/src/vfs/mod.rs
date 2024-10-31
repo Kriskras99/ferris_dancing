@@ -2,6 +2,7 @@
 //! Contains traits for a virtual filesystem and implementations of some basic filesystems.
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
+use hipstr::HipStr;
 use memmap2::Mmap;
 use stable_deref_trait::StableDeref;
 use yoke::Yokeable;
@@ -36,6 +37,16 @@ pub trait VirtualFileSystem: Sync {
     /// # Errors
     /// Can error if the directory does not exist or if directory access failed
     fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>>;
+
+    /// List all files at `path`
+    ///
+    /// # Errors
+    /// Can error if the directory does not exist or if directory access failed
+    fn read_dir<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
+        let mut walk = self.walk_filesystem(path)?;
+        walk.paths.retain(|p| p.parent() == Some(path));
+        Ok(walk)
+    }
 
     /// Check if `path` exists
     fn exists(&self, path: &VirtualPath) -> bool;
@@ -135,7 +146,7 @@ impl ReadAt for VirtualFile<'_> {
     fn read_null_terminated_string_at<'de>(
         &'de self,
         position: &mut u64,
-    ) -> Result<Cow<'de, str>, ReadError> {
+    ) -> Result<HipStr<'de>, ReadError> {
         match self {
             VirtualFile::Slice(data) => data.read_null_terminated_string_at(position),
             VirtualFile::Vec(data) => data.deref().read_null_terminated_string_at(position),

@@ -36,7 +36,7 @@ impl VecFs {
     /// # Errors
     /// Will return an error if the file already exists
     #[tracing::instrument(skip(self, content))]
-    pub fn add_file(&mut self, path: VirtualPathBuf, mut content: Vec<u8>) -> std::io::Result<()> {
+    pub fn add_file(&mut self, path: VirtualPathBuf, mut content: Vec<u8>) -> Result<()> {
         let clean_path = path.clean();
         if self.files.contains_key(&clean_path) {
             return Err(std::io::Error::new(
@@ -89,7 +89,7 @@ impl VirtualFileSystem for VecFs {
         }
     }
 
-    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> Result<VirtualMetadata> {
         let path = path.clean();
         if let Some(file) = self.files.get(&path) {
             Ok(VirtualMetadata {
@@ -101,7 +101,7 @@ impl VirtualFileSystem for VecFs {
         }
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> Result<WalkFs<'rf>> {
         let path = path.clean();
         if path == VirtualPath::new(".") {
             Ok(WalkFs {

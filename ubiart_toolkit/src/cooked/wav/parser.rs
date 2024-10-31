@@ -1,14 +1,11 @@
 use std::collections::{hash_map::Entry, HashMap};
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        endian::{Endian, BE, LE},
-        primitives::u32be,
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_any, test_eq,
-    testing::TestResult,
+use dotstar_toolkit_utils::bytes::{
+    endian::{Endian, BE, LE},
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
+use test_eq::{test_any, test_eq};
 use tracing::debug;
 
 use super::{
@@ -263,7 +260,7 @@ impl<'de> BinaryDeserialize<'de> for Strg<'de> {
             StrOrRaw::Raw(reader.read_slice_at(&mut new_position, usize::try_from(size - 8)?)?)
         };
 
-        if let TestResult::Err(_) = test_eq!(new_position, start + u64::from(offset + size)) {
+        if test_eq!(new_position, start + u64::from(offset + size)).is_err() {
             debug!("STRG broken!");
         }
 

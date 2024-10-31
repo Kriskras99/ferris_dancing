@@ -623,3 +623,97 @@ impl BinarySerialize for f32 {
         writer.write_slice_at(position, &bytes)
     }
 }
+
+pub enum u32bool {}
+impl BinaryDeserialize<'_> for u32bool {
+    type Ctx = Endian;
+    type Output = bool;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let old_position = *position;
+        let result: Result<_, _> = try {
+            let value = reader.read_at_with::<u32>(position, ctx)?;
+            match value {
+                0 => false,
+                1 => true,
+                _ => Err(ReadError::custom(format!(
+                    "invalid value for boolean {value}"
+                )))?,
+            }
+        };
+        if result.is_err() {
+            *position = old_position;
+        }
+        result
+    }
+}
+impl BinarySerialize for u32bool {
+    type Ctx = Endian;
+    type Input = bool;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        let input = u32::from(input);
+        writer.write_at_with_ctx::<u32>(position, input, ctx)
+    }
+}
+pub enum u32bebool {}
+impl BinaryDeserialize<'_> for u32bebool {
+    type Ctx = ();
+    type Output = bool;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        u32bool::deserialize_at_with(reader, position, Endian::Big)
+    }
+}
+impl BinarySerialize for u32bebool {
+    type Ctx = ();
+    type Input = bool;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        u32bool::serialize_at_with_ctx(input, writer, position, Endian::Big)
+    }
+}
+pub enum u32lebool {}
+impl BinaryDeserialize<'_> for crate::bytes::primitives::u32lebool {
+    type Ctx = ();
+    type Output = bool;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        u32bool::deserialize_at_with(reader, position, Endian::Little)
+    }
+}
+impl BinarySerialize for u32lebool {
+    type Ctx = ();
+    type Input = bool;
+
+    fn serialize_at_with_ctx(
+        input: Self::Input,
+        writer: &mut (impl WriteAt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<(), WriteError> {
+        u32bool::serialize_at_with_ctx(input, writer, position, Endian::Little)
+    }
+}

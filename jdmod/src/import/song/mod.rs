@@ -1,9 +1,10 @@
 //! # Importing songs
 //! Contains functionality for importing songs
-use std::{borrow::Cow, fs::File};
+use std::fs::File;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use hipstr::HipStr;
 use ubiart_toolkit::{cooked, utils::UniqueGameId};
 
 mod autodance;
@@ -39,11 +40,9 @@ pub struct SongImportState<'a> {
 
 /// Import the song described at `songdesc_path``
 pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
-    let songdesc_file = is
-        .vfs
-        .open(cook_path(songdesc_path, is.ugi.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&songdesc_file, is.lax)?.into_actor()?;
-    let songdesc = actor.components.swap_remove(0).into_song_description()?;
+    let songdesc_file = is.vfs.open(cook_path(songdesc_path, is.ugi)?.as_ref())?;
+    let mut actor = cooked::tpl::parse(&songdesc_file, is.ugi, is.lax)?;
+    let songdesc = actor.components.remove(0).into_song_description()?;
 
     let map_name = &songdesc.map_name;
     let lower_map_name = map_name.to_lowercase();
@@ -52,26 +51,26 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         println!("Skipping {map_name}, song already imported!");
         return Ok(());
     } else if songdesc.jdm_attributes.is_some()
-        || songdesc.tags.contains(&Cow::Borrowed("dancemachine"))
+        || songdesc.tags.contains(&HipStr::borrowed("dancemachine"))
     {
         // TODO: Support dance machine/dance lab
         println!("Warning! {map_name} is a dance machine map! Skipping!");
         return Ok(());
-    } else if songdesc.tags.contains(&Cow::Borrowed("MASHUP"))
-        || songdesc.tags.contains(&Cow::Borrowed("COMMUNITYMASHUP"))
+    } else if songdesc.tags.contains(&HipStr::borrowed("MASHUP"))
+        || songdesc.tags.contains(&HipStr::borrowed("COMMUNITYMASHUP"))
     {
         // TODO: Support mashups
         println!("Warning! {map_name} is a mashup! Skipping!");
         return Ok(());
-    } else if songdesc.tags.contains(&Cow::Borrowed("doublescoring")) {
+    } else if songdesc.tags.contains(&HipStr::borrowed("doublescoring")) {
         // TODO: Support double rumble
         println!("Warning! {map_name} is a double rumble map! Skipping!");
         return Ok(());
-    } else if songdesc.tags.contains(&Cow::Borrowed("JUSTSHINE")) {
+    } else if songdesc.tags.contains(&HipStr::borrowed("JUSTSHINE")) {
         // TODO: Support showtime maps
         println!("Warning! {map_name} is a showtime map! Skipping!");
         return Ok(());
-    } else if songdesc.tags.contains(&Cow::Borrowed("PARTYMASTER")) {
+    } else if songdesc.tags.contains(&HipStr::borrowed("PARTYMASTER")) {
         // TODO: Support party master maps
         println!("Warning! {map_name} is a party (puppet) master map! Skipping!");
         return Ok(());
@@ -90,10 +89,10 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     println!("Parsing {map_name}");
     let main_scene_path = cook_path(
         &format!("world/maps/{lower_map_name}/{lower_map_name}_main_scene.isc"),
-        is.ugi.platform,
+        is.ugi,
     )?;
     let main_scene_file = is.vfs.open(main_scene_path.as_ref())?;
-    let main_scene = cooked::isc::parse(&main_scene_file)?.scene;
+    let main_scene = cooked::isc::parse(&main_scene_file, is.ugi)?.scene;
 
     // Import the audio preview
     let autodance_path = main_scene
@@ -151,7 +150,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
 
     // Import menuart
     match (
-        main_scene.get_subscene_by_userfriendly_end("_menuart", sis.lax),
+        main_scene.get_subscene_by_userfriendly_end("_MENUART", true),
         sis.lax,
     ) {
         (Ok(subscene), _) => {
@@ -168,10 +167,10 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
                     "world/maps/{}/menuart/{}_menuart.isc",
                     sis.lower_map_name, sis.lower_map_name
                 ),
-                sis.ugi.platform,
+                sis.ugi,
             )?;
             let scene_file = sis.vfs.open(cooked_path.as_ref())?;
-            let scene = cooked::isc::parse(&scene_file)?.scene;
+            let scene = cooked::isc::parse(&scene_file, sis.ugi)?.scene;
             menuart::import(&sis, &scene, &songdesc.phone_images)?;
         }
         (Err(error), false) => return Err(error.into()),
@@ -193,13 +192,13 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         tags: songdesc
             .tags
             .iter()
-            .map(Cow::as_ref)
+            .map(HipStr::as_str)
             .map(TryInto::<Tag>::try_into)
             .collect::<Result<_, _>>()?,
         subtitle: is.locale_id_map.get(songdesc.locale_id).unwrap_or_default(),
         default_colors: (&songdesc.default_colors).into(),
-        audiofile: Cow::Owned(audiofile),
-        videofile: Cow::Borrowed(videofile),
+        audiofile: HipStr::from(audiofile),
+        videofile: HipStr::borrowed(videofile),
     };
 
     let song_file = File::create(sis.dirs.song_file())?;

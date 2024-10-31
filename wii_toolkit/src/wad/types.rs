@@ -44,7 +44,7 @@ impl BinaryDeserialize<'_> for WadType {
 }
 
 impl TryFrom<u16> for WadType {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: u16) -> Result<Self, Self::Error> {
         match value {
@@ -90,7 +90,7 @@ impl BinaryDeserialize<'_> for ContentType {
 }
 
 impl TryFrom<u16> for ContentType {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: u16) -> Result<Self, Self::Error> {
         match value {
@@ -140,7 +140,7 @@ impl BinaryDeserialize<'_> for TitleType {
 }
 
 impl TryFrom<u32> for TitleType {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
@@ -190,7 +190,7 @@ impl BinaryDeserialize<'_> for Region {
 }
 
 impl TryFrom<u16> for Region {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: u16) -> Result<Self, Self::Error> {
         match value {
@@ -232,7 +232,7 @@ impl BinaryDeserialize<'_> for AccessRights {
 }
 
 impl TryFrom<u32> for AccessRights {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {

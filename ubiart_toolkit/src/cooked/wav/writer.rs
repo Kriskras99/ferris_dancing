@@ -1,10 +1,8 @@
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{i16le, u16le, u32be, u32le},
-        write::{BinarySerialize, WriteAt, WriteError},
-    },
-    test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{i16le, u16le, u32be, u32le},
+    write::{BinarySerialize, WriteAt, WriteError},
 };
+use test_eq::test_eq;
 
 use super::{AdIn, Chunk, Codec, Data, Fmt, Wav, WavPlatform};
 use crate::cooked::wav::Dsp;

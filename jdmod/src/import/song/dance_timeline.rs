@@ -3,7 +3,7 @@
 use std::{collections::BTreeSet, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::test_eq;
+use test_eq::test_eq;
 use ubiart_toolkit::{cooked, cooked::tape};
 
 use super::{montage, SongImportState};
@@ -16,10 +16,10 @@ use crate::{
 pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<(), Error> {
     let dance_timeline_file = sis
         .vfs
-        .open(cook_path(dance_timeline_path, sis.ugi.platform)?.as_ref())?;
-    let mut actor = cooked::json::parse_v22(&dance_timeline_file, sis.lax)?.into_actor()?;
+        .open(cook_path(dance_timeline_path, sis.ugi)?.as_ref())?;
+    let mut actor = cooked::tpl::parse(&dance_timeline_file, sis.ugi, sis.lax)?;
     test_eq!(actor.components.len(), 1)?;
-    let tape_case = actor.components.swap_remove(0).into_tape_case_component()?;
+    let tape_case = actor.components.remove(0).into_tape_case_component()?;
     let tape_case_path = tape_case
         .tapes_rack
         .first()
@@ -27,10 +27,10 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
         .ok_or_else(|| anyhow!("Incomplete tapes rack!"))?
         .path
         .as_ref();
-    let dance_tml_path = cook_path(tape_case_path, sis.ugi.platform)?;
+    let dance_tml_path = cook_path(tape_case_path, sis.ugi)?;
 
     let tape_file = sis.vfs.open(dance_tml_path.as_ref())?;
-    let tape = cooked::tape::parse(&tape_file, sis.ugi)?;
+    let tape = tape::parse(&tape_file, sis.ugi)?;
 
     let mut timeline = Timeline {
         timeline: BTreeSet::new(),
@@ -41,7 +41,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
             "world/maps/{}/timeline/pictos/montage.png",
             sis.lower_map_name
         ),
-        sis.ugi.platform,
+        sis.ugi,
     )?;
 
     let mut montage_vec = sis.vfs.exists(montage_path.as_ref()).then(Vec::new);
@@ -62,7 +62,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                     let mut to = File::create(
                         sis.dirs
                             .moves()
-                            .join(new_motion.classifier_filename.as_ref()),
+                            .join(new_motion.classifier_filename.as_str()),
                     )?;
                     to.write_all(&from)?;
                 } else {
@@ -78,11 +78,11 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                         vec.push(new_picto.picto_filename.clone());
                     }
                 } else {
-                    let cooked_path = cook_path(&picto_path, sis.ugi.platform)?;
+                    let cooked_path = cook_path(&picto_path, sis.ugi)?;
                     match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
                         (Ok(from), _) => {
                             let decooked_picto = decode_texture(&from, sis.ugi)?;
-                            let path = sis.dirs.pictos().join(new_picto.picto_filename.as_ref());
+                            let path = sis.dirs.pictos().join(new_picto.picto_filename.as_str());
                             decooked_picto.save(path)?;
                         }
                         (Err(error), true) => println!("Warning! {error}"),

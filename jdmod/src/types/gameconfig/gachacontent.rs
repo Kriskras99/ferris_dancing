@@ -10,11 +10,11 @@ use ubiart_toolkit::json_types::isg::{
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub enum GachaItem {
     /// Alias
-    Alias(u16),
+    Alias(u32),
     /// Portraitborder/skin
-    PortraitBorder(u16),
+    PortraitBorder(u32),
     /// Avatar
-    Avatar(u16),
+    Avatar(u32),
 }
 
 impl From<GachaItem> for CollectibleGachaItem<'_> {

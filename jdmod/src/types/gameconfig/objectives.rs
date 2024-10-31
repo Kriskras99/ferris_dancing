@@ -1,7 +1,6 @@
 //! # Objectives
 //! Types for objectives (as used by scheduled quests)
 use std::{
-    borrow::Cow,
     collections::{
         hash_map::{DefaultHasher, Entry},
         HashMap,
@@ -10,8 +9,10 @@ use std::{
 };
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{test_eq, testing::TestResult};
+use hipstr::HipStr;
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
+use test_eq::{test_eq, test_or};
 use ubiart_toolkit::json_types;
 
 use crate::types::{
@@ -26,20 +27,22 @@ use crate::types::{
 #[derive(Debug, Clone, Default)]
 pub struct Objectives<'a> {
     /// Mapping from a objective to a objective name
-    pub objective_map: HashMap<Objective<'a>, String>,
+    pub objective_map: HashMap<Objective<'a>, HipStr<'a>>,
     /// Mapping from objective name to the objective
-    pub name_map: HashMap<String, Objective<'a>>,
+    pub name_map: HashMap<HipStr<'a>, Objective<'a>>,
 }
 
 /// Describes an objective
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, IntoOwned)]
 pub struct Objective<'a> {
     /// What does a user need to do
+    #[serde(borrow)]
     pub objective_type: ObjectiveType<'a>,
     /// Description of the objective
     pub description: LocaleId,
     /// Description of the objective as a string (empty most of the time)
-    pub description_raw: Cow<'a, str>,
+    #[serde(borrow)]
+    pub description_raw: HipStr<'a>,
     /// Can this objective be achieved multiple times
     pub is_static: bool,
     /// Don't sync with online?
@@ -54,7 +57,7 @@ impl<'a> Objectives<'a> {
     ///
     /// # Errors
     /// Will error if an objective already exists for the generated name but does not match `objective`
-    pub fn add_objective(&mut self, objective: Objective<'a>) -> String {
+    pub fn add_objective(&mut self, objective: Objective<'a>) -> HipStr<'a> {
         if let Some(name) = self.objective_map.get(&objective) {
             name.clone()
         } else {
@@ -72,7 +75,7 @@ impl<'a> Objectives<'a> {
     pub fn add_objective_with_name(
         &mut self,
         objective: Objective<'a>,
-        name: String,
+        name: HipStr<'a>,
     ) -> Result<(), Error> {
         // If objective is already known under this name, return.
         // Else if objective is not known, add it under this name and return.
@@ -106,14 +109,14 @@ impl Hash for Objective<'_> {
 impl Objective<'_> {
     /// Generate a name for this objective
     #[must_use]
-    pub fn generate_name(&self) -> String {
+    pub fn generate_name(&self) -> HipStr<'static> {
         // TODO: Generate a nicer name, preferably matching existing naming convention
         let sd = if self.is_static { "Static" } else { "Dynamic" };
         let mut hasher = DefaultHasher::new();
         self.objective_type.hash(&mut hasher);
         self.description.hash(&mut hasher);
         self.exclude_from_upload.hash(&mut hasher);
-        format!("{sd}_{:x}", hasher.finish())
+        HipStr::from(format!("{sd}_{:x}", hasher.finish()))
     }
 }
 
@@ -150,7 +153,7 @@ impl<'a> Objective<'a> {
             description: locale_id_map
                 .get(descriptor.description())
                 .unwrap_or_default(),
-            description_raw: Cow::Borrowed(""),
+            description_raw: HipStr::borrowed(""),
             is_static: o_static,
             exclude_from_upload: true,
         }
@@ -342,27 +345,33 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
 }
 
 /// The thing a user needs to do
-#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub enum ObjectiveType<'a> {
     /// Burn X calories
+    #[serde(borrow)]
     AccumulateXCal(AccumulateXCal<'a>),
     /// Do X moves
+    #[serde(borrow)]
     AccumulateXMoves(AccumulateXMoves<'a>),
     /// Active coop mode
     ActivateCoopMode,
     /// Add X song to a playlist
+    #[serde(borrow)]
     AddXSongsToAPlaylist(AddXSongsToAPlaylist<'a>),
     /// Beat a World Dance Floor boss
     BeatWDFBoss,
     /// Change a customisation item X times
+    #[serde(borrow)]
     ChangeCustoItemXTimes(ChangeCustoItemXTimes<'a>),
     /// Complete X quests
     CompleteXQuests(CompleteXQuests),
     /// Dance for X seconds
     DanceXSeconds(DanceXSeconds),
     /// Finish X playlists
+    #[serde(borrow)]
     FinishXPlaylist(FinishXPlaylist<'a>),
     /// Gather X stars
+    #[serde(borrow)]
     GatherXStars(GatherXStars<'a>),
     /// Link a Uplay account
     LinkedToUplay,
@@ -377,14 +386,17 @@ pub enum ObjectiveType<'a> {
     /// Play daily quests for X days
     PlayDailyQuestsForXDays(PlayDailyQuestsForXDays),
     /// Play the gacha machine X times
+    #[serde(borrow)]
     PlayGachaXTimes(PlayGachaXTimes<'a>),
     /// Have a savefile with a previous version of Just Dance
     PlayPreviousJD,
     /// Play a World Dance Floor tournament
     PlayWDFTournament(PlayWDFTournament),
     /// Play X maps
+    #[serde(borrow)]
     PlayXMaps(PlayXMaps<'a>),
     /// Play X World Dance Floor tournament rounds
+    #[serde(borrow)]
     PlayXWDFTournamentRounds(PlayXWDFTournamentRounds<'a>),
     /// Reach Rank X
     ReachRankX(ReachRankX),
@@ -399,6 +411,7 @@ pub enum ObjectiveType<'a> {
     /// Unlock X portrait borders (skins)
     UnlockXPortraitBorders(UnlockXPortraitBorders),
     /// Unlock X stickers
+    #[serde(borrow)]
     UnlockXStickers(UnlockXStickers<'a>),
     /// Win a World Dance Floor team battle
     WinWDFTeamBattle,
@@ -956,7 +969,7 @@ impl<'a> ObjectiveType<'a> {
                     let components = vec![
                         Component {
                             c_type: ComponentType::PlaylistIdRequirement(PlaylistIdRequirement {
-                                acceptable_playlist_ids: vec![Cow::Borrowed(
+                                acceptable_playlist_ids: vec![HipStr::borrowed(
                                     "Favorite_Playlist_ID",
                                 )],
                             }),
@@ -1328,7 +1341,7 @@ impl<'a> ObjectiveType<'a> {
 
 /// Grading of a move
 #[repr(u8)]
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
 pub enum MoveCategories {
     /// Ok
     Ok = 1,
@@ -1342,17 +1355,17 @@ pub enum MoveCategories {
     Gold = 5,
 }
 
-impl From<MoveCategories> for u8 {
+impl From<MoveCategories> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: MoveCategories) -> Self {
         value as Self
     }
 }
 
-impl TryFrom<u8> for MoveCategories {
+impl TryFrom<u32> for MoveCategories {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(Self::Ok),
             2 => Ok(Self::Good),
@@ -1364,124 +1377,125 @@ impl TryFrom<u8> for MoveCategories {
     }
 }
 
-impl TryFrom<&u8> for MoveCategories {
+impl TryFrom<&u32> for MoveCategories {
     type Error = Error;
 
-    fn try_from(value: &u8) -> Result<Self, Self::Error> {
-        match value {
-            1 => Ok(Self::Ok),
-            2 => Ok(Self::Good),
-            3 => Ok(Self::Super),
-            4 => Ok(Self::Perfect),
-            5 => Ok(Self::Gold),
-            _ => Err(anyhow!("Unknown value for MoveCategory: {}", value)),
-        }
+    fn try_from(value: &u32) -> Result<Self, Self::Error> {
+        Self::try_from(*value)
     }
 }
 
 /// Requirements for [`ObjectiveType::AccumulateXCal`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct AccumulateXCal<'a> {
     /// How many calories to burn
     pub calories_amount: u32,
     /// Should it be done in one session
     pub in_one_session: bool,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::AccumulateXMoves`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct AccumulateXMoves<'a> {
     /// How many moves
     pub moves_count: u32,
     /// What grade should the moves be
     pub categories_to_count: Vec<MoveCategories>,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::AddXSongsToAPlaylist`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct AddXSongsToAPlaylist<'a> {
     /// How many songs to add
     pub songs_added_count: u32,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::ChangeCustoItemXTimes`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct ChangeCustoItemXTimes<'a> {
     /// How many items to change
     pub custo_item_changes_count: u32,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::CompleteXQuests`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct CompleteXQuests {
     /// How many quests to complete
     pub quests_count: u32,
 }
 
 /// Requirements for [`ObjectiveType::DanceXSeconds`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct DanceXSeconds {
     /// How many seconds to dance
     pub dance_time: u32,
 }
 
 /// Requirements for [`ObjectiveType::FinishXPlaylist`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct FinishXPlaylist<'a> {
     /// How many playlists to finish
     pub playlists_play_count: u32,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::GatherXStars`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct GatherXStars<'a> {
     /// How many stars to get
     pub stars_count: u32,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::PlayDailyQuestsForXDays`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct PlayDailyQuestsForXDays {
     /// How many consecutive days
     pub consecutive_days: u32,
 }
 
 /// Requirements for [`ObjectiveType::PlayGachaXTimes`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct PlayGachaXTimes<'a> {
     /// How many times to play
     pub gacha_plays_count: u32,
     /// Unlock all gacha items (can be narrowed via [`Component`])
     pub unlock_all_acceptable_gacha_items: bool,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::PlayWDFTournament`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct PlayWDFTournament {
     /// How many tournaments to play
     pub tournament_count: u32,
 }
 
 /// Requirements for [`ObjectiveType::PlayXMaps`]
-#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct PlayXMaps<'a> {
     /// How many maps to play
     pub maps_count: u32,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
@@ -1495,43 +1509,46 @@ impl Default for PlayXMaps<'_> {
 }
 
 /// Requirements for [`ObjectiveType::PlayXWDFTournamentRounds`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct PlayXWDFTournamentRounds<'a> {
     /// How many rounds to play
     pub rounds_count: u32,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// Requirements for [`ObjectiveType::ReachRankX`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct ReachRankX {
     /// Which rank to reach
     pub rank_to_reach: u32,
 }
 
 /// Requirements for [`ObjectiveType::UnlockXPortraitBorders`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct UnlockXPortraitBorders {
     /// How many portrait borders to unlock
     pub portrait_border_count: u32,
 }
 
 /// Requirements for [`ObjectiveType::UnlockXStickers`]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct UnlockXStickers<'a> {
     /// Unlock all sticker
     pub all_stickers: bool,
     /// How many stickers to unlock
     pub stickers_count: u32,
     /// Additional generic requirements
+    #[serde(borrow)]
     pub components: Vec<Component<'a>>,
 }
 
 /// A requirements that can be shared between various objective types
-#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct Component<'a> {
     /// The actual requirements
+    #[serde(borrow)]
     pub c_type: ComponentType<'a>,
     /// Should only different values be accepted
     pub only_diff_values: bool,
@@ -1609,7 +1626,7 @@ impl<'a> Component<'a> {
                         acceptable_categories,
                     })
                 } else if data.only_map_last_move {
-                    TestResult::or(
+                    test_or!(
                         test_eq!(data.exact_moves_count, 1)
                             .and(test_eq!(data.min_moves_count, u32::MAX)),
                         test_eq!(data.exact_moves_count, u32::MAX)
@@ -1959,7 +1976,7 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
 }
 
 /// Requirement for a objective
-#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub enum ComponentType<'a> {
     /// Require a certain customisable item type for customisation objectives
     CustoItemTypeRequirement(CustoItemTypeRequirement),
@@ -1976,6 +1993,7 @@ pub enum ComponentType<'a> {
     /// Require X moves in a row of a certain grade
     MapRequireXMovesInARow(MapRequireXMovesInARow),
     /// Require certain maps
+    #[serde(borrow)]
     MapNameRequirement(MapNameRequirement<'a>),
     /// Require a playmode
     MapPlaymodeRequirement(MapPlaymodeRequirement),
@@ -1988,6 +2006,7 @@ pub enum ComponentType<'a> {
     /// Require Unlimited songs
     OnlyOnUnlimitedSongs,
     /// Require certain playlists
+    #[serde(borrow)]
     PlaylistIdRequirement(PlaylistIdRequirement<'a>),
     /// Require certain scoring modes
     ScoringModeRequirement(ScoringModeRequirement),
@@ -1999,7 +2018,7 @@ pub enum ComponentType<'a> {
 
 /// Customisable items
 #[repr(u8)]
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
 pub enum CustomisableItemType {
     /// Avatars
     Avatar = 0,
@@ -2009,17 +2028,17 @@ pub enum CustomisableItemType {
     Skin = 2,
 }
 
-impl From<CustomisableItemType> for u8 {
+impl From<CustomisableItemType> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: CustomisableItemType) -> Self {
         value as Self
     }
 }
 
-impl TryFrom<u8> for CustomisableItemType {
+impl TryFrom<u32> for CustomisableItemType {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(Self::Avatar),
             1 => Ok(Self::Alias),
@@ -2030,7 +2049,7 @@ impl TryFrom<u8> for CustomisableItemType {
 }
 
 /// Require certain customisation item types
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct CustoItemTypeRequirement {
     /// Accepatble customisation item types
     pub acceptable_custo_item_types: Vec<CustomisableItemType>,
@@ -2038,24 +2057,24 @@ pub struct CustoItemTypeRequirement {
 
 /// Item types that can be won in the gacha machine
 #[repr(u8)]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
 pub enum GachaItemType {
     /// Postcard
     #[default]
     Postcard = 0,
 }
 
-impl From<GachaItemType> for u8 {
+impl From<GachaItemType> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: GachaItemType) -> Self {
         value as Self
     }
 }
 
-impl TryFrom<u8> for GachaItemType {
+impl TryFrom<u32> for GachaItemType {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(Self::Postcard),
             _ => Err(anyhow!("Unknown GachaItemType: {value}")),
@@ -2064,21 +2083,21 @@ impl TryFrom<u8> for GachaItemType {
 }
 
 /// Require certain item types
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct GachaItemTypeRequirement {
     /// Acceptable item types
     pub acceptable_gacha_item_types: Vec<GachaItemType>,
 }
 
 /// Require X coaches
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapCoachCountRequirement {
     /// Acceptable coach amounts
     pub acceptable_coach_counts: Vec<NumberOfCoaches>,
 }
 
 /// Where is the map launched from
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
 pub enum LaunchContext {
     /// Normal?
     Family,
@@ -2107,20 +2126,20 @@ impl TryFrom<&str> for LaunchContext {
     }
 }
 
-impl From<LaunchContext> for Cow<'static, str> {
+impl From<LaunchContext> for HipStr<'static> {
     fn from(value: LaunchContext) -> Self {
         match value {
-            LaunchContext::Family => Cow::Borrowed("context_family"),
-            LaunchContext::Quickplay => Cow::Borrowed("context_quickplay"),
-            LaunchContext::WorldDanceFloor => Cow::Borrowed("context_wdf"),
-            LaunchContext::Kids => Cow::Borrowed("context_kids"),
-            LaunchContext::Anthology => Cow::Borrowed("context_anthology"),
+            LaunchContext::Family => HipStr::borrowed("context_family"),
+            LaunchContext::Quickplay => HipStr::borrowed("context_quickplay"),
+            LaunchContext::WorldDanceFloor => HipStr::borrowed("context_wdf"),
+            LaunchContext::Kids => HipStr::borrowed("context_kids"),
+            LaunchContext::Anthology => HipStr::borrowed("context_anthology"),
         }
     }
 }
 
 /// Where is the map launched from
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
 pub enum LaunchSubcontext {
     /// Search
     Search,
@@ -2140,17 +2159,17 @@ impl TryFrom<&str> for LaunchSubcontext {
     }
 }
 
-impl From<LaunchSubcontext> for Cow<'static, str> {
+impl From<LaunchSubcontext> for HipStr<'static> {
     fn from(value: LaunchSubcontext) -> Self {
         match value {
-            LaunchSubcontext::Search => Cow::Borrowed("search"),
-            LaunchSubcontext::Home => Cow::Borrowed("home"),
+            LaunchSubcontext::Search => HipStr::borrowed("search"),
+            LaunchSubcontext::Home => HipStr::borrowed("home"),
         }
     }
 }
 
 /// Require the map to be launched in a certain way
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapLaunchLocationRequirement {
     /// Normal ways
     pub acceptable_launch_contexts: Vec<LaunchContext>,
@@ -2159,21 +2178,21 @@ pub struct MapLaunchLocationRequirement {
 }
 
 /// Require all moves to be a specific grade
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapRequireAllMoves {
     /// The grade
     pub acceptable_categories: Vec<MoveCategories>,
 }
 
 /// Require last move to be a specific grade
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapRequireLastMove {
     /// The grades
     pub acceptable_categories: Vec<MoveCategories>,
 }
 
 /// Require X moves of certain grade
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapRequireXMovesInARow {
     /// Minimum amount of moves in a row
     pub min_moves_count: u32,
@@ -2182,15 +2201,16 @@ pub struct MapRequireXMovesInARow {
 }
 
 /// Require map codename
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapNameRequirement<'a> {
     /// Map codenames
-    pub acceptable_map_names: Vec<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub acceptable_map_names: Vec<HipStr<'a>>,
 }
 
 /// Require specific playmodes
 #[allow(clippy::struct_excessive_bools, reason = "Forced by engine")]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapPlaymodeRequirement {
     /// Normal mode
     pub classic: bool,
@@ -2209,7 +2229,7 @@ pub struct MapPlaymodeRequirement {
 }
 
 /// Require a certain score
-#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapScoreRequirement {
     /// Minimum score
     pub score: u32,
@@ -2227,7 +2247,7 @@ impl Default for MapScoreRequirement {
 }
 
 /// Require specific tags
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct MapTagsRequirement {
     /// Acceptable tags
     pub acceptable_map_tags: Vec<Tag>,
@@ -2236,32 +2256,33 @@ pub struct MapTagsRequirement {
 }
 
 /// Require a specifc playlist
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct PlaylistIdRequirement<'a> {
     /// Acceptable playlists
-    pub acceptable_playlist_ids: Vec<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub acceptable_playlist_ids: Vec<HipStr<'a>>,
 }
 
 /// A scoring mode like controller or Kinect
 #[repr(u8)]
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
 pub enum ScoringMode {
     /// Using a phone or controller
     #[default]
     PhoneDevice = 2,
 }
 
-impl From<ScoringMode> for u8 {
+impl From<ScoringMode> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: ScoringMode) -> Self {
         value as Self
     }
 }
 
-impl TryFrom<u8> for ScoringMode {
+impl TryFrom<u32> for ScoringMode {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             2 => Ok(Self::PhoneDevice),
             _ => Err(anyhow!("Unknown ScoringMode {value}")),
@@ -2270,14 +2291,14 @@ impl TryFrom<u8> for ScoringMode {
 }
 
 /// Require a specific scoring mode (Kinect/Controller)
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct ScoringModeRequirement {
     /// The scoring modes
     pub acceptable_scoring_modes: Vec<ScoringMode>,
 }
 
 /// Require specific search labels
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct SearchLabelsRequirement {
     /// Required labels
     pub acceptable_labels: Vec<LocaleId>,
@@ -2286,7 +2307,7 @@ pub struct SearchLabelsRequirement {
 }
 
 /// Require specific sticker ids
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
 pub struct StickerIdRequirement {
     /// The sticker ids
     pub acceptable_sticker_ids: Vec<u32>,

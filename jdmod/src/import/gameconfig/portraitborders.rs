@@ -8,7 +8,7 @@ use ubiart_toolkit::cooked;
 use crate::{
     regex,
     types::{gameconfig::portraitborders::PortraitBorder, ImportState},
-    utils::{cook_path, cow_regex_single_capture, decode_texture},
+    utils::{cook_path, decode_texture, hipstr_regex_single_capture},
 };
 
 /// Import all portraitborders
@@ -19,63 +19,60 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
 
     let new_portraitborders = is
         .vfs
-        .open(cook_path(portraitborders_path, is.ugi.platform)?.as_ref())?;
+        .open(cook_path(portraitborders_path, is.ugi)?.as_ref())?;
     let template = cooked::json::parse_v22(&new_portraitborders, is.lax)?;
     let portrait_borders_database = template.into_portrait_borders_database()?;
 
     // Load existing avatars in the mod
     let pb_config_path = is.dirs.portraitborders().join("portraitborders.json");
-    let mut portraitborders: HashMap<String, PortraitBorder> = if pb_config_path.exists() {
-        let file = File::open(&pb_config_path)?;
-        serde_json::from_reader(file)?
-    } else {
-        HashMap::new()
-    };
+    let pb_config_file = std::fs::read(&pb_config_path).unwrap_or_else(|_| vec![b'{', b'}']);
+    let mut portraitborders: HashMap<String, PortraitBorder> =
+        serde_json::from_slice(&pb_config_file)?;
 
     for desc in &portrait_borders_database.portrait_borders {
-        let name = cow_regex_single_capture(regex, desc.background_texture_path.clone())?;
+        let name = hipstr_regex_single_capture(regex, &desc.background_texture_path)?;
 
-        if !portraitborders.contains_key(name.as_ref()) {
+        if !portraitborders.contains_key(name.as_str()) {
             let pb = PortraitBorder::from_portrait_border_desc(desc, name.as_ref())?;
-            std::fs::create_dir(is.dirs.portraitborders().join(name.as_ref()))?;
+            std::fs::create_dir(is.dirs.portraitborders().join(name.as_str()))?;
 
             // Save the background and foreground textures and phone images (if they exist)
             let background_texture = is
                 .vfs
-                .open(cook_path(&desc.background_texture_path, is.ugi.platform)?.as_ref())?;
+                .open(cook_path(&desc.background_texture_path, is.ugi)?.as_ref())?;
             let background_texture_decoded = decode_texture(&background_texture, is.ugi)?;
             background_texture_decoded.save(
                 is.dirs
                     .portraitborders()
-                    .join(pb.background_texture_path.as_ref()),
+                    .join(pb.background_texture_path.as_str()),
             )?;
 
             if let Some(foreground_texture_path) = &pb.foreground_texture_path {
                 let foreground_texture = is
                     .vfs
-                    .open(cook_path(&desc.foreground_texture_path, is.ugi.platform)?.as_ref())?;
+                    .open(cook_path(&desc.foreground_texture_path, is.ugi)?.as_ref())?;
                 let foreground_texture_decoded = decode_texture(&foreground_texture, is.ugi)?;
                 foreground_texture_decoded.save(
                     is.dirs
                         .portraitborders()
-                        .join(foreground_texture_path.as_ref()),
+                        .join(foreground_texture_path.as_str()),
                 )?;
             }
 
-            let background_phone = is.vfs.open(desc.background_phone_path.as_ref().as_ref())?;
+            let background_phone = is.vfs.open(desc.background_phone_path.as_str().as_ref())?;
             let mut file = File::create(
                 is.dirs
                     .portraitborders()
-                    .join(pb.background_phone_path.as_ref()),
+                    .join(pb.background_phone_path.as_str()),
             )?;
             file.write_all(&background_phone)?;
 
             if let Some(foreground_phone_path) = &pb.foreground_phone_path {
-                let foreground_phone = is.vfs.open(desc.foreground_phone_path.as_ref().as_ref())?;
+                let foreground_phone = is.vfs.open(desc.foreground_phone_path.as_str().as_ref())?;
                 let mut file = File::create(
                     is.dirs
                         .portraitborders()
-                        .join(foreground_phone_path.as_ref()),
+                        .join(foreground_phone_path.as_str()),
                 )?;
                 file.write_all(&foreground_phone)?;
             }

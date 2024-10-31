@@ -4,6 +4,7 @@ use dotstar_toolkit_utils::bytes::{
     primitives::u32be,
     read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
+use hipstr::HipStr;
 
 #[derive(Debug)]
 pub struct Wav<'a> {
@@ -269,7 +270,7 @@ pub struct Strg<'a> {
 
 #[derive(Debug)]
 pub enum StrOrRaw<'a> {
-    String(Cow<'a, str>),
+    String(HipStr<'a>),
     Raw(Cow<'a, [u8]>),
 }
 

@@ -6,6 +6,8 @@
 use std::{collections::HashMap, fs::File};
 
 use anyhow::Error;
+use hipstr::HipStr;
+use ownable::traits::IntoOwned;
 use ubiart_toolkit::cooked;
 
 use crate::{
@@ -18,17 +20,16 @@ use crate::{
 
 /// Import all objectives.
 pub fn import_v20v22(is: &ImportState<'_>, objectives_path: &str) -> Result<(), Error> {
+    let objectives_file = is.vfs.open(cook_path(objectives_path, is.ugi)?.as_ref())?;
+    let objective_database =
+        cooked::json::parse_v22(&objectives_file, is.lax)?.into_objectives_database()?;
+
     let mut objectives = load_objectives(is)?;
 
-    let objectives_file = is
-        .vfs
-        .open(cook_path(objectives_path, is.ugi.platform)?.as_ref())?;
-    let parsed_json = cooked::json::parse_v22(&objectives_file, is.lax)?;
-    let objective_database = parsed_json.into_objectives_database()?;
     for (name, descriptor) in &objective_database.objective_descs {
         objectives.add_objective_with_name(
             Objective::from_descriptor(descriptor, &is.locale_id_map)?,
-            name.to_string(),
+            name.clone(),
         )?;
     }
 
@@ -39,8 +40,8 @@ pub fn import_v20v22(is: &ImportState<'_>, objectives_path: &str) -> Result<(), 
 
 /// Load existing objectives in the mod
 pub fn load_objectives(is: &ImportState<'_>) -> Result<Objectives<'static>, Error> {
-    if let Ok(file) = File::open(is.dirs.config().join("objectives.json")) {
-        let name_map: HashMap<String, Objective> = serde_json::from_reader(file)?;
+    if let Ok(file) = std::fs::read(is.dirs.config().join("objectives.json")) {
+        let name_map = serde_json::from_slice::<HashMap<HipStr, Objective>>(&file)?.into_owned();
         let mut objective_map = HashMap::with_capacity(name_map.len());
         for (name, objective) in &name_map {
             objective_map.insert(objective.clone(), name.clone());

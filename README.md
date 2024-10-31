@@ -12,6 +12,7 @@ It can import and export songs, playlists, quests/objectives, avatars, aliases, 
 Tools and library for parsing and writing various UbiArt files.
 
 Supports the following formats (Nintendo Switch games only!)
+
 | File extension | Tool       | Remarks                          |
 | -------------- | ---------- | -------------------------------- |
 | .act.ckd       | acttool    |                                  |
@@ -32,6 +33,7 @@ It also has the tools `stringidtool` and `ubicrctool` for easy creation of ids a
 Tools and library for parsing Nintendo Wii file formats.
 
 Supports the following formats
+
 | File extension | Tool    |  Remarks                                |
 | -------------- | ------- | --------------------------------------- | 
 | .app           | u8tool  | Supports extraction                     |

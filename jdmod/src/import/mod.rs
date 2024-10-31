@@ -19,7 +19,7 @@ use ubiart_toolkit::{
 };
 
 use crate::{
-    types::{DirectoryTree, ImportState},
+    types::{localisation::LocaleIdMap, DirectoryTree, ImportState},
     utils::cook_path,
 };
 
@@ -139,6 +139,34 @@ pub fn import(
         {
             panic!("This feature is still in development!");
         }
+    } else if game_path.ends_with("dlcdescriptor.ckd") {
+        // Init the native filesystem and load the securefat as a virtual filesystem
+        let native_vfs = NativeFs::new(
+            game_path
+                .parent()
+                .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
+        )?;
+        let sfat_vfs = SfatFilesystem::new(&native_vfs, &VirtualPathBuf::from("secure_fat.gf"))?;
+
+        // TODO: Check engine version and warn user they're missing an update
+
+        let unique_game_id = sfat_vfs.unique_game_id();
+
+        // Collect common required items in a convenient place
+        let is = ImportState {
+            vfs: &sfat_vfs,
+            dirs: dir_tree,
+            ugi: unique_game_id,
+            locale_id_map: LocaleIdMap::default(),
+            aliases: Alias8::default(),
+            lax,
+        };
+
+        let dlcdescriptor_file = native_vfs.open(VirtualPath::new("dlcdescriptor.ckd"))?;
+        let dlcdescriptor = cooked::dlcdescriptor::DlcDescriptor::deserialize(&dlcdescriptor_file)?;
+        let mapname = dlcdescriptor.name;
+
+        song::import(&is, &format!("world/jd2015/{mapname}/songdesc.tpl"))?;
     } else {
         return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf, JD Now .json files, and raw import are supported!"));
     }
@@ -186,7 +214,7 @@ pub fn import_vfs(
             &is.aliases
                 .get_path_for_alias("gameconfig")
                 .ok_or_else(|| anyhow!("common.alias8 does not contain gameconfig path!"))?,
-            is.ugi.platform,
+            is.ugi,
         )?;
         let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
 

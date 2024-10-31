@@ -2,6 +2,7 @@
 //! Build the maps objective
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use ownable::traits::IntoOwned;
 use ubiart_toolkit::json_types::{v22::GameManagerConfig22, MapsObjectives};
 
 use crate::build::BuildState;
@@ -11,7 +12,8 @@ pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Resul
     let maps_objectives_file = bs
         .native_vfs
         .open(&bs.rel_tree.config().join("maps_objectives.json"))?;
-    let maps_objectives: MapsObjectives = serde_json::from_slice(&maps_objectives_file)?;
+    let maps_objectives =
+        serde_json::from_slice::<MapsObjectives>(&maps_objectives_file)?.into_owned();
 
     gameconfig.mapsobjectives = maps_objectives;
 

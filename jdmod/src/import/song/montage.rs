@@ -1,8 +1,8 @@
 //! # Pictogram Spritesheest
 //! Code for converting pictogram spritesheets into individual pictograms
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{test_eq, test_ge, test_le};
 use image::imageops;
+use test_eq::{test_eq, test_ge, test_le};
 
 use super::SongImportState;
 use crate::utils::decode_texture;

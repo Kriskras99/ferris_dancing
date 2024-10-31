@@ -1,16 +1,15 @@
 //! # Playlists Building
 //! Build the playlists
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{
-    test_eq,
-    vfs::{VirtualFileSystem, VirtualPath},
-};
+use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPath};
+use hipstr::HipStr;
+use test_eq::test_eq;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
-    utils::SplitPath,
+    utils::{SplitPath, UniqueGameId},
 };
 
 use crate::{
@@ -28,7 +27,7 @@ pub fn build(
     let saved_playlists_file = bs
         .native_vfs
         .open(&bs.rel_tree.playlists().join("playlists.json"))?;
-    let saved_playlists: HashMap<Cow<'_, str>, Playlist> =
+    let saved_playlists: HashMap<HipStr<'_>, Playlist> =
         serde_json::from_slice(&saved_playlists_file)?;
 
     let mut playlists = HashMap::with_capacity(saved_playlists.len());
@@ -43,7 +42,7 @@ pub fn build(
         ));
 
         let cover = playlist.cover.clone();
-        let file_stem = VirtualPath::new(cover.as_ref())
+        let file_stem = VirtualPath::new(cover.as_str())
             .file_stem()
             .ok_or_else(|| anyhow!("Failure parsing filename!"))?;
         let offline_playlist = playlist.into_offline_playlist()?;
@@ -52,16 +51,16 @@ pub fn build(
         let cover_actor_vec = cover_actor(&tga)?;
 
         let cooked_cover =
-            encode_texture(bs.native_vfs, &bs.rel_tree.playlists().join(cover.as_ref()))?;
+            encode_texture(bs.native_vfs, &bs.rel_tree.playlists().join(cover.as_str()))?;
         let cooked_cover_vec = cooked::png::create_vec(cooked_cover)?;
         bf.generated_files.add_file(
-            cook_path(offline_playlist.cover_path.as_ref(), bs.platform)?.into(),
+            cook_path(offline_playlist.cover_path.as_str(), UniqueGameId::NX2022)?.into(),
             cover_actor_vec,
         )?;
         bf.generated_files.add_file(
             cook_path(
                 &format!("world/ui/textures/covers/playlists_offline/{tga}"),
-                bs.platform,
+                UniqueGameId::NX2022,
             )?
             .into(),
             cooked_cover_vec,
@@ -78,7 +77,7 @@ pub fn build(
 
     let template_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.config_files_path.playlist, bs.platform)?.into(),
+        cook_path(&gameconfig.config_files_path.playlist, UniqueGameId::NX2022)?.into(),
         template_vec,
     )?;
 
@@ -94,7 +93,7 @@ fn build_carousel(
     mut requests: Vec<json_types::isg::CarouselRequestDesc<'_>>,
     carousel_rules: &str,
 ) -> Result<(), Error> {
-    let carousel_rules_path = cook_path(carousel_rules, bs.platform)?;
+    let carousel_rules_path = cook_path(carousel_rules, UniqueGameId::NX2022)?;
     let template_file = bs.patched_base_vfs.open(carousel_rules_path.as_ref())?;
     let mut carousel_rules = cooked::json::parse_v22(&template_file, false)?
         .into_carousel_rules()?
@@ -120,9 +119,9 @@ fn build_carousel(
     // TODO: Investigate adding a carousel per Game
     let category_rule = json_types::isg::CategoryRule {
         class: Some(json_types::isg::CategoryRule::CLASS),
-        act: Cow::Borrowed("ui_carousel"),
-        isc: Cow::Borrowed("grp_row"),
-        title: Cow::Borrowed("Themed"),
+        act: HipStr::borrowed("ui_carousel"),
+        isc: HipStr::borrowed("grp_row"),
+        title: HipStr::borrowed("Themed"),
         title_id: 0x39AB, // 'Themed Playlists'
         requests,
         filters: Vec::new(),
@@ -144,8 +143,8 @@ fn build_carousel(
 fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
     let actor = cooked::act::Actor {
         lua: SplitPath::new(
-            Cow::Borrowed("enginedata/actortemplates/"),
-            Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
+            HipStr::borrowed("enginedata/actortemplates/"),
+            HipStr::borrowed("tpl_materialgraphiccomponent2d.tpl"),
         )?,
         unk1: 0.0,
         unk2: 1.0,
@@ -156,8 +155,8 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
                 // TODO: Check values!
                 files: [
                     SplitPath::new(
-                        Cow::Borrowed("world/ui/textures/covers/playlists_offline/"),
-                        Cow::Borrowed(tga),
+                        HipStr::borrowed("world/ui/textures/covers/playlists_offline/"),
+                        HipStr::borrowed(tga),
                     )?,
                     SplitPath::default(),
                     SplitPath::default(),
@@ -169,8 +168,8 @@ fn cover_actor(tga: &str) -> Result<Vec<u8>, Error> {
                     SplitPath::default(),
                     SplitPath::default(),
                     SplitPath::new(
-                        Cow::Borrowed("world/_common/matshader/"),
-                        Cow::Borrowed("multitexture_1layer.msh"),
+                        HipStr::borrowed("world/_common/matshader/"),
+                        HipStr::borrowed("multitexture_1layer.msh"),
                     )?,
                 ],
                 ..Default::default()

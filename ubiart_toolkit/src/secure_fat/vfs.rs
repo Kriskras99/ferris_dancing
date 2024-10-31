@@ -13,7 +13,6 @@ use crate::{
     ipk::vfs::IpkFilesystem,
     utils::{PathId, UniqueGameId},
 };
-use crate::utils::Platform;
 
 pub struct SfatFilesystem<'f> {
     sfat: SecureFat,
@@ -29,10 +28,10 @@ impl<'f> SfatFilesystem<'f> {
         if let Some(patch) = &self.patch {
             let patch_unique_game_id = patch.unique_game_id();
             // The patch for NX2021 has the same UGI as NX2022. UGH.
-            if patch_unique_game_id.game != original_unique_game_id.game {
-                original_unique_game_id
-            } else {
+            if patch_unique_game_id.game == original_unique_game_id.game {
                 patch_unique_game_id
+            } else {
+                original_unique_game_id
             }
         } else {
             original_unique_game_id
@@ -84,24 +83,59 @@ impl<'f> SfatFilesystem<'f> {
             .ok_or_else(|| std::io::Error::from(ErrorKind::InvalidData))?;
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             let filename = super::bundle_name_to_filename(name, sfat.game_platform());
-            let path = parent.with_file_name(&filename);
+            let path = Self::exist_or_find_lowercase(fs, parent.with_file_name(&filename))?;
             let ipk = IpkFilesystem::new(fs, &path).map_err(|error| {
                 std::io::Error::other(format!("Failed to parse {path:?}: {error:?}"))
             })?;
             bundles.insert(*bundle_id, ipk);
         }
         let filename = super::bundle_name_to_filename("patch", sfat.game_platform());
-        let path = parent.with_file_name(filename);
-        let patch = IpkFilesystem::new(fs, &path).ok();
-        if patch.is_none() && sfat.game_platform.platform != Platform::Win {
-            println!("Warning! No patch file found!");
-        }
+        let patch = if let Ok(patch_path) =
+            Self::exist_or_find_lowercase(fs, parent.with_file_name(filename))
+        {
+            Some(IpkFilesystem::new(fs, &patch_path)?)
+        } else {
+            None
+        };
 
         Ok(Self {
             sfat,
             bundles,
             patch,
         })
+    }
+
+    /// Check if `path` exists, otherwise tries to find a lowercase version of the path.
+    ///
+    /// # Errors
+    /// Will return an error if `path` and the lowercase version of `path` do not exist.
+    /// Or if there is more than one match for the lowercase version of `path`.
+    fn exist_or_find_lowercase(
+        fs: &dyn VirtualFileSystem,
+        path: VirtualPathBuf,
+    ) -> std::io::Result<VirtualPathBuf> {
+        if fs.exists(&path) {
+            Ok(path)
+        } else {
+            let parent = path
+                .parent()
+                .ok_or_else(|| std::io::Error::other("File should have a parent!"))?;
+            let path_lower = path.as_str().to_lowercase();
+            let mut candidates: Vec<_> = fs
+                .read_dir(parent)?
+                .filter(|p| p.as_str().to_lowercase() == path_lower)
+                .collect();
+            if candidates.len() > 1 {
+                Err(std::io::Error::other(format!("Found more than one candidate for lowercase version of '{path}': {candidates:?} ")))
+            } else if candidates.is_empty() {
+                Err(std::io::Error::new(
+                    ErrorKind::NotFound,
+                    format!("Could not find '{path}', nor the lowercase version"),
+                ))
+            } else {
+                Ok(VirtualPathBuf::from(candidates.remove(0)))
+            }
+        }
     }
 }
 

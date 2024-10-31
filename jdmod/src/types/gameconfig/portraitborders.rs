@@ -1,16 +1,17 @@
 //! # Portraitborders
 //! Describes portraitborders, called skins in the UI.
 //! However, these are not the same skins as in earlier games
-use std::borrow::Cow;
 
 use anyhow::{anyhow, bail, Error};
+use hipstr::HipStr;
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types::isg::PortraitBorderDesc;
 
 use super::generate_gacha_id;
 
 /// Is the portraitborder unlocked by default
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, IntoOwned)]
 pub enum LockStatus {
     /// Yes
     UnlockedByDefault,
@@ -18,10 +19,10 @@ pub enum LockStatus {
     GachaMachine,
 }
 
-impl TryFrom<u8> for LockStatus {
+impl TryFrom<u32> for LockStatus {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(Self::GachaMachine),
             1 => Ok(Self::UnlockedByDefault),
@@ -30,7 +31,7 @@ impl TryFrom<u8> for LockStatus {
     }
 }
 
-impl From<LockStatus> for u8 {
+impl From<LockStatus> for u32 {
     fn from(value: LockStatus) -> Self {
         match value {
             LockStatus::UnlockedByDefault => 1,
@@ -40,7 +41,7 @@ impl From<LockStatus> for u8 {
 }
 
 /// Is the portraitborder selectable by the user
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, IntoOwned)]
 pub enum Visibility {
     /// Yes
     Visible,
@@ -48,10 +49,10 @@ pub enum Visibility {
     Hidden,
 }
 
-impl TryFrom<u8> for Visibility {
+impl TryFrom<u32> for Visibility {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(Self::Hidden),
             1 => Ok(Self::Visible),
@@ -60,7 +61,7 @@ impl TryFrom<u8> for Visibility {
     }
 }
 
-impl From<Visibility> for u8 {
+impl From<Visibility> for u32 {
     fn from(value: Visibility) -> Self {
         match value {
             Visibility::Visible => 1,
@@ -70,16 +71,20 @@ impl From<Visibility> for u8 {
 }
 
 /// Describes a portraitborder
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, IntoOwned)]
 pub struct PortraitBorder<'a> {
     /// Path to the image that should be behind the avatar
-    pub background_texture_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub background_texture_path: HipStr<'a>,
     /// Path to the image that should be in front of the avatar
-    pub foreground_texture_path: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub foreground_texture_path: Option<HipStr<'a>>,
     /// Path to the image that should be behind the avatar (phone)
-    pub background_phone_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub background_phone_path: HipStr<'a>,
     /// Path to the image that should be in front of the avatar (phone)
-    pub foreground_phone_path: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub foreground_phone_path: Option<HipStr<'a>>,
     /// Is the portraitborder unlocked by default
     pub lock_status: LockStatus,
     /// Is the portraitborder selectable by the user
@@ -102,17 +107,17 @@ impl<'a> PortraitBorder<'a> {
             bail!("Background texture does not exist!");
         };
         Ok(Self {
-            background_texture_path: Cow::Owned(format!("{name}/background_texture.png")),
+            background_texture_path: HipStr::from(format!("{name}/background_texture.png")),
             foreground_texture_path: if desc.foreground_texture_path.is_empty() {
                 None
             } else {
-                Some(Cow::Owned(format!("{name}/foreground_texture.png")))
+                Some(HipStr::from(format!("{name}/foreground_texture.png")))
             },
-            background_phone_path: Cow::Owned(format!("{name}/background_phone.png")),
+            background_phone_path: HipStr::from(format!("{name}/background_phone.png")),
             foreground_phone_path: if desc.foreground_phone_path.is_empty() {
                 None
             } else {
-                Some(Cow::Owned(format!("{name}/foreground_phone.png")))
+                Some(HipStr::from(format!("{name}/foreground_phone.png")))
             },
             lock_status: LockStatus::try_from(desc.original_lock_status)?,
             visibility: Visibility::try_from(desc.visibility)?,
@@ -126,25 +131,25 @@ impl<'a> PortraitBorder<'a> {
         PortraitBorderDesc {
             class: Some(PortraitBorderDesc::CLASS),
             portrait_border_id: id,
-            background_texture_path: Cow::Owned(format!(
+            background_texture_path: HipStr::from(format!(
                 "world/features/collectibles/portraitborders/{id:04}_{name}/pb_back.png"
             )),
             foreground_texture_path: if self.foreground_texture_path.is_some() {
-                Cow::Owned(format!(
+                HipStr::from(format!(
                     "world/features/collectibles/portraitborders/{id:04}_{name}/pb_front.png"
                 ))
             } else {
-                Cow::Borrowed("")
+                HipStr::borrowed("")
             },
-            background_phone_path: Cow::Owned(format!(
+            background_phone_path: HipStr::from(format!(
                 "world/features/collectibles/portraitborders/{id:04}_{name}/pb_back_phone.png"
             )),
             foreground_phone_path: if self.foreground_phone_path.is_some() {
-                Cow::Owned(format!(
+                HipStr::from(format!(
                     "world/features/collectibles/portraitborders/{id:04}_{name}/pb_front_phone.png"
                 ))
             } else {
-                Cow::Borrowed("")
+                HipStr::borrowed("")
             },
             original_lock_status: self.lock_status.into(),
             visibility: self.visibility.into(),

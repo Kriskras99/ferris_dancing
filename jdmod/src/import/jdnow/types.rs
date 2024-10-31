@@ -10,19 +10,19 @@ use serde::Deserialize;
 pub struct BasicInfo<'a> {
     /// Unknown
     #[serde(rename = "_id")]
-    pub raw_id: Cow<'a, str>,
+    pub raw_id: HipStr<'a>,
     /// Codename of the song (capitalized)
-    pub id: Cow<'a, str>,
+    pub id: HipStr<'a>,
     /// Artist of this song
-    pub artist: Cow<'a, str>,
+    pub artist: HipStr<'a>,
     /// Name of the song
-    pub name: Cow<'a, str>,
+    pub name: HipStr<'a>,
     /// The amount of coaches
     pub coaches: u8,
     /// Publishing status of the song
-    pub status: Cow<'a, str>,
+    pub status: HipStr<'a>,
     /// Song credits
-    pub credits: Vec<Cow<'a, str>>,
+    pub credits: Vec<HipStr<'a>>,
     /// Associated avatar ids
     pub avatars: Vec<u16>,
     /// Duration of the song (in ms?)
@@ -34,11 +34,11 @@ pub struct BasicInfo<'a> {
     /// Original Just Dance game this is from
     pub jdversion: u16,
     /// Base url of the song
-    pub base: Cow<'a, str>,
+    pub base: HipStr<'a>,
     /// Base url for the avatars of the song
-    pub app_avatars: Cow<'a, str>,
+    pub app_avatars: HipStr<'a>,
     /// Url of the background image of the song
-    pub bkg_image: Cow<'a, str>,
+    pub bkg_image: HipStr<'a>,
 }
 
 /// Directory and file structure of a song from Just Dance Now

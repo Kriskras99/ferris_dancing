@@ -7,11 +7,13 @@ use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use hipstr::HipStr;
 use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit_json_types::Empty;
 use ubiart_toolkit_shared_types::{errors::ParserError, Color};
 
 use super::json;
-use crate::utils::{Game, UniqueGameId};
+use crate::{
+    json_types::Empty,
+    utils::{Game, UniqueGameId},
+};
 
 pub fn parse(data: &[u8], ugi: UniqueGameId) -> Result<Tape<'_>, ParserError> {
     let tape = match ugi.game {

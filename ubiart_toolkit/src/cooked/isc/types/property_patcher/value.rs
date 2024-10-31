@@ -1,23 +1,22 @@
-use std::borrow::Cow;
-
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 
-use crate::{impl_deserialize_for_internally_tagged_enum, wrap};
+use crate::cooked::isc::{impl_deserialize_for_internally_tagged_enum, wrap};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "@NAME", deny_unknown_fields)]
 pub enum Value<'a> {
     #[serde(rename = "PropertyPatchValue_Color")]
     Color(WrappedColor),
-    #[serde(rename = "PropertyPatchValue_ColorSet")]
+    #[serde(borrow, rename = "PropertyPatchValue_ColorSet")]
     ColorSet(WrappedColorSet<'a>),
     #[serde(rename = "PropertyPatchValue_Float")]
     Float(WrappedFloat),
     #[serde(rename = "PropertyPatchValue_Int")]
     Int(WrappedInt),
-    #[serde(rename = "PropertyPatchValue_Path")]
+    #[serde(borrow, rename = "PropertyPatchValue_Path")]
     Path(WrappedPath<'a>),
-    #[serde(rename = "PropertyPatchValue_String")]
+    #[serde(borrow, rename = "PropertyPatchValue_String")]
     String(WrappedString<'a>),
     #[serde(rename = "PropertyPatchValue_Time")]
     Time(Base),
@@ -59,8 +58,8 @@ pub struct ColorSets<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct ColorSet<'a> {
-    #[serde(rename = "@KEY")]
-    pub key: Cow<'a, str>,
+    #[serde(borrow, rename = "@KEY")]
+    pub key: HipStr<'a>,
     #[serde(rename = "@VAL")]
     pub value: ubiart_toolkit_shared_types::Color,
 }
@@ -82,13 +81,13 @@ pub struct Int {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Path<'a> {
-    #[serde(rename = "@VALUE")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@VALUE")]
+    pub value: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct String<'a> {
-    #[serde(rename = "@VALUE")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@VALUE")]
+    pub value: HipStr<'a>,
 }

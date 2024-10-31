@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualPathBuf;
+use hipstr::HipStr;
 use ubiart_toolkit::loc8::{self, Language, Loc8};
 
 use super::{BuildFiles, BuildState};
@@ -101,10 +102,7 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
                     strings: HashMap::with_capacity(unique_ids),
                 })
                 .strings
-                .insert(
-                    *locale_id,
-                    std::borrow::Cow::Borrowed(translation.get(lang)),
-                );
+                .insert(*locale_id, HipStr::borrowed(translation.get(lang)));
         }
     }
 

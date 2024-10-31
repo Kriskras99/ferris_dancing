@@ -1,11 +1,16 @@
 //! # Audio Building
 //! Build the audio and musictrack
-use std::borrow::Cow;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
-use hipstr::string::HipStr;
-use ubiart_toolkit::{cooked, cooked::tape, json_types};
+use hipstr::HipStr;
+use ubiart_toolkit::{
+    cooked,
+    cooked::{
+        isc::{MusicTrackComponent, TapeCase},
+        tape,
+    },
+};
 
 use super::SongExportState;
 use crate::{
@@ -27,7 +32,7 @@ pub fn build(
 
     // audio file
     let audio_file_path = {
-        let source_file_path = ses.dirs.audio().join(ses.song.audiofile.as_ref());
+        let source_file_path = ses.dirs.audio().join(ses.song.audiofile.as_str());
         let extension = source_file_path
             .extension()
             .ok_or_else(|| anyhow!("Invalid or missing extension! {source_file_path}"))?;
@@ -90,22 +95,22 @@ pub fn build(
 fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
     let map_path = &ses.map_path;
     let lower_map_name = ses.lower_map_name;
-    let map_name = ses.song.map_name.as_ref();
+    let map_name = ses.song.map_name.as_str();
     cooked::isc::Root {
         scene: cooked::isc::Scene {
             engine_version: ses.engine_version,
             actors: vec![
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
-                        userfriendly: Cow::Borrowed("MusicTrack"),
+                        userfriendly: HipStr::borrowed("MusicTrack"),
                         pos2d: (1.125_962, -0.418_641),
-                        lua: Cow::Owned(
+                        lua: HipStr::from(
                             map_path
                                 .join(format!("audio/{lower_map_name}_musictrack.tpl"))
                                 .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::MusicTrack(
-                            Default::default(),
+                            MusicTrackComponent::default(),
                         )],
                         ..Default::default()
                     }),
@@ -113,15 +118,15 @@ fn audio_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
                         relativez: 0.000_001,
-                        userfriendly: Cow::Owned(format!("{map_name}_sequence")),
+                        userfriendly: HipStr::from(format!("{map_name}_sequence")),
                         pos2d: (-0.006_158, -0.006_158),
-                        lua: Cow::Owned(
+                        lua: HipStr::from(
                             map_path
                                 .join(format!("audio/{lower_map_name}_sequence.tpl"))
                                 .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase(
-                            Default::default(),
+                            TapeCase::default(),
                         )],
                         ..Default::default()
                     }),
@@ -139,28 +144,28 @@ fn musictrack_template(
     ses: &SongExportState<'_>,
     audio_file_path: String,
 ) -> Result<Vec<u8>, Error> {
-    let map_name = ses.song.map_name.as_ref();
+    let map_name = ses.song.map_name.as_str();
 
     let musictrack_file = ses
         .native_vfs
         .open(&ses.dirs.song().join("musictrack.json"))?;
     let musictrack: MusicTrack = serde_json::from_slice(&musictrack_file)?;
 
-    let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
-        class: None,
+    let template = cooked::tpl::types::Actor {
+        class: cooked::tpl::types::Actor::CLASS,
         wip: 0,
         lowupdate: 0,
         update_layer: 0,
         procedural: 0,
         startpaused: 0,
         forceisenvironment: 0,
-        components: vec![json_types::v22::Template22::MusicTrackComponent(
-            json_types::tpl::MusicTrackComponent {
+        components: vec![cooked::tpl::types::Template::MusicTrackComponent(
+            cooked::tpl::types::MusicTrackComponent {
                 class: None,
-                track_data: json_types::tpl::MusicTrackData {
-                    class: Some(json_types::tpl::MusicTrackData::CLASS),
-                    structure: json_types::tpl::MusicTrackStructure {
-                        class: Some(json_types::tpl::MusicTrackStructure::CLASS),
+                track_data: cooked::tpl::types::MusicTrackData {
+                    class: Some(cooked::tpl::types::MusicTrackData::CLASS),
+                    structure: cooked::tpl::types::MusicTrackStructure {
+                        class: Some(cooked::tpl::types::MusicTrackStructure::CLASS),
                         markers: musictrack.markers.clone(),
                         signatures: musictrack.signatures.into_iter().map(Into::into).collect(),
                         sections: musictrack.sections.into_iter().map(Into::into).collect(),
@@ -181,12 +186,12 @@ fn musictrack_template(
                         fade_out_type: 0,
                         entry_points: Vec::new(),
                     },
-                    path: Cow::Owned(audio_file_path),
-                    url: Cow::Owned(format!("jmcs://jd-contents/{map_name}/{map_name}.ogg")),
+                    path: HipStr::from(audio_file_path),
+                    url: HipStr::from(format!("jmcs://jd-contents/{map_name}/{map_name}.ogg")),
                 },
             },
         )],
-    });
+    };
 
     Ok(cooked::json::create_vec_with_capacity_hint(
         &template, 8000,
@@ -195,12 +200,12 @@ fn musictrack_template(
 
 /// Build the sequence template
 fn sequence_template() -> Result<Vec<u8>, Error> {
-    let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
-        components: vec![json_types::v22::Template22::TapeCase(
-            json_types::tpl::MasterTape::default(),
+    let template = cooked::tpl::types::Actor {
+        components: vec![cooked::tpl::types::Template::TapeCase(
+            cooked::tpl::types::MasterTape::default(),
         )],
         ..Default::default()
-    });
+    };
 
     Ok(cooked::json::create_vec_with_capacity_hint(&template, 500)?)
 }

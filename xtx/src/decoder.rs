@@ -2,13 +2,9 @@
 
 use std::{collections::VecDeque, num::TryFromIntError};
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u32le, u64le},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_eq, test_le,
-    testing::TestError,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u32le, u64le},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use image::{
     error::{DecodingError, ImageFormatHint},
@@ -18,6 +14,7 @@ use tegra_swizzle::{
     surface::{deswizzle_surface, BlockDim},
     BlockHeight, SwizzleError,
 };
+use test_eq::{test_eq, test_le, TestFailure};
 use thiserror::Error;
 
 use crate::types::{
@@ -54,7 +51,7 @@ pub enum DecoderError {
     Read(#[from] ReadError),
     /// Test failure
     #[error("Value test failed")]
-    Test(#[from] TestError),
+    Test(#[from] TestFailure),
     /// Integer conversion failed
     #[error("Integer conversion failed")]
     TryFromInt(#[from] TryFromIntError),

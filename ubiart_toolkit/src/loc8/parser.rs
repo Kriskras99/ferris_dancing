@@ -2,13 +2,11 @@
 
 use std::collections::{hash_map::Entry, HashMap};
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::u32be,
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_any,
+use dotstar_toolkit_utils::bytes::{
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
+use test_eq::test_any;
 
 use super::types::Loc8;
 use crate::{loc8::types::Language, utils::LocaleId};

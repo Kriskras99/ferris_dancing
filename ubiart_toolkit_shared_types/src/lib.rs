@@ -38,7 +38,9 @@ impl BinaryDeserialize<'_> for Color {
 }
 
 /// Represents the id of a localised string
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, IntoOwned,
+)]
 #[repr(transparent)]
 pub struct LocaleId(u32);
 

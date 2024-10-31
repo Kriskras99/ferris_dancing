@@ -7,4 +7,5 @@ pub mod json;
 pub mod png;
 pub mod sgs;
 pub mod tape;
+pub mod tpl;
 pub mod wav;

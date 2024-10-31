@@ -5,6 +5,7 @@ use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
+    utils::UniqueGameId,
 };
 
 use crate::{
@@ -42,7 +43,11 @@ pub fn build(
     let gacha_content_database_vec =
         cooked::json::create_vec_with_capacity_hint(&gacha_content_database, 16_000)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.config_files_path.gachacontent, bs.platform)?.into(),
+        cook_path(
+            &gameconfig.config_files_path.gachacontent,
+            UniqueGameId::NX2022,
+        )?
+        .into(),
         gacha_content_database_vec,
     )?;
 

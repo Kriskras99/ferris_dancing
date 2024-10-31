@@ -6,6 +6,7 @@ mod error;
 mod impls;
 
 pub use error::*;
+use hipstr::HipStr;
 
 use super::{len::Len, write::BinarySerialize};
 
@@ -71,7 +72,7 @@ pub trait ReadAt {
     fn read_null_terminated_string_at<'rf>(
         &'rf self,
         position: &mut u64,
-    ) -> Result<Cow<'rf, str>, ReadError>;
+    ) -> Result<HipStr<'rf>, ReadError>;
 
     /// Read a `&[u8]` of length `len` at `position`
     ///
@@ -90,7 +91,7 @@ impl<T: ReadAt> ReadAt for Arc<T> {
     fn read_null_terminated_string_at<'rf>(
         &'rf self,
         position: &mut u64,
-    ) -> Result<Cow<'rf, str>, ReadError> {
+    ) -> Result<HipStr<'rf>, ReadError> {
         self.deref().read_null_terminated_string_at(position)
     }
 
@@ -110,7 +111,7 @@ impl<T: ReadAt> ReadAt for Rc<T> {
     fn read_null_terminated_string_at<'rf>(
         &'rf self,
         position: &mut u64,
-    ) -> Result<Cow<'rf, str>, ReadError> {
+    ) -> Result<HipStr<'rf>, ReadError> {
         self.deref().read_null_terminated_string_at(position)
     }
 
@@ -168,7 +169,7 @@ pub trait ReadAtExt: ReadAt {
     /// # Errors
     /// This function will return an error when the string would be (partially) outside the source.
     #[inline]
-    fn read_len_string_at<'rf, L>(&'rf self, position: &mut u64) -> Result<Cow<'rf, str>, ReadError>
+    fn read_len_string_at<'rf, L>(&'rf self, position: &mut u64) -> Result<HipStr<'rf>, ReadError>
     where
         L: Len<'rf>,
         <L as BinaryDeserialize<'rf>>::Ctx: Default,
@@ -181,10 +182,10 @@ pub trait ReadAtExt: ReadAt {
             let len = L::read_len_at(self, position)?;
             match self.read_slice_at(position, len)? {
                 Cow::Borrowed(slice) => std::str::from_utf8(slice)
-                    .map(Cow::Borrowed)
+                    .map(HipStr::borrowed)
                     .map_err(ReadError::from)?,
                 Cow::Owned(vec) => String::from_utf8(vec)
-                    .map(Cow::Owned)
+                    .map(HipStr::from)
                     .map_err(ReadError::from)?,
             }
         };
@@ -208,7 +209,7 @@ pub trait ReadAtExt: ReadAt {
     fn read_len_string_lossy_at<'rf, L>(
         &'rf self,
         position: &mut u64,
-    ) -> Result<Cow<'rf, str>, ReadError>
+    ) -> Result<HipStr<'rf>, ReadError>
     where
         L: Len<'rf>,
         <L as BinaryDeserialize<'rf>>::Ctx: Default,
@@ -220,9 +221,12 @@ pub trait ReadAtExt: ReadAt {
         let result: Result<_, _> = try {
             let len = L::read_len_at(self, position)?;
             match self.read_slice_at(position, len)? {
-                Cow::Borrowed(slice) => String::from_utf8_lossy(slice),
+                Cow::Borrowed(slice) => match String::from_utf8_lossy(slice) {
+                    Cow::Borrowed(string) => HipStr::borrowed(string),
+                    Cow::Owned(string) => HipStr::from(string),
+                },
                 Cow::Owned(vec) => String::from_utf8(vec)
-                    .map(Cow::Owned)
+                    .map(HipStr::from)
                     .map_err(ReadError::from)?,
             }
         };
@@ -274,7 +278,10 @@ pub trait ReadAtExt: ReadAt {
     fn read_len_type_at<'rf, 'pos, L, T>(
         &'rf self,
         position: &'pos mut u64,
-    ) -> Result<impl Iterator<Item = Result<T::Output, ReadError>>, ReadError>
+    ) -> Result<
+        impl Iterator<Item = Result<<T as BinaryDeserialize<'rf>>::Output, ReadError>>,
+        ReadError,
+    >
     where
         L: Len<'rf>,
         <L as BinaryDeserialize<'rf>>::Ctx: Default,
@@ -316,7 +323,10 @@ pub trait ReadAtExt: ReadAt {
         &'rf self,
         position: &'pos mut u64,
         ctx: T::Ctx,
-    ) -> Result<impl Iterator<Item = Result<T::Output, ReadError>>, ReadError>
+    ) -> Result<
+        impl Iterator<Item = Result<<T as BinaryDeserialize<'rf>>::Output, ReadError>>,
+        ReadError,
+    >
     where
         L: Len<'rf>,
         <L as BinaryDeserialize<'rf>>::Ctx: Default,

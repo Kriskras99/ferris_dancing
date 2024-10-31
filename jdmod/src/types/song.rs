@@ -2,7 +2,6 @@
 //! Types used to describe songs
 
 use std::{
-    borrow::Cow,
     cmp::Ordering,
     collections::{BTreeSet, HashMap},
     hash::Hash,
@@ -12,16 +11,17 @@ use std::{
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::{VirtualPath, VirtualPathBuf};
 use hash32::{Hasher, Murmur3Hasher};
-use hipstr::string::HipStr;
+use hipstr::HipStr;
+use ownable::IntoOwned;
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
+    cooked,
     cooked::tape,
-    json_types,
     utils::{LocaleId, Platform},
 };
 
-use crate::{regex, utils::cow_regex_single_capture};
+use crate::{regex, utils::hipstr_regex_single_capture};
 
 /// Directory structure of a song
 pub struct SongDirectoryTree {
@@ -188,7 +188,7 @@ impl RelativeSongDirectoryTree {
 }
 
 /// Possible tags for a song
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, IntoOwned)]
 pub enum Tag {
     /// Song from the main content
     Main,
@@ -238,35 +238,35 @@ impl Tag {
     // TODO: Add normalisation?
     /// Convert the tag to a static str
     #[must_use]
-    pub const fn to_cow(self) -> Cow<'static, str> {
+    pub const fn to_cow(self) -> HipStr<'static> {
         match self {
-            Self::Main => Cow::Borrowed("main"),
-            Self::KidsOnly => Cow::Borrowed("kidsonly"),
-            Self::Alternate => Cow::Borrowed("alternate"),
-            Self::BringChairTutorial => Cow::Borrowed("bringchairtutorial"),
-            Self::ChairTutorial => Cow::Borrowed("chairtutorial"),
-            Self::Cool => Cow::Borrowed("cool"),
-            Self::DanceMachine => Cow::Borrowed("dancemachine"),
-            Self::Exclusive => Cow::Borrowed("exclusive"),
-            Self::Extreme => Cow::Borrowed("extreme"),
-            Self::Intense => Cow::Borrowed("intense"),
-            Self::KidsMode => Cow::Borrowed("kidsmode"),
-            Self::KidsModeTeaser => Cow::Borrowed("kidsmodeteaser"),
-            Self::JdMbs => Cow::Borrowed("jdmbs"),
-            Self::Mashup => Cow::Borrowed("mashup"),
-            Self::NoSweat => Cow::Borrowed("nosweat"),
-            Self::Uplay2016 => Cow::Borrowed("uplay2016"),
-            Self::Uplay2017 => Cow::Borrowed("uplay2017"),
-            Self::Sweat => Cow::Borrowed("sweat"),
-            Self::BikeTutorial => Cow::Borrowed("biketutorial"),
-            Self::Chair2Tutorial => Cow::Borrowed("chair2tutorial"),
-            Self::SofaTutorial => Cow::Borrowed("SofaTutorial"),
+            Self::Main => HipStr::borrowed("main"),
+            Self::KidsOnly => HipStr::borrowed("kidsonly"),
+            Self::Alternate => HipStr::borrowed("alternate"),
+            Self::BringChairTutorial => HipStr::borrowed("bringchairtutorial"),
+            Self::ChairTutorial => HipStr::borrowed("chairtutorial"),
+            Self::Cool => HipStr::borrowed("cool"),
+            Self::DanceMachine => HipStr::borrowed("dancemachine"),
+            Self::Exclusive => HipStr::borrowed("exclusive"),
+            Self::Extreme => HipStr::borrowed("extreme"),
+            Self::Intense => HipStr::borrowed("intense"),
+            Self::KidsMode => HipStr::borrowed("kidsmode"),
+            Self::KidsModeTeaser => HipStr::borrowed("kidsmodeteaser"),
+            Self::JdMbs => HipStr::borrowed("jdmbs"),
+            Self::Mashup => HipStr::borrowed("mashup"),
+            Self::NoSweat => HipStr::borrowed("nosweat"),
+            Self::Uplay2016 => HipStr::borrowed("uplay2016"),
+            Self::Uplay2017 => HipStr::borrowed("uplay2017"),
+            Self::Sweat => HipStr::borrowed("sweat"),
+            Self::BikeTutorial => HipStr::borrowed("biketutorial"),
+            Self::Chair2Tutorial => HipStr::borrowed("chair2tutorial"),
+            Self::SofaTutorial => HipStr::borrowed("SofaTutorial"),
         }
     }
 }
 
 impl TryFrom<&str> for Tag {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let value_lower = value.to_lowercase();
@@ -299,7 +299,7 @@ impl TryFrom<&str> for Tag {
 
 /// Number of coaches for this song
 #[repr(u8)]
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
 pub enum NumberOfCoaches {
     /// One coach
     Solo = 1,
@@ -313,10 +313,10 @@ pub enum NumberOfCoaches {
     Sextet = 6,
 }
 
-impl TryFrom<u8> for NumberOfCoaches {
-    type Error = anyhow::Error;
+impl TryFrom<u32> for NumberOfCoaches {
+    type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(Self::Solo),
             2 => Ok(Self::Duo),
@@ -328,7 +328,7 @@ impl TryFrom<u8> for NumberOfCoaches {
     }
 }
 
-impl From<NumberOfCoaches> for u8 {
+impl From<NumberOfCoaches> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: NumberOfCoaches) -> Self {
         value as Self
@@ -336,30 +336,36 @@ impl From<NumberOfCoaches> for u8 {
 }
 
 /// Main metadata about the song
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, IntoOwned)]
 pub struct Song<'a> {
     /// Codename for the song (Capitalised)
-    pub map_name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub map_name: HipStr<'a>,
     /// Original Just Dance version
-    pub original_jd_version: u16,
+    pub original_jd_version: u32,
     /// Artist
-    pub artist: Cow<'a, str>,
+    #[serde(borrow)]
+    pub artist: HipStr<'a>,
     /// Coach name
-    pub dancer_name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub dancer_name: HipStr<'a>,
     /// Song name
-    pub title: Cow<'a, str>,
+    #[serde(borrow)]
+    pub title: HipStr<'a>,
     /// Writing credits
-    pub credits: Cow<'a, str>,
+    #[serde(borrow)]
+    pub credits: HipStr<'a>,
     /// Number of coaches
     pub number_of_coaches: NumberOfCoaches,
     /// Which of the coaches is the main coach? None if only one coach
-    pub main_coach: Option<u8>,
+    pub main_coach: Option<u32>,
     /// Difficulty of the song
     pub difficulty: Difficulty,
     /// Intensity of the song
     pub sweat_difficulty: SweatDifficulty,
     /// Related songs (other difficulties, covers)
-    pub related_songs: Vec<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub related_songs: Vec<HipStr<'a>>,
     /// How is the song unlocked
     pub status: MapStatus,
     /// Tags related to this song
@@ -369,20 +375,23 @@ pub struct Song<'a> {
     /// Theme colors of the song
     pub default_colors: SongColors,
     /// The audio file for the song
-    pub audiofile: Cow<'a, str>,
+    #[serde(borrow)]
+    pub audiofile: HipStr<'a>,
     /// The videofile for the song
-    pub videofile: Cow<'a, str>,
+    #[serde(borrow)]
+    pub videofile: HipStr<'a>,
 }
 
 /// Settings used by the autodance preview
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Autodance<'a> {
     /// Soundclip to play
-    pub autodance_sound: Cow<'a, str>,
+    #[serde(borrow)]
+    pub autodance_sound: HipStr<'a>,
     /// Position in the clip to start at
-    pub song_start_position: i32,
+    pub song_start_position: f32,
     /// Duration to play
-    pub duration: f64,
+    pub duration: f32,
     /// Unknown
     pub record: Vec<Record>,
     /// Unknown
@@ -394,8 +403,10 @@ pub struct Autodance<'a> {
 #[derive(Serialize, Deserialize, Clone)]
 pub enum MenuArt<'a> {
     /// Image for the game itself
+    #[serde(borrow)]
     Texture(MenuArtTexture<'a>),
     /// Image for a phone controller
+    #[serde(borrow)]
     Phone(PhoneImage<'a>),
 }
 
@@ -403,16 +414,18 @@ pub enum MenuArt<'a> {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct MenuArtTexture<'a> {
     /// Userfriendly name
-    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub name: HipStr<'a>,
     /// Filename
-    pub filename: Cow<'a, str>,
-    /// Scale as used in [`ubiart_toolkit::cooked::isc::MaterialGraphicComponent`]
+    #[serde(borrow)]
+    pub filename: HipStr<'a>,
+    /// Scale as used in [`cooked::isc::MaterialGraphicComponent`]
     pub scale: (f32, f32),
-    /// 2d position as used in [`ubiart_toolkit::cooked::isc::MaterialGraphicComponent`]
-    pub pos2d: (f64, f64),
-    /// Disable shadow as used in [`ubiart_toolkit::cooked::isc::MaterialGraphicComponent`]
+    /// 2d position as used in [`cooked::isc::MaterialGraphicComponent`]
+    pub pos2d: (f32, f32),
+    /// Disable shadow as used in [`cooked::isc::MaterialGraphicComponent`]
     pub disable_shadow: u32,
-    /// Unknown? Used in [`ubiart_toolkit::cooked::isc::MaterialGraphicComponent`]
+    /// Unknown? Used in [`cooked::isc::MaterialGraphicComponent`]
     pub anchor: i32,
 }
 
@@ -420,21 +433,23 @@ pub struct MenuArtTexture<'a> {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PhoneImage<'a> {
     /// Filename
-    pub filename: Cow<'a, str>,
+    #[serde(borrow)]
+    pub filename: HipStr<'a>,
     /// Userfriendly name
-    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub name: HipStr<'a>,
 }
 
 /// Unknown
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Record {
     /// Start of the record?
-    pub start: f64,
+    pub start: f32,
     /// Duration of the record?
-    pub duration: f64,
+    pub duration: f32,
 }
 
-impl From<&Record> for json_types::just_dance::Record<'static> {
+impl From<&Record> for cooked::tpl::types::Record<'static> {
     fn from(value: &Record) -> Self {
         Self {
             class: Some(Self::CLASS),
@@ -444,8 +459,8 @@ impl From<&Record> for json_types::just_dance::Record<'static> {
     }
 }
 
-impl From<&json_types::just_dance::Record<'_>> for Record {
-    fn from(value: &json_types::just_dance::Record) -> Self {
+impl From<&cooked::tpl::types::Record<'_>> for Record {
+    fn from(value: &cooked::tpl::types::Record) -> Self {
         Self {
             start: value.start,
             duration: value.duration,
@@ -461,14 +476,14 @@ pub struct PlaybackEvent {
     /// Start time in the clip?
     pub start_clip: f32,
     /// Start time of the event?
-    pub start_time: f64,
+    pub start_time: f32,
     /// Duration of the event?
-    pub duration: f64,
+    pub duration: f32,
     /// Playback speed?
     pub speed: f32,
 }
 
-impl From<&PlaybackEvent> for json_types::just_dance::PlaybackEvent<'static> {
+impl From<&PlaybackEvent> for cooked::tpl::types::PlaybackEvent<'static> {
     fn from(value: &PlaybackEvent) -> Self {
         Self {
             class: Some(Self::CLASS),
@@ -481,8 +496,8 @@ impl From<&PlaybackEvent> for json_types::just_dance::PlaybackEvent<'static> {
     }
 }
 
-impl From<&json_types::just_dance::PlaybackEvent<'_>> for PlaybackEvent {
-    fn from(value: &json_types::just_dance::PlaybackEvent) -> Self {
+impl From<&cooked::tpl::types::PlaybackEvent<'_>> for PlaybackEvent {
+    fn from(value: &cooked::tpl::types::PlaybackEvent) -> Self {
         Self {
             clip_number: value.clip_number,
             start_clip: value.start_clip,
@@ -494,7 +509,9 @@ impl From<&json_types::just_dance::PlaybackEvent<'_>> for PlaybackEvent {
 }
 
 /// A RGBA8 color
-#[derive(Hash, Serialize, Deserialize, Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[derive(
+    Hash, Serialize, Deserialize, Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord, IntoOwned,
+)]
 pub struct Color {
     /// Transparency, 0 is fully transparent, 255 is fully opaque
     pub transparency: u8,
@@ -557,7 +574,7 @@ fn map_range_to_u8(mut value: f32, min: f32, max: f32) -> u8 {
 
 /// Theme colors of the song
 #[allow(clippy::module_name_repetitions, reason = "It's a good name")]
-#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq, IntoOwned)]
 pub struct SongColors {
     /// Main theme
     pub theme: Color,
@@ -573,7 +590,7 @@ pub struct SongColors {
     pub two_b: Color,
 }
 
-impl From<&SongColors> for json_types::just_dance::DefaultColors {
+impl From<&SongColors> for cooked::tpl::types::DefaultColors {
     fn from(colors: &SongColors) -> Self {
         Self {
             theme: (&colors.theme).into(),
@@ -586,23 +603,25 @@ impl From<&SongColors> for json_types::just_dance::DefaultColors {
     }
 }
 
-impl From<&json_types::just_dance::DefaultColors> for SongColors {
-    fn from(value: &json_types::just_dance::DefaultColors) -> Self {
+impl From<&cooked::tpl::types::DefaultColors> for SongColors {
+    fn from(value: &cooked::tpl::types::DefaultColors) -> Self {
         Self {
             theme: (&value.theme).into(),
             lyrics: (&value.lyrics).into(),
-            one_a: (value.songcolor_1a.as_ref().unwrap_or(&value.theme)).into(),
-            one_b: (value.songcolor_1b.as_ref().unwrap_or(&value.theme)).into(),
-            two_a: (value.songcolor_2a.as_ref().unwrap_or(&value.theme)).into(),
-            two_b: (value.songcolor_2b.as_ref().unwrap_or(&value.theme)).into(),
+            one_a: value.songcolor_1a.as_ref().unwrap_or(&value.theme).into(),
+            one_b: value.songcolor_1b.as_ref().unwrap_or(&value.theme).into(),
+            two_a: value.songcolor_2a.as_ref().unwrap_or(&value.theme).into(),
+            two_b: value.songcolor_2b.as_ref().unwrap_or(&value.theme).into(),
         }
     }
 }
 
 /// How is this map unlocked
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, IntoOwned)]
 pub enum MapStatus {
+    /// Probably DLC?
+    Unknown0 = 0,
     /// Unknown
     Unknown1 = 1,
     /// Buy it with mojo (JD2018 and earler)
@@ -625,7 +644,7 @@ pub enum MapStatus {
     Anthology = 13,
 }
 
-impl From<MapStatus> for u8 {
+impl From<MapStatus> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: MapStatus) -> Self {
         value as Self
@@ -643,11 +662,12 @@ impl MapStatus {
     }
 }
 
-impl TryFrom<u8> for MapStatus {
+impl TryFrom<u32> for MapStatus {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
+            0 => Ok(Self::Unknown0),
             1 => Ok(Self::Unknown1),
             2 => Ok(Self::BuyWithMojo),
             3 => Ok(Self::Unlocked),
@@ -665,7 +685,7 @@ impl TryFrom<u8> for MapStatus {
 
 /// Difficulty of the song
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, IntoOwned)]
 pub enum Difficulty {
     /// Easy
     Easy = 1,
@@ -677,17 +697,17 @@ pub enum Difficulty {
     Extreme = 4,
 }
 
-impl From<Difficulty> for u8 {
+impl From<Difficulty> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: Difficulty) -> Self {
         value as Self
     }
 }
 
-impl TryFrom<u8> for Difficulty {
+impl TryFrom<u32> for Difficulty {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(Self::Easy),
             2 => Ok(Self::Medium),
@@ -700,7 +720,7 @@ impl TryFrom<u8> for Difficulty {
 
 /// Intensity of the song
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, IntoOwned)]
 pub enum SweatDifficulty {
     /// Low intensity
     Low = 1,
@@ -710,17 +730,17 @@ pub enum SweatDifficulty {
     Intense = 3,
 }
 
-impl From<SweatDifficulty> for u8 {
+impl From<SweatDifficulty> for u32 {
     #[allow(clippy::as_conversions, reason = "Is repr(Self)")]
     fn from(value: SweatDifficulty) -> Self {
         value as Self
     }
 }
 
-impl TryFrom<u8> for SweatDifficulty {
+impl TryFrom<u32> for SweatDifficulty {
     type Error = Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(Self::Low),
             2 => Ok(Self::Moderate),
@@ -738,7 +758,7 @@ pub struct MusicTrack {
     /// End of the audio track
     pub end_beat: u32,
     /// Start of the video
-    pub video_start_time: f64,
+    pub video_start_time: f32,
     /// Unknown
     pub preview_entry: f32,
     /// Preview audio track start
@@ -757,12 +777,12 @@ pub struct MusicTrack {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Signature {
     /// Unknown
-    pub marker: f32,
+    pub marker: i32,
     /// Unknown
     pub beats: u32,
 }
 
-impl From<Signature> for json_types::tpl::MusicSignature<'static> {
+impl From<Signature> for cooked::tpl::types::MusicSignature<'static> {
     fn from(value: Signature) -> Self {
         Self {
             class: Some(Self::CLASS),
@@ -773,8 +793,8 @@ impl From<Signature> for json_types::tpl::MusicSignature<'static> {
     }
 }
 
-impl From<json_types::tpl::MusicSignature<'_>> for Signature {
-    fn from(value: json_types::tpl::MusicSignature) -> Self {
+impl From<cooked::tpl::types::MusicSignature<'_>> for Signature {
+    fn from(value: cooked::tpl::types::MusicSignature) -> Self {
         Self {
             marker: value.marker,
             beats: value.beats,
@@ -786,24 +806,24 @@ impl From<json_types::tpl::MusicSignature<'_>> for Signature {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Section {
     /// Unknown
-    pub marker: f32,
+    pub marker: i32,
     /// Unknown
     pub section_type: u32,
 }
 
-impl From<Section> for json_types::tpl::MusicSection<'static> {
+impl From<Section> for cooked::tpl::types::MusicSection<'static> {
     fn from(value: Section) -> Self {
         Self {
             class: Some(Self::CLASS),
             marker: value.marker,
             section_type: value.section_type,
-            comment: Cow::Borrowed(""),
+            comment: HipStr::borrowed(""),
         }
     }
 }
 
-impl From<json_types::tpl::MusicSection<'_>> for Section {
-    fn from(value: json_types::tpl::MusicSection) -> Self {
+impl From<cooked::tpl::types::MusicSection<'_>> for Section {
+    fn from(value: cooked::tpl::types::MusicSection) -> Self {
         Self {
             marker: value.marker,
             section_type: value.section_type,
@@ -815,6 +835,7 @@ impl From<json_types::tpl::MusicSection<'_>> for Section {
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Timeline<'a> {
     /// The events in chronological order
+    #[serde(borrow)]
     pub timeline: BTreeSet<Clip<'a>>,
 }
 
@@ -826,28 +847,34 @@ pub enum Clip<'a> {
     /// Unknown
     Color(ColorClip),
     /// Unknown
+    #[serde(borrow)]
     GameplayEvent(GameplayEventClip<'a>),
     /// Gold move effect
     GoldEffect(GoldEffectClip),
     /// Hide user interface
     HideUserInterface(HideUserInterfaceClip),
     /// Show lyric
+    #[serde(borrow)]
     Karaoke(KaraokeClip<'a>),
     /// Unknown
     MaterialGraphicEnableLayer(MaterialGraphicEnableLayerClip),
     /// Grade dance move
+    #[serde(borrow)]
     Motion(MotionClip<'a>),
     /// Show picto
+    #[serde(borrow)]
     Pictogram(PictogramClip<'a>),
     /// Unknown
     Proportion(ProportionClip),
     /// Unknown
     Rotation(RotationClip),
     /// Play audio sample
+    #[serde(borrow)]
     SoundSet(SoundSetClip<'a>),
     /// Unknown
     Translation(TranslationClip),
     /// Vibrate the controller
+    #[serde(borrow)]
     Vibration(VibrationClip<'a>),
 }
 
@@ -1145,7 +1172,8 @@ pub struct GameplayEventClip<'a> {
     /// Unknown
     pub event_type: u32,
     /// Unknown
-    pub custom_param: Cow<'a, str>,
+    #[serde(borrow)]
+    pub custom_param: HipStr<'a>,
 }
 
 impl<'a> From<GameplayEventClip<'a>> for tape::GameplayEventClip<'a> {
@@ -1164,7 +1192,7 @@ impl<'a> From<GameplayEventClip<'a>> for tape::GameplayEventClip<'a> {
             actor_indices: value.actor_indices,
             target_actors: Vec::new(),
             event_type: value.event_type,
-            custom_param: value.custom_param.into(),
+            custom_param: value.custom_param,
         }
     }
 }
@@ -1177,7 +1205,7 @@ impl<'a> From<tape::GameplayEventClip<'a>> for GameplayEventClip<'a> {
             duration: value.duration,
             actor_indices: value.actor_indices,
             event_type: value.event_type,
-            custom_param: value.custom_param.into(),
+            custom_param: value.custom_param,
         }
     }
 }
@@ -1279,7 +1307,8 @@ pub struct KaraokeClip<'a> {
     /// Expected pitch of the lyric (for use with microphone enabled systems)
     pub pitch: f32,
     /// The lyric
-    pub lyrics: Cow<'a, str>,
+    #[serde(borrow)]
+    pub lyrics: HipStr<'a>,
     /// Should the next lyric be on a new line
     pub is_end_of_line: bool,
     /// Unknown
@@ -1341,7 +1370,7 @@ impl<'a> From<KaraokeClip<'a>> for tape::KaraokeClip<'a> {
             start_time: value.start_time,
             duration: value.duration,
             pitch: value.pitch,
-            lyrics: value.lyrics.into(),
+            lyrics: value.lyrics,
             is_end_of_line: u8::from(value.is_end_of_line),
             content_type: value.content_type,
             start_time_tolerance: 4,
@@ -1358,7 +1387,7 @@ impl<'a> From<tape::KaraokeClip<'a>> for KaraokeClip<'a> {
             start_time: value.start_time,
             duration: value.duration,
             pitch: value.pitch,
-            lyrics: value.lyrics.into(),
+            lyrics: value.lyrics,
             is_end_of_line: value.is_end_of_line == 1,
             content_type: value.content_type,
         }
@@ -1429,8 +1458,9 @@ pub struct MotionClip<'a> {
     pub start_time: i32,
     /// Duration of the move
     pub duration: u32,
-    /// The classifier (.msm file for NX)
-    pub classifier_filename: Cow<'a, str>,
+    /// The classifier (.msm file for NX/WiiU/Phone)
+    #[serde(borrow)]
+    pub classifier_filename: HipStr<'a>,
     /// Is this a gold move
     pub gold_move: bool,
     /// Which coach this move is tracking
@@ -1448,7 +1478,7 @@ impl MotionClip<'_> {
         let id = hasher.finish32();
 
         let lower_map_name = song.map_name.to_lowercase();
-        let filename = self.classifier_filename.as_ref();
+        let filename = &self.classifier_filename;
 
         tape::MotionClip {
             class: None,
@@ -1494,7 +1524,7 @@ impl<'a> TryFrom<tape::MotionClip<'a>> for MotionClip<'a> {
 
     fn try_from(value: tape::MotionClip<'a>) -> Result<Self, Self::Error> {
         let regex = regex!(r".*/[a-z0-9]*_(.*\.msm|.*\.gesture)$");
-        let classifier_filename = cow_regex_single_capture(regex, value.classifier_path.into())?;
+        let classifier_filename = hipstr_regex_single_capture(regex, &value.classifier_path)?;
 
         Ok(Self {
             is_active: value.is_active == 1,
@@ -1518,7 +1548,8 @@ pub struct PictogramClip<'a> {
     /// Duration to show the picto for
     pub duration: u32,
     /// The picto texture
-    pub picto_filename: Cow<'a, str>,
+    #[serde(borrow)]
+    pub picto_filename: HipStr<'a>,
 }
 
 impl PictogramClip<'_> {
@@ -1530,7 +1561,7 @@ impl PictogramClip<'_> {
         let id = hasher.finish32();
 
         let lower_map_name = song.map_name.to_lowercase();
-        let filename = self.picto_filename.as_ref();
+        let filename = &self.picto_filename;
 
         tape::PictogramClip {
             class: None,
@@ -1554,7 +1585,7 @@ impl<'a> TryFrom<tape::PictogramClip<'a>> for PictogramClip<'a> {
 
     fn try_from(value: tape::PictogramClip<'a>) -> Result<Self, Self::Error> {
         let regex = regex!(r".*/(.*\.png)$");
-        let picto_filename = cow_regex_single_capture(regex, value.picto_path.into())?;
+        let picto_filename = hipstr_regex_single_capture(regex, &value.picto_path)?;
 
         Ok(Self {
             is_active: value.is_active == 1,
@@ -1699,15 +1730,17 @@ pub struct SoundSetClip<'a> {
     /// Duration of the audio
     pub duration: u32,
     /// The audio file
-    pub audio_filename: Cow<'a, str>,
+    #[serde(borrow)]
+    pub audio_filename: HipStr<'a>,
     /// Name of the audio clip
-    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub name: HipStr<'a>,
 }
 
 impl SoundSetClip<'_> {
     /// Convert the SoundSetClip to the UbiArt representation with `sound_set_path`
     #[must_use]
-    pub fn to_tape<'a>(&self, sound_set_path: Cow<'a, str>) -> tape::SoundSetClip<'a> {
+    pub fn to_tape<'a>(&self, sound_set_path: HipStr<'a>) -> tape::SoundSetClip<'a> {
         let mut hasher = Murmur3Hasher::default();
         self.hash(&mut hasher);
         let id = hasher.finish32();
@@ -1719,7 +1752,7 @@ impl SoundSetClip<'_> {
             is_active: u8::from(self.is_active),
             start_time: self.start_time,
             duration: self.duration,
-            sound_set_path: sound_set_path.into(),
+            sound_set_path,
             sound_channel: 0,
             start_offset: 0,
             stops_on_end: 0,
@@ -1804,7 +1837,8 @@ pub struct VibrationClip<'a> {
     /// Duration of the vibration
     pub duration: u32,
     /// The vibration file
-    pub vibration: Cow<'a, str>,
+    #[serde(borrow)]
+    pub vibration: HipStr<'a>,
 }
 
 impl<'a> From<VibrationClip<'a>> for tape::VibrationClip<'a> {
@@ -1819,7 +1853,7 @@ impl<'a> From<VibrationClip<'a>> for tape::VibrationClip<'a> {
             is_active: u8::from(value.is_active),
             start_time: value.start_time,
             duration: value.duration,
-            vibration_file_path: value.vibration.into(),
+            vibration_file_path: value.vibration,
             loop_it: 0,
             device_side: 0,
             player_id: -1,
@@ -1836,7 +1870,7 @@ impl<'a> From<tape::VibrationClip<'a>> for VibrationClip<'a> {
             is_active: value.is_active == 1,
             start_time: value.start_time,
             duration: value.duration,
-            vibration: value.vibration_file_path.into(),
+            vibration: value.vibration_file_path,
         }
     }
 }

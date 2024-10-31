@@ -2,6 +2,7 @@
 A library and CLI tools for parsing Nintendo Wii file formats.
 
 Currently supported file formats are:
+
 | File format | Extension | Supported                        |
 | ----------- | --------- | -------------------------------- |
 | U8          | .app      | yes                              |

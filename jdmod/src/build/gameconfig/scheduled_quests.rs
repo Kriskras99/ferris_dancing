@@ -5,6 +5,7 @@ use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
     json_types::{self, v22::GameManagerConfig22},
+    utils::UniqueGameId,
 };
 
 use crate::{
@@ -17,12 +18,12 @@ use crate::{
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &mut GameManagerConfig22<'_>,
+    gameconfig: &mut GameManagerConfig22,
 ) -> Result<(), Error> {
     let quest_config_file = bs
         .native_vfs
         .open(&bs.rel_tree.config().join("quests.json"))?;
-    let quest_config: ScheduledQuests = serde_json::from_slice(&quest_config_file)?;
+    let quest_config = serde_json::from_slice::<ScheduledQuests>(&quest_config_file)?.into_owned();
 
     let mut scheduled_quests = Vec::new();
 
@@ -58,7 +59,11 @@ pub fn build(
 
     let quest_database_vec = cooked::json::create_vec(&quest_database)?;
     bf.generated_files.add_file(
-        cook_path("enginedata/gameconfig/scheduledquests.isg", bs.platform)?.into(),
+        cook_path(
+            "enginedata/gameconfig/scheduledquests.isg",
+            UniqueGameId::NX2022,
+        )?
+        .into(),
         quest_database_vec,
     )?;
 

@@ -1,19 +1,20 @@
 //! # Search labels
 //! Describes search labels
-use std::borrow::Cow;
-
+use hipstr::HipStr;
+use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{json_types::isg::SongSearchTag, utils::LocaleId};
 
 use crate::types::localisation::LocaleIdMap;
 
 /// A search label
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, IntoOwned)]
 pub struct SearchLabel<'a> {
     /// Description of this label
     pub description: LocaleId,
     /// The label itself
-    pub label: Cow<'a, str>,
+    #[serde(borrow)]
+    pub label: HipStr<'a>,
 }
 
 impl<'a> SearchLabel<'a> {

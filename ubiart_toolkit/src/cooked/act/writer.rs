@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use dotstar_toolkit_utils::bytes::{
     primitives::{f32be, i32be, u32be, u64be},
     write::{BinarySerialize, BinarySerializeExt, WriteAt, WriteError},
@@ -130,10 +128,7 @@ impl BinarySerialize for PleoComponent<'_> {
     ) -> Result<(), WriteError> {
         writer.write_at::<SplitPath>(position, input.video)?;
         writer.write_at::<SplitPath>(position, input.dash_mpd)?;
-        writer.write_len_string_at::<u32be>(
-            position,
-            input.channel_id.as_ref().map_or("", Cow::as_ref),
-        )?;
+        writer.write_len_string_at::<u32be>(position, input.channel_id.as_str())?;
 
         Ok(())
     }

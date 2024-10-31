@@ -3,11 +3,11 @@
     reason = "The booleans are imposed by the UbiArt engine"
 )]
 
-use std::borrow::Cow;
-
+use hipstr::HipStr;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use ubiart_toolkit_shared_types::Color;
 
+mod binary;
 pub mod property_patcher;
 
 use property_patcher::WrappedPropertyPatcher;
@@ -123,7 +123,7 @@ impl Scene<'_> {
                         .iter()
                         .map(WrappedActors::sub_scene_actor)
                         .filter_map(Result::ok)
-                        .map(|a| a.userfriendly.as_ref())
+                        .map(|a| a.userfriendly.as_str())
                 ))
             })
     }
@@ -132,24 +132,24 @@ impl Scene<'_> {
     pub fn get_subscene_by_userfriendly_end(
         &self,
         userfriendly: &str,
-        lax: bool,
+        also_lowercase: bool,
     ) -> Result<&SubSceneActor, ParserError> {
-        let userfriendly = if lax {
-            Cow::Owned(userfriendly.to_lowercase())
+        let userfriendly = if also_lowercase {
+            HipStr::from(userfriendly.to_lowercase())
         } else {
-            Cow::Borrowed(userfriendly)
+            HipStr::borrowed(userfriendly)
         };
         self.actors
             .iter()
             .map(WrappedActors::sub_scene_actor)
             .filter_map(Result::ok)
             .find(|a| {
-                if lax {
+                if also_lowercase {
                     a.userfriendly
                         .to_lowercase()
-                        .ends_with(userfriendly.as_ref())
+                        .ends_with(userfriendly.as_str())
                 } else {
-                    a.userfriendly.ends_with(&userfriendly.as_ref())
+                    a.userfriendly.ends_with(&userfriendly.as_str())
                 }
             })
             .ok_or_else(|| {
@@ -159,7 +159,7 @@ impl Scene<'_> {
                         .iter()
                         .map(WrappedActors::sub_scene_actor)
                         .filter_map(Result::ok)
-                        .map(|a| a.userfriendly.as_ref())
+                        .map(|a| a.userfriendly.as_str())
                 ))
             })
     }
@@ -171,9 +171,9 @@ impl Scene<'_> {
         lax: bool,
     ) -> Result<&Actor, ParserError> {
         let userfriendly = if lax {
-            Cow::Owned(userfriendly.to_lowercase())
+            HipStr::from(userfriendly.to_lowercase())
         } else {
-            Cow::Borrowed(userfriendly)
+            HipStr::borrowed(userfriendly)
         };
         self.actors
             .iter()
@@ -183,9 +183,9 @@ impl Scene<'_> {
                 if lax {
                     a.userfriendly
                         .to_lowercase()
-                        .ends_with(userfriendly.as_ref())
+                        .ends_with(userfriendly.as_str())
                 } else {
-                    a.userfriendly.ends_with(&userfriendly.as_ref())
+                    a.userfriendly.ends_with(&userfriendly.as_str())
                 }
             })
             .ok_or_else(|| {
@@ -195,7 +195,7 @@ impl Scene<'_> {
                         .iter()
                         .map(WrappedActors::actor)
                         .filter_map(Result::ok)
-                        .map(|a| a.userfriendly.as_ref())
+                        .map(|a| a.userfriendly.as_str())
                 ))
             })
     }
@@ -214,7 +214,7 @@ impl Scene<'_> {
                         .iter()
                         .map(WrappedActors::actor)
                         .filter_map(Result::ok)
-                        .map(|a| a.userfriendly.as_ref())
+                        .map(|a| a.userfriendly.as_str())
                 ))
             })
     }
@@ -239,32 +239,35 @@ pub struct SceneConfigs<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIBannerSceneConfig<'a> {
-    #[serde(rename = "@name")]
-    pub name: Cow<'a, str>,
-    #[serde(rename = "@theme")]
-    pub theme: Cow<'a, str>,
-    #[serde(rename = "@type")]
-    pub typed: Cow<'a, str>,
-    #[serde(rename = "@context")]
-    pub context: Cow<'a, str>,
+    #[serde(borrow, rename = "@name")]
+    pub name: HipStr<'a>,
+    #[serde(borrow, rename = "@theme")]
+    pub theme: HipStr<'a>,
+    #[serde(borrow, rename = "@type")]
+    pub typed: HipStr<'a>,
+    #[serde(borrow, rename = "@context")]
+    pub context: HipStr<'a>,
     #[serde(
+        borrow,
         rename = "@enterChain",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub enter_chain: Option<Cow<'a, str>>,
+    pub enter_chain: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@activeChain",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub active_chain: Option<Cow<'a, str>>,
+    pub active_chain: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@leaveChain",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub leave_chain: Option<Cow<'a, str>>,
+    pub leave_chain: Option<HipStr<'a>>,
     #[serde(
         borrow,
         rename = "paramBindings",
@@ -288,8 +291,8 @@ pub struct UIItemTextField<'a> {
     pub is_password: bool,
     #[serde(rename = "@dialogMaxChar")]
     pub dialog_max_char: u32,
-    #[serde(rename = "@dialogNameRaw")]
-    pub dialog_name_raw: Cow<'a, str>,
+    #[serde(borrow, rename = "@dialogNameRaw")]
+    pub dialog_name_raw: HipStr<'a>,
     #[serde(rename = "@dialogNameLoc")]
     pub dialog_name_loc: u32,
     #[serde(
@@ -304,8 +307,8 @@ pub struct UIItemTextField<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct TransitionSceneConfig<'a> {
-    #[serde(rename = "@name")]
-    pub name: Cow<'a, str>,
+    #[serde(borrow, rename = "@name")]
+    pub name: HipStr<'a>,
     #[serde(
         borrow,
         rename = "paramBindings",
@@ -327,12 +330,12 @@ wrap!(WrappedParamBinding, ParamBinding, "ParamBinding", 'a);
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct ParamBinding<'a> {
-    #[serde(rename = "@paramName")]
-    pub param_name: Cow<'a, str>,
-    #[serde(rename = "@providerClass")]
-    pub provider_class: Cow<'a, str>,
-    #[serde(rename = "@patcherMarker")]
-    pub patcher_marker: Cow<'a, str>,
+    #[serde(borrow, rename = "@paramName")]
+    pub param_name: HipStr<'a>,
+    #[serde(borrow, rename = "@providerClass")]
+    pub provider_class: HipStr<'a>,
+    #[serde(borrow, rename = "@patcherMarker")]
+    pub patcher_marker: HipStr<'a>,
     #[serde(
         borrow,
         rename = "dataBindings",
@@ -345,19 +348,19 @@ pub struct ParamBinding<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DataBindings<'a> {
-    #[serde(rename = "@KEY")]
-    pub key: Cow<'a, str>,
-    #[serde(rename = "@VAL")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@KEY")]
+    pub key: HipStr<'a>,
+    #[serde(borrow, rename = "@VAL")]
+    pub value: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct MapSceneConfig<'a> {
-    #[serde(rename = "@name")]
-    pub name: Cow<'a, str>,
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@name")]
+    pub name: HipStr<'a>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
     #[serde(rename = "@hud")]
     pub hud: u32,
     #[serde(
@@ -367,11 +370,12 @@ pub struct MapSceneConfig<'a> {
     )]
     pub phone_title_loc_id: Option<u32>,
     #[serde(
+        borrow,
         rename = "@phoneImage",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub phone_image: Option<Cow<'a, str>>,
+    pub phone_image: Option<HipStr<'a>>,
     #[serde(
         borrow,
         rename = "ENUM",
@@ -385,14 +389,14 @@ pub struct MapSceneConfig<'a> {
 #[serde(deny_unknown_fields)]
 pub struct SongDatabaseSceneConfig<'a> {
     /// Not in 2016, always empty string
-    #[serde(rename = "@name", default)]
-    pub name: Cow<'a, str>,
-    #[serde(rename = "@SKU")]
-    pub sku: Cow<'a, str>,
-    #[serde(rename = "@Territory")]
-    pub territory: Cow<'a, str>,
-    #[serde(rename = "@RatingUI")]
-    pub rating_ui: Cow<'a, str>,
+    #[serde(borrow, rename = "@name", default)]
+    pub name: HipStr<'a>,
+    #[serde(borrow, rename = "@SKU")]
+    pub sku: HipStr<'a>,
+    #[serde(borrow, rename = "@Territory")]
+    pub territory: HipStr<'a>,
+    #[serde(borrow, rename = "@RatingUI")]
+    pub rating_ui: HipStr<'a>,
     #[serde(
         borrow,
         rename = "ENUM",
@@ -412,12 +416,12 @@ pub struct SongDatabaseSceneConfig<'a> {
 impl Default for SongDatabaseSceneConfig<'static> {
     fn default() -> Self {
         Self {
-            name: Cow::Borrowed(""),
-            sku: Cow::Borrowed(""),
-            territory: Cow::Borrowed("NCSA"),
-            rating_ui: Cow::Borrowed(""),
+            name: HipStr::borrowed(""),
+            sku: HipStr::borrowed(""),
+            territory: HipStr::borrowed("NCSA"),
+            rating_ui: HipStr::borrowed(""),
             enums: vec![Enum {
-                name: Cow::Borrowed("Pause_Level"),
+                name: HipStr::borrowed("Pause_Level"),
                 selection: 6,
             }],
             coverflow_sku_songs: Vec::default(),
@@ -435,10 +439,10 @@ pub struct CoverflowSkuSongs<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct CoverflowSong<'a> {
-    #[serde(rename = "@name")]
-    pub name: Cow<'a, str>,
-    #[serde(rename = "@cover_path")]
-    pub cover_path: Cow<'a, str>,
+    #[serde(borrow, rename = "@name")]
+    pub name: HipStr<'a>,
+    #[serde(borrow, rename = "@cover_path")]
+    pub cover_path: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -450,10 +454,10 @@ pub struct Actor<'a> {
     pub scale: (f32, f32),
     #[serde(rename = "@xFLIPPED", serialize_with = "ser_bool")]
     pub x_flipped: bool,
-    #[serde(rename = "@USERFRIENDLY")]
-    pub userfriendly: Cow<'a, str>,
-    #[serde(rename = "@MARKER", skip_serializing_if = "Option::is_none")]
-    pub marker: Option<Cow<'a, str>>,
+    #[serde(borrow, rename = "@USERFRIENDLY")]
+    pub userfriendly: HipStr<'a>,
+    #[serde(borrow, rename = "@MARKER", skip_serializing_if = "Option::is_none")]
+    pub marker: Option<HipStr<'a>>,
     /// Not used in nx2017
     #[serde(
         default,
@@ -470,13 +474,13 @@ pub struct Actor<'a> {
     )]
     pub is_enabled: Option<bool>,
     #[serde(rename = "@POS2D")]
-    pub pos2d: (f64, f64),
+    pub pos2d: (f32, f32),
     #[serde(rename = "@ANGLE")]
     pub angle: f32,
-    #[serde(rename = "@INSTANCEDATAFILE")]
-    pub instancedatafile: Cow<'a, str>,
-    #[serde(rename = "@LUA")]
-    pub lua: Cow<'a, str>,
+    #[serde(borrow, rename = "@INSTANCEDATAFILE")]
+    pub instancedatafile: HipStr<'a>,
+    #[serde(borrow, rename = "@LUA")]
+    pub lua: HipStr<'a>,
     #[serde(
         borrow,
         rename = "COMPONENTS",
@@ -501,13 +505,13 @@ impl Default for Actor<'_> {
             relativez: Default::default(),
             scale: (1.0, 1.0),
             x_flipped: Default::default(),
-            userfriendly: Cow::Borrowed(""),
-            marker: Some(Cow::Borrowed("")),
+            userfriendly: HipStr::borrowed(""),
+            marker: Some(HipStr::borrowed("")),
             defaultenable: Some(true),
             pos2d: Default::default(),
             angle: Default::default(),
-            instancedatafile: Cow::Borrowed(""),
-            lua: Cow::Borrowed(""),
+            instancedatafile: HipStr::borrowed(""),
+            lua: HipStr::borrowed(""),
             components: Vec::default(),
             parent_bind: Option::default(),
             markers: Vec::default(),
@@ -526,8 +530,8 @@ pub struct ParentBind<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Bind<'a> {
-    #[serde(rename = "@parentPath")]
-    pub parent_path: Cow<'a, str>,
+    #[serde(borrow, rename = "@parentPath")]
+    pub parent_path: HipStr<'a>,
     #[serde(rename = "@typeData")]
     pub type_data: u32,
     #[serde(rename = "@offsetPos")]
@@ -612,29 +616,29 @@ pub struct CreditsComponent<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct CreditsLine<'a> {
-    #[serde(rename = "@VAL")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@VAL")]
+    pub value: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct SceneSpawnerComponent<'a> {
-    #[serde(rename = "@editorScenePath")]
-    pub editor_scene_path: Cow<'a, str>,
+    #[serde(borrow, rename = "@editorScenePath")]
+    pub editor_scene_path: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WDFThemePresentationComponent<'a> {
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WDFTeamBattlePresentationComponent<'a> {
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -642,8 +646,8 @@ pub struct WDFTeamBattlePresentationComponent<'a> {
 pub struct WDFBossSpawnerComponent<'a> {
     #[serde(rename = "@editorOnly", serialize_with = "ser_bool")]
     pub editor_only: bool,
-    #[serde(rename = "@editorBossId")]
-    pub editor_boss_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@editorBossId")]
+    pub editor_boss_id: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -658,14 +662,14 @@ pub struct ScrollBarComponent {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct PictoTimeline<'a> {
-    #[serde(rename = "@text")]
-    pub text: Cow<'a, str>,
+    #[serde(borrow, rename = "@text")]
+    pub text: HipStr<'a>,
     #[serde(rename = "@locId")]
     pub loc_id: u32,
-    #[serde(rename = "@modelName")]
-    pub model_name: Cow<'a, str>,
-    #[serde(rename = "@flag")]
-    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "@modelName")]
+    pub model_name: HipStr<'a>,
+    #[serde(borrow, rename = "@flag")]
+    pub flag: HipStr<'a>,
     #[serde(rename = "@RelativeStartingPositionSolo")]
     pub relative_start_position_solo: (f32, f32, f32),
     #[serde(rename = "@RelativeStartingPositionDuo")]
@@ -722,14 +726,14 @@ pub struct UIHudAutodanceRecorderComponent {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct BeatPulseComponent<'a> {
-    #[serde(rename = "@text")]
-    pub text: Cow<'a, str>,
+    #[serde(borrow, rename = "@text")]
+    pub text: HipStr<'a>,
     #[serde(rename = "@locId")]
     pub loc_id: u32,
-    #[serde(rename = "@modelName")]
-    pub model_name: Cow<'a, str>,
-    #[serde(rename = "@flag")]
-    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "@modelName")]
+    pub model_name: HipStr<'a>,
+    #[serde(borrow, rename = "@flag")]
+    pub flag: HipStr<'a>,
     #[serde(borrow, rename = "Elements")]
     pub elements: Vec<WrappedUIWidgetElementDesc<'a>>,
 }
@@ -737,14 +741,14 @@ pub struct BeatPulseComponent<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
-    #[serde(rename = "@text")]
-    pub text: Cow<'a, str>,
+    #[serde(borrow, rename = "@text")]
+    pub text: HipStr<'a>,
     #[serde(rename = "@locId")]
     pub loc_id: u32,
-    #[serde(rename = "@modelName")]
-    pub model_name: Cow<'a, str>,
-    #[serde(rename = "@flag")]
-    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "@modelName")]
+    pub model_name: HipStr<'a>,
+    #[serde(borrow, rename = "@flag")]
+    pub flag: HipStr<'a>,
     #[serde(rename = "@IconDefaultPosition")]
     pub icon_default_position: (f32, f32, f32),
     #[serde(rename = "@IconRelativeStartPositionSolo")]
@@ -774,14 +778,14 @@ pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIWidgetGroupHUDLyrics<'a> {
-    #[serde(rename = "@text")]
-    pub text: Cow<'a, str>,
+    #[serde(borrow, rename = "@text")]
+    pub text: HipStr<'a>,
     #[serde(rename = "@locId")]
     pub loc_id: u32,
-    #[serde(rename = "@modelName")]
-    pub model_name: Cow<'a, str>,
-    #[serde(rename = "@flag")]
-    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "@modelName")]
+    pub model_name: HipStr<'a>,
+    #[serde(borrow, rename = "@flag")]
+    pub flag: HipStr<'a>,
     #[serde(borrow, rename = "Elements")]
     pub elements: Vec<WrappedUIWidgetElementDesc<'a>>,
 }
@@ -789,14 +793,14 @@ pub struct UIWidgetGroupHUDLyrics<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIWidgetGroupHUDPauseIcon<'a> {
-    #[serde(rename = "@text")]
-    pub text: Cow<'a, str>,
+    #[serde(borrow, rename = "@text")]
+    pub text: HipStr<'a>,
     #[serde(rename = "@locId")]
     pub loc_id: u32,
-    #[serde(rename = "@modelName")]
-    pub model_name: Cow<'a, str>,
-    #[serde(rename = "@flag")]
-    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "@modelName")]
+    pub model_name: HipStr<'a>,
+    #[serde(borrow, rename = "@flag")]
+    pub flag: HipStr<'a>,
     #[serde(borrow, rename = "Elements")]
     pub elements: Vec<WrappedUIWidgetElementDesc<'a>>,
 }
@@ -804,14 +808,14 @@ pub struct UIWidgetGroupHUDPauseIcon<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIWidgetGroupHUD<'a> {
-    #[serde(rename = "@text")]
-    pub text: Cow<'a, str>,
+    #[serde(borrow, rename = "@text")]
+    pub text: HipStr<'a>,
     #[serde(rename = "@locId")]
     pub loc_id: u32,
-    #[serde(rename = "@modelName")]
-    pub model_name: Cow<'a, str>,
-    #[serde(rename = "@flag")]
-    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "@modelName")]
+    pub model_name: HipStr<'a>,
+    #[serde(borrow, rename = "@flag")]
+    pub flag: HipStr<'a>,
     #[serde(borrow, rename = "Elements")]
     pub elements: Vec<WrappedUIWidgetElementDesc<'a>>,
 }
@@ -821,12 +825,12 @@ wrap!(WrappedUIWidgetElementDesc, UIWidgetElementDesc, "JD_UIWidgetElementDesc",
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIWidgetElementDesc<'a> {
-    #[serde(rename = "@elementPath")]
-    pub element_path: Cow<'a, str>,
-    #[serde(rename = "@name")]
-    pub name: Cow<'a, str>,
-    #[serde(rename = "@flag")]
-    pub flag: Cow<'a, str>,
+    #[serde(borrow, rename = "@elementPath")]
+    pub element_path: HipStr<'a>,
+    #[serde(borrow, rename = "@name")]
+    pub name: HipStr<'a>,
+    #[serde(borrow, rename = "@flag")]
+    pub flag: HipStr<'a>,
     #[serde(rename = "@parentIndex")]
     pub parent_index: i32,
     #[serde(
@@ -841,8 +845,8 @@ pub struct UIWidgetElementDesc<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WDFTeamBattleTransitionComponent<'a> {
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -879,10 +883,10 @@ pub struct UIHudVersusPlayerComponent<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct RegistrationComponent<'a> {
-    #[serde(rename = "@Tag")]
-    pub tag: Cow<'a, str>,
-    #[serde(rename = "@UserData")]
-    pub user_data: Cow<'a, str>,
+    #[serde(borrow, rename = "@Tag")]
+    pub tag: HipStr<'a>,
+    #[serde(borrow, rename = "@UserData")]
+    pub user_data: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -898,7 +902,12 @@ pub struct ViewportUIComponent<'a> {
     pub position: (f32, f32),
     #[serde(rename = "@Size")]
     pub size: (f32, f32),
-    #[serde(rename = "ENUM", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -915,14 +924,14 @@ pub struct Mesh3DComponent<'a> {
     pub disable_shadow: u32,
     #[serde(rename = "@ScaleZ")]
     pub scale_z: f32,
-    #[serde(rename = "@mesh3D")]
-    pub mesh_3d: Cow<'a, str>,
-    #[serde(rename = "@skeleton3D")]
-    pub skeleton_3d: Cow<'a, str>,
-    #[serde(rename = "@animation3D")]
-    pub animation_3d: Cow<'a, str>,
-    #[serde(rename = "@animationNode")]
-    pub animation_node: Cow<'a, str>,
+    #[serde(borrow, rename = "@mesh3D")]
+    pub mesh_3d: HipStr<'a>,
+    #[serde(borrow, rename = "@skeleton3D")]
+    pub skeleton_3d: HipStr<'a>,
+    #[serde(borrow, rename = "@animation3D")]
+    pub animation_3d: HipStr<'a>,
+    #[serde(borrow, rename = "@animationNode")]
+    pub animation_node: HipStr<'a>,
     #[serde(rename = "@orientation", deserialize_with = "deser_separator")]
     pub orientation: [Color; 4],
     #[serde(default, rename = "@force2DRender", serialize_with = "ser_bool")]
@@ -933,24 +942,29 @@ pub struct Mesh3DComponent<'a> {
     pub material_list: Material<'a>,
     #[serde(rename = "animation3DSet")]
     pub animation_3d_set: Animation3DSet,
-    #[serde(rename = "ENUM", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct TexturePatcherComponent<'a> {
-    #[serde(rename = "@Diffuse1")]
-    pub diffuse_1: Cow<'a, str>,
-    #[serde(rename = "@Diffuse2")]
-    pub diffuse_2: Cow<'a, str>,
-    #[serde(rename = "@Diffuse3")]
-    pub diffuse_3: Cow<'a, str>,
-    #[serde(rename = "@Diffuse4")]
-    pub diffuse_4: Cow<'a, str>,
+    #[serde(borrow, rename = "@Diffuse1")]
+    pub diffuse_1: HipStr<'a>,
+    #[serde(borrow, rename = "@Diffuse2")]
+    pub diffuse_2: HipStr<'a>,
+    #[serde(borrow, rename = "@Diffuse3")]
+    pub diffuse_3: HipStr<'a>,
+    #[serde(borrow, rename = "@Diffuse4")]
+    pub diffuse_4: HipStr<'a>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 #[serde(deny_unknown_fields)]
 pub struct Animation3DSet {
     #[serde(rename = "Animation3DSet")]
@@ -964,16 +978,16 @@ pub struct UIControl<'a> {
     pub is_dpad_sensitive: bool,
     #[serde(rename = "@isCursorSensitive", serialize_with = "ser_bool")]
     pub is_cursor_sensitive: bool,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadLeft")]
-    pub cursor_dpad_left: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadRight")]
-    pub cursor_dpad_right: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadUp")]
-    pub cursor_dpad_up: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadDown")]
-    pub cursor_dpad_down: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadLeft")]
+    pub cursor_dpad_left: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadRight")]
+    pub cursor_dpad_right: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadUp")]
+    pub cursor_dpad_up: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadDown")]
+    pub cursor_dpad_down: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -983,18 +997,18 @@ pub struct UIChangePage<'a> {
     pub is_dpad_sensitive: bool,
     #[serde(rename = "@isCursorSensitive", serialize_with = "ser_bool")]
     pub is_cursor_sensitive: bool,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadLeft")]
-    pub cursor_dpad_left: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadRight")]
-    pub cursor_dpad_right: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadUp")]
-    pub cursor_dpad_up: Cow<'a, str>,
-    #[serde(rename = "@cursorDpadDown")]
-    pub cursor_dpad_down: Cow<'a, str>,
-    #[serde(rename = "@destination")]
-    pub destination: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadLeft")]
+    pub cursor_dpad_left: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadRight")]
+    pub cursor_dpad_right: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadUp")]
+    pub cursor_dpad_up: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorDpadDown")]
+    pub cursor_dpad_down: HipStr<'a>,
+    #[serde(borrow, rename = "@destination")]
+    pub destination: HipStr<'a>,
     #[serde(rename = "@isBack", serialize_with = "ser_bool")]
     pub is_back: bool,
 }
@@ -1004,8 +1018,8 @@ pub struct UIChangePage<'a> {
 pub struct UIPhoneData<'a> {
     #[serde(rename = "@phoneLocId")]
     pub phone_loc_id: u32,
-    #[serde(rename = "@phoneImage")]
-    pub phone_image: Cow<'a, str>,
+    #[serde(borrow, rename = "@phoneImage")]
+    pub phone_image: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1026,7 +1040,12 @@ pub struct CameraFeedComponent<'a> {
     pub record_duration: f32,
     #[serde(rename = "@Replay_StartBeat")]
     pub replay_start_beat: f32,
-    #[serde(rename = "ENUM", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        borrow,
+        rename = "ENUM",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub enums: Vec<Enum<'a>>,
 }
 
@@ -1093,66 +1112,74 @@ pub struct AaBb {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct ConvertedTmlTapeComponent<'a> {
-    #[serde(rename = "@MapName")]
-    pub map_name: Cow<'a, str>,
+    #[serde(borrow, rename = "@MapName")]
+    pub map_name: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UIScreenComponent<'a> {
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
     #[serde(rename = "@allowDpadNavigation", serialize_with = "ser_bool")]
     pub allow_dpad_navigation: bool,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_DEFAULT",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_default: Option<Cow<'a, str>>,
+    pub shortcuts_config_default: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_SWITCH",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_switch: Option<Cow<'a, str>>,
+    pub shortcuts_config_switch: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_PS4",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_ps4: Option<Cow<'a, str>>,
+    pub shortcuts_config_ps4: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_XB1",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_xb1: Option<Cow<'a, str>>,
+    pub shortcuts_config_xb1: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_PC",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_pc: Option<Cow<'a, str>>,
+    pub shortcuts_config_pc: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_GGP",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_ggp: Option<Cow<'a, str>>,
+    pub shortcuts_config_ggp: Option<HipStr<'a>>,
     /// Not in nx2020 or earlier
     #[serde(
+        borrow,
         default,
         rename = "@shortcutsConfig_PROSPERO",
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_prospero: Option<Cow<'a, str>>,
+    pub shortcuts_config_prospero: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_SCARLETT",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_scarlett: Option<Cow<'a, str>>,
+    pub shortcuts_config_scarlett: Option<HipStr<'a>>,
     #[serde(
         rename = "@shortcutsFromCenterInsteadFromLeft",
         serialize_with = "ser_option_bool",
@@ -1166,8 +1193,8 @@ pub struct UIScreenComponent<'a> {
         skip_serializing_if = "Option::is_none"
     )]
     pub shortcuts_horizontal_shift: Option<i32>,
-    #[serde(rename = "@shortcutConfig")]
-    pub shortcuts: Option<Cow<'a, str>>,
+    #[serde(borrow, rename = "@shortcutConfig")]
+    pub shortcuts: Option<HipStr<'a>>,
     #[serde(rename = "@shortcutShift")]
     pub shortcut_shift: Option<u32>,
     #[serde(
@@ -1214,8 +1241,8 @@ pub struct PhoneSetupData<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UserFriendlyBindings<'a> {
-    #[serde(rename = "@VAL")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@VAL")]
+    pub value: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1223,39 +1250,41 @@ pub struct UserFriendlyBindings<'a> {
 pub struct LineGrid<'a> {
     #[serde(rename = "@mainAnchor")]
     pub main_anchor: u32,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@carouselDataID")]
-    pub carousel_data_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@carouselDataID")]
+    pub carousel_data_id: HipStr<'a>,
     #[serde(rename = "@manageCarouselHistory", serialize_with = "ser_bool")]
     pub manage_carousel_history: bool,
     #[serde(rename = "@switchSpeed")]
     pub switch_speed: f32,
-    #[serde(rename = "@shortcutsConfig_DEFAULT")]
-    pub shortcuts_config_default: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_SWITCH")]
-    pub shortcuts_config_switch: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PS4")]
-    pub shortcuts_config_ps4: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_XB1")]
-    pub shortcuts_config_xb1: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PC")]
-    pub shortcuts_config_pc: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_GGP")]
-    pub shortcuts_config_ggp: Cow<'a, str>,
+    #[serde(borrow, rename = "@shortcutsConfig_DEFAULT")]
+    pub shortcuts_config_default: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_SWITCH")]
+    pub shortcuts_config_switch: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PS4")]
+    pub shortcuts_config_ps4: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_XB1")]
+    pub shortcuts_config_xb1: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PC")]
+    pub shortcuts_config_pc: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_GGP")]
+    pub shortcuts_config_ggp: HipStr<'a>,
     /// Not in nx2020 or earlier
     #[serde(
+        borrow,
         default,
         rename = "@shortcutsConfig_Prospero",
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_prospero: Option<Cow<'a, str>>,
+    pub shortcuts_config_prospero: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_Scarlett",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_scarlett: Option<Cow<'a, str>>,
+    pub shortcuts_config_scarlett: Option<HipStr<'a>>,
     #[serde(
         rename = "@shortcutsFromCenterInsteadFromLeft",
         serialize_with = "ser_bool"
@@ -1263,13 +1292,14 @@ pub struct LineGrid<'a> {
     pub shortcuts_from_center_instead_from_left: bool,
     #[serde(rename = "@shortcutsHorizontalShift")]
     pub shortcuts_horizontal_shift: i32,
-    #[serde(rename = "@initialBehaviour")]
-    pub initial_behaviour: Cow<'a, str>,
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@initialBehaviour")]
+    pub initial_behaviour: HipStr<'a>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub behaviours: Vec<ValWrappedCarouselBehaviour<'a>>,
     #[serde(
+        borrow,
         rename = "animItemsDesc",
         default,
         skip_serializing_if = "Option::is_none"
@@ -1282,19 +1312,20 @@ pub struct LineGrid<'a> {
 pub struct UIGrid<'a> {
     #[serde(rename = "@mainAnchor")]
     pub main_anchor: u32,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@carouselDataID")]
-    pub carousel_data_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@carouselDataID")]
+    pub carousel_data_id: HipStr<'a>,
     #[serde(rename = "@manageCarouselHistory", serialize_with = "ser_bool")]
     pub manage_carousel_history: bool,
-    #[serde(rename = "@initialBehaviour")]
-    pub initial_behaviour: Cow<'a, str>,
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@initialBehaviour")]
+    pub initial_behaviour: HipStr<'a>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub behaviours: Vec<ValWrappedCarouselBehaviour<'a>>,
     #[serde(
+        borrow,
         rename = "animItemsDesc",
         default,
         skip_serializing_if = "Option::is_none"
@@ -1307,26 +1338,26 @@ pub struct UIGrid<'a> {
 pub struct AnthologyGrid<'a> {
     #[serde(rename = "@mainAnchor")]
     pub main_anchor: u32,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@carouselDataID")]
-    pub carousel_data_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@carouselDataID")]
+    pub carousel_data_id: HipStr<'a>,
     #[serde(rename = "@manageCarouselHistory", serialize_with = "ser_bool")]
     pub manage_carousel_history: bool,
     #[serde(rename = "@switchSpeed")]
     pub switch_speed: f32,
-    #[serde(rename = "@shortcutsConfig_DEFAULT")]
-    pub shortcuts_config_default: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_SWITCH")]
-    pub shortcuts_config_switch: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PS4")]
-    pub shortcuts_config_ps4: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_XB1")]
-    pub shortcuts_config_xb1: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PC")]
-    pub shortcuts_config_pc: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_GGP")]
-    pub shortcuts_config_ggp: Cow<'a, str>,
+    #[serde(borrow, rename = "@shortcutsConfig_DEFAULT")]
+    pub shortcuts_config_default: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_SWITCH")]
+    pub shortcuts_config_switch: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PS4")]
+    pub shortcuts_config_ps4: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_XB1")]
+    pub shortcuts_config_xb1: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PC")]
+    pub shortcuts_config_pc: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_GGP")]
+    pub shortcuts_config_ggp: HipStr<'a>,
     #[serde(
         rename = "@shortcutsFromCenterInsteadFromLeft",
         serialize_with = "ser_bool"
@@ -1334,13 +1365,14 @@ pub struct AnthologyGrid<'a> {
     pub shortcuts_from_center_instead_from_left: bool,
     #[serde(rename = "@shortcutsHorizontalShift")]
     pub shortcuts_horizontal_shift: i32,
-    #[serde(rename = "@initialBehaviour")]
-    pub initial_behaviour: Cow<'a, str>,
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@initialBehaviour")]
+    pub initial_behaviour: HipStr<'a>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub behaviours: Vec<ValWrappedCarouselBehaviour<'a>>,
     #[serde(
+        borrow,
         rename = "animItemsDesc",
         default,
         skip_serializing_if = "Option::is_none"
@@ -1352,39 +1384,41 @@ pub struct AnthologyGrid<'a> {
 pub struct Carousel<'a> {
     #[serde(rename = "@mainAnchor")]
     pub main_anchor: u32,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@carouselDataID")]
-    pub carousel_data_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@carouselDataID")]
+    pub carousel_data_id: HipStr<'a>,
     #[serde(rename = "@manageCarouselHistory", serialize_with = "ser_bool")]
     pub manage_carousel_history: bool,
     #[serde(rename = "@switchSpeed")]
     pub switch_speed: f32,
-    #[serde(rename = "@shortcutsConfig_DEFAULT")]
-    pub shortcuts_config_default: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_SWITCH")]
-    pub shortcuts_config_switch: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PS4")]
-    pub shortcuts_config_ps4: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_XB1")]
-    pub shortcuts_config_xb1: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PC")]
-    pub shortcuts_config_pc: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_GGP")]
-    pub shortcuts_config_ggp: Cow<'a, str>,
+    #[serde(borrow, rename = "@shortcutsConfig_DEFAULT")]
+    pub shortcuts_config_default: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_SWITCH")]
+    pub shortcuts_config_switch: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PS4")]
+    pub shortcuts_config_ps4: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_XB1")]
+    pub shortcuts_config_xb1: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PC")]
+    pub shortcuts_config_pc: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_GGP")]
+    pub shortcuts_config_ggp: HipStr<'a>,
     /// Not in nx2020 or earlier
     #[serde(
+        borrow,
         default,
         rename = "@shortcutsConfig_Prospero",
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_prospero: Option<Cow<'a, str>>,
+    pub shortcuts_config_prospero: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_Scarlett",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_scarlett: Option<Cow<'a, str>>,
+    pub shortcuts_config_scarlett: Option<HipStr<'a>>,
     #[serde(
         rename = "@shortcutsFromCenterInsteadFromLeft",
         serialize_with = "ser_bool"
@@ -1392,10 +1426,10 @@ pub struct Carousel<'a> {
     pub shortcuts_from_center_instead_from_left: bool,
     #[serde(rename = "@shortcutsHorizontalShift")]
     pub shortcuts_horizontal_shift: i32,
-    #[serde(rename = "@initialBehaviour")]
-    pub initial_behaviour: Cow<'a, str>,
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@initialBehaviour")]
+    pub initial_behaviour: HipStr<'a>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
     #[serde(rename = "@minNbItemsToLoop")]
     pub min_nb_items_to_loop: u32,
     #[serde(rename = "@forceLoop", serialize_with = "ser_bool")]
@@ -1403,6 +1437,7 @@ pub struct Carousel<'a> {
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub behaviours: Vec<ValWrappedCarouselBehaviour<'a>>,
     #[serde(
+        borrow,
         rename = "animItemsDesc",
         default,
         skip_serializing_if = "Option::is_none"
@@ -1415,39 +1450,41 @@ pub struct Carousel<'a> {
 pub struct Grid<'a> {
     #[serde(rename = "@mainAnchor")]
     pub main_anchor: u32,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@carouselDataID")]
-    pub carousel_data_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@carouselDataID")]
+    pub carousel_data_id: HipStr<'a>,
     #[serde(rename = "@manageCarouselHistory", serialize_with = "ser_bool")]
     pub manage_carousel_history: bool,
     #[serde(rename = "@switchSpeed")]
     pub switch_speed: f32,
-    #[serde(rename = "@shortcutsConfig_DEFAULT")]
-    pub shortcuts_config_default: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_SWITCH")]
-    pub shortcuts_config_switch: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PS4")]
-    pub shortcuts_config_ps4: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_XB1")]
-    pub shortcuts_config_xb1: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_PC")]
-    pub shortcuts_config_pc: Cow<'a, str>,
-    #[serde(rename = "@shortcutsConfig_GGP")]
-    pub shortcuts_config_ggp: Cow<'a, str>,
+    #[serde(borrow, rename = "@shortcutsConfig_DEFAULT")]
+    pub shortcuts_config_default: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_SWITCH")]
+    pub shortcuts_config_switch: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PS4")]
+    pub shortcuts_config_ps4: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_XB1")]
+    pub shortcuts_config_xb1: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_PC")]
+    pub shortcuts_config_pc: HipStr<'a>,
+    #[serde(borrow, rename = "@shortcutsConfig_GGP")]
+    pub shortcuts_config_ggp: HipStr<'a>,
     /// Not in nx2020 or earlier
     #[serde(
+        borrow,
         default,
         rename = "@shortcutsConfig_Prospero",
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_prospero: Option<Cow<'a, str>>,
+    pub shortcuts_config_prospero: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@shortcutsConfig_Scarlett",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub shortcuts_config_scarlett: Option<Cow<'a, str>>,
+    pub shortcuts_config_scarlett: Option<HipStr<'a>>,
     #[serde(
         rename = "@shortcutsFromCenterInsteadFromLeft",
         serialize_with = "ser_bool"
@@ -1455,23 +1492,24 @@ pub struct Grid<'a> {
     pub shortcuts_from_center_instead_from_left: bool,
     #[serde(rename = "@shortcutsHorizontalShift")]
     pub shortcuts_horizontal_shift: i32,
-    #[serde(rename = "@initialBehaviour")]
-    pub initial_behaviour: Cow<'a, str>,
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
-    #[serde(rename = "@gridArea_topLeftMarker")]
-    pub grid_area_top_left_marker: Cow<'a, str>,
-    #[serde(rename = "@gridArea_bottomRightMarker")]
-    pub grid_area_bottom_right_marker: Cow<'a, str>,
-    #[serde(rename = "@cursorArea_topLeftMarker")]
-    pub cursor_area_top_left_marker: Cow<'a, str>,
-    #[serde(rename = "@cursorArea_bottomRightMarker")]
-    pub cursor_area_bottom_right_marker: Cow<'a, str>,
+    #[serde(borrow, rename = "@initialBehaviour")]
+    pub initial_behaviour: HipStr<'a>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
+    #[serde(borrow, rename = "@gridArea_topLeftMarker")]
+    pub grid_area_top_left_marker: HipStr<'a>,
+    #[serde(borrow, rename = "@gridArea_bottomRightMarker")]
+    pub grid_area_bottom_right_marker: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorArea_topLeftMarker")]
+    pub cursor_area_top_left_marker: HipStr<'a>,
+    #[serde(borrow, rename = "@cursorArea_bottomRightMarker")]
+    pub cursor_area_bottom_right_marker: HipStr<'a>,
     #[serde(rename = "@centerGrid")]
     pub center_grid: u32,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub behaviours: Vec<ValWrappedCarouselBehaviour<'a>>,
     #[serde(
+        borrow,
         rename = "animItemsDesc",
         default,
         skip_serializing_if = "Option::is_none"
@@ -1486,7 +1524,7 @@ wrap!(WrappedAnimItemsDesc, AnimItemsDesc, "$value", 'a);
 pub enum AnimItemsDesc<'a> {
     #[serde(rename = "BrowserAnimItemsDesc")]
     Browser(BrowserAnimItemsDesc),
-    #[serde(rename = "CarouselAnimItemsDesc")]
+    #[serde(borrow, rename = "CarouselAnimItemsDesc")]
     Carousel(CarouselAnimItemsDesc<'a>),
 }
 
@@ -1529,6 +1567,7 @@ pub struct CarouselAnimItemsDesc<'a> {
     )]
     pub check_items_visibility_on_anim_ends: bool,
     #[serde(
+        borrow,
         rename = "animsToListen",
         default,
         skip_serializing_if = "Vec::is_empty"
@@ -1539,23 +1578,23 @@ pub struct CarouselAnimItemsDesc<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct AnimsToListen<'a> {
-    #[serde(rename = "@VAL")]
-    pub val: Cow<'a, str>,
+    #[serde(borrow, rename = "@VAL")]
+    pub val: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct CarouselBehaviourNavigation<'a> {
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
-    #[serde(rename = "@soundNotifGoNext")]
-    pub sound_notif_go_next: Cow<'a, str>,
-    #[serde(rename = "@soundNotifGoPrev")]
-    pub sound_notif_go_prev: Cow<'a, str>,
-    #[serde(rename = "@animSetupID")]
-    pub anim_setup_id: Cow<'a, str>,
-    #[serde(rename = "@decelTapeLabel")]
-    pub decel_tape_label: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
+    #[serde(borrow, rename = "@soundNotifGoNext")]
+    pub sound_notif_go_next: HipStr<'a>,
+    #[serde(borrow, rename = "@soundNotifGoPrev")]
+    pub sound_notif_go_prev: HipStr<'a>,
+    #[serde(borrow, rename = "@animSetupID")]
+    pub anim_setup_id: HipStr<'a>,
+    #[serde(borrow, rename = "@decelTapeLabel")]
+    pub decel_tape_label: HipStr<'a>,
     #[serde(rename = "@timeBetweenStep")]
     pub time_between_step: f32,
     #[serde(
@@ -1605,16 +1644,16 @@ pub struct CarouselBehaviourNavigation<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct CarouselBehaviourNavigationGoToElement<'a> {
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
-    #[serde(rename = "@soundNotifGoNext")]
-    pub sound_notif_go_next: Cow<'a, str>,
-    #[serde(rename = "@soundNotifGoPrev")]
-    pub sound_notif_go_prev: Cow<'a, str>,
-    #[serde(rename = "@animSetupID")]
-    pub anim_setup_id: Cow<'a, str>,
-    #[serde(rename = "@decelTapeLabel")]
-    pub decel_tape_label: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
+    #[serde(borrow, rename = "@soundNotifGoNext")]
+    pub sound_notif_go_next: HipStr<'a>,
+    #[serde(borrow, rename = "@soundNotifGoPrev")]
+    pub sound_notif_go_prev: HipStr<'a>,
+    #[serde(borrow, rename = "@animSetupID")]
+    pub anim_setup_id: HipStr<'a>,
+    #[serde(borrow, rename = "@decelTapeLabel")]
+    pub decel_tape_label: HipStr<'a>,
     #[serde(rename = "@timeBetweenStep")]
     pub time_between_steps: f32,
     #[serde(rename = "@idxToReach")]
@@ -1666,16 +1705,16 @@ pub struct CarouselBehaviourNavigationGoToElement<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct CarouselBehaviourNavigationAutoScroll<'a> {
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
-    #[serde(rename = "@soundNotifGoNext")]
-    pub sound_notif_go_next: Cow<'a, str>,
-    #[serde(rename = "@soundNotifGoPrev")]
-    pub sound_notif_go_prev: Cow<'a, str>,
-    #[serde(rename = "@animSetupID")]
-    pub anim_setup_id: Cow<'a, str>,
-    #[serde(rename = "@decelTapeLabel")]
-    pub decel_tape_label: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
+    #[serde(borrow, rename = "@soundNotifGoNext")]
+    pub sound_notif_go_next: HipStr<'a>,
+    #[serde(borrow, rename = "@soundNotifGoPrev")]
+    pub sound_notif_go_prev: HipStr<'a>,
+    #[serde(borrow, rename = "@animSetupID")]
+    pub anim_setup_id: HipStr<'a>,
+    #[serde(borrow, rename = "@decelTapeLabel")]
+    pub decel_tape_label: HipStr<'a>,
     #[serde(rename = "@timeBetweenStep")]
     pub time_between_steps: f32,
     #[serde(rename = "@activeOnDisabledCarousel")]
@@ -1738,8 +1777,8 @@ pub struct StopCondition<'a> {
     pub waiting_time: f32,
     #[serde(rename = "@countToReach")]
     pub count_to_reach: u32,
-    #[serde(rename = "@nextBehaviour")]
-    pub next_behaviour: Cow<'a, str>,
+    #[serde(borrow, rename = "@nextBehaviour")]
+    pub next_behaviour: HipStr<'a>,
     #[serde(
         borrow,
         rename = "ENUM",
@@ -1752,8 +1791,8 @@ pub struct StopCondition<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Value<'a> {
-    #[serde(rename = "@VAL")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@VAL")]
+    pub value: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1873,30 +1912,32 @@ pub struct UICarousel<'a> {
         skip_serializing_if = "Option::is_none"
     )]
     pub max_deceleration_start_ratio: Option<f32>,
-    #[serde(rename = "@validateAction")]
-    pub validate_action: Cow<'a, str>,
-    #[serde(rename = "@carouselDataID")]
-    pub carousel_data_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@validateAction")]
+    pub validate_action: HipStr<'a>,
+    #[serde(borrow, rename = "@carouselDataID")]
+    pub carousel_data_id: HipStr<'a>,
     #[serde(
         rename = "@timeBetweenStep",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub time_between_step: Option<f32>,
-    #[serde(rename = "@soundContext")]
-    pub sound_context: Cow<'a, str>,
+    #[serde(borrow, rename = "@soundContext")]
+    pub sound_context: HipStr<'a>,
     #[serde(
+        borrow,
         rename = "@soundNotifGoNext",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub sound_notif_go_next: Option<Cow<'a, str>>,
+    pub sound_notif_go_next: Option<HipStr<'a>>,
     #[serde(
+        borrow,
         rename = "@soundNotifGoPrev",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub sound_notif_go_prev: Option<Cow<'a, str>>,
+    pub sound_notif_go_prev: Option<HipStr<'a>>,
     #[serde(rename = "@forceLoop", serialize_with = "ser_bool")]
     pub force_loop: bool,
     #[serde(
@@ -1953,11 +1994,12 @@ pub struct UICarousel<'a> {
     #[serde(borrow, rename = "animItemsDesc")]
     pub anim_items_desc: WrappedAnimItemsDesc<'a>,
     #[serde(
+        borrow,
         rename = "@initialBehaviour",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub initial_behaviour: Option<Cow<'a, str>>,
+    pub initial_behaviour: Option<HipStr<'a>>,
     #[serde(
         rename = "@switchSpeed",
         default,
@@ -2091,8 +2133,8 @@ pub struct UITextBox<'a> {
     pub max_height: f32,
     #[serde(rename = "@area")]
     pub area: (f32, f32),
-    #[serde(rename = "@rawText")]
-    pub raw_text: Cow<'a, str>,
+    #[serde(borrow, rename = "@rawText")]
+    pub raw_text: HipStr<'a>,
     #[serde(rename = "@useLinesMaxCount", serialize_with = "ser_bool")]
     pub use_lines_max_count: bool,
     #[serde(rename = "@linesMaxCount")]
@@ -2107,8 +2149,8 @@ pub struct UITextBox<'a> {
     pub auto_scroll_wait_time: f32,
     #[serde(rename = "@autoScrollWaitTimeY")]
     pub auto_scroll_wait_time_y: f32,
-    #[serde(rename = "@autoScrollFontEffectName")]
-    pub auto_scroll_font_effect_name: Cow<'a, str>,
+    #[serde(borrow, rename = "@autoScrollFontEffectName")]
+    pub auto_scroll_font_effect_name: HipStr<'a>,
     #[serde(rename = "@autoScrollResetOnInactive", serialize_with = "ser_bool")]
     pub auto_scroll_reset_on_inactive: bool,
     #[serde(rename = "@scrollOnce", serialize_with = "ser_bool")]
@@ -2260,11 +2302,11 @@ impl Default for MaterialGraphicComponent<'static> {
             primitive_parameters: PrimitiveParameters::default(),
             enums: vec![
                 Enum {
-                    name: Cow::Borrowed("anchor"),
+                    name: HipStr::borrowed("anchor"),
                     selection: 1,
                 },
                 Enum {
-                    name: Cow::Borrowed("oldAnchor"),
+                    name: HipStr::borrowed("oldAnchor"),
                     selection: 1,
                 },
             ],
@@ -2287,12 +2329,12 @@ pub struct FixedCameraComponent {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct PleoComponent<'a> {
-    #[serde(rename = "@video")]
-    pub video: Cow<'a, str>,
-    #[serde(rename = "@dashMPD")]
-    pub dash_mpd: Cow<'a, str>,
-    #[serde(rename = "@channelID")]
-    pub channel_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@video")]
+    pub video: HipStr<'a>,
+    #[serde(borrow, rename = "@dashMPD")]
+    pub dash_mpd: HipStr<'a>,
+    #[serde(borrow, rename = "@channelID")]
+    pub channel_id: HipStr<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -2318,8 +2360,8 @@ pub struct PleoTextureGraphicComponent<'a> {
     pub angle_x: f32,
     #[serde(rename = "@AngleY")]
     pub angle_y: f32,
-    #[serde(rename = "@channelID")]
-    pub channel_id: Cow<'a, str>,
+    #[serde(borrow, rename = "@channelID")]
+    pub channel_id: HipStr<'a>,
     #[serde(borrow, rename = "PrimitiveParameters")]
     pub primitive_parameters: PrimitiveParameters<'a>,
     #[serde(
@@ -2361,7 +2403,7 @@ impl Default for GFXPrimitiveParam<'static> {
                 color: (1.0, 1.0, 1.0, 1.0),
             },
             enums: vec![Enum {
-                name: Cow::Borrowed("gfxOccludeInfo"),
+                name: HipStr::borrowed("gfxOccludeInfo"),
                 selection: 0,
             }],
         }
@@ -2380,10 +2422,10 @@ pub struct Material<'a> {
 pub struct GFXMaterialSerializable<'a> {
     #[serde(rename = "@ATL_Channel")]
     pub atl_channel: u32,
-    #[serde(rename = "@ATL_Path")]
-    pub atl_path: Cow<'a, str>,
-    #[serde(rename = "@shaderPath")]
-    pub shader_path: Cow<'a, str>,
+    #[serde(borrow, rename = "@ATL_Path")]
+    pub atl_path: HipStr<'a>,
+    #[serde(borrow, rename = "@shaderPath")]
+    pub shader_path: HipStr<'a>,
     #[serde(
         default,
         rename = "@stencilTest",
@@ -2406,8 +2448,8 @@ impl Default for GFXMaterialSerializable<'static> {
     fn default() -> Self {
         Self {
             atl_channel: Default::default(),
-            atl_path: Cow::Borrowed(""),
-            shader_path: Cow::Borrowed(""),
+            atl_path: HipStr::borrowed(""),
+            shader_path: HipStr::borrowed(""),
             stencil_test: Option::default(),
             alpha_test: u32::MAX,
             alpha_ref: u32::MAX,
@@ -2428,24 +2470,24 @@ pub struct TextureSet<'a> {
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct GFXMaterialTexturePathSet<'a> {
-    #[serde(rename = "@diffuse")]
-    pub diffuse: Cow<'a, str>,
-    #[serde(rename = "@back_light")]
-    pub back_light: Cow<'a, str>,
-    #[serde(rename = "@normal")]
-    pub normal: Cow<'a, str>,
-    #[serde(rename = "@separateAlpha")]
-    pub separate_alpha: Cow<'a, str>,
-    #[serde(rename = "@diffuse_2")]
-    pub diffuse_2: Cow<'a, str>,
-    #[serde(rename = "@back_light_2")]
-    pub back_light_2: Cow<'a, str>,
-    #[serde(rename = "@anim_impostor")]
-    pub anim_impostor: Cow<'a, str>,
-    #[serde(rename = "@diffuse_3")]
-    pub diffuse_3: Cow<'a, str>,
-    #[serde(rename = "@diffuse_4")]
-    pub diffuse_4: Cow<'a, str>,
+    #[serde(borrow, rename = "@diffuse")]
+    pub diffuse: HipStr<'a>,
+    #[serde(borrow, rename = "@back_light")]
+    pub back_light: HipStr<'a>,
+    #[serde(borrow, rename = "@normal")]
+    pub normal: HipStr<'a>,
+    #[serde(borrow, rename = "@separateAlpha")]
+    pub separate_alpha: HipStr<'a>,
+    #[serde(borrow, rename = "@diffuse_2")]
+    pub diffuse_2: HipStr<'a>,
+    #[serde(borrow, rename = "@back_light_2")]
+    pub back_light_2: HipStr<'a>,
+    #[serde(borrow, rename = "@anim_impostor")]
+    pub anim_impostor: HipStr<'a>,
+    #[serde(borrow, rename = "@diffuse_3")]
+    pub diffuse_3: HipStr<'a>,
+    #[serde(borrow, rename = "@diffuse_4")]
+    pub diffuse_4: HipStr<'a>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
@@ -2499,10 +2541,10 @@ pub struct SubSceneActor<'a> {
     pub scale: (f32, f32),
     #[serde(rename = "@xFLIPPED", serialize_with = "ser_bool")]
     pub x_flipped: bool,
-    #[serde(rename = "@USERFRIENDLY")]
-    pub userfriendly: Cow<'a, str>,
-    #[serde(rename = "@MARKER", skip_serializing_if = "Option::is_none")]
-    pub marker: Option<Cow<'a, str>>,
+    #[serde(borrow, rename = "@USERFRIENDLY")]
+    pub userfriendly: HipStr<'a>,
+    #[serde(borrow, rename = "@MARKER", skip_serializing_if = "Option::is_none")]
+    pub marker: Option<HipStr<'a>>,
     /// Not used in nx2017
     #[serde(
         default,
@@ -2522,12 +2564,12 @@ pub struct SubSceneActor<'a> {
     pub pos2d: (f32, f32),
     #[serde(rename = "@ANGLE")]
     pub angle: f32,
-    #[serde(rename = "@INSTANCEDATAFILE")]
-    pub instancedatafile: Cow<'a, str>,
-    #[serde(rename = "@LUA")]
-    pub lua: Cow<'a, str>,
-    #[serde(rename = "@RELATIVEPATH")]
-    pub relativepath: Cow<'a, str>,
+    #[serde(borrow, rename = "@INSTANCEDATAFILE")]
+    pub instancedatafile: HipStr<'a>,
+    #[serde(borrow, rename = "@LUA")]
+    pub lua: HipStr<'a>,
+    #[serde(borrow, rename = "@RELATIVEPATH")]
+    pub relativepath: HipStr<'a>,
     #[serde(rename = "@EMBED_SCENE", serialize_with = "ser_bool")]
     pub embed_scene: bool,
     #[serde(rename = "@IS_SINGLE_PIECE", serialize_with = "ser_bool")]
@@ -2571,14 +2613,14 @@ impl Default for SubSceneActor<'_> {
             relativez: Default::default(),
             scale: (1.0, 1.0),
             x_flipped: Default::default(),
-            userfriendly: Cow::Borrowed(""),
-            marker: Some(Cow::Borrowed("")),
+            userfriendly: HipStr::borrowed(""),
+            marker: Some(HipStr::borrowed("")),
             defaultenable: Some(true),
             pos2d: Default::default(),
             angle: Default::default(),
-            instancedatafile: Cow::Borrowed(""),
-            lua: Cow::Borrowed(""),
-            relativepath: Cow::Borrowed(""),
+            instancedatafile: HipStr::borrowed(""),
+            lua: HipStr::borrowed(""),
+            relativepath: HipStr::borrowed(""),
             embed_scene: true,
             is_single_piece: Default::default(),
             zforced: true,
@@ -2597,8 +2639,8 @@ impl Default for SubSceneActor<'_> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct Marker<'a> {
-    #[serde(rename = "@VAL")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@VAL")]
+    pub value: HipStr<'a>,
 }
 
 wrap!(WrappedScene, Scene, "Scene", 'a);
@@ -2606,8 +2648,8 @@ wrap!(WrappedScene, Scene, "Scene", 'a);
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Enum<'a> {
-    #[serde(rename = "@NAME")]
-    pub name: Cow<'a, str>,
+    #[serde(borrow, rename = "@NAME")]
+    pub name: HipStr<'a>,
     #[serde(rename = "@SEL")]
     pub selection: i32,
 }
@@ -2622,8 +2664,8 @@ pub struct PlatformFilter<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct TargetFilterList<'a> {
-    #[serde(rename = "@platform")]
-    pub platform: Cow<'a, str>,
+    #[serde(borrow, rename = "@platform")]
+    pub platform: HipStr<'a>,
     #[serde(borrow)]
     pub objects: Vec<TargetFilterObject<'a>>,
 }
@@ -2631,8 +2673,8 @@ pub struct TargetFilterList<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct TargetFilterObject<'a> {
-    #[serde(rename = "@VAL")]
-    pub value: Cow<'a, str>,
+    #[serde(borrow, rename = "@VAL")]
+    pub value: HipStr<'a>,
 }
 
 /// Serialize a boolean as a "1" or a "0"
@@ -2656,6 +2698,7 @@ where
 /// The Option needs to be Some!
 #[allow(
     clippy::trivially_copy_pass_by_ref,
+    clippy::ref_option,
     reason = "required by the Serde api"
 )]
 fn ser_option_bool<S>(data: &Option<bool>, ser: S) -> Result<S::Ok, S::Error>
@@ -2663,7 +2706,7 @@ where
     S: Serializer,
 {
     use serde::ser::Error;
-    let act_data = data.ok_or_else(|| S::Error::custom("Option<bool> is empty!"))?;
+    let act_data = data.ok_or_else(|| Error::custom("Option<bool> is empty!"))?;
     if act_data {
         ser.serialize_str("1")
     } else {
@@ -2693,32 +2736,32 @@ where
         let mut second_split = split.split(' ');
         let first = second_split
             .next()
-            .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
+            .ok_or_else(|| Error::custom("Not enough floats in separator"))?;
         result[i].color.0 = first
             .parse::<f32>()
-            .map_err(|_| D::Error::custom(format!("Could not parse '{first}' as a float!")))?;
+            .map_err(|_| Error::custom(format!("Could not parse '{first}' as a float!")))?;
         let second = second_split
             .next()
-            .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
+            .ok_or_else(|| Error::custom("Not enough floats in separator"))?;
         result[i].color.1 = second
             .parse::<f32>()
-            .map_err(|_| D::Error::custom(format!("Could not parse '{second}' as a float!")))?;
+            .map_err(|_| Error::custom(format!("Could not parse '{second}' as a float!")))?;
         let third = second_split
             .next()
-            .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
+            .ok_or_else(|| Error::custom("Not enough floats in separator"))?;
         result[i].color.2 = third
             .parse::<f32>()
-            .map_err(|_| D::Error::custom(format!("Could not parse '{third}' as a float!")))?;
+            .map_err(|_| Error::custom(format!("Could not parse '{third}' as a float!")))?;
         let fourth = second_split
             .next()
-            .ok_or_else(|| D::Error::custom("Not enough floats in separator"))?;
+            .ok_or_else(|| Error::custom("Not enough floats in separator"))?;
         result[i].color.3 = fourth
             .parse::<f32>()
-            .map_err(|_| D::Error::custom(format!("Could not parse '{fourth}' as a float!")))?;
+            .map_err(|_| Error::custom(format!("Could not parse '{fourth}' as a float!")))?;
         max_i = i;
     }
     if max_i != 3 {
-        return Err(D::Error::custom("max_i is not 3!"));
+        return Err(Error::custom("max_i is not 3!"));
     }
     Ok(result)
 }
@@ -2787,7 +2830,7 @@ macro_rules! impl_deserialize_for_internally_tagged_enum {
                         let de = ::serde::de::value::MapAccessDeserializer::new(map);
                         match tag.as_ref() {
                             $(
-                                $variant_tag => Ok(crate::deserialize_variant!( de, $enum, $($variant)+ )),
+                                $variant_tag => Ok($crate::cooked::isc::deserialize_variant!( de, $enum, $($variant)+ )),
                             )*
                             _ => Err(A::Error::unknown_field(&tag, &[$($variant_tag),+])),
                         }
@@ -3666,7 +3709,7 @@ mod wrapped_carousel_behaviour {
     #[serde(deny_unknown_fields)]
     pub struct ValWrappedCarouselBehaviourNavigation<'a> {
         #[serde(rename = "@KEY")]
-        pub key: Cow<'a, str>,
+        pub key: HipStr<'a>,
         #[serde(borrow, rename = "VAL")]
         pub val: WrappedCarouselBehaviourNavigation<'a>,
     }
@@ -3682,7 +3725,7 @@ mod wrapped_carousel_behaviour {
     #[serde(deny_unknown_fields)]
     pub struct ValWrappedCarouselBehaviourNavigationGrid<'a> {
         #[serde(rename = "@KEY")]
-        pub key: Cow<'a, str>,
+        pub key: HipStr<'a>,
         #[serde(borrow, rename = "VAL")]
         pub val: WrappedCarouselBehaviourNavigationGrid<'a>,
     }
@@ -3698,7 +3741,7 @@ mod wrapped_carousel_behaviour {
     #[serde(deny_unknown_fields)]
     pub struct ValWrappedCarouselBehaviourGoToElement<'a> {
         #[serde(rename = "@KEY")]
-        pub key: Cow<'a, str>,
+        pub key: HipStr<'a>,
         #[serde(borrow, rename = "VAL")]
         pub val: WrappedCarouselBehaviourGoToElement<'a>,
     }
@@ -3714,7 +3757,7 @@ mod wrapped_carousel_behaviour {
     #[serde(deny_unknown_fields)]
     pub struct ValWrappedCarouselBehaviourAutoScroll<'a> {
         #[serde(rename = "@KEY")]
-        pub key: Cow<'a, str>,
+        pub key: HipStr<'a>,
         #[serde(borrow, rename = "VAL")]
         pub val: WrappedCarouselBehaviourAutoScroll<'a>,
     }

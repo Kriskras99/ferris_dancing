@@ -1,15 +1,13 @@
 //! Contains the parser implementation
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u16be, u32be, u64be},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-        CursorAt,
-    },
-    test_any, test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u16be, u32be, u64be},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
+    CursorAt,
 };
 use gtx::GtxDecoder;
 use image::DynamicImage;
+use test_eq::{test_any, test_eq};
 use xtx::XtxDecoder;
 
 use super::Png;

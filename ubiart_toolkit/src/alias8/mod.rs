@@ -20,17 +20,16 @@
 //! | ... | 2            | `u16be`     | `unk3`       | Probably flags, possible values in [`Unk3`] |
 #![deny(clippy::missing_docs_in_private_items)]
 
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use bitflags::bitflags;
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u16be, u32be},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-        write::{BinarySerialize, WriteAt, WriteError},
-    },
-    test_any, test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u16be, u32be},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
+    write::{BinarySerialize, WriteAt, WriteError},
 };
+use hipstr::HipStr;
+use test_eq::{test_any, test_eq};
 
 use crate::utils::SplitPath;
 
@@ -38,7 +37,7 @@ use crate::utils::SplitPath;
 #[derive(Debug, Clone)]
 pub struct Alias<'a> {
     /// The alias name
-    pub alias: Cow<'a, str>,
+    pub alias: HipStr<'a>,
     /// The (uncooked) path for the alias
     pub path: SplitPath<'a>,
     /// Unknown value
@@ -130,10 +129,10 @@ impl BinarySerialize for Alias<'_> {
 }
 
 /// Describes the entire file
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Alias8<'a> {
     /// The aliases in this file
-    aliases: HashMap<Cow<'a, str>, Alias<'a>>,
+    aliases: HashMap<HipStr<'a>, Alias<'a>>,
 }
 
 impl<'a> Alias8<'a> {

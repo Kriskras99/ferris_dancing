@@ -5,7 +5,7 @@ use std::ops::Deref;
 use dotstar_toolkit_utils::bytes::read::{BinaryDeserialize, ReadAtExt, ReadError};
 use nohash_hasher::{BuildNoHashHasher, IntMap, IsEnabled};
 
-use crate::utils::{Game, PathId, Platform, UniqueGameId};
+use crate::utils::{PathId, Platform, UniqueGameId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BundleId(u8);
@@ -170,81 +170,19 @@ impl SecureFat {
 /// Convert a bundle name to a filename based on the platform
 #[must_use]
 pub fn bundle_name_to_filename(name: &str, ugi: UniqueGameId) -> String {
-    match ugi {
-        UniqueGameId {
-            platform: Platform::Nx,
-            game: _,
-            id: _,
-        } => {
-            let mut result = String::with_capacity(name.len() + 7);
-            result.push_str(name);
-            result.push_str("_nx.ipk");
-            result
+    match ugi.platform {
+        Platform::Nx => {
+            format!("{name}_nx.ipk")
         }
-        UniqueGameId {
-            platform: Platform::Win,
-            game: _,
-            id: _,
-        } => {
-            let mut result = String::with_capacity(name.len() + 7);
-            result.push_str(name);
-            result.push_str("_pc.ipk");
-            result
+        Platform::Win => {
+            format!("{name}_pc.ipk")
         }
-        UniqueGameId {
-            platform: Platform::Wii,
-            game: _,
-            id: _,
-        } => {
-            let mut result = String::with_capacity(name.len() + 8);
-            result.push_str(name);
-            if let Some(index) = result.find("bundle") {
-                result.replace_range(index..index + 6, "Bundle");
-            }
-            if let Some(index) = result.find("blockflows") {
-                result.replace_range(index..index + 10, "BlockFlows");
-            }
-            if let Some(index) = result.find("logic") {
-                result.replace_range(index..index + 5, "Logic");
-            }
-            if let Some(index) = result.find("boot") {
-                result.replace_range(index..index + 4, "Boot");
-            }
-            result.push_str("_WII.ipk");
-            result
+        Platform::Wii => {
+            format!("{name}_wii.ipk")
         }
-        UniqueGameId {
-            platform: Platform::WiiU,
-            game: Game::JustDance2019 | Game::JustDance2018 | Game::JustDance2017,
-            id: _,
-        } => {
-            let mut result = String::with_capacity(name.len() + 9);
-            result.push_str(name);
-            result.push_str("_wiiu.ipk");
-            result
+        Platform::WiiU => {
+            format!("{name}_wiiu.ipk")
         }
-        UniqueGameId {
-            platform: Platform::WiiU,
-            game: _,
-            id: _,
-        } => {
-            let mut result = String::with_capacity(name.len() + 9);
-            result.push_str(name);
-            if let Some(index) = result.find("bundle") {
-                result.replace_range(index..index + 6, "Bundle");
-            }
-            if let Some(index) = result.find("blockflows") {
-                result.replace_range(index..index + 10, "BlockFlows");
-            }
-            if let Some(index) = result.find("logic") {
-                result.replace_range(index..index + 5, "Logic");
-            }
-            if let Some(index) = result.find("boot") {
-                result.replace_range(index..index + 4, "Boot");
-            }
-            result.push_str("_WIIU.ipk");
-            result
-        }
-        _ => todo!("Unsupported platform: {ugi}"),
+        _ => todo!("Unsupported platform: {}", ugi.platform),
     }
 }

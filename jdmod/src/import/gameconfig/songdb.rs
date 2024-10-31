@@ -11,10 +11,8 @@ use crate::{import::song, types::ImportState, utils::cook_path};
 /// Imports all songs in the song database using [`song::import`]
 pub fn import(is: &ImportState<'_>, songdb_scene: &str) -> Result<(), Error> {
     println!("Importing songs...");
-    let songdb_scene_file = is
-        .vfs
-        .open(cook_path(songdb_scene, is.ugi.platform)?.as_ref())?;
-    let songdb_scene = cooked::isc::parse(&songdb_scene_file)?;
+    let songdb_scene_file = is.vfs.open(cook_path(songdb_scene, is.ugi)?.as_ref())?;
+    let songdb_scene = cooked::isc::parse(&songdb_scene_file, is.ugi)?;
 
     for actors in songdb_scene.scene.actors {
         let actor = actors.actor()?;

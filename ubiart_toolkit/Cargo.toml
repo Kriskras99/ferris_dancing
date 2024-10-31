@@ -14,10 +14,10 @@ arbitrary = { workspace = true, optional = true }
 anyhow = { workspace = true }
 bitflags = { workspace = true }
 clap = { workspace = true }
-dotstar_toolkit_utils.workspace = true
+dotstar_toolkit_utils = { workspace = true }
 flate2 = { workspace = true }
-gc_adpcm.workspace = true
-gtx.workspace = true
+gc_adpcm = { workspace = true }
+gtx = { workspace = true }
 hound = { workspace = true }
 image = { workspace = true }
 image_dds = { workspace = true }
@@ -33,32 +33,31 @@ serde_with = { workspace = true }
 simd-json = { workspace = true }
 stable_deref_trait = { workspace = true }
 tegra_swizzle = { workspace = true }
+test_eq = { workspace = true }
 texpresso = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber.workspace = true
-ubiart_toolkit_isc_types.workspace = true
-ubiart_toolkit_json_types.workspace = true
-ubiart_toolkit_shared_types.workspace = true
+tracing-subscriber = { workspace = true }
+ubiart_toolkit_shared_types = { workspace = true }
 wiiu_swizzle = { workspace = true }
 xtx = { path = "../xtx" }
 yoke = { workspace = true }
 zopfli = { workspace = true, optional = true }
-hipstr.workspace = true
-ownable.workspace = true
-simdutf8.workspace = true
-derive_builder = "0.20.2"
-superstruct = "0.8.0"
+hipstr = { workspace = true }
+ownable = { workspace = true }
+simdutf8 = { workspace = true }
+superstruct = { workspace = true }
 
 [dev-dependencies]
 datatest-stable = { workspace = true }
 
 [features]
-default = []
+default = ["line-info"]
+line-info = []
 fuzz = ["arbitrary"]
 zopfli = ["dep:zopfli"]
 arbitrary = ["dep:arbitrary"]
-full_json_types = ["ubiart_toolkit_json_types/full_json_types"]
+full_json_types = []
 
 [lints]
 workspace = true

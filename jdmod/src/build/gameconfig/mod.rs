@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{bytes::read::BinaryDeserializeExt as _, vfs::VirtualFileSystem};
-use ubiart_toolkit::{alias8::Alias8, cooked, json_types};
+use ubiart_toolkit::{alias8::Alias8, cooked, json_types, utils::UniqueGameId};
 
 use super::{BuildFiles, BuildState};
 use crate::utils::cook_path;
@@ -35,7 +35,7 @@ pub fn build(bs: &BuildState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
         &aliases
             .get_path_for_alias("gameconfig")
             .ok_or_else(|| anyhow!("gameconfig path not found in common.alias8!"))?,
-        bs.platform,
+        UniqueGameId::NX2022,
     )?;
     let gameconfig_file = bs.patched_base_vfs.open(gameconfig_path.as_ref())?;
     let gameconfig_template = cooked::json::parse_v22(&gameconfig_file, false)?;

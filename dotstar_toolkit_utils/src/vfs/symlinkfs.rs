@@ -71,7 +71,7 @@ impl SymlinkFs<'_> {
             let metadata = self.backing_fs.metadata(path)?;
             size = size
                 .checked_add(metadata.file_size())
-                .ok_or_else(|| std::io::Error::other("Overflow occured"))?;
+                .ok_or_else(|| Error::other("Overflow occured"))?;
         }
         Ok(size)
     }
@@ -106,7 +106,7 @@ impl<'fs> SymlinkFs<'fs> {
 }
 
 impl VirtualFileSystem for SymlinkFs<'_> {
-    fn open<'fs>(&'fs self, path: &VirtualPath) -> std::io::Result<VirtualFile<'fs>> {
+    fn open<'fs>(&'fs self, path: &VirtualPath) -> Result<VirtualFile<'fs>> {
         let path = path.clean();
         let actual_path = self
             .mapping
@@ -115,7 +115,7 @@ impl VirtualFileSystem for SymlinkFs<'_> {
         self.backing_fs.open(actual_path)
     }
 
-    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> Result<VirtualMetadata> {
         let path = &path.clean();
         let actual_path = self
             .mapping
@@ -124,7 +124,7 @@ impl VirtualFileSystem for SymlinkFs<'_> {
         self.backing_fs.metadata(actual_path)
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> Result<WalkFs<'rf>> {
         let path = path.clean();
         if path == VirtualPath::new("/") {
             Ok(WalkFs {

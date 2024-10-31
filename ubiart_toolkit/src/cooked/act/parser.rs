@@ -1,12 +1,10 @@
 //! Contains the parser implementation
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{f32be, i32be, u32be, u64be},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_any, test_eq, test_le,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{f32be, i32be, u32be, u64be},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
+use test_eq::{test_any, test_eq, test_le};
 use ubiart_toolkit_shared_types::Color;
 
 use super::{
@@ -22,7 +20,7 @@ use super::{
     UIWidgetGroupHUDAutodanceRecorder, UIWidgetGroupHUDLyrics, UIWidgetGroupHUDPauseIcon,
     Unknown2CB3C8E8, Unknown77F7D66C, UnknownA6E4EFBA, UnknownA97634C7, ViewportUIComponent,
 };
-use crate::utils::{Game, SplitPath, UniqueGameId};
+use crate::utils::{path::ExpectedPadding, Game, InternedString, SplitPath, UniqueGameId};
 
 impl<'de> BinaryDeserialize<'de> for Actor<'de> {
     type Ctx = UniqueGameId;
@@ -43,7 +41,7 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         let unk3_5 = reader.read_at::<u32be>(position)?;
         test_any!(unk3_5, [0, 0xFFFF_FFFF])?;
 
-        if ugi >= UniqueGameId::NX2019V1 {
+        if ugi.game >= Game::JustDance2019 {
             let unk4 = reader.read_at::<u64be>(position)?;
             test_eq!(unk4, 0x1_0000_0000u64)?;
         } else {
@@ -60,7 +58,7 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         let unk6 = reader.read_at::<u64be>(position)?;
         test_eq!(unk6, 0u64)?;
 
-        if ugi >= UniqueGameId::WIIU2016 {
+        if ugi.game >= Game::JustDance2016 {
             let unk6_5 = reader.read_at::<u32be>(position)?;
             test_eq!(unk6_5, 0x0)?;
         }
@@ -1384,8 +1382,8 @@ impl<'de> BinaryDeserialize<'de> for TexturePatcherComponent<'de> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, 0x6F32_8BC1)?;
 
-        let unk1 = reader.read_at_with::<SplitPath>(position, 0x2)?;
-        let unk2 = reader.read_at_with::<SplitPath>(position, 0x2)?;
+        let unk1 = reader.read_at_with::<SplitPath>(position, ExpectedPadding::Value(0x2))?;
+        let unk2 = reader.read_at_with::<SplitPath>(position, ExpectedPadding::Value(0x2))?;
 
         let unk3 = reader.read_at::<u32be>(position)?;
         test_eq!(unk3, 0)?;
@@ -1477,11 +1475,11 @@ impl<'de> BinaryDeserialize<'de> for UICarouselV16<'de> {
         let time_between_step = reader.read_at::<f32be>(position)?;
         test_eq!(time_between_step, 0.15)?;
         let sound_context = reader.read_len_string_at::<u32be>(position)?;
-        test_eq!(sound_context.as_ref(), "Carousel")?;
+        test_eq!(sound_context.as_str(), "Carousel")?;
         let sound_notif_go_next = reader.read_len_string_at::<u32be>(position)?;
-        test_eq!(sound_notif_go_next.as_ref(), "Next")?;
+        test_eq!(sound_notif_go_next.as_str(), "Next")?;
         let sound_notif_go_prev = reader.read_len_string_at::<u32be>(position)?;
-        test_eq!(sound_notif_go_prev.as_ref(), "Prev")?;
+        test_eq!(sound_notif_go_prev.as_str(), "Prev")?;
 
         let mode = reader.read_at::<i32be>(position)?;
         test_any!(mode, 1..=3)?;
@@ -1755,7 +1753,7 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
         let unk18 = reader.read_at::<u32be>(position)?;
         test_eq!(unk18, 0)?;
 
-        if ugi >= UniqueGameId::NX2019V1 {
+        if ugi.game >= Game::JustDance2019 {
             let unk19 = reader.read_at::<i32be>(position)?;
             test_eq!(unk19, 0)?;
             let unk20 = reader.read_at::<u32be>(position)?;
@@ -1766,7 +1764,7 @@ impl<'de> BinaryDeserialize<'de> for UITextBox<'de> {
         test_eq!(overriding_font_size_min, -1.0)?;
         let ending_dots = reader.read_at::<u32be>(position)?;
         test_eq!(ending_dots, 0)?;
-        let colorize_icons = if ugi >= UniqueGameId::NX2020 {
+        let colorize_icons = if ugi.game >= Game::JustDance2020 {
             let colorize_icons = reader.read_at::<u32be>(position)?;
             test_eq!(colorize_icons, 0)?;
             Some(colorize_icons)
@@ -2043,7 +2041,7 @@ impl<'de> BinaryDeserialize<'de> for Unknown77F7D66C<'de> {
         let unk3 = reader.read_len_slice_at::<u32be>(position)?;
         test_eq!(unk3.len(), 7)?;
         let unk4 = reader.read_at::<f32be>(position)?;
-        test_any!(unk4, 0.112503..=0.879022)?;
+        test_any!(unk4, 0.112_503..=0.879_022)?;
         if ugi.game == Game::JustDance2016 {
             let unk5 = reader.read_at::<u32be>(position)?;
             test_eq!(unk5, 0x0)?;
@@ -2355,11 +2353,6 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
             reader.read_at::<SplitPath>(position)?
         };
         let channel_id = reader.read_len_string_at::<u32be>(position)?;
-        let channel_id = if channel_id.is_empty() {
-            None
-        } else {
-            Some(channel_id)
-        };
         Ok(PleoComponent {
             video,
             dash_mpd,
@@ -2383,41 +2376,4 @@ fn parse_property_patcher(
         test_eq!(unk13, 0u32)?;
     }
     Ok(())
-}
-
-struct InternedString;
-impl BinaryDeserialize<'_> for InternedString {
-    type Ctx = ();
-    type Output = &'static str;
-
-    fn deserialize_at_with(
-        reader: &(impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        _ctx: Self::Ctx,
-    ) -> Result<Self::Output, ReadError> {
-        let string_id = reader.read_at::<u32be>(position)?;
-        match string_id {
-            0x1445_31FF => Ok("navigation_default"),
-            0x1576_B015 => Ok("navigation_row"),
-            0x2810_2F02 => Ok("navigation_speed"),
-            0x40A1_5156 => Ok("menu_valid"),
-            0x418F_AF9A => Ok("menu_lstick_right"),
-            0x4C55_6308 => Ok("navigation"),
-            0x6DC2_DBB2 => Ok("menu_phone_right"),
-            0x7233_490C => Ok("menu_dpad_right"),
-            0x7411_331E => Ok("navigation_age"),
-            0x83B2_58E1 => Ok("gotodefault"),
-            0x8E09_B64A => Ok("navigation_kids"),
-            0xAA55_B6BD => Ok("asyncplayervideo"),
-            0xB20E_35D5 => Ok("navigation_big_items"),
-            0xC33B_4C02 => Ok("menu_phone_left"),
-            0xD64E_0E2A => Ok("menu_dpad_left"),
-            0xD9B1_E95C => Ok("menu_lstick_left"),
-            0xDFEF_DBFB => Ok("decel"),
-            0xFFFF_FFFF => Ok(""),
-            _ => Err(ReadError::custom(format!(
-                "Unknown interned string id: 0x{string_id:08x}"
-            ))),
-        }
-    }
 }

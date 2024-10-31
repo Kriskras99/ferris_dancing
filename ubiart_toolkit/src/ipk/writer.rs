@@ -10,14 +10,14 @@ use dotstar_toolkit_utils::{
         write::{WriteAt, WriteError},
         CursorAt,
     },
-    test_eq,
     vfs::{VirtualFileSystem, VirtualPath},
 };
 use flate2::{write::ZlibEncoder, Compression};
+use test_eq::test_eq;
 use tracing::instrument;
 
 use super::MAGIC;
-use crate::utils::{self, Game, Platform, SplitPath, UniqueGameId};
+use crate::utils::{Game, Platform, SplitPath, UniqueGameId};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
@@ -108,8 +108,8 @@ pub fn write(
     files: &[&VirtualPath],
 ) -> Result<(), WriteError> {
     // TODO: Make this code position independent
-    assert!(
-        *position == 0,
+    assert_eq!(
+        *position, 0,
         "TODO: This code is not yet position independent!"
     );
     // let static_header_size = *position + u64::try_from(STATIC_HEADER_SIZE)?;
@@ -117,7 +117,7 @@ pub fn write(
     let mut base_offset = STATIC_HEADER_SIZE;
 
     // On NX, JD2020-JD2022 have 4 null bytes between the header and the content of the files
-    if options.game_platform.platform == utils::Platform::Nx
+    if options.game_platform.platform == Platform::Nx
         && (options.game_platform.game == Game::JustDance2020
             || options.game_platform.game == Game::JustDance2021
             || options.game_platform.game == Game::JustDance2022)
@@ -195,16 +195,17 @@ pub fn write(
                 }
                 #[cfg(feature = "zopfli")]
                 CompressionEffort::Zopfli(provided_options) => {
-                    let cursor = CursorAt::new(writer, position);
+                    let mut cursor = CursorAt::new(writer, *position);
                     // Zopfli encoder consumes the writer
                     let mut encoder = zopfli::DeflateEncoder::new(
                         provided_options.into(),
                         zopfli::BlockType::default(),
-                        cursor,
+                        &mut cursor,
                     );
                     encoder.write_all(&file)?;
                     // Writer is returned at finish
                     encoder.finish()?;
+                    *position = cursor.into_inner().1;
                     // Return compressed size
                     *position - raw_offset
                 }
@@ -246,7 +247,7 @@ pub fn write(
         }
     }
 
-    if options.game_platform.platform == utils::Platform::Nx
+    if options.game_platform.platform == Platform::Nx
         && (options.game_platform.game == Game::JustDance2020
             || options.game_platform.game == Game::JustDance2021
             || options.game_platform.game == Game::JustDance2022)

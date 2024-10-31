@@ -1,5 +1,6 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use ubiart_toolkit_shared_types::errors::ParserError;
@@ -12,15 +13,8 @@ use super::{
         PadRumbleManager, QuickplayRules, SoundConfig, TRCLocalisation, UITextManager,
         VibrationManager, WDFLinearRewards, ZInputConfig, ZInputManager,
     },
-    just_dance::{AgingBotBehaviourAllTrees, FixedCameraComponent, SkinDescription, SongDatabase},
     msh::GFXMaterialShader,
     tfn::FontTemplate,
-    tpl::{
-        AFXPostProcessComponent, BezierTreeComponent, BoxInterpolatorComponent, FxBankComponent,
-        FxControllerComponent, ModeType, PleoComponent, PleoTextureGraphicComponent,
-        SingleInstanceMesh3DComponent, TextureGraphicComponent, UINineSliceMaskComponent,
-        UITextBox,
-    },
     Empty,
 };
 use super::{
@@ -36,20 +30,12 @@ use super::{
         UnlimitedUpsellSongList, UnlimitedUpsellSubtitles, UplayReward, WDFBossEntry,
         WhatsNewConfigs,
     },
-    just_dance::{AutodanceComponent, SongDescription},
-    tpl::{MasterTape, MaterialGraphicComponent, MusicTrackComponent, SoundComponent},
     AliasesObjectives, AvatarsObjectives, MapsGoals, MapsObjectives, OfflineRecommendation,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "__class")]
 pub enum Template22<'a> {
-    #[serde(borrow, rename = "Actor_Template")]
-    Actor(Actor22<'a>),
-    #[serde(borrow, rename = "JD_AutodanceComponent_Template")]
-    AutodanceComponent(AutodanceComponent<'a>),
-    #[serde(borrow, rename = "JD_AvatarDescTemplate")]
-    AvatarDescription(AvatarDescription2022<'a>),
     #[serde(borrow, rename = "JD_CarouselRules")]
     CarouselRules(CarouselRules<'a>),
     #[serde(borrow, rename = "JD_GachaContentDatabase_Template")]
@@ -66,27 +52,6 @@ pub enum Template22<'a> {
     PortraitBordersDatabase(PortraitBordersDatabase<'a>),
     #[serde(borrow, rename = "JD_ScheduledQuestDatabase_Template")]
     ScheduledQuestDatabase(ScheduledQuestDatabase<'a>),
-    #[serde(borrow, rename = "JD_SongDescTemplate")]
-    SongDescription(SongDescription<'a>),
-    #[serde(borrow, rename = "MasterTape_Template")]
-    MasterTape(MasterTape<'a>),
-    #[serde(borrow, rename = "MaterialGraphicComponent_Template")]
-    MaterialGraphicComponent(MaterialGraphicComponent<'a>),
-    #[serde(borrow, rename = "MusicTrackComponent_Template")]
-    MusicTrackComponent(MusicTrackComponent<'a>),
-    #[serde(borrow, rename = "SoundComponent_Template")]
-    SoundComponent(SoundComponent<'a>),
-    #[serde(borrow, rename = "TapeCase_Template")]
-    TapeCase(MasterTape<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "AFXPostProcessComponent_Template")]
-    AFXPostProcessComponent(AFXPostProcessComponent<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "BezierTreeComponent_Template")]
-    BezierTreeComponent(BezierTreeComponent<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "BoxInterpolatorComponent_Template")]
-    BoxInterpolatorComponent(BoxInterpolatorComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "CameraShakeConfig_Template")]
     CameraShakeConfig(CameraShakeConfig<'a>),
@@ -109,20 +74,11 @@ pub enum Template22<'a> {
     #[serde(borrow, rename = "FontTemplate")]
     FontTemplate(FontTemplate<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "FxBankComponent_Template")]
-    FxBankComponent(FxBankComponent<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "FXControllerComponent_Template")]
-    FxControllerComponent(FxControllerComponent<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "GFXMaterialShader_Template")]
     GFXMaterialShader(GFXMaterialShader<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_AchievementsDatabase_Template")]
     AchievementsDatabase(AchievementsDatabase<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_AgingBot_BehaviourAllTrees")]
-    AgingBotBehaviourAllTrees(AgingBotBehaviourAllTrees<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_Carousel_Template")]
     Carousel(Empty<'a>),
@@ -130,17 +86,11 @@ pub enum Template22<'a> {
     #[serde(borrow, rename = "JD_CreditsComponent_Template")]
     CreditsComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_FixedCameraComponent_Template")]
-    FixedCameraComponent(FixedCameraComponent<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_FTUESteps_Template")]
     FTUESteps(FTUESteps<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_GachaComponent_Template")]
     GachaComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_GoldMoveComponent_Template")]
-    GoldMoveComponent(ModeType<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_Grid_CustomPatterned_Template")]
     GridCustomPatterned(Empty<'a>),
@@ -168,12 +118,6 @@ pub enum Template22<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_ScrollingTextComponent_Template")]
     ScrollingTextComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_SkinDescTemplate")]
-    SkinDescription(SkinDescription<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "JD_SongDatabaseTemplate")]
-    SongDatabase(SongDatabase<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_StickerGrid_Template")]
     StickerGrid(Empty<'a>),
@@ -262,23 +206,11 @@ pub enum Template22<'a> {
     #[serde(borrow, rename = "PadRumbleManager_Template")]
     PadRumbleManager(PadRumbleManager<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "PleoComponent_Template")]
-    PleoComponent(PleoComponent<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "PleoTextureGraphicComponent_Template")]
-    PleoTextureGraphicComponent(PleoTextureGraphicComponent<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "PropertyPatcher_Template")]
     PropertyPatcher(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "SingleInstanceMesh3DComponent_Template")]
-    SingleInstanceMesh3DComponent(SingleInstanceMesh3DComponent<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "SoundConfig_Template")]
     SoundConfig(SoundConfig<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "TextureGraphicComponent_Template")]
-    TextureGraphicComponent(TextureGraphicComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "TRCLocalisation_Template")]
     TRCLocalisation(TRCLocalisation<'a>),
@@ -298,12 +230,6 @@ pub enum Template22<'a> {
     #[serde(borrow, rename = "UICountdown_Template")]
     UICountdown(Empty<'a>),
     #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "UINineSliceComponent_Template")]
-    UiNineSliceComponent(MaterialGraphicComponent<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "UINineSliceMaskComponent_Template")]
-    UINineSliceMaskComponent(UINineSliceMaskComponent<'a>),
-    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UIPhoneData_Template")]
     UIPhoneData(Empty<'a>),
     #[cfg(feature = "full_json_types")]
@@ -312,9 +238,6 @@ pub enum Template22<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UIScreenComponent_Template")]
     UIScreenComponent(Empty<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "UITextBox_Template")]
-    UITextBox(UITextBox<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "UITextManager_Template")]
     UITextManager(UITextManager<'a>),
@@ -398,72 +321,6 @@ impl<'a> Template22<'a> {
         }
     }
 
-    /// Convert this template to a `Actor22`.
-    pub fn into_actor(self) -> Result<Actor22<'a>, ParserError> {
-        if let Template22::Actor(actor) = self {
-            Ok(actor)
-        } else {
-            Err(ParserError::custom(format!(
-                "Actor not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `AvatarDescription22`.
-    pub fn into_avatar_description(self) -> Result<AvatarDescription2022<'a>, ParserError> {
-        if let Template22::AvatarDescription(avatar_description) = self {
-            Ok(avatar_description)
-        } else {
-            Err(ParserError::custom(format!(
-                "AvatarDescription not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `SongDescription`.
-    pub fn into_song_description(self) -> Result<SongDescription<'a>, ParserError> {
-        if let Template22::SongDescription(song_description) = self {
-            Ok(song_description)
-        } else {
-            Err(ParserError::custom(format!(
-                "SongDescription not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `AutodanceComponent`.
-    pub fn into_autodance_component(self) -> Result<AutodanceComponent<'a>, ParserError> {
-        if let Template22::AutodanceComponent(autodance_component) = self {
-            Ok(autodance_component)
-        } else {
-            Err(ParserError::custom(format!(
-                "AutodanceComponent not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `MasterTape`.
-    pub fn into_master_tape(self) -> Result<MasterTape<'a>, ParserError> {
-        if let Template22::MasterTape(master_tape) = self {
-            Ok(master_tape)
-        } else {
-            Err(ParserError::custom(format!(
-                "MasterTape not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `MusicTrackComponent`.
-    pub fn into_tape_case_component(self) -> Result<MasterTape<'a>, ParserError> {
-        if let Template22::TapeCase(tape_case_component) = self {
-            Ok(tape_case_component)
-        } else {
-            Err(ParserError::custom(format!(
-                "TapeCase not found in template: {self:?}"
-            )))
-        }
-    }
-
     /// Convert this template to a `CarouselRules`.
     pub fn into_carousel_rules(self) -> Result<CarouselRules<'a>, ParserError> {
         if let Template22::CarouselRules(carousel_rules) = self {
@@ -474,40 +331,27 @@ impl<'a> Template22<'a> {
             )))
         }
     }
-
-    /// Convert this template to a `SoundComponent`.
-    pub fn into_sound_component(&'a self) -> Result<&'a SoundComponent<'a>, ParserError> {
-        if let Template22::SoundComponent(sound_component) = self {
-            Ok(sound_component)
-        } else {
-            Err(ParserError::custom(format!(
-                "SoundComponent not found in template: {self:?}"
-            )))
-        }
-    }
-
-    /// Convert this template to a `MusicTrackComponent`.
-    pub fn into_musictrack_component(self) -> Result<MusicTrackComponent<'a>, ParserError> {
-        if let Template22::MusicTrackComponent(musictrack_component) = self {
-            Ok(musictrack_component)
-        } else {
-            Err(ParserError::custom(format!(
-                "MusicTrackComponent not found in template: {self:?}"
-            )))
-        }
-    }
 }
 
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct GameManagerConfig22<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub game_text_file_path: Cow<'a, str>,
-    pub loading: Cow<'a, str>,
-    pub game_flow_scene_path: Cow<'a, str>,
-    pub camera_shake_config: Cow<'a, str>,
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub game_text_file_path: HipStr<'a>,
+    #[serde(borrow)]
+    pub loading: HipStr<'a>,
+    #[serde(borrow)]
+    pub game_flow_scene_path: HipStr<'a>,
+    #[serde(borrow)]
+    pub camera_shake_config: HipStr<'a>,
     pub cut_scene_default_unskippable_duration_first_time: u32,
     pub max_local_players: u32,
     pub max_online_players: u32,
@@ -519,239 +363,200 @@ pub struct GameManagerConfig22<'a> {
     pub other_met_value: u32,
     pub sweat_magic_mult: u32,
     pub sweat_magic_add: u32,
-    #[serde(rename = "carousel_rules")]
-    pub carousel_rules: Cow<'a, str>,
-    #[serde(rename = "alias_db_path")]
-    pub alias_db_path: Cow<'a, str>,
+    #[serde(borrow, rename = "carousel_rules")]
+    pub carousel_rules: HipStr<'a>,
+    #[serde(borrow, rename = "alias_db_path")]
+    pub alias_db_path: HipStr<'a>,
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    pub jdpaths: HashMap<u32, Cow<'a, str>>,
-    pub jdblockspath: Cow<'a, str>,
-    pub jdcommontapepath: Cow<'a, str>,
-    pub picto_component_tpl_paths: HashMap<Cow<'a, str>, Cow<'a, str>>,
-    pub dynamic_music_track_component_tpl_path: Cow<'a, str>,
-    pub anchor_tpl_path: Cow<'a, str>,
-    #[serde(rename = "songdb_scene")]
-    pub songdb_scene: Cow<'a, str>,
-    #[serde(rename = "agingbot_behavioursTpl")]
-    pub agingbot_behaviours_tpl: Cow<'a, str>,
-    #[serde(rename = "avatardb_scene")]
-    pub avatardb_scene: Cow<'a, str>,
-    #[serde(rename = "skindb_scene")]
-    pub skindb_scene: Cow<'a, str>,
-    #[serde(rename = "flagdb_scene")]
-    pub flagdb_scene: Cow<'a, str>,
-    pub wdf_player_name_prefix_on_xbox_one: Cow<'a, str>,
-    pub wdf_player_name_prefix_on_stadia: Cow<'a, str>,
-    #[serde(rename = "wdfPlayerNamePrefixNonPS4")]
-    pub wdf_player_name_prefix_non_ps4: Cow<'a, str>,
-    pub shortcut_descriptors: HashMap<Cow<'a, str>, ShortcutDesc1719<'a>>,
-    pub space_between_shortcuts: Cow<'a, str>,
+    #[serde(borrow)]
+    pub jdpaths: HashMap<u32, HipStr<'a>>,
+    #[serde(borrow)]
+    pub jdblockspath: HipStr<'a>,
+    #[serde(borrow)]
+    pub jdcommontapepath: HipStr<'a>,
+    #[serde(borrow)]
+    pub picto_component_tpl_paths: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow)]
+    pub dynamic_music_track_component_tpl_path: HipStr<'a>,
+    #[serde(borrow)]
+    pub anchor_tpl_path: HipStr<'a>,
+    #[serde(borrow, rename = "songdb_scene")]
+    pub songdb_scene: HipStr<'a>,
+    #[serde(borrow, rename = "agingbot_behavioursTpl")]
+    pub agingbot_behaviours_tpl: HipStr<'a>,
+    #[serde(borrow, rename = "avatardb_scene")]
+    pub avatardb_scene: HipStr<'a>,
+    #[serde(borrow, rename = "skindb_scene")]
+    pub skindb_scene: HipStr<'a>,
+    #[serde(borrow, rename = "flagdb_scene")]
+    pub flagdb_scene: HipStr<'a>,
+    #[serde(borrow)]
+    pub wdf_player_name_prefix_on_xbox_one: HipStr<'a>,
+    #[serde(borrow)]
+    pub wdf_player_name_prefix_on_stadia: HipStr<'a>,
+    #[serde(borrow, rename = "wdfPlayerNamePrefixNonPS4")]
+    pub wdf_player_name_prefix_non_ps4: HipStr<'a>,
+    #[serde(borrow)]
+    pub shortcut_descriptors: HashMap<HipStr<'a>, ShortcutDesc1719<'a>>,
+    #[serde(borrow)]
+    pub space_between_shortcuts: HipStr<'a>,
     pub max_controller_sleep_time: f32,
-    pub package_scene_paths: HashMap<Cow<'a, str>, Cow<'a, str>>,
-    #[serde(rename = "ed_songdb_scene")]
-    pub ed_songdb_scene: Cow<'a, str>,
-    pub cameras: HashMap<Cow<'a, str>, Cow<'a, str>>,
-    pub uiscenes: HashMap<Cow<'a, str>, Cow<'a, str>>,
-    pub banner_scenes: Vec<Cow<'a, str>>,
-    pub transition_scenes: Vec<Cow<'a, str>>,
-    pub actors_to_bundle: Vec<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub package_scene_paths: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow, rename = "ed_songdb_scene")]
+    pub ed_songdb_scene: HipStr<'a>,
+    #[serde(borrow)]
+    pub cameras: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow)]
+    pub uiscenes: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow)]
+    pub banner_scenes: Vec<HipStr<'a>>,
+    #[serde(borrow)]
+    pub transition_scenes: Vec<HipStr<'a>>,
+    #[serde(borrow)]
+    pub actors_to_bundle: Vec<HipStr<'a>>,
+    #[serde(borrow)]
     pub popupconfigs: PopupConfigList<'a>,
-    pub clubrewardconfigs: HashMap<Cow<'a, str>, ClubRewardConfig<'a>>,
+    #[serde(borrow)]
+    pub clubrewardconfigs: HashMap<HipStr<'a>, ClubRewardConfig<'a>>,
+    #[serde(borrow)]
     pub scoringparams: ScoringParams<'a>,
+    #[serde(borrow)]
     pub scoringcameraparams: ScoringCameraParams<'a>,
+    #[serde(borrow)]
     pub scoringmovespaceparams: ScoringMovespaceParams<'a>,
+    #[serde(borrow)]
     pub menuassetsparams: Vec<MenuAssetsCacheParams<'a>>,
-    pub menumusicsparams: HashMap<Cow<'a, str>, MenuMusicParams<'a>>,
-    pub remotesoundparams: HashMap<Cow<'a, str>, RemoteSoundParams<'a>>,
-    pub menu_music_multi_tracks: HashMap<Cow<'a, str>, MenuMultiTrackItem<'a>>,
+    #[serde(borrow)]
+    pub menumusicsparams: HashMap<HipStr<'a>, MenuMusicParams<'a>>,
+    #[serde(borrow)]
+    pub remotesoundparams: HashMap<HipStr<'a>, RemoteSoundParams<'a>>,
+    #[serde(borrow)]
+    pub menu_music_multi_tracks: HashMap<HipStr<'a>, MenuMultiTrackItem<'a>>,
+    #[serde(borrow)]
     pub menumusicconfig: MenuMusicConfig<'a>,
+    #[serde(borrow)]
     pub rankdescriptor: RankDescriptor<'a>,
+    #[serde(borrow)]
     pub unlimitedupsellsonglist: Vec<UnlimitedUpsellSongList<'a>>,
-    #[serde(rename = "defaultJDUVideoPreviewSubtitles")]
+    #[serde(borrow, rename = "defaultJDUVideoPreviewSubtitles")]
     pub default_jdu_video_preview_subtitles: UnlimitedUpsellSubtitles<'a>,
+    #[serde(borrow)]
     pub customizableitemconfig: CustomizableItemConfig<'a>,
-    #[serde(rename = "scheduled_questSetup")]
+    #[serde(borrow, rename = "scheduled_questSetup")]
     pub scheduled_quest_setup: ScheduledQuestSetup<'a>,
+    #[serde(borrow)]
     pub countryentries: Vec<CountryEntry<'a>>,
-    pub default_country_code: Cow<'a, str>,
-    pub credits_textbox_path: Cow<'a, str>,
-    pub countdown_delays: HashMap<Cow<'a, str>, u32>,
+    #[serde(borrow)]
+    pub default_country_code: HipStr<'a>,
+    #[serde(borrow)]
+    pub credits_textbox_path: HipStr<'a>,
+    #[serde(borrow)]
+    pub countdown_delays: HashMap<HipStr<'a>, u32>,
+    #[serde(borrow)]
     pub autodance_effects_list: Vec<AutoDanceEffectData<'a>>,
-    pub autodance_transition_sound_path: Cow<'a, str>,
+    #[serde(borrow)]
+    pub autodance_transition_sound_path: HipStr<'a>,
     pub autodance_transition_sound_synchronise_sample: u32,
-    pub tutorials_contents: HashMap<Cow<'a, str>, TutorialContent<'a>>,
+    #[serde(borrow)]
+    pub tutorials_contents: HashMap<HipStr<'a>, TutorialContent<'a>>,
+    #[serde(borrow)]
     pub tutorials: Vec<TutorialDesc<'a>>,
-    pub redeem_maps: HashMap<Cow<'a, str>, Vec<Cow<'a, str>>>,
-    #[serde(rename = "UplayRewards")]
+    #[serde(borrow)]
+    pub redeem_maps: HashMap<HipStr<'a>, Vec<HipStr<'a>>>,
+    #[serde(borrow, rename = "UplayRewards")]
     pub uplay_rewards: Vec<UplayReward<'a>>,
     pub stars_6th_step_song_score: u32,
     pub stars_7th_step_song_score: u32,
     pub perfect_feedback_min_score: u32,
     pub min_song_nb_for_shuffle: u32,
+    #[serde(borrow)]
     pub wdf_boss_entries: Vec<WDFBossEntry<'a>>,
+    #[serde(borrow)]
     pub itemcolorlookup: ItemColorLookUp<'a>,
-    #[serde(rename = "defaultJDUVideoPreview")]
-    pub default_jdu_video_preview: Cow<'a, str>,
-    #[serde(rename = "defaultJDUVideoPreview_kids")]
-    pub default_jdu_video_preview_kids: Cow<'a, str>,
+    #[serde(borrow, rename = "defaultJDUVideoPreview")]
+    pub default_jdu_video_preview: HipStr<'a>,
+    #[serde(borrow, rename = "defaultJDUVideoPreview_kids")]
+    pub default_jdu_video_preview_kids: HipStr<'a>,
     pub jd_points_per_star: Vec<u32>,
-    pub banned_maps_in_chinese: Vec<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub banned_maps_in_chinese: Vec<HipStr<'a>>,
+    #[serde(borrow)]
     pub collectiblealbum: CollectibleAlbum<'a>,
+    #[serde(borrow)]
     pub gachaconfig: GachaConfig<'a>,
+    #[serde(borrow)]
     pub config_files_path: ConfigFilesPath22<'a>,
-    pub watermark: Cow<'a, str>,
-    pub grid_actors_to_preload: HashMap<Cow<'a, str>, GridActorsToPreload<'a>>,
-    pub grid_item_descriptors: HashMap<Cow<'a, str>, CarouselElementDesc<'a>>,
-    pub tabbed_grids_layout_descriptors: HashMap<Cow<'a, str>, LayoutTabbedGrids<'a>>,
+    #[serde(borrow)]
+    pub watermark: HipStr<'a>,
+    #[serde(borrow)]
+    pub grid_actors_to_preload: HashMap<HipStr<'a>, GridActorsToPreload<'a>>,
+    #[serde(borrow)]
+    pub grid_item_descriptors: HashMap<HipStr<'a>, CarouselElementDesc<'a>>,
+    #[serde(borrow)]
+    pub tabbed_grids_layout_descriptors: HashMap<HipStr<'a>, LayoutTabbedGrids<'a>>,
+    #[serde(borrow)]
     pub home_data_config: HomeDataConfig<'a>,
+    #[serde(borrow)]
     pub home_data_tips_config: Vec<HomeDataTipEntry<'a>>,
-    pub home_data_default_article_thumbnail: Cow<'a, str>,
-    pub home_data_online_incentive_article_thumbnail: Cow<'a, str>,
-    #[serde(rename = "special_characters")]
-    pub special_characters: Vec<Cow<'a, str>>,
-    #[serde(rename = "derived_letters")]
-    pub derived_letters: HashMap<Cow<'a, str>, Cow<'a, str>>,
-    #[serde(rename = "search_labels")]
+    #[serde(borrow)]
+    pub home_data_default_article_thumbnail: HipStr<'a>,
+    #[serde(borrow)]
+    pub home_data_online_incentive_article_thumbnail: HipStr<'a>,
+    #[serde(borrow, rename = "special_characters")]
+    pub special_characters: Vec<HipStr<'a>>,
+    #[serde(borrow, rename = "derived_letters")]
+    pub derived_letters: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow, rename = "search_labels")]
     pub search_labels: SongsSearchTags<'a>,
+    #[serde(borrow)]
     pub mapsobjectives: MapsObjectives<'a>,
+    #[serde(borrow)]
     pub maps_goals: MapsGoals<'a>,
     pub legacy_alias_id: u32,
     #[serde(rename = "JDUAliasId")]
     pub jdu_alias_id: u32,
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+    #[serde(borrow)]
     pub avatarsobjectives: AvatarsObjectives<'a>,
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+    #[serde(borrow)]
     pub aliasesobjectives: AliasesObjectives<'a>,
-    pub specific_cases_check_order: Vec<Cow<'a, str>>,
-    pub on_fly_notification_types: HashMap<Cow<'a, str>, OnFlyNotificationTypeParams<'a>>,
-    pub bubbles_prioritized_notif_types_groups: Vec<Vec<Cow<'a, str>>>,
-    pub reward_screen_prioritized_notif_types: Vec<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub specific_cases_check_order: Vec<HipStr<'a>>,
+    #[serde(borrow)]
+    pub on_fly_notification_types: HashMap<HipStr<'a>, OnFlyNotificationTypeParams<'a>>,
+    #[serde(borrow)]
+    pub bubbles_prioritized_notif_types_groups: Vec<Vec<HipStr<'a>>>,
+    #[serde(borrow)]
+    pub reward_screen_prioritized_notif_types: Vec<HipStr<'a>>,
     pub bubbles_pile_delay_before_exit: Vec<f32>,
-    pub new_notification_tree: HashMap<Cow<'a, str>, Vec<Cow<'a, str>>>,
+    #[serde(borrow)]
+    pub new_notification_tree: HashMap<HipStr<'a>, Vec<HipStr<'a>>>,
+    #[serde(borrow)]
     pub recap_config: RecapConfig<'a>,
+    #[serde(borrow)]
     pub offline_recommendation: OfflineRecommendation<'a>,
-    #[serde(rename = "whats_new_configs")]
+    #[serde(borrow, rename = "whats_new_configs")]
     pub whats_new_configs: WhatsNewConfigs<'a>,
-    #[serde(rename = "wdf_linear_rewards_path")]
-    pub wdf_linear_rewards_path: Cow<'a, str>,
+    #[serde(borrow, rename = "wdf_linear_rewards_path")]
+    pub wdf_linear_rewards_path: HipStr<'a>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigFilesPath22<'a> {
-    pub gachacontent: Cow<'a, str>,
-    pub ftuesteps: Cow<'a, str>,
-    pub objectives: Cow<'a, str>,
-    pub playlist: Cow<'a, str>,
-    pub portraitborders: Cow<'a, str>,
-    pub quickplayrules: Cow<'a, str>,
-    pub scheduledquests: Cow<'a, str>,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
-#[serde(rename_all = "UPPERCASE", deny_unknown_fields)]
-pub struct Actor22<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub wip: u32,
-    pub lowupdate: u32,
-    pub update_layer: u32,
-    pub procedural: u32,
-    pub startpaused: u32,
-    pub forceisenvironment: u32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub components: Vec<Template22<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-pub struct AvatarDescription2022<'a> {
-    #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<&'a str>,
-    pub jd_version: u16,
-    pub relative_song_name: Cow<'a, str>,
-    #[serde(rename = "RelativeQuestID")]
-    pub relative_quest_id: Cow<'a, str>,
-    #[serde(rename = "RelativeWDFBossName")]
-    pub relative_wdf_boss_name: Cow<'a, str>,
-    #[serde(rename = "RelativeWDFTournamentName")]
-    pub relative_wdf_tournament_name: Cow<'a, str>,
-    #[serde(rename = "RelativeJDRank")]
-    pub relative_jd_rank: Cow<'a, str>,
-    pub relative_game_mode_name: Cow<'a, str>,
-    pub sound_family: Cow<'a, str>,
-    pub status: u8,
-    pub unlock_type: u8,
-    pub mojo_price: u16,
-    pub wdf_level: u8,
-    pub count_in_progression: u8,
-    pub actor_path: Cow<'a, str>,
-    pub phone_image: Cow<'a, str>,
-    pub avatar_id: u16,
-    #[serde(rename = "UsedAsCoach_MapName")]
-    pub used_as_coach_map_name: Cow<'a, str>,
-    #[serde(rename = "UsedAsCoach_CoachId")]
-    pub used_as_coach_coach_id: u8,
-    #[serde(rename = "specialEffect")]
-    pub special_effect: u8,
-    #[serde(rename = "mainAvatarId")]
-    pub main_avatar_id: u16,
-}
-
-impl Default for AvatarDescription2022<'static> {
-    fn default() -> Self {
-        Self {
-            class: Option::default(),
-            jd_version: 2022,
-            relative_song_name: Cow::default(),
-            relative_quest_id: Cow::default(),
-            relative_wdf_boss_name: Cow::default(),
-            relative_wdf_tournament_name: Cow::default(),
-            relative_jd_rank: Cow::default(),
-            relative_game_mode_name: Cow::default(),
-            sound_family: Cow::default(),
-            status: Default::default(),
-            unlock_type: Default::default(),
-            mojo_price: 0,
-            wdf_level: 1,
-            count_in_progression: 1,
-            actor_path: Cow::default(),
-            phone_image: Cow::default(),
-            avatar_id: Default::default(),
-            used_as_coach_map_name: Cow::default(),
-            used_as_coach_coach_id: Default::default(),
-            special_effect: 0,
-            main_avatar_id: u16::MAX,
-        }
-    }
-}
-
-impl AvatarDescription2022<'_> {
-    #[must_use]
-    pub fn into_owned(self) -> AvatarDescription2022<'static> {
-        AvatarDescription2022 {
-            class: None,
-            jd_version: self.jd_version,
-            relative_song_name: Cow::Owned(self.relative_song_name.into_owned()),
-            relative_quest_id: Cow::Owned(self.relative_quest_id.into_owned()),
-            relative_wdf_boss_name: Cow::Owned(self.relative_wdf_boss_name.into_owned()),
-            relative_wdf_tournament_name: Cow::Owned(
-                self.relative_wdf_tournament_name.into_owned(),
-            ),
-            relative_jd_rank: Cow::Owned(self.relative_jd_rank.into_owned()),
-            relative_game_mode_name: Cow::Owned(self.relative_game_mode_name.into_owned()),
-            sound_family: Cow::Owned(self.sound_family.into_owned()),
-            status: self.status,
-            unlock_type: self.unlock_type,
-            mojo_price: self.mojo_price,
-            wdf_level: self.wdf_level,
-            count_in_progression: self.count_in_progression,
-            actor_path: Cow::Owned(self.actor_path.into_owned()),
-            phone_image: Cow::Owned(self.phone_image.into_owned()),
-            avatar_id: self.avatar_id,
-            used_as_coach_map_name: Cow::Owned(self.used_as_coach_map_name.into_owned()),
-            used_as_coach_coach_id: self.used_as_coach_coach_id,
-            special_effect: self.special_effect,
-            main_avatar_id: self.main_avatar_id,
-        }
-    }
+    #[serde(borrow)]
+    pub gachacontent: HipStr<'a>,
+    #[serde(borrow)]
+    pub ftuesteps: HipStr<'a>,
+    #[serde(borrow)]
+    pub objectives: HipStr<'a>,
+    #[serde(borrow)]
+    pub playlist: HipStr<'a>,
+    #[serde(borrow)]
+    pub portraitborders: HipStr<'a>,
+    #[serde(borrow)]
+    pub quickplayrules: HipStr<'a>,
+    #[serde(borrow)]
+    pub scheduledquests: HipStr<'a>,
 }

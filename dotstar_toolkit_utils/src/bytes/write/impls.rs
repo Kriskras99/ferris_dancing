@@ -12,8 +12,8 @@ where
     T: BinarySerialize,
     T::Ctx: Copy,
 {
-    type Input = [T::Input; N];
     type Ctx = T::Ctx;
+    type Input = [T::Input; N];
     fn serialize_at_with_ctx(
         input: Self::Input,
         writer: &mut (impl WriteAt + ?Sized),

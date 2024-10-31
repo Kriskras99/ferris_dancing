@@ -44,7 +44,7 @@ pub enum FilesToAdd<'a> {
 }
 
 /// Wrapper around [`export`]
-pub fn main(cli: &Build) -> Result<(), anyhow::Error> {
+pub fn main(cli: &Build) -> Result<(), Error> {
     export(&cli.source, &cli.destination, cli.threads)
 }
 

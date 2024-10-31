@@ -10,9 +10,7 @@ members = [
     "nx_opus",
     "rgbcx-rs", 
     "rgbcx-sys",
-    "rgbcx", 
-    "ubiart_toolkit_isc_types", 
-    "ubiart_toolkit_json_types", 
+    "rgbcx",
     "ubiart_toolkit_shared_types", 
     "ubiart_toolkit",
     "wii_toolkit",
@@ -38,11 +36,111 @@ debug = "line-tables-only"
 #[profile.dev.package.dotstar_toolkit_utils]
 #opt-level = 3
 
-# [profile.dev.package."*"]
-# opt-level = 3
+[profile.dev.package."aes"]
+opt-level = 3
+[profile.dev.package."anyhow"]
+opt-level = 3
+[profile.dev.package."arbitrary"]
+opt-level = 3
+[profile.dev.package."bindgen"]
+opt-level = 3
+[profile.dev.package."bitflags"]
+opt-level = 3
+[profile.dev.package."bit-vec"]
+opt-level = 3
+[profile.dev.package."cbc"]
+opt-level = 3
+[profile.dev.package."cipher"]
+opt-level = 3
+[profile.dev.package."clap"]
+opt-level = 3
+[profile.dev.package."crossbeam"]
+opt-level = 3
+[profile.dev.package."datatest-stable"]
+opt-level = 3
+[profile.dev.package."dotstar_toolkit_utils"]
+opt-level = 3
+[profile.dev.package."flate2"]
+opt-level = 3
+[profile.dev.package."gc_adpcm"]
+opt-level = 3
+[profile.dev.package."gtx"]
+opt-level = 3
+[profile.dev.package."hash32"]
+opt-level = 3
+[profile.dev.package."hipstr"]
+opt-level = 3
+[profile.dev.package."hound"]
+opt-level = 3
+[profile.dev.package."image"]
+opt-level = 3
+[profile.dev.package."image_dds"]
+opt-level = 3
+[profile.dev.package."itertools"]
+opt-level = 3
+[profile.dev.package."memmap2"]
+opt-level = 3
+[profile.dev.package."nx_opus"]
+opt-level = 3
+[profile.dev.package."ogg"]
+opt-level = 3
+[profile.dev.package."opus"]
+opt-level = 3
+[profile.dev.package."ownable"]
+opt-level = 3
+[profile.dev.package."path-clean"]
+opt-level = 3
+[profile.dev.package."positioned-io"]
+opt-level = 3
+[profile.dev.package."quick-xml"]
+opt-level = 3
+[profile.dev.package."regex"]
+opt-level = 3
+[profile.dev.package."rgbcx"]
+opt-level = 3
+[profile.dev.package."rgbcx-sys"]
+opt-level = 3
+[profile.dev.package."rubato"]
+opt-level = 3
+[profile.dev.package."serde"]
+opt-level = 3
+[profile.dev.package."serde_json"]
+opt-level = 3
+[profile.dev.package."serde_with"]
+opt-level = 3
+[profile.dev.package."simd-json"]
+opt-level = 3
+[profile.dev.package."simdutf8"]
+opt-level = 3
+[profile.dev.package."stable_deref_trait"]
+opt-level = 3
+[profile.dev.package."superstruct"]
+opt-level = 3
+[profile.dev.package."tegra_swizzle"]
+opt-level = 3
+[profile.dev.package."test_eq"]
+opt-level = 3
+[profile.dev.package."texpresso"]
+opt-level = 3
+[profile.dev.package."thiserror"]
+opt-level = 3
+[profile.dev.package."tracing"]
+opt-level = 3
+[profile.dev.package."tracing-subscriber"]
+opt-level = 3
+[profile.dev.package."ubiart_toolkit_shared_types"]
+opt-level = 3
+[profile.dev.package."wiiu_swizzle"]
+opt-level = 3
+[profile.dev.package."yoke"]
+opt-level = 3
+[profile.dev.package."zip"]
+opt-level = 3
+[profile.dev.package."zopfli"]
+opt-level = 3
 
 [workspace.lints.clippy]
-all = { level = "deny", priority = -1 }
+all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 cargo = { level = "warn", priority = -1 }
@@ -54,6 +152,8 @@ missing_assert_message = "deny"
 missing_panics_doc = "deny"
 allow_attributes_without_reason = "deny"
 
+float_cmp = "allow" # Used a lot in deserialize functions for checking
+cognitive_complexity = "allow" # most deserialize functions are "too" complex
 multiple_crate_versions = "allow" # Not much we can do about this
 similar_names = "allow" # triggers too often
 doc_markdown = "allow" # unreliable
@@ -61,6 +161,7 @@ missing_errors_doc = "allow" # the error types are descriptive enough
 option_if_let_else = "allow" # much less readable than the original
 too_many_lines = "allow" # parsers and writers are large and not easy to split
 module_name_repetitions = "allow" # they're named like that for a reason
+if_not_else = "allow" # code is easier to follow without the lint
 struct_field_names = "allow"
 
 # TODO: Too many undocumented stuff in ubiart_toolkit
@@ -69,7 +170,7 @@ struct_field_names = "allow"
 
 [workspace.dependencies]
 aes = { version = "0.8.4", default-features = false }
-anyhow = { version = "1.0.90", default-features = false, features = ["std", "backtrace"] }
+anyhow = { version = "1.0.91", default-features = false, features = ["std", "backtrace"] }
 arbitrary = { version = "1.3.2", default-features = false, features = ["derive"] }
 bindgen = { version = "0.70.1", default-features = false}
 bitflags = { version = "2.6.0", default-features = false, features = ["std"] }
@@ -87,7 +188,7 @@ hash32 = { version = "0.3.1", default-features = false }
 hipstr= { path = "hipstr", default-features = false, features = ["std", "serde"]}
 hound = { version = "3.5.1", default-features = false }
 image = { version = "0.25.4", default-features = false, features = ["png"] }
-image_dds = { version = "0.6.0", default-features = false, features = ["ddsfile", "image"]}
+image_dds = { version = "0.6.1", default-features = false, features = ["ddsfile", "image"]}
 itertools = { version = "0.13.0", default-features = false }
 memmap2 = { version = "0.9.5", default-features = false, features = ["stable_deref_trait"] }
 nx_opus = { path = "nx_opus" }
@@ -97,26 +198,26 @@ opus = { version = "0.3.0", default-features = false }
 ownable = { version = "0.6.2", default-features = false, features = ["std"]}
 path-clean = { version = "1.0.1", default-features = false }
 positioned-io = { version = "0.3.3", default-features = false }
-quick-xml = { version = "0.36.2", default-features = false, features = ["serialize", "overlapped-lists"] }
-regex = { version = "1.11.0", default-features = false, features = ["std", "perf"] }
+quick-xml = { version = "0.37.0", default-features = false, features = ["serialize", "overlapped-lists"] }
+regex = { version = "1.11.1", default-features = false, features = ["std", "perf"] }
 rgbcx = { path = "rgbcx" }
 rgbcx-sys = { path = "rgbcx-sys" }
-rubato = { version = "0.16.0", default-features = false, features = []}
-serde = { version = "1.0.210", default-features = false, features = ["std", "derive"] }
+rubato = { version = "0.16.1", default-features = false, features = []}
+serde = { version = "1.0.214", default-features = false, features = ["std", "derive"] }
 serde_json = { version = "1.0.132", default-features = false, features = ["std"] }
 serde_with = { version = "3.11.0", default-features = false, features = ["std", "macros"] }
-simd-json = { version = "0.14.1", default-features = false, features = ["runtime-detection", "swar-number-parsing"]}
+simd-json = { version = "0.14.2", default-features = false, features = ["runtime-detection", "swar-number-parsing"]}
 simdutf8 = { version = "0.1.5", default-features = false, features = ["std", "aarch64_neon"]}
 stable_deref_trait = { version = "1.2.0", default-features = false, features = ["std"] }
+superstruct = { version = "0.8.0", default-features = false, features = [] }
 tegra_swizzle = { version = "0.4.0", default-features = false, features = ["std"]}
+test_eq = { version = "0.1.1", default-features = true }
 texpresso = { version = "2.0.1", default-features = false }
-thiserror = { version = "1.0.64", default-features = false }
+thiserror = { version = "1.0.65", default-features = false }
 tracing = { version = "0.1.40", default-features = false, features = ["std", "attributes"] }
 tracing-subscriber = { version = "0.3.18", features = ["std", "fmt", "ansi", "local-time", "time", "env-filter"] }
 ubiart_toolkit = { path = "ubiart_toolkit" }
 ubiart_toolkit_shared_types = { path = "ubiart_toolkit_shared_types" }
-ubiart_toolkit_json_types = { path = "ubiart_toolkit_json_types" }
-ubiart_toolkit_isc_types = { path = "ubiart_toolkit_isc_types" }
 wiiu_swizzle = { version = "0.3.0", default-features = false, features = ["std"] }
 yoke = { version = "0.7.4", default-features = false, features = ["alloc", "derive"] }
 zip = { version = "2.2.0", default-features = false, features = ["deflate-flate2"] }

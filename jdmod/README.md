@@ -5,6 +5,7 @@ The goal is to be able to import every Just Dance game ever made and to be made,
 It can import and export songs, playlists, quests/objectives, avatars, aliases, portraitborders, gacha machine, and search labels.
 
 Platform support matrix:
+
 |        | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 | 2020 | 舞力全开 | 2021 | 2022 |
 | ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | Switch |      |      |      |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |

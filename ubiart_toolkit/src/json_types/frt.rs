@@ -1,5 +1,4 @@
-use std::borrow::Cow;
-
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "full_json_types")]
@@ -7,7 +6,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct FeedbackFXManager<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
     pub bus_list: Vec<Buses<'a>>,
 }
 
@@ -16,7 +16,9 @@ pub struct FeedbackFXManager<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct Buses<'a> {
     #[serde(rename = "__class", default, skip_serializing_if = "Option::is_none")]
-    class: Option<&'a str>,
-    pub actor_type: Cow<'a, str>,
-    pub bus: Cow<'a, str>,
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub actor_type: HipStr<'a>,
+    #[serde(borrow)]
+    pub bus: HipStr<'a>,
 }

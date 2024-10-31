@@ -1,14 +1,16 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use std::borrow::Cow;
-
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MovementSpaceMove<'a> {
-    pub name: Cow<'a, str>,
-    pub map: Cow<'a, str>,
-    pub device: Cow<'a, str>,
+    #[serde(borrow)]
+    pub name: HipStr<'a>,
+    #[serde(borrow)]
+    pub map: HipStr<'a>,
+    #[serde(borrow)]
+    pub device: HipStr<'a>,
     pub data: Vec<(f32, f32)>,
     pub version: u32,
     pub unk3: f32,

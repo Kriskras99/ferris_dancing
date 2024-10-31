@@ -1,20 +1,17 @@
 //! Contains the parser implementation for IPK bundles
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u32be, u64be},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_any, test_eq,
-    testing::TestResult,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u32be, u64be},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
+use test_eq::{test_any, test_eq};
 
 use super::{
     Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR, UNK1, UNK2, UNK3,
     UNK6,
 };
-use crate::utils::{self, Game, PathId, Platform, SplitPath, UniqueGameId};
+use crate::utils::{Game, PathId, Platform, SplitPath, UniqueGameId};
 
 impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
     type Ctx = ();
@@ -70,8 +67,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
             test_any!(is_cooked_u32, IS_COOKED)?;
 
             // This is swapped for one game
-            if game_platform.game == Game::JustDance2014
-                && game_platform.platform == crate::utils::Platform::Wii
+            if game_platform.game == Game::JustDance2014 && game_platform.platform == Platform::Wii
             {
                 (filename, path) = (path, filename);
             } else if path.contains('.') || filename.contains('/') {
@@ -117,7 +113,7 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
 
         let header_end = *position;
 
-        if game_platform.platform == utils::Platform::Nx
+        if game_platform.platform == Platform::Nx
             && (game_platform.game == Game::JustDance2020
                 || game_platform.game == Game::JustDance2021
                 || game_platform.game == Game::JustDance2022
@@ -125,11 +121,11 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         {
             // Make sure the separator is here
             match test_eq!((header_end + 0x4), base_offset) {
-                TestResult::Ok => {
+                Ok(()) => {
                     let separator = reader.read_at::<u32be>(position)?;
                     test_eq!(separator, SEPARATOR)?;
                 }
-                result @ TestResult::Err(_) => result?,
+                result @ Err(_) => result?,
             }
         } else {
             // Make sure the separator is not here

@@ -3,20 +3,23 @@
 //!
 //! Current implementation is a bit wonky. A better option would be too manually match all avatar ids
 //! to names per game. Then Just Dance 2017 avatars can also be imported.
-use std::{borrow::Cow, collections::HashMap, fs::File, io::Write, sync::OnceLock};
+use std::{collections::HashMap, fs::File, io::Write, sync::LazyLock};
 
 use anyhow::{anyhow, Context, Error};
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserialize,
-    test_eq,
     vfs::{VirtualFile, VirtualPath},
 };
+use hipstr::HipStr;
+use ownable::traits::IntoOwned;
+use test_eq::test_eq;
 use ubiart_toolkit::{
     cooked,
-    json_types::{
-        v16::AvatarDescription16, v17::AvatarDescription17, v1819::AvatarDescription1819,
-        v22::AvatarDescription2022, AvatarsObjectives,
+    cooked::tpl::types::{
+        AvatarDescription, AvatarDescription16, AvatarDescription17, AvatarDescription1819,
+        AvatarDescription2022,
     },
+    json_types::AvatarsObjectives,
     utils::Game,
 };
 
@@ -29,20 +32,20 @@ use crate::{
 };
 
 /// Load existing avatars in the mod
-fn load_avatar_config(is: &ImportState<'_>) -> Result<HashMap<String, Avatar<'static>>, Error> {
+fn load_avatar_config(
+    is: &ImportState<'_>,
+) -> Result<HashMap<HipStr<'static>, Avatar<'static>>, Error> {
     let avatars_config_path = is.dirs.avatars().join("avatars.json");
-    if avatars_config_path.exists() {
-        let file = File::open(&avatars_config_path)?;
-        Ok(serde_json::from_reader(file)?)
-    } else {
-        Ok(HashMap::new())
-    }
+    let avatars_file = std::fs::read(&avatars_config_path).unwrap_or_else(|_| vec![b'{', b'}']);
+    let avatars = serde_json::from_slice::<HashMap<HipStr, Avatar>>(&avatars_file)?;
+    let avatars = avatars.into_owned();
+    Ok(avatars)
 }
 
 /// Save the avatar metadata to avatars.json
 fn save_avatar_config(
     is: &ImportState<'_>,
-    avatars: &HashMap<String, Avatar>,
+    avatars: &HashMap<HipStr, Avatar>,
 ) -> Result<(), Error> {
     let avatars_config_path = is.dirs.avatars().join("avatars.json");
     let file = File::create(avatars_config_path)?;
@@ -62,9 +65,7 @@ fn save_images(
     std::fs::create_dir(&avatar_named_dir_path).with_context(|| {
         format!("Tried to create {avatar_named_dir_path:?}, but it already exists!")
     })?;
-    let alt_actor_file = is
-        .vfs
-        .open(cook_path(actor_path, is.ugi.platform)?.as_ref())?;
+    let alt_actor_file = is.vfs.open(cook_path(actor_path, is.ugi)?.as_ref())?;
     let alt_actor = cooked::act::Actor::deserialize_with(&alt_actor_file, is.ugi)?;
 
     let image_actor = alt_actor
@@ -76,14 +77,14 @@ fn save_images(
     // Save decooked image
     let image_path = mtg.files[0].to_string();
     test_eq!(image_path.is_empty(), false)?;
-    let cooked_image_path = cook_path(&image_path, is.ugi.platform)?;
+    let cooked_image_path = cook_path(&image_path, is.ugi)?;
     let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?, is.ugi)
         .with_context(|| format!("Failed to decode {cooked_image_path}!"))?;
-    let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
+    let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_str());
     decooked_image.save(&avatar_image_path)?;
 
     // Save phone image
-    let avatar_image_phone_path = is.dirs.avatars().join(avatar.image_phone_path.as_ref());
+    let avatar_image_phone_path = is.dirs.avatars().join(avatar.image_phone_path.as_str());
     let mut avatar_image_phone_file = File::create(avatar_image_phone_path)?;
     avatar_image_phone_file.write_all(&is.vfs.open(phone_image.as_ref())?)?;
 
@@ -93,17 +94,17 @@ fn save_images(
 /// Minimum information to correctly parse an avatar
 struct MinAvatarDesc<'a> {
     /// The id in the current game
-    pub avatar_id: u16,
+    pub avatar_id: u32,
     /// The sound effect
-    pub sound_family: Cow<'a, str>,
+    pub sound_family: HipStr<'a>,
     /// Unkown, so better keep it around
-    pub status: u8,
+    pub status: u32,
     /// How is it unlocked in the game
-    pub unlock_type: u8,
+    pub unlock_type: u32,
     /// Path to the actor
-    pub actor_path: Cow<'a, str>,
+    pub actor_path: HipStr<'a>,
     /// Path to the image for the phone controller
-    pub phone_image: Cow<'a, str>,
+    pub phone_image: HipStr<'a>,
 }
 
 impl<'a> From<AvatarDescription2022<'a>> for MinAvatarDesc<'a> {
@@ -149,11 +150,22 @@ impl<'a> From<AvatarDescription16<'a>> for MinAvatarDesc<'a> {
     fn from(value: AvatarDescription16<'a>) -> Self {
         Self {
             avatar_id: value.avatar_id,
-            sound_family: Cow::default(),
+            sound_family: HipStr::default(),
             status: value.status,
             unlock_type: value.unlock_type,
             actor_path: value.actor_path,
             phone_image: value.phone_image,
+        }
+    }
+}
+
+impl<'a> From<AvatarDescription<'a>> for MinAvatarDesc<'a> {
+    fn from(value: AvatarDescription<'a>) -> Self {
+        match value {
+            AvatarDescription::V16(desc) => desc.into(),
+            AvatarDescription::V17(desc) => desc.into(),
+            AvatarDescription::V1819(desc) => desc.into(),
+            AvatarDescription::V2022(desc) => desc.into(),
         }
     }
 }
@@ -163,8 +175,7 @@ fn parse_actor_v20v22<'a>(
     is: &ImportState,
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
-    let template = cooked::json::parse_v22(file, is.lax)?;
-    let mut actor_template = template.into_actor()?;
+    let mut actor_template = cooked::tpl::parse(file, is.ugi, is.lax)?;
     test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
         .components
@@ -178,8 +189,7 @@ fn parse_actor_v18v19<'a>(
     is: &ImportState,
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
-    let template = cooked::json::parse_v19(file, is.lax)?;
-    let mut actor_template = template.into_actor()?;
+    let mut actor_template = cooked::tpl::parse(file, is.ugi, is.lax)?;
     test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
         .components
@@ -193,8 +203,7 @@ fn parse_actor_v17<'a>(
     is: &ImportState,
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
-    let template = cooked::json::parse_v17(file, is.lax)?;
-    let mut actor_template = template.into_actor()?;
+    let mut actor_template = cooked::tpl::parse(file, is.ugi, is.lax)?;
     test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
         .components
@@ -208,8 +217,7 @@ fn parse_actor_v16<'a>(
     is: &ImportState,
     file: &'a VirtualFile,
 ) -> Result<MinAvatarDesc<'a>, Error> {
-    let template = cooked::json::parse_v16(file, is.lax)?;
-    let mut actor_template = template.into_actor()?;
+    let mut actor_template = cooked::tpl::parse(file, is.ugi, is.lax)?;
     test_eq!(actor_template.components.len(), 2)?;
     let avatar_desc = actor_template
         .components
@@ -227,15 +235,13 @@ pub fn import(
     let empty_objectives = HashMap::new();
     println!("Importing avatars...");
 
-    let mut avatars = load_avatar_config(is)?;
-
     // Open the avatardb and avatarsobjectives (which might be empty)
-    let avatardb_file = is
-        .vfs
-        .open(cook_path(avatardb_scene, is.ugi.platform)?.as_ref())?;
-    let avatardb = cooked::isc::parse(&avatardb_file)?;
+    let avatardb_file = is.vfs.open(cook_path(avatardb_scene, is.ugi)?.as_ref())?;
+    let avatardb = cooked::isc::parse(&avatardb_file, is.ugi)?;
     let avatarsobjectives = avatarsobjectives.unwrap_or(&empty_objectives);
     let mut avatar_description_files = Vec::with_capacity(avatardb.scene.actors.len());
+
+    let mut avatars = load_avatar_config(is)?;
 
     for actor in avatardb.scene.actors {
         let actor = actor.actor()?;
@@ -243,7 +249,7 @@ pub fn import(
         // Extract avatar description from template
         let file = is
             .vfs
-            .open(cook_path(actor.lua.as_ref(), is.ugi.platform)?.as_ref())?;
+            .open(cook_path(actor.lua.as_ref(), is.ugi)?.as_ref())?;
         avatar_description_files.push(file);
     }
 
@@ -270,17 +276,17 @@ pub fn import(
             let avatar_image_path = format!("{name}/avatar.png");
             let avatar_image_phone_path = format!("{name}/avatar_phone.png");
 
-            let main_avatar = avatar_info.main_avatar().map(Cow::Borrowed);
+            let main_avatar = avatar_info.main_avatar().map(HipStr::borrowed);
 
             let avatar = Avatar {
-                relative_song_name: Cow::Borrowed(avatar_info.map),
+                relative_song_name: HipStr::borrowed(avatar_info.map),
                 sound_family: avatar_desc.sound_family,
                 status: avatar_desc.status,
                 unlock_type: UnlockType::from_unlock_type(
                     avatar_desc.unlock_type,
                     avatarsobjectives.get(&avatar_desc.avatar_id),
                 )?,
-                used_as_coach_map_name: Cow::Borrowed(avatar_info.map),
+                used_as_coach_map_name: HipStr::borrowed(avatar_info.map),
                 used_as_coach_coach_id: avatar_info.coach,
                 special_effect: avatar_info.special_effect,
                 main_avatar,
@@ -297,7 +303,7 @@ pub fn import(
                 &avatar_desc.phone_image,
             )?;
 
-            avatars.insert(name.to_string(), avatar);
+            avatars.insert(HipStr::borrowed(name).into_owned(), avatar);
         }
     }
 
@@ -311,16 +317,16 @@ pub fn import(
 /// Imports avatars that were not in the avatar database
 fn import_unreferenced_avatars(
     is: &ImportState<'_>,
-    avatars: &mut HashMap<String, Avatar>,
+    avatars: &mut HashMap<HipStr, Avatar>,
 ) -> Result<(), Error> {
-    let import_path = cook_path("world/avatars/", is.ugi.platform)?;
+    let import_path = cook_path("world/avatars/", is.ugi)?;
     for avatar_id in is
         .vfs
         .walk_filesystem(import_path.as_ref())?
         .filter(|p| p.file_name().is_some_and(|s| s.ends_with("avatar.png.ckd")))
         .filter_map(VirtualPath::parent)
         .filter_map(VirtualPath::file_name)
-        .flat_map(str::parse::<u16>)
+        .flat_map(str::parse::<u32>)
     {
         let avatar_info = match get_name(is.ugi.game, avatar_id) {
             Ok(avatar_info) => avatar_info,
@@ -341,14 +347,14 @@ fn import_unreferenced_avatars(
             let avatar_image_path = format!("{name}/avatar.png");
             let avatar_image_phone_path = format!("{name}/avatar_phone.png");
 
-            let main_avatar = avatar_info.main_avatar().map(Cow::Borrowed);
+            let main_avatar = avatar_info.main_avatar().map(HipStr::borrowed);
 
             let avatar = Avatar {
-                relative_song_name: Cow::Borrowed(avatar_info.map),
-                sound_family: Cow::Borrowed("AVTR_Common_Brand"),
+                relative_song_name: HipStr::borrowed(avatar_info.map),
+                sound_family: HipStr::borrowed("AVTR_Common_Brand"),
                 status: 1,
                 unlock_type: UnlockType::Unlocked,
-                used_as_coach_map_name: Cow::Borrowed(avatar_info.map),
+                used_as_coach_map_name: HipStr::borrowed(avatar_info.map),
                 used_as_coach_coach_id: avatar_info.coach,
                 special_effect: avatar_info.special_effect,
                 main_avatar,
@@ -358,16 +364,14 @@ fn import_unreferenced_avatars(
             };
 
             // Save decooked image
-            let cooked_image_path = cook_path(
-                &format!("world/avatars/{avatar_id:0>4}/avatar.png"),
-                is.ugi.platform,
-            )?;
+            let cooked_image_path =
+                cook_path(&format!("world/avatars/{avatar_id:0>4}/avatar.png"), is.ugi)?;
             let decooked_image = decode_texture(&is.vfs.open(cooked_image_path.as_ref())?, is.ugi)?;
-            let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_ref());
+            let avatar_image_path = is.dirs.avatars().join(avatar.image_path.as_str());
             decooked_image.save(&avatar_image_path)?;
 
             // Save the phone image if it exists, otherwise save the decooked image as the phone image
-            let avatar_image_phone_path = is.dirs.avatars().join(avatar.image_phone_path.as_ref());
+            let avatar_image_phone_path = is.dirs.avatars().join(avatar.image_phone_path.as_str());
             if let Ok(file) = is
                 .vfs
                 .open(format!("word/avatars/{avatar_id:0>4}/avatar_phone.png").as_ref())
@@ -378,19 +382,16 @@ fn import_unreferenced_avatars(
                 decooked_image.save(&avatar_image_phone_path)?;
             }
 
-            avatars.insert(name.to_string(), avatar);
+            avatars.insert(HipStr::borrowed(name).into_owned(), avatar);
         }
     }
 
     Ok(())
 }
 
-/// Maps avatar ids to their proper names for each game
-static GAME_AVATAR_ID_NAME_MAP: OnceLock<HashMap<Game, HashMap<u16, AvatarInfo>>> = OnceLock::new();
-
 /// Get the name for the `avatar_id` for `game`
-fn get_name(game: Game, avatar_id: u16) -> Result<AvatarInfo, String> {
-    get_map()
+fn get_name(game: Game, avatar_id: u32) -> Result<AvatarInfo, String> {
+    GAME_AVATAR_ID_NAME_MAP
         .get(&game)
         .ok_or_else(|| format!("No avatar name<->ID mapping for {game}"))?
         .get(&avatar_id)
@@ -398,9 +399,46 @@ fn get_name(game: Game, avatar_id: u16) -> Result<AvatarInfo, String> {
         .ok_or_else(|| format!("Unknown Avatar ID: {avatar_id}"))
 }
 
-/// Get the static map which maps avatar ids to their proper names for each game
-fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
-    GAME_AVATAR_ID_NAME_MAP.get_or_init(|| {
+#[derive(Debug, Clone, Copy)]
+/// Documents avatar information which might be missing in the game
+pub struct AvatarInfo {
+    /// Unique name for the avatar
+    pub name: &'static str,
+    /// The map this avatar belongs to
+    pub map: &'static str,
+    /// Which coach this avatar is based on
+    pub coach: u32,
+    /// Is this a golden avatar
+    pub special_effect: bool,
+}
+
+impl AvatarInfo {
+    /// Create a `AvatarInfo`
+    pub const fn new(
+        name: &'static str,
+        map: &'static str,
+        coach: u32,
+        special_effect: bool,
+    ) -> Self {
+        Self {
+            name,
+            map,
+            coach,
+            special_effect,
+        }
+    }
+
+    /// Get the main avatar for this avatar if it exists
+    pub fn main_avatar(&self) -> Option<&'static str> {
+        self.name
+            .ends_with("_Gold")
+            .then(|| &self.name[0..self.name.len() - 5])
+    }
+}
+
+/// Maps avatar ids to their proper names for each game
+static GAME_AVATAR_ID_NAME_MAP: LazyLock<HashMap<Game, HashMap<u32, AvatarInfo>>> =
+    LazyLock::new(|| {
         HashMap::from([
             (
                 Game::JustDance2022,
@@ -4450,42 +4488,4 @@ fn get_map() -> &'static HashMap<Game, HashMap<u16, AvatarInfo>> {
                 ]),
             ),
         ])
-    })
-}
-
-#[derive(Debug, Clone, Copy)]
-/// Documents avatar information which might be missing in the game
-pub struct AvatarInfo {
-    /// Unique name for the avatar
-    pub name: &'static str,
-    /// The map this avatar belongs to
-    pub map: &'static str,
-    /// Which coach this avatar is based on
-    pub coach: u8,
-    /// Is this a golden avatar
-    pub special_effect: bool,
-}
-
-impl AvatarInfo {
-    /// Create a `AvatarInfo`
-    pub const fn new(
-        name: &'static str,
-        map: &'static str,
-        coach: u8,
-        special_effect: bool,
-    ) -> Self {
-        Self {
-            name,
-            map,
-            coach,
-            special_effect,
-        }
-    }
-
-    /// Get the main avatar for this avatar if it exists
-    pub fn main_avatar(&self) -> Option<&'static str> {
-        self.name
-            .ends_with("_Gold")
-            .then(|| &self.name[0..self.name.len() - 5])
-    }
-}
+    });

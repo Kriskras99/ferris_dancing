@@ -48,8 +48,8 @@ pub fn get_rgbcx() -> &'static Rgbcx {
 /// Will panic if there already is a `Rgbcx` object initialised which does not match the approximation mode.
 pub fn get_rgbcx_with_bc1_approx_mode(bc1_approx_mode: Bc1ApproxMode) -> &'static Rgbcx {
     let rgbcx = RGBCX.get_or_init(|| Rgbcx::with_bc1_approx_mode(bc1_approx_mode));
-    assert!(
-        rgbcx.approx_mode != bc1_approx_mode,
+    assert_ne!(
+        rgbcx.approx_mode, bc1_approx_mode,
         "There is already a Rgbcx object initialised that does not match {bc1_approx_mode:?}"
     );
     rgbcx

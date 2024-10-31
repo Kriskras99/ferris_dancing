@@ -1,5 +1,4 @@
-use std::borrow::Cow;
-
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 
 use self::{action::Action, value::Value};
@@ -56,16 +55,17 @@ pub struct PropertyPatches<'a> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct PropertyPatch<'a> {
-    #[serde(rename = "@marker")]
-    pub marker: Cow<'a, str>,
+    #[serde(borrow, rename = "@marker")]
+    pub marker: HipStr<'a>,
     #[serde(rename = "@invertActivationApply", serialize_with = "super::ser_bool")]
     pub invert_activation_apply: bool,
     #[serde(
+        borrow,
         rename = "@patchedOnDataStatusChanged",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub patched_on_data_status_changed: Option<Cow<'a, str>>,
+    pub patched_on_data_status_changed: Option<HipStr<'a>>,
     #[serde(borrow)]
     pub action: Action<'a>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]

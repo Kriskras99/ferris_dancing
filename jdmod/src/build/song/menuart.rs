@@ -1,9 +1,9 @@
 //! # Menuart building
 //! Builds the menuart textures and phone images
-use std::borrow::Cow;
 
 use anyhow::{bail, Error};
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use hipstr::HipStr;
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
@@ -46,7 +46,7 @@ pub fn build(
                 let scene_actor = materialgraphiccomponent_scene(ses, &texture);
                 scene_actors.push(scene_actor);
 
-                let from = ses.dirs.menuart().join(texture.filename.as_ref());
+                let from = ses.dirs.menuart().join(texture.filename.as_str());
                 let encoded = encode_texture(ses.native_vfs, &from)?;
                 let to = textures_cache_dir.join(format!("{lower_map_name}_{lower_name}.tga.ckd"));
 
@@ -59,7 +59,7 @@ pub fn build(
                 bf.generated_files.add_file(to, encoded_vec)?;
             }
             MenuArt::Phone(phone) => {
-                let from = ses.dirs.menuart().join(phone.filename.as_ref());
+                let from = ses.dirs.menuart().join(phone.filename.as_str());
                 let to = match phone.name.as_ref() {
                     "cover" | "Cover" => {
                         textures_dir.join(format!("{lower_map_name}_cover_phone.jpg"))
@@ -141,8 +141,8 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
         lua: SplitPath::new(
-            Cow::Borrowed("enginedata/actortemplates/"),
-            Cow::Borrowed("tpl_materialgraphiccomponent2d.tpl"),
+            HipStr::borrowed("enginedata/actortemplates/"),
+            HipStr::borrowed("tpl_materialgraphiccomponent2d.tpl"),
         )?,
         unk1: 0.0,
         unk2: 1.0,
@@ -152,8 +152,8 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
             cooked::act::MaterialGraphicComponent {
                 files: [
                     SplitPath::new(
-                        Cow::Owned(format!("world/maps/{lower_map_name}/menuart/textures/")),
-                        Cow::Borrowed(tga),
+                        HipStr::from(format!("world/maps/{lower_map_name}/menuart/textures/")),
+                        HipStr::borrowed(tga),
                     )?,
                     SplitPath::default(),
                     SplitPath::default(),
@@ -165,8 +165,8 @@ fn materialgraphiccomponent_actor(ses: &SongExportState<'_>, tga: &str) -> Resul
                     SplitPath::default(),
                     SplitPath::default(),
                     SplitPath::new(
-                        Cow::Borrowed("world/_common/matshader/"),
-                        Cow::Borrowed("multitexture_1layer.msh"),
+                        HipStr::borrowed("world/_common/matshader/"),
+                        HipStr::borrowed("multitexture_1layer.msh"),
                     )?,
                 ],
                 anchor: if tga.ends_with("_albumcoach.tga") || tga.contains("_coach_") {
@@ -187,17 +187,17 @@ fn materialgraphiccomponent_scene(
     ses: &SongExportState<'_>,
     texture: &MenuArtTexture<'_>,
 ) -> cooked::isc::WrappedActors<'static> {
-    let map_name = ses.song.map_name.as_ref();
+    let map_name = ses.song.map_name.as_str();
     let lower_map_name = ses.lower_map_name;
     let lower_name = texture.name.to_lowercase();
-    let name = texture.name.as_ref();
+    let name = texture.name.as_str();
 
     cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
         actor: Box::new(cooked::isc::Actor {
             scale: texture.scale,
-            userfriendly: Cow::Owned(format!("{map_name}_{name}")),
+            userfriendly: HipStr::from(format!("{map_name}_{name}")),
             pos2d: texture.pos2d,
-            lua: Cow::Borrowed("enginedata/actortemplates/tpl_materialgraphiccomponent2d.tpl"),
+            lua: HipStr::borrowed("enginedata/actortemplates/tpl_materialgraphiccomponent2d.tpl"),
             components: vec![
                 cooked::isc::WrappedComponent::MaterialGraphic(cooked::isc::MaterialGraphicComponent {
                     color_computer_tag_id: 0,
@@ -211,18 +211,18 @@ fn materialgraphiccomponent_scene(
                     angle_x: 0.0,
                     angle_y: 0.0,
                     primitive_parameters: cooked::isc::PrimitiveParameters {
-                        gfx_primitive_param: cooked::isc::GFXPrimitiveParam { color_factor: ubiart_toolkit::utils::Color::default(), enums: vec![cooked::isc::Enum { name: Cow::Borrowed("gfxOccludeInfo"), selection: 0 }] } 
+                        gfx_primitive_param: cooked::isc::GFXPrimitiveParam { color_factor: ubiart_toolkit::utils::Color::default(), enums: vec![cooked::isc::Enum { name: HipStr::borrowed("gfxOccludeInfo"), selection: 0 }] } 
                     },
-                    enums: vec![cooked::isc::Enum { name: Cow::Borrowed("anchor"), selection: texture.anchor }, cooked::isc::Enum { name: Cow::Borrowed("oldAnchor"), selection: texture.anchor }],
+                    enums: vec![cooked::isc::Enum { name: HipStr::borrowed("anchor"), selection: texture.anchor }, cooked::isc::Enum { name: HipStr::borrowed("oldAnchor"), selection: texture.anchor }],
                     material: cooked::isc::Material { gfx_material_serializable: cooked::isc::GFXMaterialSerializable {
                         atl_channel: 0,
-                        atl_path: Cow::Borrowed(""),
-                        shader_path: Cow::Borrowed("world/_common/matshader/multitexture_1layer.msh"),
+                        atl_path: HipStr::borrowed(""),
+                        shader_path: HipStr::borrowed("world/_common/matshader/multitexture_1layer.msh"),
                         stencil_test: None,
                         alpha_test: 4_294_967_295,
                         alpha_ref: 4_294_967_295,
                         texture_set: cooked::isc::TextureSet { gfx_material_texture_path_set: cooked::isc::GFXMaterialTexturePathSet {
-                            diffuse: Cow::Owned(format!("world/maps/{lower_map_name}/menuart/textures/{lower_map_name}_{lower_name}.tga")),
+                            diffuse: HipStr::from(format!("world/maps/{lower_map_name}/menuart/textures/{lower_map_name}_{lower_name}.tga")),
                             ..Default::default()
                         }},
                         material_params: cooked::isc::MaterialParams::default(),

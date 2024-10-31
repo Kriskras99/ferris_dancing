@@ -1,8 +1,5 @@
 //! Various utilities like texture encoding/decoding and dealing with paths
-use std::{
-    borrow::Cow,
-    io::{Seek, Write},
-};
+use std::io::{Seek, Write};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{
@@ -12,27 +9,28 @@ use dotstar_toolkit_utils::{
         write::WriteAt,
         CursorAt,
     },
-    test_eq,
     vfs::{VirtualFileSystem, VirtualPath},
 };
+use hipstr::HipStr;
 use hound::SampleFormat;
 use image::{imageops, RgbaImage};
 use nx_opus::{mux_from_opus, mux_to_opus};
 use regex::Regex;
 use rubato::Resampler;
+use test_eq::test_eq;
 use ubiart_toolkit::{
     cooked::{
         png::Png,
         wav::{self, AdIn, Codec, Data, Dsp, Fmt, Wav, WavPlatform},
     },
-    utils::{Platform, UniqueGameId},
+    utils::{Game, Platform, UniqueGameId},
 };
 
 /// Cook a path so it stars with 'cache/itf_cooked/...'
 ///
 /// # Errors
 /// Will return an error if it's unknown how the path or the platform should be cooked
-pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
+pub fn cook_path(path: &str, ugi: UniqueGameId) -> Result<String, Error> {
     let path = path.strip_prefix('/').unwrap_or(path);
 
     // Just return if it is already cooked
@@ -45,14 +43,20 @@ pub fn cook_path(path: &str, platform: Platform) -> Result<String, Error> {
         String::with_capacity(path.len() + "cache/itf_cooked/".len() + 4 + "durango".len());
     cooked.push_str("cache/itf_cooked/");
 
-    match platform {
+    match ugi.platform {
         Platform::Nx => cooked.push_str("nx/"),
         Platform::WiiU => cooked.push_str("wiiu/"),
         Platform::Win => cooked.push_str("pc/"),
         _ => Err(anyhow!("Not yet implemented for {path}"))?,
     };
 
-    cooked.push_str(path);
+    // replace maps with jd2015 for Just Dance 2015
+    if ugi.game == Game::JustDance2015 && path.starts_with("world/maps/") {
+        cooked.push_str("world/jd2015/");
+        cooked.push_str(&path[11..]);
+    } else {
+        cooked.push_str(path);
+    }
 
     // Early exit if there's no filename
     if path.ends_with('/') {
@@ -142,30 +146,19 @@ pub fn encode_texture(
     })
 }
 
-/// Efficient implementation of `(_, [needle]) = regex.captures(haystack).extract()` for `Cow<str>`
+/// Efficient implementation of `(_, [needle]) = regex.captures(haystack).extract()` for [`HipStr`]
 ///
 /// # Errors
 /// Returns an error if the needle is not in the haystack
-pub fn cow_regex_single_capture<'a>(
+pub fn hipstr_regex_single_capture<'a>(
     regex: &Regex,
-    haystack: Cow<'a, str>,
-) -> Result<Cow<'a, str>, Error> {
-    match haystack {
-        Cow::Borrowed(haystack) => {
-            let (_, [needle]) = regex
-                .captures(haystack)
-                .ok_or_else(|| anyhow!("No needle found! Haystack: {haystack}, regex: {regex:?}"))?
-                .extract();
-            Ok(Cow::Borrowed(needle))
-        }
-        Cow::Owned(haystack) => {
-            let (_, [needle]) = regex
-                .captures(&haystack)
-                .ok_or_else(|| anyhow!("No needle found! Haystack: {haystack}, regex: {regex:?}"))?
-                .extract();
-            Ok(Cow::Owned(String::from(needle)))
-        }
-    }
+    haystack: &HipStr<'a>,
+) -> Result<HipStr<'a>, Error> {
+    let (_, [needle]) = regex
+        .captures(haystack.as_str())
+        .ok_or_else(|| anyhow!("No needle found! Haystack: {haystack}, regex: {regex:?}"))?
+        .extract();
+    Ok(HipStr::borrowed(needle).into_owned())
 }
 
 /// Decode JD audio file
@@ -212,7 +205,7 @@ pub fn decode_audio(
                 channels: fmt.channel_count,
                 sample_rate: 48000,
                 bits_per_sample: fmt.bits_per_sample,
-                sample_format: hound::SampleFormat::Int,
+                sample_format: SampleFormat::Int,
             };
             let buffer = CursorAt::new(writer, 0);
             let mut writer = hound::WavWriter::new(buffer, spec)?;
@@ -242,7 +235,7 @@ pub fn decode_audio(
                 channels: fmt.channel_count,
                 sample_rate: 48000,
                 bits_per_sample: 16,
-                sample_format: hound::SampleFormat::Int,
+                sample_format: SampleFormat::Int,
             };
 
             if let Some(data) = wav.chunks.get(&Data::MAGIC_STEREO) {
@@ -382,6 +375,9 @@ pub fn decode_audio(
 }
 
 /// Encode a JD audio file
+///
+/// # Panics
+/// Will panic if the input file has a different sample rate than 48kHz
 pub fn encode_audio(
     vfs: &impl VirtualFileSystem,
     audio_path: &VirtualPath,
@@ -389,7 +385,7 @@ pub fn encode_audio(
 ) -> Result<Vec<u8>, Error> {
     if audio_path.extension() != Some("wav") && audio_path.extension() != Some("opus") {
         return Err(anyhow!(
-            "This application only supports .wav and .opus files"
+            "This application only supports .wav and .opus files: {audio_path}"
         ));
     }
     let file = vfs.open(audio_path)?;
@@ -424,8 +420,8 @@ pub fn encode_audio(
             test_eq!(spec.sample_format, SampleFormat::Int)
                 .and(test_eq!(spec.bits_per_sample, 16))?;
 
-            assert!(
-                spec.sample_rate == 48000,
+            assert_eq!(
+                spec.sample_rate, 48000,
                 "{audio_path} is not 48kHz, please resample!"
             );
 
@@ -446,7 +442,7 @@ pub fn encode_audio(
             Ok(vec)
         }
         _ => Err(anyhow!(
-            "This application only supports .wav and .opus files"
+            "This application only supports .wav and .opus files: {audio_path}"
         )),
     }
 }
@@ -454,6 +450,14 @@ pub fn encode_audio(
 /// Resample an audio stream
 ///
 /// `input` and `output` are interleaved streams.
+///
+/// # Panics
+/// Will panic if the amount of samples is not a multiple of the amount of channels.
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_possible_truncation,
+    reason = "No other way to convert from float to int"
+)]
 pub fn resample_audio<W: Write + Seek>(
     sample_rate_in: u32,
     sample_rate_out: u32,
@@ -475,7 +479,7 @@ pub fn resample_audio<W: Write + Seek>(
         1024,
         channels,
     )
-    .unwrap();
+    .unwrap_or_else(|_| unreachable!());
 
     let mut outbuffer = vec![vec![0.0f32; resampler.output_frames_max()]; channels];
     let mut inbuffer = vec![vec![0.0f32; resampler.input_frames_max()]; channels];
@@ -505,7 +509,7 @@ pub fn resample_audio<W: Write + Seek>(
         // resample the frames in the inbuffer to the outbuffer
         let (used_input_frames, written_output_frames) = resampler
             .process_into_buffer(&inbuffer, &mut outbuffer, None)
-            .unwrap();
+            .unwrap_or_else(|_| unreachable!());
 
         // move unused frames to the front of inbuffer
         for channel in &mut inbuffer {
@@ -514,7 +518,9 @@ pub fn resample_audio<W: Write + Seek>(
         frames_in_inbuffer -= used_input_frames;
 
         // write the output frames and flush
-        let mut i16_writer = output.get_i16_writer((written_output_frames * channels) as u32);
+        let mut i16_writer = output.get_i16_writer(
+            u32::try_from(written_output_frames * channels).unwrap_or_else(|_| unreachable!()),
+        );
         for frame in 0..written_output_frames {
             for channel in &mut outbuffer {
                 i16_writer.write_sample(channel[frame] as i16);

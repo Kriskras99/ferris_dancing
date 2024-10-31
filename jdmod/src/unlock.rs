@@ -8,6 +8,7 @@ use std::{
 
 use anyhow::{bail, Error};
 use clap::Args;
+use hipstr::HipStr;
 
 use crate::types::{
     gameconfig::{
@@ -45,7 +46,8 @@ pub fn unlock(mod_path: &Path) -> Result<(), Error> {
         let song_dir = song_dir?;
         if song_dir.metadata()?.is_dir() {
             let path = song_dir.path().join("song.json");
-            let mut song: Song = serde_json::from_reader(File::open(&path)?)?;
+            let file = std::fs::read(&path)?;
+            let mut song = serde_json::from_slice::<Song>(&file)?;
             song.status = MapStatus::Unlocked;
             serde_json::to_writer_pretty(File::create(path)?, &song)?;
         }
@@ -54,7 +56,8 @@ pub fn unlock(mod_path: &Path) -> Result<(), Error> {
     // Unlock all the aliases
     println!("Unlocking all the aliases");
     let aliases_path = dir_tree.config().join("aliases.json");
-    let mut aliases: Aliases = serde_json::from_reader(File::open(&aliases_path)?)?;
+    let aliases_file = std::fs::read(&aliases_path)?;
+    let mut aliases = serde_json::from_slice::<Aliases>(&aliases_file)?;
     for alias in &mut aliases.aliases {
         alias.unlock_objective = None;
         alias.unlocked_by_default = true;
@@ -64,7 +67,8 @@ pub fn unlock(mod_path: &Path) -> Result<(), Error> {
     // Unlock all the avatars
     println!("Unlocking all the avatars");
     let avatars_path = dir_tree.avatars().join("avatars.json");
-    let mut avatars: HashMap<String, Avatar> = serde_json::from_reader(File::open(&avatars_path)?)?;
+    let avatars_file = std::fs::read(&avatars_path)?;
+    let mut avatars = serde_json::from_slice::<HashMap<HipStr, Avatar>>(&avatars_file)?;
     for avatar in avatars.values_mut() {
         avatar.unlock_type = UnlockType::Unlocked;
         avatar.status = 3;
@@ -74,8 +78,9 @@ pub fn unlock(mod_path: &Path) -> Result<(), Error> {
     // Unlock all the portraitborders
     println!("Unlocking all the portraitborders");
     let portraitborders_path = dir_tree.portraitborders().join("portraitborders.json");
-    let mut portraitborders: HashMap<String, PortraitBorder> =
-        serde_json::from_reader(File::open(&portraitborders_path)?)?;
+    let portraitborders_file = std::fs::read(&portraitborders_path)?;
+    let mut portraitborders =
+        serde_json::from_slice::<HashMap<HipStr, PortraitBorder>>(&portraitborders_file)?;
     for portraitborder in portraitborders.values_mut() {
         portraitborder.lock_status = LockStatus::UnlockedByDefault;
     }

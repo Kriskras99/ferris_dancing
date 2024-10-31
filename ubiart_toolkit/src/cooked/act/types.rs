@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 
+use hipstr::HipStr;
 use superstruct::superstruct;
 use ubiart_toolkit_shared_types::Color;
 
@@ -189,10 +190,10 @@ pub struct AaBb {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BeatPulseComponent<'a> {
-    pub text: Cow<'a, str>,
+    pub text: HipStr<'a>,
     pub loc_id: u32,
     pub model_name: &'static str,
-    pub flag: Cow<'a, str>,
+    pub flag: HipStr<'a>,
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
@@ -227,20 +228,20 @@ pub struct CameraGraphicComponent<'a> {
 pub struct Carousel<'a> {
     pub main_anchor: u32,
     pub validate_action: &'static str,
-    pub carousel_data_id: Cow<'a, str>,
+    pub carousel_data_id: HipStr<'a>,
     pub manage_carousel_history: u32,
     pub switch_speed: f32,
-    pub shortcuts_config_default: Cow<'a, str>,
-    pub shortcuts_config_switch: Cow<'a, str>,
-    pub shortcuts_config_ps4: Cow<'a, str>,
-    pub shortcuts_config_xb1: Cow<'a, str>,
-    pub shortcuts_config_pc: Cow<'a, str>,
-    pub shortcuts_config_ggp: Cow<'a, str>,
-    pub shortcuts_config_prospero: Option<Cow<'a, str>>,
-    pub shortcuts_config_scarlett: Option<Cow<'a, str>>,
+    pub shortcuts_config_default: HipStr<'a>,
+    pub shortcuts_config_switch: HipStr<'a>,
+    pub shortcuts_config_ps4: HipStr<'a>,
+    pub shortcuts_config_xb1: HipStr<'a>,
+    pub shortcuts_config_pc: HipStr<'a>,
+    pub shortcuts_config_ggp: HipStr<'a>,
+    pub shortcuts_config_prospero: Option<HipStr<'a>>,
+    pub shortcuts_config_scarlett: Option<HipStr<'a>>,
     pub shortcuts_from_center_instead_from_left: u32,
     pub initial_behaviour: &'static str,
-    pub sound_context: Cow<'a, str>,
+    pub sound_context: HipStr<'a>,
     pub behaviours: Vec<CarouselBehaviour<'a>>,
     pub anim_items_desc: CarouselAnimItemsDesc,
 }
@@ -262,9 +263,9 @@ pub enum CarouselBehaviour<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CarouselBehaviourNavigation<'a> {
     pub key: &'static str,
-    pub sound_context: Cow<'a, str>,
-    pub sound_notif_go_next: Cow<'a, str>,
-    pub sound_notif_go_prev: Cow<'a, str>,
+    pub sound_context: HipStr<'a>,
+    pub sound_notif_go_next: HipStr<'a>,
+    pub sound_notif_go_prev: HipStr<'a>,
     pub stop_conditions: Vec<StopCondition>,
     pub decel_tape_label: &'static str,
     pub scroll_mode: u32,
@@ -276,9 +277,9 @@ pub struct CarouselBehaviourNavigation<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CarouselBehaviourGoToElement<'a> {
     pub key: &'static str,
-    pub sound_context: Cow<'a, str>,
-    pub sound_notif_go_next: Cow<'a, str>,
-    pub sound_notif_go_prev: Cow<'a, str>,
+    pub sound_context: HipStr<'a>,
+    pub sound_notif_go_next: HipStr<'a>,
+    pub sound_notif_go_prev: HipStr<'a>,
     pub stop_conditions: Vec<StopCondition>,
     pub decel_tape_label: &'static str,
     pub scroll_mode: u32,
@@ -294,7 +295,7 @@ pub struct ClearColorComponent {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConvertedTmlTapeComponent<'a> {
-    pub map_name: Cow<'a, str>,
+    pub map_name: HipStr<'a>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -310,7 +311,7 @@ pub struct CreditsComponent<'a> {
     pub speed_steps: Option<f32>,
     pub bottom_spawn_y: Option<f32>,
     pub top_spawn_y: Option<f32>,
-    pub credits_lines: Vec<Cow<'a, str>>,
+    pub credits_lines: Vec<HipStr<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -391,10 +392,10 @@ impl Default for MaterialGraphicComponent<'static> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PictoTimeline<'a> {
-    pub text: Cow<'a, str>,
+    pub text: HipStr<'a>,
     pub loc_id: u32,
     pub model_name: &'static str,
-    pub flag: Cow<'a, str>,
+    pub flag: HipStr<'a>,
     pub relative_start_position_solo: (f32, f32, f32),
     pub relative_start_position_duo: (f32, f32, f32),
     pub relative_start_position_trio: (f32, f32, f32),
@@ -416,13 +417,13 @@ pub struct PleoComponent<'a> {
     pub video: SplitPath<'a>,
     /// Manifest filename of the video
     pub dash_mpd: SplitPath<'a>,
-    pub channel_id: Option<Cow<'a, str>>,
+    pub channel_id: HipStr<'a>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RegistrationComponent<'a> {
     pub tag: &'static str,
-    pub user_data: Cow<'a, str>,
+    pub user_data: HipStr<'a>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -492,13 +493,13 @@ pub struct UICarousel<'a> {
     #[superstruct(only(V16))]
     pub max_deceleration_start_ratio: f32,
     pub validate_action: &'static str,
-    pub carousel_data_id: Cow<'a, str>,
+    pub carousel_data_id: HipStr<'a>,
     #[superstruct(only(V16))]
     pub time_between_step: f32,
     #[superstruct(only(V16))]
-    pub sound_notif_go_next: Cow<'a, str>,
+    pub sound_notif_go_next: HipStr<'a>,
     #[superstruct(only(V16))]
-    pub sound_notif_go_prev: Cow<'a, str>,
+    pub sound_notif_go_prev: HipStr<'a>,
     #[superstruct(only(V16, V1718))]
     pub force_loop: u32,
     #[superstruct(only(V16))]
@@ -514,7 +515,7 @@ pub struct UICarousel<'a> {
     pub auto_scroll_max_speed_ratio: f32,
     #[superstruct(only(V1718, V1922))]
     pub initial_behaviour: &'static str,
-    pub sound_context: Cow<'a, str>,
+    pub sound_context: HipStr<'a>,
     #[superstruct(only(V1718, V1922))]
     pub behaviours: Vec<CarouselBehaviour<'a>>,
     #[superstruct(only(V16))]
@@ -536,7 +537,7 @@ pub struct UITextBox<'a> {
     pub max_width: f32,
     pub max_height: f32,
     pub area: (f32, f32),
-    pub raw_text: Cow<'a, str>,
+    pub raw_text: HipStr<'a>,
     pub use_lines_max_count: u32,
     pub lines_max_count: u32,
     pub loc_id: u32,
@@ -544,7 +545,7 @@ pub struct UITextBox<'a> {
     pub auto_scroll_speed_y: f32,
     pub auto_scroll_wait_time: f32,
     pub auto_scroll_wait_time_y: f32,
-    pub auto_scroll_font_effect_name: Cow<'a, str>,
+    pub auto_scroll_font_effect_name: HipStr<'a>,
     pub auto_scroll_reset_on_inactive: u32,
     pub scroll_once: u32,
     pub overriding_shadow_color: (f32, f32, f32, f32),
@@ -560,27 +561,27 @@ pub struct UITextBox<'a> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetElementDesc<'a> {
     pub element_path: SplitPath<'a>,
-    pub name: Cow<'a, str>,
-    pub flag: Cow<'a, str>,
+    pub name: HipStr<'a>,
+    pub flag: HipStr<'a>,
     pub parent_index: i32,
     pub bind_mode: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetGroupHUD<'a> {
-    pub text: Cow<'a, str>,
+    pub text: HipStr<'a>,
     pub loc_id: u32,
     pub model_name: &'static str,
-    pub flag: Cow<'a, str>,
+    pub flag: HipStr<'a>,
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
-    pub text: Cow<'a, str>,
+    pub text: HipStr<'a>,
     pub loc_id: u32,
     pub model_name: &'static str,
-    pub flag: Cow<'a, str>,
+    pub flag: HipStr<'a>,
     pub icon_default_position: (f32, f32, f32),
     pub icon_relative_start_position_solo: (f32, f32, f32),
     pub icon_relative_start_position_duo: (f32, f32, f32),
@@ -597,25 +598,25 @@ pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetGroupHUDLyrics<'a> {
-    pub text: Cow<'a, str>,
+    pub text: HipStr<'a>,
     pub loc_id: u32,
     pub model_name: &'static str,
-    pub flag: Cow<'a, str>,
+    pub flag: HipStr<'a>,
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UIWidgetGroupHUDPauseIcon<'a> {
-    pub text: Cow<'a, str>,
+    pub text: HipStr<'a>,
     pub loc_id: u32,
     pub model_name: &'static str,
-    pub flag: Cow<'a, str>,
+    pub flag: HipStr<'a>,
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Unknown77F7D66C<'a> {
-    pub map_name: Cow<'a, str>,
+    pub map_name: HipStr<'a>,
     pub jd_version: u32,
     pub unk2: u32,
     pub unk3: Cow<'a, [u8]>,

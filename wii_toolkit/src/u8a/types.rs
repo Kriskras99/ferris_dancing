@@ -5,21 +5,20 @@ use std::{
     collections::{hash_map::Entry, HashMap},
 };
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u24be, u32be},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-        write::{BinarySerialize, WriteAt, WriteError},
-    },
-    test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u24be, u32be},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
+    write::{BinarySerialize, WriteAt, WriteError},
 };
+use hipstr::HipStr;
+use test_eq::test_eq;
 
 use crate::round_to_boundary;
 
 /// A file in a U8 archive
 pub struct Node<'a> {
     /// The filename
-    pub name: Cow<'a, str>,
+    pub name: HipStr<'a>,
     /// The data
     pub data: Cow<'a, [u8]>,
 }
@@ -194,7 +193,7 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
                 files: HashMap::new(),
             };
 
-            let mut trees = vec![(Cow::from(""), file_tree)];
+            let mut trees = vec![(HipStr::borrowed(""), file_tree)];
             let mut indexes = vec![total_nodes];
 
             for index in 2..=total_nodes {
@@ -216,7 +215,7 @@ impl<'de> BinaryDeserialize<'de> for U8Archive<'de> {
                         let mut data_offset = u64::from(node.data_offset)
                             .checked_add(begin_position)
                             .ok_or_else(ReadError::int_under_overflow)?;
-                        let size = usize::try_from(node.size).unwrap();
+                        let size = usize::try_from(node.size)?;
                         let mut string_offset = u64::from(node.name_offset)
                             .checked_add(string_table_offset)
                             .ok_or_else(ReadError::int_under_overflow)?;
@@ -312,7 +311,7 @@ fn write_filetree_rec(
     position: &mut u64,
     data_offset: &mut u32,
     file_tree: &FileTree,
-    string_table: &HashMap<Cow<'_, str>, u32>,
+    string_table: &HashMap<HipStr<'_>, u32>,
     current_idx: &mut u32, // start with one
     name: &str,
 ) -> Result<(), WriteError> {
@@ -333,7 +332,7 @@ fn write_filetree_rec(
         let size = u32::try_from(data.len())?;
         let node = NewUnparsedFile {
             name_offset: *string_table
-                .get(filename.as_ref())
+                .get(filename.as_str())
                 .unwrap_or_else(|| unreachable!()),
             data_offset: *data_offset,
             size,
@@ -371,9 +370,9 @@ fn write_filetree_rec(
 #[derive(Debug)]
 pub struct FileTree<'a> {
     /// The directories at this level
-    pub directories: HashMap<Cow<'a, str>, FileTree<'a>>,
+    pub directories: HashMap<HipStr<'a>, FileTree<'a>>,
     /// The files at this level
-    pub files: HashMap<Cow<'a, str>, Cow<'a, [u8]>>,
+    pub files: HashMap<HipStr<'a>, Cow<'a, [u8]>>,
 }
 
 impl FileTree<'_> {
@@ -396,7 +395,7 @@ impl FileTree<'_> {
 
 impl<'a> FileTree<'a> {
     /// Creates a string table from this tree
-    fn string_table(&self) -> Result<(u32, HashMap<Cow<'a, str>, u32>), WriteError> {
+    fn string_table(&self) -> Result<(u32, HashMap<HipStr<'a>, u32>), WriteError> {
         let mut string_map = HashMap::new();
         let mut offset = 1;
         self.string_table_rec(&mut string_map, &mut offset)?;
@@ -406,7 +405,7 @@ impl<'a> FileTree<'a> {
     /// Recursive part of `string_table`
     fn string_table_rec(
         &self,
-        string_map: &mut HashMap<Cow<'a, str>, u32>,
+        string_map: &mut HashMap<HipStr<'a>, u32>,
         offset: &mut u32,
     ) -> Result<(), WriteError> {
         for file in &self.files {

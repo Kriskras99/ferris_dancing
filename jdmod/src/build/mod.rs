@@ -1,14 +1,18 @@
 //! # Build
 //! Logic for building the mod
-use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{
     layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs, VirtualFileSystem,
 };
+use hipstr::HipStr;
 use ubiart_toolkit::{
-    cooked::{self, isc, sgs},
-    utils::Platform,
+    cooked::{
+        isc,
+        isc::{SongDatabase, SongDesc},
+        sgs,
+    },
+    utils::{Platform, UniqueGameId},
 };
 
 use crate::{types::RelativeDirectoryTree, utils::cook_path};
@@ -60,9 +64,9 @@ pub fn song_database(
     song_names: &[String],
 ) -> Result<(), Error> {
     println!("Building song database...");
-    let sgscontainer_path = cook_path("sgscontainer", bs.platform)?;
+    let sgscontainer_path = cook_path("sgscontainer", UniqueGameId::NX2022)?;
     let sgscontainer_file = bs.patched_base_vfs.open(sgscontainer_path.as_ref())?;
-    let mut sgscontainer = sgs::parse(&sgscontainer_file)?.as_scene_config_manager()?;
+    let mut sgscontainer = sgs::parse(&sgscontainer_file)?.into_scene_config_manager()?;
 
     // Remove all maps and map lists from sgscontainer
     sgscontainer.sgs_map.keys.retain(|k, _| {
@@ -74,25 +78,21 @@ pub fn song_database(
     let mut sgscontainer_skuscene_nx = sgs::SongDatabaseSceneConfig::default();
     // The cover database (as the actor for the cover for generic and online)
     let mut isc_coverflow_sku_songs = Vec::new();
-    let mut actors = vec![cooked::isc::WrappedActors::Actor(
-        cooked::isc::WrappedActor {
-            actor: Box::new(cooked::isc::Actor {
-                userfriendly: Cow::Borrowed("skuscene_db"),
-                lua: Cow::Borrowed("world/skuscenes/skuscene_base.tpl"),
-                components: vec![cooked::isc::WrappedComponent::SongDatabase(
-                    Default::default(),
-                )],
-                ..Default::default()
-            }),
-        },
-    )];
+    let mut actors = vec![isc::WrappedActors::Actor(isc::WrappedActor {
+        actor: Box::new(isc::Actor {
+            userfriendly: HipStr::borrowed("skuscene_db"),
+            lua: HipStr::borrowed("world/skuscenes/skuscene_base.tpl"),
+            components: vec![isc::WrappedComponent::SongDatabase(SongDatabase::default())],
+            ..Default::default()
+        }),
+    })];
 
     for song_name in song_names {
         let lower_song_name = song_name.to_lowercase();
-        let song_name = Cow::Borrowed(song_name.as_str());
+        let song_name = HipStr::borrowed(song_name.as_str());
 
         sgscontainer.sgs_map.keys.insert(
-            Cow::Owned(format!(
+            HipStr::from(format!(
                 "world/maps/{lower_song_name}/{lower_song_name}_main_scene.isc"
             )),
             sgs::Settings::MapSceneConfig(sgs::MapSceneConfig::default()),
@@ -103,7 +103,7 @@ pub fn song_database(
             .push(sgs::CoverflowSong {
                 class: Some(sgs::CoverflowSong::CLASS),
                 name: song_name.clone(),
-                cover_path: Cow::Owned(format!(
+                cover_path: HipStr::from(format!(
                 "world/maps/{lower_song_name}/menuart/actors/{lower_song_name}_cover_generic.act"
             )),
             });
@@ -113,7 +113,7 @@ pub fn song_database(
             .push(sgs::CoverflowSong {
                 class: Some(sgs::CoverflowSong::CLASS),
                 name: song_name.clone(),
-                cover_path: Cow::Owned(format!(
+                cover_path: HipStr::from(format!(
                 "world/maps/{lower_song_name}/menuart/actors/{lower_song_name}_cover_online.act"
             )),
             });
@@ -121,22 +121,22 @@ pub fn song_database(
         isc_coverflow_sku_songs.push(isc::CoverflowSkuSongs {
             coverflow_song: isc::CoverflowSong {
                 name: song_name.clone(),
-                cover_path: Cow::Owned(format!("world/maps/{lower_song_name}/menuart/actors/{lower_song_name}_cover_generic.act")),
+                cover_path: HipStr::from(format!("world/maps/{lower_song_name}/menuart/actors/{lower_song_name}_cover_generic.act")),
             },
         });
 
         isc_coverflow_sku_songs.push(isc::CoverflowSkuSongs {
             coverflow_song: isc::CoverflowSong {
                 name: song_name.clone(),
-                cover_path: Cow::Owned(format!("world/maps/{lower_song_name}/menuart/actors/{lower_song_name}_cover_online.act")),
+                cover_path: HipStr::from(format!("world/maps/{lower_song_name}/menuart/actors/{lower_song_name}_cover_online.act")),
             },
         });
 
         actors.push(isc::WrappedActors::Actor(isc::WrappedActor {
             actor: Box::new(isc::Actor {
                 userfriendly: song_name,
-                lua: Cow::Owned(format!("world/maps/{lower_song_name}/songdesc.tpl")),
-                components: vec![isc::WrappedComponent::SongDesc(Default::default())],
+                lua: HipStr::from(format!("world/maps/{lower_song_name}/songdesc.tpl")),
+                components: vec![isc::WrappedComponent::SongDesc(SongDesc::default())],
                 ..Default::default()
             }),
         }));
@@ -147,11 +147,11 @@ pub fn song_database(
         settings: sgs::Settings::SongDatabaseSceneConfig(sgscontainer_skuscene_nx.clone()),
     };
     sgscontainer.sgs_map.keys.insert(
-        Cow::Borrowed("world/skuscenes/skuscene_maps_pc_all.isc"),
+        HipStr::borrowed("world/skuscenes/skuscene_maps_pc_all.isc"),
         sgs::Settings::SongDatabaseSceneConfig(sgscontainer_skuscene_pc),
     );
     sgscontainer.sgs_map.keys.insert(
-        Cow::Borrowed("world/skuscenes/skuscene_maps_nx_all.isc"),
+        HipStr::borrowed("world/skuscenes/skuscene_maps_nx_all.isc"),
         sgs::Settings::SongDatabaseSceneConfig(sgscontainer_skuscene_nx),
     );
 
@@ -165,11 +165,19 @@ pub fn song_database(
         .add_file(sgscontainer_path.into(), sgscontainer_vec)?;
 
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_nx_all.sgs", bs.platform)?.into(),
+        cook_path(
+            "world/skuscenes/skuscene_maps_nx_all.sgs",
+            UniqueGameId::NX2022,
+        )?
+        .into(),
         skuscene_maps_sgs_vec.clone(),
     )?;
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_pc_all.sgs", bs.platform)?.into(),
+        cook_path(
+            "world/skuscenes/skuscene_maps_pc_all.sgs",
+            UniqueGameId::NX2022,
+        )?
+        .into(),
         skuscene_maps_sgs_vec,
     )?;
 
@@ -182,8 +190,8 @@ pub fn song_database(
                 active_scene_config: 0,
                 jd_scene_config: vec![isc::WrappedJdSceneConfig::SongDatabase(
                     isc::SongDatabaseSceneConfig {
-                        sku: Cow::Borrowed("jd2022-nx-all"),
-                        rating_ui: Cow::Borrowed(
+                        sku: HipStr::borrowed("jd2022-nx-all"),
+                        rating_ui: HipStr::borrowed(
                             "world/ui/screens/boot_warning/boot_warning_esrb.isc",
                         ),
                         coverflow_sku_songs: isc_coverflow_sku_songs,
@@ -200,11 +208,19 @@ pub fn song_database(
     let skuscene_maps_isc_vec = isc::create_vec_with_capacity_hint(&isc_skuscene_nx, 230_000)?;
 
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_nx_all.isc", bs.platform)?.into(),
+        cook_path(
+            "world/skuscenes/skuscene_maps_nx_all.isc",
+            UniqueGameId::NX2022,
+        )?
+        .into(),
         skuscene_maps_isc_vec.clone(),
     )?;
     bf.generated_files.add_file(
-        cook_path("world/skuscenes/skuscene_maps_pc_all.isc", bs.platform)?.into(),
+        cook_path(
+            "world/skuscenes/skuscene_maps_pc_all.isc",
+            UniqueGameId::NX2022,
+        )?
+        .into(),
         skuscene_maps_isc_vec,
     )?;
 

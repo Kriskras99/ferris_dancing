@@ -1,12 +1,12 @@
 //! # Search labels
 //! Imports search labels for the maps
 use std::{
-    borrow::Cow,
     collections::{HashMap, HashSet},
     fs::File,
 };
 
 use anyhow::Error;
+use hipstr::HipStr;
 use ubiart_toolkit::json_types::isg::SongsSearchTags;
 
 use crate::types::{gameconfig::search_labels::SearchLabel, ImportState};
@@ -19,12 +19,10 @@ pub fn import_v19v22(
     println!("Importing search labels...");
 
     let search_labels_path = is.dirs.config().join("search_labels.json");
-    let mut search_labels: HashMap<Cow<'_, str>, HashSet<SearchLabel>> =
-        if let Ok(file) = File::open(&search_labels_path) {
-            serde_json::from_reader(file)?
-        } else {
-            HashMap::new()
-        };
+    let search_labels_file =
+        std::fs::read(&search_labels_path).unwrap_or_else(|_| vec![b'{', b'}']);
+    let mut search_labels: HashMap<HipStr<'_>, HashSet<SearchLabel>> =
+        serde_json::from_slice(&search_labels_file)?;
 
     for (name, tags) in new_search_labels.maps {
         let map = search_labels.entry(name).or_default();

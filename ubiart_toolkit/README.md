@@ -1,7 +1,8 @@
-# [UbiArt Toolkit](ubiart_toolkit/README.md)
+# UbiArt Toolkit
 Tools and library for parsing and writing various UbiArt files.
 
 Supports the following formats (Nintendo Switch games only!)
+
 | File extension | Tool       | Remarks                          |
 | -------------- | ---------- | -------------------------------- |
 | .act.ckd       | acttool    |                                  |

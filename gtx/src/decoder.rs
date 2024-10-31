@@ -1,17 +1,14 @@
 use std::{collections::VecDeque, num::TryFromIntError};
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::u32be,
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_eq, test_le,
-    testing::TestError,
+use dotstar_toolkit_utils::bytes::{
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use image::{
     error::{DecodingError, ImageFormatHint},
     ColorType, ImageDecoder, ImageError, ImageResult,
 };
+use test_eq::{test_eq, test_le, TestFailure};
 use thiserror::Error;
 use wiiu_swizzle::{deswizzle_mipmap, SwizzleError, TileMode};
 
@@ -46,7 +43,7 @@ pub enum DecoderError {
     Read(#[from] ReadError),
     /// Test failure
     #[error("Value test failed")]
-    Test(#[from] TestError),
+    Test(#[from] TestFailure),
     /// Integer conversion failed
     #[error("Integer conversion failed")]
     TryFromInt(#[from] TryFromIntError),

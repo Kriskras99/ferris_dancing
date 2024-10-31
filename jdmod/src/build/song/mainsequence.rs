@@ -1,11 +1,14 @@
 //! # Mainsequence Building
 //! Build the mainsequence
-use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
 use hipstr::HipStr;
-use ubiart_toolkit::{cooked, cooked::tape, json_types, utils::SplitPath};
+use ubiart_toolkit::{
+    cooked,
+    cooked::{isc::MasterTape, tape},
+    utils::{SplitPath, UniqueGameId},
+};
 
 use super::SongExportState;
 use crate::{
@@ -59,8 +62,8 @@ fn mainsequence_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
         lua: SplitPath::new(
-            Cow::Owned(format!("world/maps/{lower_map_name}/cinematics/")),
-            Cow::Owned(format!("{lower_map_name}_mainsequence.tpl")),
+            HipStr::from(format!("world/maps/{lower_map_name}/cinematics/")),
+            HipStr::from(format!("{lower_map_name}_mainsequence.tpl")),
         )?,
         unk1: 0.0,
         unk2: 1.0,
@@ -75,7 +78,7 @@ fn mainsequence_actor(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
 /// Build the cine scene
 fn cine_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
     let lower_map_name = ses.lower_map_name;
-    let map_name = ses.song.map_name.as_ref();
+    let map_name = ses.song.map_name.as_str();
     cooked::isc::Root {
         scene: cooked::isc::Scene {
             engine_version: ses.engine_version,
@@ -98,9 +101,9 @@ fn cine_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
             platform_filters: Vec::new(),
             actors: vec![
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor { actor: Box::new(cooked::isc::Actor {
-                    userfriendly: Cow::Owned(format!("{map_name}_MainSequence")),
-                    lua: Cow::Owned(format!("world/maps/{lower_map_name}/cinematics/{lower_map_name}_mainsequence.tpl")),
-                    components: vec![cooked::isc::WrappedComponent::MasterTape(Default::default())],
+                    userfriendly: HipStr::from(format!("{map_name}_MainSequence")),
+                    lua: HipStr::from(format!("world/maps/{lower_map_name}/cinematics/{lower_map_name}_mainsequence.tpl")),
+                    components: vec![cooked::isc::WrappedComponent::MasterTape(MasterTape::default())],
                     ..Default::default()
                 })}),
             ],
@@ -112,30 +115,30 @@ fn cine_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
 /// Build the mainsequence template
 fn mainsequence_template(ses: &SongExportState<'_>) -> Result<Vec<u8>, Error> {
     let lower_map_name = ses.lower_map_name;
-    let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
-        class: None,
+    let template = cooked::tpl::types::Actor {
+        class: cooked::tpl::types::Actor::CLASS,
         wip: 0,
         lowupdate: 0,
         update_layer: 0,
         procedural: 0,
         startpaused: 0,
         forceisenvironment: 0,
-        components: vec![json_types::v22::Template22::MasterTape(
-            json_types::tpl::MasterTape {
+        components: vec![cooked::tpl::types::Template::MasterTape(
+            cooked::tpl::types::MasterTape {
                 class: None,
-                tapes_rack: vec![json_types::tpl::TapeGroup {
-                    class: Some(json_types::tpl::TapeGroup::CLASS),
-                    entries: vec![json_types::tpl::TapeEntry {
-                        class: Some(json_types::tpl::TapeEntry::CLASS),
-                        label: Cow::Borrowed("master"),
-                        path: Cow::Owned(format!(
+                tapes_rack: vec![cooked::tpl::types::TapeGroup {
+                    class: Some(cooked::tpl::types::TapeGroup::CLASS),
+                    entries: vec![cooked::tpl::types::TapeEntry {
+                        class: Some(cooked::tpl::types::TapeEntry::CLASS),
+                        label: HipStr::borrowed("master"),
+                        path: HipStr::from(format!(
                         "world/maps/{lower_map_name}/cinematics/{lower_map_name}_mainsequence.tape"
                     )),
                     }],
                 }],
             },
         )],
-    });
+    };
 
     Ok(cooked::json::create_vec(&template)?)
 }
@@ -158,16 +161,16 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
                 Some(orig_clip.into_tape(&ses.song)?)
             }
             Clip::SoundSet(orig_clip) => {
-                let name = orig_clip.name.as_ref();
+                let name = orig_clip.name.as_str();
                 let filename =
-                    Cow::Owned(map_path.join(format!("audio/amb/{name}.wav")).into_string());
-                let cooked_filename = cook_path(&filename, ses.platform)?;
+                    HipStr::from(map_path.join(format!("audio/amb/{name}.wav")).into_string());
+                let cooked_filename = cook_path(&filename, UniqueGameId::NX2022)?;
 
                 // Add amb clip to copy list
-                let from = ses.dirs.audio().join(orig_clip.audio_filename.as_ref());
+                let from = ses.dirs.audio().join(orig_clip.audio_filename.as_str());
                 let to = VirtualPathBuf::from(cooked_filename);
                 let template_path =
-                    Cow::Owned(map_path.join(format!("audio/amb/{name}.tpl")).into_string());
+                    HipStr::from(map_path.join(format!("audio/amb/{name}.tpl")).into_string());
 
                 // If the amb clip is already in the list, we skip building the template
                 if !bf.generated_files.exists(&to) {
@@ -175,23 +178,23 @@ fn mainsequence_timeline(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Resu
                     bf.generated_files.add_file(to, encoded)?;
 
                     // Create the sound template
-                    let sound_descriptor = json_types::tpl::SoundDescriptor {
-                        name: Cow::Borrowed(name),
+                    let sound_descriptor = cooked::tpl::types::SoundDescriptor {
+                        name: HipStr::borrowed(name),
                         files: vec![filename],
                         ..Default::default()
                     };
-                    let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
-                        components: vec![json_types::v22::Template22::SoundComponent(
-                            json_types::tpl::SoundComponent {
+                    let template = cooked::tpl::types::Actor {
+                        components: vec![cooked::tpl::types::Template::SoundComponent(
+                            cooked::tpl::types::SoundComponent {
                                 class: None,
                                 sound_list: vec![sound_descriptor],
                             },
                         )],
                         ..Default::default()
-                    });
+                    };
 
                     // Save the template
-                    let cooked_template_path = cook_path(&template_path, ses.platform)?;
+                    let cooked_template_path = cook_path(&template_path, UniqueGameId::NX2022)?;
                     let cooked_template_vec = cooked::json::create_vec(&template)?;
                     bf.generated_files
                         .add_file(cooked_template_path.into(), cooked_template_vec)?;

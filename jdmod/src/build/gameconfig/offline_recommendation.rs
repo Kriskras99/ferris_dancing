@@ -1,20 +1,21 @@
 //! # Offline Recommendations
 //! Build the offline recommendations
-use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use hipstr::HipStr;
+use ownable::traits::IntoOwned;
 use ubiart_toolkit::json_types::v22::GameManagerConfig22;
 
 use crate::build::BuildState;
 
 /// Build the offline recommendations
-pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Result<(), Error> {
+pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22) -> Result<(), Error> {
     let offline_recommendation_file = bs
         .native_vfs
         .open(&bs.rel_tree.config().join("offline_recommendations.json"))?;
-    let offline_recommendation: Vec<Cow<'_, str>> =
-        serde_json::from_slice(&offline_recommendation_file)?;
+    let offline_recommendation =
+        serde_json::from_slice::<Vec<HipStr<'_>>>(&offline_recommendation_file)?.into_owned();
 
     gameconfig.offline_recommendation = offline_recommendation;
 

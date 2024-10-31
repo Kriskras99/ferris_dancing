@@ -2,11 +2,11 @@
 
 use std::path::Path;
 
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
-use ubiart_toolkit::{cooked::dlcdescriptor::DlcDescriptor, utils::UniqueGameId};
+use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt;
+use ubiart_toolkit::cooked::dlcdescriptor::DlcDescriptor;
 
 fn dlcdescriptor_parse_wiiu2015(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    DlcDescriptor::deserialize_with(&data, UniqueGameId::WIIU2015)?;
+    DlcDescriptor::deserialize(&data)?;
     Ok(())
 }
 

@@ -6,12 +6,10 @@
 #[cfg(feature = "full_json_types")]
 pub mod frt;
 pub mod isg;
-pub mod just_dance;
 #[cfg(feature = "full_json_types")]
 pub mod msh;
 #[cfg(feature = "full_json_types")]
 pub mod tfn;
-pub mod tpl;
 pub mod v1819;
 
 pub mod v16;
@@ -23,7 +21,7 @@ pub mod v20c;
 pub mod v21;
 pub mod v22;
 
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use hipstr::HipStr;
 use isg::Rarity;
@@ -42,10 +40,9 @@ pub struct Empty<'a> {
     class: Option<HipStr<'a>>,
 }
 
-pub type AliasesObjectives<'a> = HashMap<u16, Cow<'a, str>>;
-pub type DifficultyColors<'a> = HashMap<Rarity, Cow<'a, str>>;
-pub type MapsGoals<'a> = HashMap<Cow<'a, str>, Vec<Cow<'a, str>>>;
-pub type MapsObjectives<'a> = HashMap<Cow<'a, str>, Cow<'a, str>>;
-pub type OfflineRecommendation<'a> = Vec<Cow<'a, str>>;
-pub type AvatarsObjectives<'a> = HashMap<u16, Cow<'a, str>>;
-pub type PhoneImages<'a> = HashMap<Cow<'a, str>, Cow<'a, str>>;
+pub type AliasesObjectives<'a> = HashMap<u32, HipStr<'a>>;
+pub type DifficultyColors<'a> = HashMap<Rarity, HipStr<'a>>;
+pub type MapsGoals<'a> = HashMap<HipStr<'a>, Vec<HipStr<'a>>>;
+pub type MapsObjectives<'a> = HashMap<HipStr<'a>, HipStr<'a>>;
+pub type OfflineRecommendation<'a> = Vec<HipStr<'a>>;
+pub type AvatarsObjectives<'a> = HashMap<u32, HipStr<'a>>;

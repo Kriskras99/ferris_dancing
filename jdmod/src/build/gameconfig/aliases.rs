@@ -8,6 +8,7 @@ use ubiart_toolkit::{
         isg::LocalAliases,
         v22::{GameManagerConfig22, Template22},
     },
+    utils::UniqueGameId,
 };
 
 use crate::{
@@ -20,13 +21,13 @@ use crate::{
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &mut GameManagerConfig22<'_>,
+    gameconfig: &mut GameManagerConfig22,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let aliases_file = bs
         .native_vfs
         .open(&bs.rel_tree.config().join("aliases.json"))?;
-    let aliases: Aliases = serde_json::from_slice(&aliases_file)?;
+    let aliases = serde_json::from_slice::<Aliases>(&aliases_file)?.into_owned();
 
     let aliasesobjectives = &mut gameconfig.aliasesobjectives;
     aliasesobjectives.clear();
@@ -54,7 +55,7 @@ pub fn build(
 
     let local_aliases_vec = cooked::json::create_vec_with_capacity_hint(&local_aliases, 230_000)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.alias_db_path, bs.platform)?.into(),
+        cook_path(&gameconfig.alias_db_path, UniqueGameId::NX2022)?.into(),
         local_aliases_vec,
     )?;
 

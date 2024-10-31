@@ -3,7 +3,8 @@
 use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use dotstar_toolkit_utils::{test_eq, vfs::VirtualPath};
+use dotstar_toolkit_utils::vfs::VirtualPath;
+use test_eq::test_eq;
 use ubiart_toolkit::cooked;
 
 use super::SongImportState;
@@ -16,19 +17,17 @@ use crate::{
 pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String, Error> {
     let mainsequence_file = sis
         .vfs
-        .open(cook_path(musictrack_path, sis.ugi.platform)?.as_ref())?;
-    let template = cooked::json::parse_v22(&mainsequence_file, sis.lax)?;
-    let mut actor = template.into_actor()?;
+        .open(cook_path(musictrack_path, sis.ugi)?.as_ref())?;
+    let mut actor = cooked::tpl::parse(&mainsequence_file, sis.ugi, sis.lax)?;
     test_eq!(actor.components.len(), 1)?;
     let track_data = actor
         .components
-        .swap_remove(0)
+        .remove(0)
         .into_musictrack_component()?
         .track_data;
 
-    let path = track_data.path.as_ref();
+    let path = track_data.path.as_str();
 
-    // TODO: Decook WAV!
     let audio_filename = if sis.vfs.exists(path.as_ref()) {
         let audio_filename = VirtualPath::new(path)
             .file_name()
@@ -39,7 +38,7 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         to.write_all(&from)?;
         audio_filename
     } else {
-        let cooked_path = cook_path(path, sis.ugi.platform)?;
+        let cooked_path = cook_path(path, sis.ugi)?;
         let mut audio_filename = VirtualPath::new(&cooked_path)
             .file_name()
             .ok_or_else(|| anyhow!("Can't find filename! {cooked_path:?}"))?

@@ -1,262 +1,95 @@
+pub mod path;
 pub mod plumbing;
-use std::{borrow::Cow, cmp::Ordering, ffi::OsStr, fmt::Display, ops::Deref};
+
+// TODO: Remove pub use and replace uses with utils::path::
+use std::{cmp::Ordering, ffi::OsStr, fmt::Display};
 
 use clap::ValueEnum;
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::{u32be, u32le},
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-        write::{BinarySerialize, WriteAt, WriteError},
-    },
-    test_eq,
-    testing::TestError,
-    vfs::{VirtualPath, VirtualPathBuf},
+use dotstar_toolkit_utils::bytes::{
+    primitives::{u32be, u32le},
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
+    write::{BinarySerialize, WriteAt, WriteError},
 };
-use nohash_hasher::IsEnabled;
+pub use path::{PathId, SplitPath};
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit_shared_types::errors::ParserError;
 pub use ubiart_toolkit_shared_types::{errors, Color, LocaleId};
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-pub struct SplitPath<'a> {
-    path: Cow<'a, str>,
-    filename: Cow<'a, str>,
-}
-
-impl<'a> SplitPath<'a> {
-    const EMPTY_PATH_ID: PathId = PathId(0xFFFF_FFFF);
-    const PADDING: u32 = 0x0;
-
-    pub fn new(mut path: Cow<'a, str>, filename: Cow<'a, str>) -> Result<Self, TestError> {
-        if !path.is_empty() && !path.ends_with('/') {
-            let mut string = path.into_owned();
-            string.push('/');
-            path = string.into();
-        }
-        test_eq!(path.ends_with('/'), true).or(test_eq!(path.is_empty(), true))?;
-        test_eq!(!path.contains('.'), true)?;
-        test_eq!(!filename.ends_with('/'), true)?;
-        test_eq!(!filename.starts_with('/'), true)?;
-        Ok(Self { path, filename })
-    }
-
-    /// The total length of the path and filename combined
-    #[must_use]
-    pub fn len(&self) -> usize {
-        self.path.len() + self.filename.len()
-    }
-
-    /// Returns `true` if the path and filename are empty
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.path.is_empty() && self.filename.is_empty()
-    }
-
-    #[must_use]
-    pub fn id(&self) -> PathId {
-        if self.is_empty() {
-            Self::EMPTY_PATH_ID
-        } else {
-            PathId::from(self)
-        }
-    }
-
-    #[must_use]
-    pub fn starts_with(&self, pattern: &str) -> bool {
-        let (path_pattern, filename_pattern) = pattern.split_at(self.path.len().min(pattern.len()));
-        self.path.starts_with(path_pattern) && self.filename.starts_with(filename_pattern)
-    }
-
-    #[must_use]
-    /// Will only check if pattern is completely in path or filename, not partly in both
-    // TODO: Make this work when the pattern is partly in both
-    pub fn contains(&self, pattern: &str) -> bool {
-        self.path.contains(pattern) || self.filename.contains(pattern)
-    }
-
-    #[must_use]
-    pub fn parent(&self) -> &str {
-        &self.path
-    }
-
-    #[must_use]
-    pub fn filename(&self) -> &str {
-        &self.filename
-    }
-}
-
-impl<'de> BinaryDeserialize<'de> for SplitPath<'de> {
-    type Ctx = u32;
-    type Output = Self;
-
-    fn deserialize_at_with(
-        reader: &'de (impl ReadAtExt + ?Sized),
-        position: &mut u64,
-        expected_padding: Self::Ctx,
-    ) -> Result<Self, ReadError> {
-        let old_position = *position;
-        let result: Result<_, _> = try {
-            let filename = reader.read_len_string_at::<u32be>(position)?;
-            let path = reader.read_len_string_at::<u32be>(position)?;
-            let path_id = reader.read_at::<PathId>(position)?;
-            let split_path = SplitPath::new(path, filename)?;
-            test_eq!(path_id, split_path.id())?;
-            let padding = reader.read_at::<u32be>(position)?;
-            test_eq!(padding, expected_padding)?;
-            split_path
-        };
-        if result.is_err() {
-            *position = old_position;
-        }
-        result
-    }
-}
-
-impl BinarySerialize for SplitPath<'_> {
+pub struct InternedString;
+impl BinaryDeserialize<'_> for InternedString {
     type Ctx = ();
-    type Input = Self;
-
-    fn serialize_at_with_ctx(
-        input: Self::Input,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        _ctx: (),
-    ) -> Result<(), WriteError> {
-        writer.write_len_string_at::<u32be>(position, &input.filename)?;
-        writer.write_len_string_at::<u32be>(position, &input.path)?;
-        writer.write_at::<PathId>(position, input.id())?;
-        writer.write_at::<u32be>(position, Self::PADDING)?;
-
-        Ok(())
-    }
-}
-
-impl Display for SplitPath<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.path)?;
-        f.write_str(&self.filename)
-    }
-}
-
-impl From<&SplitPath<'_>> for PathId {
-    fn from(value: &SplitPath<'_>) -> Self {
-        Self(string_id_2(&value.path, &value.filename))
-    }
-}
-
-impl<'a> TryFrom<&'a str> for SplitPath<'a> {
-    type Error = ParserError;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        let (path, filename) = match value.rfind('/') {
-            Some(pos) => value.split_at(pos + 1),
-            None => ("", value),
-        };
-        let path = path.strip_prefix('/').unwrap_or(path);
-        Ok(SplitPath::new(
-            Cow::Borrowed(path),
-            Cow::Borrowed(filename),
-        )?)
-    }
-}
-
-impl<'a> TryFrom<&'a VirtualPath> for SplitPath<'a> {
-    type Error = ParserError;
-
-    fn try_from(value: &'a VirtualPath) -> Result<Self, Self::Error> {
-        let value = value.as_str();
-        Self::try_from(value)
-    }
-}
-
-impl From<&SplitPath<'_>> for VirtualPathBuf {
-    fn from(value: &SplitPath<'_>) -> Self {
-        let mut pb = Self::with_capacity(value.len());
-        pb.push(value.path.as_ref());
-        pb.push(value.filename.as_ref());
-        pb
-    }
-}
-
-/// The UbiArt CRC of a path converted to all caps
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct PathId(u32);
-
-impl PathId {
-    pub const EMPTY: Self = Self(u32::MAX);
-}
-
-impl From<&str> for PathId {
-    fn from(mut value: &str) -> Self {
-        if value.starts_with('/') {
-            value = &value[1..];
-        }
-        Self(string_id(value))
-    }
-}
-
-impl From<&VirtualPath> for PathId {
-    fn from(value: &VirtualPath) -> Self {
-        Self::from(value.as_str())
-    }
-}
-
-impl From<&VirtualPathBuf> for PathId {
-    fn from(value: &VirtualPathBuf) -> Self {
-        Self::from(value.as_str())
-    }
-}
-
-impl From<VirtualPathBuf> for PathId {
-    fn from(value: VirtualPathBuf) -> Self {
-        Self::from(value.as_str())
-    }
-}
-
-impl From<u32> for PathId {
-    fn from(value: u32) -> Self {
-        Self(value)
-    }
-}
-impl From<PathId> for u32 {
-    fn from(value: PathId) -> Self {
-        value.0
-    }
-}
-impl IsEnabled for PathId {}
-impl Deref for PathId {
-    type Target = u32;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl BinaryDeserialize<'_> for PathId {
-    type Ctx = ();
-    type Output = Self;
+    type Output = &'static str;
 
     fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: (),
-    ) -> Result<Self, ReadError> {
-        Ok(Self(reader.read_at::<u32be>(position)?))
-    }
-}
-
-impl BinarySerialize for PathId {
-    type Ctx = ();
-    type Input = Self;
-
-    fn serialize_at_with_ctx(
-        input: Self::Input,
-        writer: &mut (impl WriteAt + ?Sized),
-        position: &mut u64,
-        _ctx: (),
-    ) -> Result<(), WriteError> {
-        writer.write_at::<u32be>(position, input.0)
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let string_id = reader.read_at::<u32be>(position)?;
+        match string_id {
+            0x0288_3A7E => Ok("MusicTrackComponent_Template"),
+            0x0579_E81B => Ok("PleoTextureGraphicComponent"),
+            0x0C73_6497 => Ok("MasterTape_Template"),
+            0x1263_DAD9 => Ok("PleoComponent"),
+            0x1445_31FF => Ok("navigation_default"),
+            0x1576_B015 => Ok("navigation_row"),
+            0x1B85_7BCE => Ok("Actor_Template"),
+            0x231F_27DE => Ok("TapeCase_Component"),
+            0x24A3_7BF0 => Ok("TML_Motion"),
+            0x27C6_D339 => Ok("JD_AvatarDescTemplate"),
+            0x2810_2F02 => Ok("navigation_speed"),
+            0x2949_932E => Ok("PleoTextureGraphicComponent_Template"),
+            0x31D3_B347 => Ok("lyrics"),
+            0x36F0_1B59 => Ok("JD_AsyncPlayerDesc_Template"),
+            0x40A1_5156 => Ok("menu_valid"),
+            0x418F_AF9A => Ok("menu_lstick_right"),
+            0x4C55_6308 => Ok("navigation"),
+            0x4FA4_0F09 => Ok("SubSceneActor"),
+            0x51EA_2CD0 => Ok("JD_AutodanceComponent_Template"),
+            0x5B64_8E44 => Ok("JD_BlockFlowTemplate"),
+            0x6696_D39A => Ok("video"),
+            0x677B_269B => Ok("MasterTape"),
+            0x67B8_BB77 => Ok("JD_AutodanceComponent"),
+            0x6DC2_DBB2 => Ok("menu_phone_right"),
+            0x6F40_37D0 => Ok("coverflow"),
+            0x7233_490C => Ok("menu_dpad_right"),
+            0x72B6_1FC5 => Ok("MaterialGraphicComponent"),
+            0x7411_331E => Ok("navigation_age"),
+            0x7A7C_235B => Ok("MusicTrackComponent"),
+            0x83B2_58E1 => Ok("gotodefault"),
+            0x8AC2_B5C6 => Ok("JD_SongDescTemplate"),
+            0x8229_ABC3 => Ok("TapeCase_Template"),
+            0x8E09_B64A => Ok("navigation_kids"),
+            0x8DA9_E375 => Ok("JD_BlockFlowComponent"),
+            0x97CA_628B => Ok("Actor"),
+            0x9A0A_4843 => Ok("PleoComponent_Template"),
+            0x9CD9_0BCB => Ok("theme"),
+            0xA355_7351 => Err(ReadError::custom(
+                "Unkown component with animation/.*.anm files".into(),
+            )),
+            0xA58D_BCC2 => Ok("JD_TransitionSceneConfig"),
+            0xAA55_B6BD => Ok("asyncplayervideo"),
+            0xABF3_773E => Ok("master"),
+            0xB11F_C1B6 => Ok("prelobby"),
+            0xB20E_35D5 => Ok("navigation_big_items"),
+            0xC33B_4C02 => Ok("menu_phone_left"),
+            0xCE01_8EDB => Ok("JD_MapSceneConfig"),
+            0xD5B5_4597 => Ok("TML_Sequence"),
+            0xD64E_0E2A => Ok("menu_dpad_left"),
+            0xD94D_6C53 => Ok("SoundComponent_Template"),
+            0xD9B1_E95C => Ok("menu_lstick_left"),
+            0xDFEF_DBFB => Ok("decel"),
+            0xE07F_CC3F => Ok("JD_SongDescComponent"),
+            0xE628_44B8 => Ok("JD_UIBannerSceneConfig"),
+            0xEB53_7A60 => Ok("AMB"),
+            0xF878_DC2D => Ok("JD_SongDatabaseSceneConfig"),
+            0xF9BE_082F => Ok("MaterialGraphicComponent_Template"),
+            0xFD45_47AC => Ok("TML_Karaoke"),
+            0xFFFF_FFFF => Ok(""),
+            _ => Err(ReadError::custom(format!(
+                "Unknown interned string id: 0x{string_id:08x}"
+            ))),
+        }
     }
 }
 
@@ -475,7 +308,7 @@ pub enum Game {
 }
 
 impl PartialOrd for Game {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if *self == Self::Unknown || *other == Self::Unknown {
             None
         } else {
@@ -737,9 +570,8 @@ const fn shifter(mut a: u32, mut b: u32, mut c: u32) -> (u32, u32, u32) {
 #[allow(clippy::missing_panics_doc)]
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-
     use dotstar_toolkit_utils::vfs::VirtualPathBuf;
+    use hipstr::HipStr;
 
     use super::{string_id, PathId, SplitPath};
 
@@ -761,8 +593,8 @@ mod tests {
     #[test]
     fn test_splitpath_starts_with() {
         let split_path = SplitPath::new(
-            Cow::Borrowed("cache/itf_cooked/nx/"),
-            Cow::Borrowed("atlascontainer.ckd"),
+            HipStr::borrowed("cache/itf_cooked/nx/"),
+            HipStr::borrowed("atlascontainer.ckd"),
         )
         .unwrap();
         assert!(split_path.starts_with("cache"));

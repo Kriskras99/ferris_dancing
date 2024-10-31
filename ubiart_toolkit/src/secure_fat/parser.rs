@@ -1,13 +1,11 @@
 //! A parser for the secure_fat.gf file format
 
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::u32be,
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_eq, test_le, test_ne,
+use dotstar_toolkit_utils::bytes::{
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
+use test_eq::{test_eq, test_le, test_ne};
 
 use super::{BundleId, SecureFat, MAGIC, UNK1};
 use crate::utils::{PathId, UniqueGameId};

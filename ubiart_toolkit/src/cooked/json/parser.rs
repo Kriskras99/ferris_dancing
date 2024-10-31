@@ -1,28 +1,24 @@
-use dotstar_toolkit_utils::{
-    test_eq,
-    testing::{TestError, TestResult},
-};
 use serde::Deserialize;
-use ubiart_toolkit_json_types::v16::Template16;
+use test_eq::{test_eq, TestFailure};
 
 use crate::{
     json_types::{
-        v17::Template17, v18::Template18, v19::Template19, v20::Template20, v20c::Template20C,
-        v21::Template21, v22::Template22,
+        v16::Template16, v17::Template17, v18::Template18, v19::Template19, v20::Template20,
+        v20c::Template20C, v21::Template21, v22::Template22,
     },
     utils::errors::ParserError,
 };
 
 /// Remove the '\0' from the end of the `buffer`
-pub fn clean_buffer_json(buffer: &[u8], lax: bool) -> Result<&[u8], TestError> {
+pub fn clean_buffer_json(buffer: &[u8], lax: bool) -> Result<&[u8], TestFailure> {
     let result = test_eq!(buffer[buffer.len() - 1], 0x0);
     match (result, lax) {
-        (TestResult::Ok, _) => Ok(&buffer[..buffer.len() - 1]),
-        (TestResult::Err(error), true) => {
+        (Ok(()), _) => Ok(&buffer[..buffer.len() - 1]),
+        (Err(error), true) => {
             println!("Warning! Ignoring TestError: {error:?}");
             Ok(buffer)
         }
-        (TestResult::Err(error), false) => Err(error),
+        (Err(error), false) => Err(error),
     }
 }
 

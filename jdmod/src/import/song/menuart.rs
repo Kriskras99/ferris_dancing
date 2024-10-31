@@ -1,9 +1,10 @@
 //! # Menuart
 //! Imports all the textures and phone images used in the menus for this song
-use std::{borrow::Cow, fs::File, io::Write};
+use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
-use ubiart_toolkit::{cooked, json_types::PhoneImages};
+use hipstr::HipStr;
+use ubiart_toolkit::{cooked, cooked::tpl::types::PhoneImages};
 
 use super::SongImportState;
 use crate::{
@@ -49,7 +50,7 @@ pub fn import(
                     .texture_set
                     .gfx_material_texture_path_set
                     .diffuse,
-                sis.ugi.platform,
+                sis.ugi,
             )?;
 
             let from = match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
@@ -69,8 +70,8 @@ pub fn import(
             menuart.push(MenuArt::Texture(MenuArtTexture {
                 scale: actor.scale,
                 pos2d: actor.pos2d,
-                name: Cow::Borrowed(name),
-                filename: Cow::Owned(to_filename),
+                name: name.clone(),
+                filename: HipStr::from(to_filename),
                 disable_shadow: mgc.disable_shadow,
                 anchor: mgc
                     .enums
@@ -82,7 +83,7 @@ pub fn import(
     }
 
     for (name, filename) in phone_images {
-        let from = match (sis.vfs.open(filename.as_ref().as_ref()), sis.lax) {
+        let from = match (sis.vfs.open(filename.as_str().as_ref()), sis.lax) {
             (Ok(from), _) => from,
             (Err(err), true) => {
                 println!("Warning! {err}");
@@ -96,13 +97,14 @@ pub fn import(
             filename
                 .rsplit_once('.')
                 .ok_or_else(|| anyhow!("Malformed filename"))?
-                .1,
+                .1
+                .as_str(),
         );
         let mut to = File::create(sis.dirs.menuart().join(&new_filename))?;
         to.write_all(&from)?;
 
         menuart.push(MenuArt::Phone(PhoneImage {
-            filename: Cow::Owned(new_filename),
+            filename: HipStr::from(new_filename),
             name: name.clone(),
         }));
     }

@@ -1,8 +1,7 @@
 use std::{backtrace::Backtrace, num::TryFromIntError};
 
+use test_eq::TestFailure;
 use thiserror::Error;
-
-use crate::testing::TestError;
 
 /// Errors returend when the test* functions fail
 #[derive(Error, Debug)]
@@ -46,7 +45,7 @@ pub enum WriteError {
     Test {
         /// The original test error
         #[from]
-        test: TestError,
+        test: TestFailure,
         /// Backtrace
         backtrace: Backtrace,
     },

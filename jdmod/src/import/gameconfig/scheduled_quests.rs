@@ -1,8 +1,9 @@
 //! # Scheduled Quests
 //! Imports all scheduled quests
+
 use std::fs::File;
 
-use anyhow::{anyhow, Context, Error};
+use anyhow::{anyhow, Error};
 use ubiart_toolkit::{
     cooked,
     json_types::{isg::ScheduledQuestSetup, v1819::ScheduledQuestDesc1819},
@@ -25,20 +26,21 @@ pub fn import_v20v22(
 ) -> Result<(), Error> {
     println!("Importing scheduled quests...");
 
-    let scheduled_quests_file = is.vfs.open(cook_path(path, is.ugi.platform)?.as_ref())?;
+    let scheduled_quests_file = is.vfs.open(cook_path(path, is.ugi)?.as_ref())?;
     let parsed_json = cooked::json::parse_v22(&scheduled_quests_file, is.lax)?;
     let scheduled_quests = parsed_json.into_scheduled_quests_database()?;
     let quest_descriptions = scheduled_quests.scheduled_quests;
 
     let quest_config_path = is.dirs.config().join("quests.json");
-    let scheduled_quests = if quest_config_path.exists() {
-        let quest_config_file = File::open(&quest_config_path)?;
-        let mut scheduled_quests: ScheduledQuests<'_> =
-            serde_json::from_reader(&quest_config_file)?;
+    if quest_config_path.exists() {
+        let quest_config_file = std::fs::read(&quest_config_path)?;
+        let mut scheduled_quests: ScheduledQuests<'_> = serde_json::from_slice(&quest_config_file)?;
         scheduled_quests
             .quests
             .extend(quest_descriptions.into_iter().map(QuestDescription::from));
-        scheduled_quests
+
+        let quest_config_file = File::create(&quest_config_path)?;
+        serde_json::to_writer_pretty(quest_config_file, &scheduled_quests)?;
     } else {
         let first_discovery_quest = quest_descriptions
             .iter()
@@ -49,7 +51,7 @@ pub fn import_v20v22(
             .into_iter()
             .map(QuestDescription::from)
             .collect();
-        ScheduledQuests {
+        let scheduled_quests = ScheduledQuests {
             minimum_score: setup.minimum_score,
             session_count_until_discovery_kill: setup.session_count_until_discovery_kill,
             session_count_until_quest_kill: setup.session_count_until_quest_kill,
@@ -63,11 +65,11 @@ pub fn import_v20v22(
             time_cap_in_hours_to_renew: setup.time_cap_in_hours_to_renew,
             exclude_from_algorithm_quest_tags: setup.exclude_from_algorithm_quest_tags,
             quests,
-        }
-    };
+        };
 
-    let quest_config_file = File::create(&quest_config_path)?;
-    serde_json::to_writer_pretty(quest_config_file, &scheduled_quests)?;
+        let quest_config_file = File::create(&quest_config_path)?;
+        serde_json::to_writer_pretty(quest_config_file, &scheduled_quests)?;
+    };
 
     Ok(())
 }
@@ -85,11 +87,9 @@ pub fn import_v18v19(
     let mut objectives = load_objectives(is)?;
 
     let quest_config_path = is.dirs.config().join("quests.json");
-    let mut scheduled_quests: ScheduledQuests<'_> = {
-        let quest_config_file =
-            File::open(&quest_config_path).context("config/quests.json not found!")?;
-        serde_json::from_reader(&quest_config_file)?
-    };
+    let scheduled_quests_file = std::fs::read(&quest_config_path)?;
+    let mut scheduled_quests: ScheduledQuests = serde_json::from_slice(&scheduled_quests_file)?;
+
     let quests = quest_descriptions
         .into_iter()
         .map(|q| {

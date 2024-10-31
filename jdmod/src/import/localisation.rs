@@ -13,18 +13,19 @@ use crate::types::{
 
 /// Imports the localisation files and matches them against existing translations
 pub fn import(vfs: &dyn VirtualFileSystem, dirs: &DirectoryTree) -> Result<LocaleIdMap, Error> {
-    // First: load existing translations
-    let mut mod_locale = Localisation::load(dirs)?;
-
-    let mut game_locale: HashMap<LocaleId, Translation<'_>> = HashMap::new();
-
     let mut loc8_files = Vec::new();
 
-    // Second: load new translations
+    // First: load new translations files
     for file in vfs.walk_filesystem("enginedata/localisation".as_ref())? {
         let loc8_file = vfs.open(file.as_ref())?;
         loc8_files.push(loc8_file);
     }
+
+    // Second: load existing translations
+    let mut mod_locale = Localisation::load(dirs)?;
+
+    // Third: load new translations
+    let mut game_locale: HashMap<LocaleId, Translation<'_>> = HashMap::new();
     for loc8_file in &loc8_files {
         if let Ok(loc) = Loc8::deserialize(loc8_file) {
             let lang = loc.language;
@@ -40,7 +41,7 @@ pub fn import(vfs: &dyn VirtualFileSystem, dirs: &DirectoryTree) -> Result<Local
         }
     }
 
-    // Third: Merge translations if the mod already has translations, otherwise just set the translations
+    // Fourth: Merge translations if the mod already has translations, otherwise just set the translations
     let locale_id_map = if mod_locale.is_empty() {
         mod_locale = Localisation::from_game_locale(game_locale);
         let mut locale_id_map = LocaleIdMap::default();
@@ -58,7 +59,7 @@ pub fn import(vfs: &dyn VirtualFileSystem, dirs: &DirectoryTree) -> Result<Local
         locale_id_map
     };
 
-    // Fourth: Save translations
+    // Fifth: Save translations
     mod_locale.save(dirs)?;
 
     Ok(locale_id_map)

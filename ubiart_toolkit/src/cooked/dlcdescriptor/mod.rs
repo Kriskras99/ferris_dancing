@@ -1,20 +1,16 @@
-use dotstar_toolkit_utils::{
-    bytes::{
-        primitives::u32be,
-        read::{BinaryDeserialize, ReadAtExt, ReadError},
-    },
-    test_eq,
+use dotstar_toolkit_utils::bytes::{
+    primitives::u32be,
+    read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use hipstr::HipStr;
-
-use crate::utils::UniqueGameId;
+use test_eq::test_eq;
 
 pub struct DlcDescriptor<'a> {
     pub name: HipStr<'a>,
 }
 
 impl<'de> BinaryDeserialize<'de> for DlcDescriptor<'de> {
-    type Ctx = UniqueGameId;
+    type Ctx = ();
     type Output = Self;
 
     fn deserialize_at_with(
@@ -30,7 +26,7 @@ impl<'de> BinaryDeserialize<'de> for DlcDescriptor<'de> {
         test_eq!(unk2, 0x07DF)?;
         let unk3 = reader.read_at::<u32be>(position)?;
         test_eq!(unk3, 0x1)?;
-        let name = reader.read_len_string_at::<u32be>(position)?.into();
+        let name = reader.read_len_string_at::<u32be>(position)?;
         Ok(Self { name })
     }
 }

@@ -1,7 +1,8 @@
 //! Contains the types that describe the usefull information in this filetype
 
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::{errors::ParserError, LocaleId};
@@ -100,7 +101,7 @@ impl Language {
 #[derive(Clone)]
 pub struct Loc8<'a> {
     pub language: Language,
-    pub strings: HashMap<LocaleId, Cow<'a, str>>,
+    pub strings: HashMap<LocaleId, HipStr<'a>>,
 }
 
 impl Loc8<'_> {

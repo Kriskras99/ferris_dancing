@@ -1,4 +1,4 @@
-use dotstar_toolkit_utils::{test_eq, testing::TestError};
+use test_eq::{test_eq, TestFailure};
 
 use super::{SceneConfigManager, Sgs};
 use crate::utils::errors::ParserError;
@@ -20,7 +20,7 @@ pub fn parse_sgscontainer(src: &[u8]) -> Result<SceneConfigManager<'_>, ParserEr
 }
 
 /// Remove the 'S' at the front and '\0' at the back of the buffer.
-fn clean_buffer_sgs(buffer: &[u8]) -> Result<&[u8], TestError> {
+fn clean_buffer_sgs(buffer: &[u8]) -> Result<&[u8], TestFailure> {
     test_eq!(buffer[0], b'S')?;
     test_eq!(buffer[buffer.len() - 1], 0x0)?;
 

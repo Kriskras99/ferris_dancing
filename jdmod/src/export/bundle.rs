@@ -13,12 +13,12 @@ use anyhow::{anyhow, Context, Error};
 use crossbeam::channel::{Receiver, Sender};
 use dotstar_toolkit_utils::{
     bytes::write::WriteAt,
-    test_eq,
     vfs::{
         layeredfs::OverlayFs, native::NativeFs, symlinkfs::SymlinkFs, vecfs::VecFs,
         VirtualFileSystem,
     },
 };
+use test_eq::test_eq;
 use ubiart_toolkit::{
     ipk::{self, vfs::IpkFilesystem},
     secure_fat::SecureFat,
@@ -70,7 +70,11 @@ pub fn bundle<'fs: 'bf, 'bf>(
     )));
 
     // Make sure that bundle_nx.ipk is the first bundle, so loading goes faster
-    let main_bundle_id = { sfat.lock().unwrap().add_bundle("bundle".into()) };
+    let main_bundle_id = {
+        sfat.lock()
+            .expect("Poisoned lock, terminating")
+            .add_bundle("bundle".into())
+    };
 
     // Loop while the channel we receive files on is still open
     loop {
@@ -82,7 +86,9 @@ pub fn bundle<'fs: 'bf, 'bf>(
                 // Check if the song bundle would be too big if this song is added
                 if song_files.size()? + new_song_files.size()? >= MAX_BUNDLE_SIZE_FAT32 {
                     // Save this bundle and create a new one
-                    tx_bundle_job.send((sfat.clone(), song_files)).unwrap();
+                    tx_bundle_job
+                        .send((sfat.clone(), song_files))
+                        .expect("Broken jobs channel, terminating");
                     song_files = BuildFiles {
                         generated_files: VecFs::with_capacity(1000),
                         static_files: SymlinkFs::with_capacity(native_vfs, 500),
@@ -135,7 +141,9 @@ pub fn bundle<'fs: 'bf, 'bf>(
     }
 
     // Save last song bundle
-    tx_bundle_job.send((sfat.clone(), song_files)).unwrap();
+    tx_bundle_job
+        .send((sfat.clone(), song_files))
+        .expect("Broken jobs channel, terminating");
     // Other threads will keep waiting for jobs until this channel is closed/dropped
     drop(tx_bundle_job);
 
@@ -179,7 +187,7 @@ pub fn bundle<'fs: 'bf, 'bf>(
     {
         // Link all the file paths to the bundle
         sfat.lock()
-            .unwrap()
+            .expect("Poisoned lock, terminating")
             .add_path_ids_to_bundle(main_bundle_id, filenames.into_iter().map(PathId::from));
     }
 
@@ -188,7 +196,7 @@ pub fn bundle<'fs: 'bf, 'bf>(
     // Wait until all bundles are added
     let sfat = loop {
         sfat = match Arc::try_unwrap(sfat) {
-            Ok(unwrapped) => break unwrapped.into_inner().unwrap(),
+            Ok(unwrapped) => break unwrapped.into_inner().unwrap_or_else(|_| unreachable!()),
             Err(still_shared) => still_shared,
         }
     };
@@ -240,7 +248,7 @@ pub fn save_songs_bundle(
     )?;
 
     {
-        let mut sfat = sfat.lock().unwrap();
+        let mut sfat = sfat.lock().expect("Poisoned lock, terminating");
         // Add the bundle to the sfat
         let bundle_id = sfat.add_bundle(name.clone());
         // Link all the file paths to the bundle

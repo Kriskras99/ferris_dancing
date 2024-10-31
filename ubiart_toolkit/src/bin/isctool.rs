@@ -4,7 +4,7 @@ use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use dotstar_toolkit_utils::bytes::read_to_vec;
-use ubiart_toolkit::cooked;
+use ubiart_toolkit::{cooked, utils::UniqueGameId};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -18,7 +18,7 @@ fn main() {
     let path = cli.source;
 
     let data = read_to_vec(&path).unwrap();
-    let isc = match cooked::isc::parse(&data) {
+    let isc = match cooked::isc::parse(&data, UniqueGameId::WIIU2015) {
         Ok(isc) => isc,
         Err(e) => panic!("{path:?}: {e:?}"),
     };

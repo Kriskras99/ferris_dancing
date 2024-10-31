@@ -3,7 +3,7 @@
 use std::{
     collections::{hash_map::Entry, HashMap},
     fs::{self, File},
-    io::{self, ErrorKind},
+    io::{Error, ErrorKind, Result},
     path::{Path, PathBuf},
     sync::{Arc, Mutex, OnceLock, Weak},
     time::SystemTime,
@@ -30,7 +30,7 @@ impl NativeFs {
     /// # Errors
     /// Will error if `root` does not exist
     #[instrument]
-    pub fn new(root: &Path) -> std::io::Result<Self> {
+    pub fn new(root: &Path) -> Result<Self> {
         Ok(Self {
             root: root.canonicalize()?,
             cache: Mutex::new(HashMap::new()),
@@ -42,7 +42,7 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if the path is outside the root or if the path does not exist
-    fn canonicalize(&self, path: &VirtualPath) -> std::io::Result<PathBuf> {
+    fn canonicalize(&self, path: &VirtualPath) -> Result<PathBuf> {
         let mut clean = path.clean().into_string();
         if clean.starts_with('/') {
             clean.remove(0);
@@ -52,8 +52,8 @@ impl NativeFs {
         if path.starts_with(&self.root) {
             Ok(path)
         } else {
-            Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
+            Err(Error::new(
+                ErrorKind::InvalidInput,
                 format!("{path:?} is outside root {:?}", self.root),
             ))
         }
@@ -67,7 +67,7 @@ impl NativeFs {
         root: &Path,
         current: &Path,
         list: &mut Vec<VirtualPathBuf>,
-    ) -> std::io::Result<()> {
+    ) -> Result<()> {
         for entry in current.read_dir()?.flatten() {
             let path = entry.path();
             if path.is_dir() {
@@ -75,9 +75,9 @@ impl NativeFs {
             } else if path.is_file() {
                 let path = path
                     .strip_prefix(root)
-                    .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?;
+                    .map_err(|e| Error::new(ErrorKind::Other, e))?;
                 let path = VirtualPathBuf::try_from(path)
-                    .map_err(|e| std::io::Error::new(ErrorKind::Other, e))?
+                    .map_err(|e| Error::new(ErrorKind::Other, e))?
                     .clean();
                 list.push(path);
             }
@@ -87,7 +87,7 @@ impl NativeFs {
 }
 
 impl VirtualFileSystem for NativeFs {
-    fn open(&self, path: &VirtualPath) -> std::io::Result<VirtualFile<'static>> {
+    fn open(&self, path: &VirtualPath) -> Result<VirtualFile<'static>> {
         let path = self.canonicalize(path)?;
 
         #[allow(
@@ -118,7 +118,7 @@ impl VirtualFileSystem for NativeFs {
         Ok(VirtualFile::Mmap(data))
     }
 
-    fn metadata(&self, path: &VirtualPath) -> std::io::Result<VirtualMetadata> {
+    fn metadata(&self, path: &VirtualPath) -> Result<VirtualMetadata> {
         let metadata = fs::metadata(self.canonicalize(path)?)?;
         let file_size = metadata.len();
         let created = metadata
@@ -132,8 +132,8 @@ impl VirtualFileSystem for NativeFs {
         Ok(VirtualMetadata { file_size, created })
     }
 
-    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> std::io::Result<WalkFs<'rf>> {
-        let list = self.list.get_or_try_init::<_, io::Error>(|| {
+    fn walk_filesystem<'rf>(&'rf self, path: &VirtualPath) -> Result<WalkFs<'rf>> {
+        let list = self.list.get_or_try_init::<_, Error>(|| {
             let mut list = Vec::new();
             Self::recursive_file_list(&self.root, &self.root, &mut list)?;
             Ok(list)

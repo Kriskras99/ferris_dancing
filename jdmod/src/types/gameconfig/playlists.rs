@@ -1,8 +1,9 @@
 //! # Playlists
 //! Types for playlists
-use std::{borrow::Cow, path::Path};
+use std::path::Path;
 
 use anyhow::{anyhow, Error};
+use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::json_types;
 
@@ -16,9 +17,11 @@ pub struct Playlist<'a> {
     /// Description of the playlist
     pub description: LocaleId,
     /// Path to the cover image
-    pub cover: Cow<'a, str>,
+    #[serde(borrow)]
+    pub cover: HipStr<'a>,
     /// Codenames of the maps in the playlist
-    pub maps: Vec<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub maps: Vec<HipStr<'a>>,
 }
 
 impl<'a> Playlist<'a> {
@@ -30,43 +33,43 @@ impl<'a> Playlist<'a> {
         is: &ImportState<'_>,
         offline_playlist: &json_types::isg::OfflinePlaylist<'a>,
     ) -> Result<Self, Error> {
-        let file_stem = AsRef::<Path>::as_ref(offline_playlist.cover_path.as_ref())
+        let file_stem = AsRef::<Path>::as_ref(offline_playlist.cover_path.as_str())
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
             .ok_or_else(|| anyhow!("Failure parsing filename!"))?;
         let cover = if file_stem.starts_with("jd") {
-            Cow::Owned(format!("{file_stem}.png"))
+            HipStr::from(format!("{file_stem}.png"))
         } else {
             match is.ugi.game {
                 ubiart_toolkit::utils::Game::JustDance2014 => {
-                    Cow::Owned(format!("jd14_{file_stem}.png"))
+                    HipStr::from(format!("jd14_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2015 => {
-                    Cow::Owned(format!("jd15_{file_stem}.png"))
+                    HipStr::from(format!("jd15_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2016 => {
-                    Cow::Owned(format!("jd16_{file_stem}.png"))
+                    HipStr::from(format!("jd16_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2017 => {
-                    Cow::Owned(format!("jd17_{file_stem}.png"))
+                    HipStr::from(format!("jd17_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2018 => {
-                    Cow::Owned(format!("jd18_{file_stem}.png"))
+                    HipStr::from(format!("jd18_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2019 => {
-                    Cow::Owned(format!("jd19_{file_stem}.png"))
+                    HipStr::from(format!("jd19_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2020 => {
-                    Cow::Owned(format!("jd20_{file_stem}.png"))
+                    HipStr::from(format!("jd20_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDanceChina => {
-                    Cow::Owned(format!("jdc_{file_stem}.png"))
+                    HipStr::from(format!("jdc_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2021 => {
-                    Cow::Owned(format!("jd21_{file_stem}.png"))
+                    HipStr::from(format!("jd21_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::JustDance2022 => {
-                    Cow::Owned(format!("jd22_{file_stem}.png"))
+                    HipStr::from(format!("jd22_{file_stem}.png"))
                 }
                 ubiart_toolkit::utils::Game::Unknown => {
                     return Err(anyhow!(
@@ -94,7 +97,7 @@ impl<'a> Playlist<'a> {
     /// # Errors
     /// Will error if parsing the filename fails
     pub fn into_offline_playlist(self) -> Result<json_types::isg::OfflinePlaylist<'a>, Error> {
-        let file_stem = AsRef::<Path>::as_ref(self.cover.as_ref())
+        let file_stem = AsRef::<Path>::as_ref(self.cover.as_str())
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
             .ok_or_else(|| anyhow!("Failure parsing filename!"))?;
@@ -102,7 +105,7 @@ impl<'a> Playlist<'a> {
             class: Some(json_types::isg::OfflinePlaylist::CLASS),
             title_id: self.title,
             description_id: self.description,
-            cover_path: Cow::Owned(format!(
+            cover_path: HipStr::from(format!(
                 "world/ui/textures/covers/playlists_offline/{file_stem}.act"
             )),
             maps: self.maps,

@@ -1,9 +1,10 @@
 //! # Video Building
 //! Build the video scenes, actors, and video
-use std::borrow::Cow;
 
 use anyhow::Error;
-use dotstar_toolkit_utils::{test_eq, vfs::VirtualFileSystem};
+use dotstar_toolkit_utils::vfs::VirtualFileSystem;
+use hipstr::HipStr;
+use test_eq::test_eq;
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
@@ -37,7 +38,7 @@ pub fn build(
         cooked::isc::create_vec_with_capacity_hint(&video_map_preview_scene(ses), 1100)?;
 
     // the actual video
-    let video_path = ses.dirs.song().join(ses.song.videofile.as_ref());
+    let video_path = ses.dirs.song().join(ses.song.videofile.as_str());
     test_eq!(
         video_path.extension(),
         Some("webm"),
@@ -88,11 +89,11 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
     let lower_map_name = ses.lower_map_name;
     let actor = cooked::act::Actor {
         lua: SplitPath::new(
-            Cow::Borrowed("world/_common/videoscreen/"),
+            HipStr::borrowed("world/_common/videoscreen/"),
             if map_preview {
-                Cow::Borrowed("video_player_map_preview.tpl")
+                HipStr::borrowed("video_player_map_preview.tpl")
             } else {
-                Cow::Borrowed("video_player_main.tpl")
+                HipStr::borrowed("video_player_main.tpl")
             },
         )?,
         unk1: 0.0,
@@ -102,14 +103,16 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         components: vec![cooked::act::Component::PleoComponent(
             cooked::act::PleoComponent {
                 video: SplitPath::new(
-                    Cow::Owned(map_path.join("videoscoach/").into_string()),
-                    Cow::Owned(format!("{lower_map_name}.webm")),
+                    HipStr::from(map_path.join("videoscoach/").into_string()),
+                    HipStr::from(format!("{lower_map_name}.webm")),
                 )?,
                 dash_mpd: SplitPath::new(
-                    Cow::Owned(map_path.join("videoscoach/").into_string()),
-                    Cow::Owned(format!("{lower_map_name}.mpd")),
+                    HipStr::from(map_path.join("videoscoach/").into_string()),
+                    HipStr::from(format!("{lower_map_name}.mpd")),
                 )?,
-                channel_id: map_preview.then(|| ses.song.map_name.clone()),
+                channel_id: map_preview
+                    .then(|| ses.song.map_name.clone())
+                    .unwrap_or_default(),
             },
         )],
     };
@@ -145,22 +148,22 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
                         relativez: -1.0,
-                        userfriendly: Cow::Borrowed("VideoScreen"),
+                        userfriendly: HipStr::borrowed("VideoScreen"),
                         pos2d: (0.0, -4.5),
-                        lua: Cow::Borrowed("world/_common/videoscreen/video_player_main.tpl"),
+                        lua: HipStr::borrowed("world/_common/videoscreen/video_player_main.tpl"),
                         components: vec![cooked::isc::WrappedComponent::Pleo(
                             cooked::isc::PleoComponent {
-                                video: Cow::Owned(
+                                video: HipStr::from(
                                     map_path
                                         .join(format!("videoscoach/{lower_map_name}.webm"))
                                         .into_string(),
                                 ),
-                                dash_mpd: Cow::Owned(
+                                dash_mpd: HipStr::from(
                                     map_path
                                         .join(format!("videoscoach/{lower_map_name}.mpd"))
                                         .into_string(),
                                 ),
-                                channel_id: Cow::Borrowed(""),
+                                channel_id: HipStr::borrowed(""),
                             }
                             .into(),
                         )],
@@ -170,8 +173,8 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
                         scale: (3.941_238, 2.22),
-                        userfriendly: Cow::Borrowed("VideoOutput"),
-                        lua: Cow::Borrowed("world/_common/videoscreen/video_output_main.tpl"),
+                        userfriendly: HipStr::borrowed("VideoOutput"),
+                        lua: HipStr::borrowed("world/_common/videoscreen/video_output_main.tpl"),
                         components: vec![cooked::isc::WrappedComponent::PleoTextureGraphic(
                             cooked::isc::PleoTextureGraphicComponent {
                                 color_computer_tag_id: 0,
@@ -184,23 +187,23 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                 sinus_speed: 1.0,
                                 angle_x: 0.0,
                                 angle_y: 0.0,
-                                channel_id: Cow::Borrowed(""),
+                                channel_id: HipStr::borrowed(""),
                                 primitive_parameters: cooked::isc::PrimitiveParameters {
                                     gfx_primitive_param: cooked::isc::GFXPrimitiveParam {
                                         color_factor: ubiart_toolkit::utils::Color { color: (1.0, 1.0, 1.0, 1.0) },
                                         enums: vec![cooked::isc::Enum {
-                                            name: Cow::Borrowed("gfxOccludeInfo"),
+                                            name: HipStr::borrowed("gfxOccludeInfo"),
                                             selection: 1,
                                         }],
                                     },
                                 },
                                 enums: vec![
                                     cooked::isc::Enum {
-                                        name: Cow::Borrowed("anchor"),
+                                        name: HipStr::borrowed("anchor"),
                                         selection: 1,
                                     },
                                     cooked::isc::Enum {
-                                        name: Cow::Borrowed("oldAnchor"),
+                                        name: HipStr::borrowed("oldAnchor"),
                                         selection: 1,
                                     },
                                 ],
@@ -208,8 +211,8 @@ fn video_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                                     gfx_material_serializable:
                                         cooked::isc::GFXMaterialSerializable {
                                             atl_channel: 0,
-                                            atl_path: Cow::Borrowed(""),
-                                            shader_path: Cow::Borrowed(
+                                            atl_path: HipStr::borrowed(""),
+                                            shader_path: HipStr::borrowed(
                                                 "world/_common/matshader/pleofullscreen.msh",
                                             ),
                                             stencil_test: None,
@@ -289,19 +292,19 @@ fn video_map_preview_scene<'a>(ses: &SongExportState<'a>) -> cooked::isc::Root<'
                 cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
                         relativez: -1.0,
-                        userfriendly: Cow::Borrowed("VideoScreen"),
+                        userfriendly: HipStr::borrowed("VideoScreen"),
                         pos2d: (0.0, -4.5),
-                        lua: Cow::Borrowed(
+                        lua: HipStr::borrowed(
                             "world/_common/videoscreen/video_player_map_preview.tpl",
                         ),
                         components: vec![cooked::isc::WrappedComponent::Pleo(
                             cooked::isc::PleoComponent {
-                                video: Cow::Owned(
+                                video: HipStr::from(
                                     map_path
                                         .join(format!("videoscoach/{lower_map_name}.webm"))
                                         .into_string(),
                                 ),
-                                dash_mpd: Cow::Owned(
+                                dash_mpd: HipStr::from(
                                     map_path
                                         .join(format!("videoscoach/{lower_map_name}.mpd"))
                                         .into_string(),

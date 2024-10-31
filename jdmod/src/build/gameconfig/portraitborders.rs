@@ -7,6 +7,7 @@ use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
 use ubiart_toolkit::{
     cooked,
     json_types::{self, isg::PortraitBordersDatabase, v22::GameManagerConfig22},
+    utils::UniqueGameId,
 };
 
 use crate::{
@@ -40,11 +41,11 @@ pub fn build(
             bs.native_vfs,
             &bs.rel_tree
                 .portraitborders()
-                .join(pb.background_texture_path.as_ref()),
+                .join(pb.background_texture_path.as_str()),
         )?;
         let background_texture_vec = cooked::png::create_vec(background_texture_encoded)?;
         bf.generated_files.add_file(
-            cook_path(&desc.background_texture_path, bs.platform)?.into(),
+            cook_path(&desc.background_texture_path, UniqueGameId::NX2022)?.into(),
             background_texture_vec,
         )?;
 
@@ -53,11 +54,11 @@ pub fn build(
                 bs.native_vfs,
                 &bs.rel_tree
                     .portraitborders()
-                    .join(foreground_texture_path.as_ref()),
+                    .join(foreground_texture_path.as_str()),
             )?;
             let foreground_texture_vec = cooked::png::create_vec(foreground_texture_encoded)?;
             bf.generated_files.add_file(
-                cook_path(&desc.foreground_texture_path, bs.platform)?.into(),
+                cook_path(&desc.foreground_texture_path, UniqueGameId::NX2022)?.into(),
                 foreground_texture_vec,
             )?;
         }
@@ -65,16 +66,16 @@ pub fn build(
         bf.static_files.add_file(
             bs.rel_tree
                 .portraitborders()
-                .join(pb.background_phone_path.as_ref()),
-            VirtualPathBuf::from(desc.background_phone_path.as_ref()),
+                .join(pb.background_phone_path.as_str()),
+            VirtualPathBuf::from(desc.background_phone_path.as_str()),
         )?;
 
         if let Some(foreground_phone_path) = &pb.foreground_phone_path {
             bf.static_files.add_file(
                 bs.rel_tree
                     .portraitborders()
-                    .join(foreground_phone_path.as_ref()),
-                VirtualPathBuf::from(desc.foreground_phone_path.as_ref()),
+                    .join(foreground_phone_path.as_str()),
+                VirtualPathBuf::from(desc.foreground_phone_path.as_str()),
             )?;
         }
 
@@ -88,7 +89,11 @@ pub fn build(
 
     let template_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
-        cook_path(&gameconfig.config_files_path.portraitborders, bs.platform)?.into(),
+        cook_path(
+            &gameconfig.config_files_path.portraitborders,
+            UniqueGameId::NX2022,
+        )?
+        .into(),
         template_vec,
     )?;
 

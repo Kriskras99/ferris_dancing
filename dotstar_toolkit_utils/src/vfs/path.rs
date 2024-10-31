@@ -951,13 +951,13 @@ impl VirtualPathBuf {
 }
 
 impl Display for VirtualPathBuf {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.inner)
     }
 }
 
 impl std::fmt::Debug for VirtualPathBuf {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.inner)
     }
 }
@@ -1040,6 +1040,18 @@ impl From<&str> for VirtualPathBuf {
         };
         path.check_path();
         path
+    }
+}
+
+impl From<&VirtualPath> for VirtualPathBuf {
+    /// Converts a borrowed [`VirtualPath`] to a [`VirtualPathBuf`].
+    ///
+    /// Allocates a [`VirtualPathBuf`] and copies the data into it.
+    #[inline]
+    fn from(s: &VirtualPath) -> VirtualPathBuf {
+        Self {
+            inner: s.to_string(),
+        }
     }
 }
 

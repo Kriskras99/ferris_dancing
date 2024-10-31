@@ -8,10 +8,8 @@ use std::{
 
 use anyhow::{anyhow, Error};
 use clap::Args;
-use dotstar_toolkit_utils::{
-    test_eq,
-    vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
-};
+use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf};
+use test_eq::test_eq;
 use ubiart_toolkit::{ipk, secure_fat};
 
 use crate::FileConflictStrategy;

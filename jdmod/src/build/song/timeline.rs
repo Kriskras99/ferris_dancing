@@ -1,11 +1,14 @@
 //! # Timeline Building
 //! Builds the karaoke and dance timelines, and pictos
-use std::borrow::Cow;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
 use hipstr::HipStr;
-use ubiart_toolkit::{cooked, cooked::tape, json_types, utils::SplitPath};
+use ubiart_toolkit::{
+    cooked,
+    cooked::{isc::TapeCase, tape},
+    utils::{SplitPath, UniqueGameId},
+};
 
 use super::SongExportState;
 use crate::{
@@ -103,7 +106,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
                 let from = ses
                     .dirs
                     .moves()
-                    .join(orig_clip.classifier_filename.as_ref());
+                    .join(orig_clip.classifier_filename.as_str());
                 // Classifier path does not include platform specifier
                 let to = MotionClip::fix_classifier_path(&new_clip.classifier_path, ses.platform)?;
 
@@ -120,11 +123,11 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
             }
             Clip::Pictogram(orig_clip) => {
                 let new_clip = orig_clip.to_tape(&ses.song);
-                let to = cook_path(&new_clip.picto_path, ses.platform)?;
+                let to = cook_path(&new_clip.picto_path, UniqueGameId::NX2022)?;
 
                 // A picto will be used multiple times, so only create it once
                 if !bf.generated_files.exists(to.as_ref()) {
-                    let from = ses.dirs.pictos().join(orig_clip.picto_filename.as_ref());
+                    let from = ses.dirs.pictos().join(orig_clip.picto_filename.as_str());
                     if ses.native_vfs.exists(&from) {
                         let encoded = encode_texture(ses.native_vfs, &from)?;
                         let encoded_vec = cooked::png::create_vec(encoded)?;
@@ -156,7 +159,7 @@ fn build_dance(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Err
         tape_clock: 0,
         tape_bar_count: 1,
         free_resources_after_play: 0,
-        map_name: ses.song.map_name.as_ref().into(),
+        map_name: ses.song.map_name.as_str().into(),
         soundwich_event: Some(HipStr::new()),
     };
 
@@ -214,7 +217,7 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
         tape_clock: 0,
         tape_bar_count: 1,
         free_resources_after_play: 0,
-        map_name: ses.song.map_name.as_ref().into(),
+        map_name: ses.song.map_name.as_str().into(),
         soundwich_event: Some(HipStr::new()),
     };
 
@@ -238,7 +241,7 @@ fn build_karaoke(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), E
 /// Build tml scene
 fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
     let map_path = ses.map_path;
-    let map_name = ses.song.map_name.as_ref();
+    let map_name = ses.song.map_name.as_str();
     let lower_map_name = ses.lower_map_name;
     cooked::isc::Root {
         scene: cooked::isc::Scene {
@@ -280,15 +283,15 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
                         relativez: 0.000_001,
-                        userfriendly: Cow::Owned(format!("{map_name}_tml_dance")),
+                        userfriendly: HipStr::from(format!("{map_name}_tml_dance")),
                         pos2d: (-1.157_74, 0.006_158),
-                        lua: Cow::Owned(
+                        lua: HipStr::from(
                             map_path
                                 .join(format!("timeline/{lower_map_name}_tml_dance.tpl"))
                                 .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase(
-                            Default::default(),
+                            TapeCase::default(),
                         )],
                         ..Default::default()
                     }),
@@ -296,15 +299,15 @@ fn tml_scene(ses: &SongExportState<'_>) -> cooked::isc::Root<'static> {
                 cooked::isc::WrappedActors::Actor(cooked::isc::WrappedActor {
                     actor: Box::new(cooked::isc::Actor {
                         relativez: 0.000_001,
-                        userfriendly: Cow::Owned(format!("{map_name}_tml_karaoke")),
+                        userfriendly: HipStr::from(format!("{map_name}_tml_karaoke")),
                         pos2d: (-1.157_74, 0.006_158),
-                        lua: Cow::Owned(
+                        lua: HipStr::from(
                             map_path
                                 .join(format!("timeline/{lower_map_name}_tml_karaoke.tpl"))
                                 .into_string(),
                         ),
                         components: vec![cooked::isc::WrappedComponent::TapeCase(
-                            Default::default(),
+                            TapeCase::default(),
                         )],
                         ..Default::default()
                     }),
@@ -326,8 +329,8 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
     let k_or_d = k_or_d.to_str();
     let actor = cooked::act::Actor {
         lua: SplitPath::new(
-            Cow::Owned(map_path.join("timeline/").into_string()),
-            Cow::Owned(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
+            HipStr::from(map_path.join("timeline/").into_string()),
+            HipStr::from(format!("{lower_map_name}_tml_{k_or_d}.tpl")),
         )?,
         unk1: 0.0,
         unk2: 1.0,
@@ -349,12 +352,12 @@ fn tml_template(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Erro
         let lower_map_name = ses.lower_map_name;
         let label = k_or_d.to_label();
         let k_or_d = k_or_d.to_tape_end();
-        vec![json_types::tpl::TapeGroup {
-            class: Some(json_types::tpl::TapeGroup::CLASS),
-            entries: vec![json_types::tpl::TapeEntry {
-                class: Some(json_types::tpl::TapeEntry::CLASS),
-                label: Cow::Owned(format!("tml_{label}")),
-                path: Cow::Owned(
+        vec![cooked::tpl::types::TapeGroup {
+            class: Some(cooked::tpl::types::TapeGroup::CLASS),
+            entries: vec![cooked::tpl::types::TapeEntry {
+                class: Some(cooked::tpl::types::TapeEntry::CLASS),
+                label: HipStr::from(format!("tml_{label}")),
+                path: HipStr::from(
                     map_path
                         .join(format!("timeline/{lower_map_name}_tml_{k_or_d}"))
                         .into_string(),
@@ -362,21 +365,21 @@ fn tml_template(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Erro
             }],
         }]
     };
-    let template = json_types::v22::Template22::Actor(json_types::v22::Actor22 {
-        class: None,
+    let template = cooked::tpl::types::Actor {
+        class: cooked::tpl::types::Actor::CLASS,
         wip: 0,
         lowupdate: 0,
         update_layer: 0,
         procedural: 0,
         startpaused: 0,
         forceisenvironment: 0,
-        components: vec![json_types::v22::Template22::TapeCase(
-            json_types::tpl::MasterTape {
+        components: vec![cooked::tpl::types::Template::TapeCase(
+            cooked::tpl::types::MasterTape {
                 class: None,
                 tapes_rack,
             },
         )],
-    });
+    };
 
     Ok(cooked::json::create_vec(&template)?)
 }
