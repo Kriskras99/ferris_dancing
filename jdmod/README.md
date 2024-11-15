@@ -6,20 +6,30 @@ It can import and export songs, playlists, quests/objectives, avatars, aliases, 
 
 Platform support matrix:
 
-|        | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 | 2020 | 舞力全开 | 2021 | 2022 |
-| ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| Switch |      |      |      |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |
-| PS4    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |  ❌   |  ❌   |
-| Wii U  |  ❌   |  ❌   |  ✅   |  ✅   |  ❌   |  ❌   |      |      |      |      |
-| X360   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |      |
-| PS3    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |      |      |
-| Win    |      |      |      |  ✅   |      |      |      |      |      |      |
-| Wii    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |      |      |
+|        | 2014 | 2015 | 舞力全开2015 | 2016 | 2017 | 舞力全开2017 | 2018 | 2019 | 2020 | 舞力全开 | 2021 | 2022 |
+| ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| Switch |      |      |      |      |  ✅   |      |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |  ✅   |
+| PS4    |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |  ❌   |      |  ❌   |  ❌   |
+| Wii U  |  ❌   |  ⚠<sup>1</sup>   |      |  ✅   |  ✅         ||  ❌   |  ❌   |      |      |      |      |
+| X360   |  ❌   |  ❌   |      |  ❌   |  ❌   |      |  ❌   |  ❌   |      |      |      |      |
+| PS3    |  ❌   |  ❌   |      |  ❌   |  ❌   |      |  ❌   |      |      |      |      |      |
+| Win    |      |      |      |      |  ✅   |      |      |      |      |      |      |      |
+| Wii    |  ❌   |  ❌   |      |  ❌   |  ❌   |      |  ❌   |  ❌   |  ❌   |      |      |      |
+
+<sup>1</sup> Only DLC is supported
 
 Legend:
 - Empty cell: Game not released on that platform
 - ✅: Supported in JDMod
+- ⚠: Partial support in JDMod, see footnotes
 - ❌: Not yet supported in JDMod
+
+## Usage
+```
+jdmod new path/to/switch/just/dance/2022/secure_fat.gf path/to/where/you/want/the/mod
+jdmod import path/to/game/files/to/import path/to/where/you/placed/the/mod
+```
+Every game, dlc, and song you want to import should be in seperate directories.
 
 ## FAQ
 
@@ -35,5 +45,3 @@ If you have the programming skills, you're welcome to add support for it.
 
 ### I want to create a mod for a game that is not Just Dance 2022, is this supported?
 **No**, you can only export a mod created in this program for Just Dance 2022. Any other game is not supported.
-
-739
