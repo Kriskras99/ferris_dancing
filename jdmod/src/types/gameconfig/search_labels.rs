@@ -3,7 +3,7 @@
 use hipstr::HipStr;
 use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::{json_types::isg::SongSearchTag, utils::LocaleId};
+use ubiart_toolkit::{cooked::isg::SongSearchTag, utils::LocaleId};
 
 use crate::types::localisation::LocaleIdMap;
 

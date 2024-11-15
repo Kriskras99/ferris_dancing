@@ -18,6 +18,7 @@ use nx_opus::{mux_from_opus, mux_to_opus};
 use regex::Regex;
 use rubato::Resampler;
 use test_eq::test_eq;
+use tracing::debug;
 use ubiart_toolkit::{
     cooked::{
         png::Png,
@@ -167,6 +168,7 @@ pub fn hipstr_regex_single_capture<'a>(
 pub fn decode_audio(
     reader: &(impl ReadAtExt + ?Sized),
     writer: &mut (impl WriteAt + ?Sized),
+    lax: bool,
 ) -> Result<bool, Error> {
     let wav = Wav::deserialize(reader)?;
 
@@ -210,18 +212,27 @@ pub fn decode_audio(
             let buffer = CursorAt::new(writer, 0);
             let mut writer = hound::WavWriter::new(buffer, spec)?;
 
+            let leftover_bytes = data.data.len() % (2 * usize::from(fmt.channel_count));
+            let data = if leftover_bytes == 0 {
+                &data.data
+            } else if lax {
+                debug!("Truncating {leftover_bytes} bytes");
+                &data.data[..data.data.len() - leftover_bytes]
+            } else {
+                return Err(anyhow!("Samples is not a multiple of channel count: Samples: {}, Channel count: {}, Sample rate: {}", data.data.len(), fmt.channel_count, fmt.sample_rate));
+            };
+
             if fmt.sample_rate != 48000 {
                 let input = data
-                    .data
                     .chunks_exact(2)
                     .map(|chunk| <[u8; 2]>::try_from(chunk).unwrap_or_else(|_| unreachable!()))
                     .map(i16::from_le_bytes);
                 resample_audio(fmt.sample_rate, 48000, fmt.channel_count, input, writer);
             } else {
-                let mut sample_writer = writer.get_i16_writer(u32::try_from(data.data.len() / 2)?);
+                let mut sample_writer = writer.get_i16_writer(u32::try_from(data.len() / 2)?);
                 let mut position = 0;
-                for _ in 0..(data.data.len() / 2) {
-                    let sample = data.data.read_at::<i16le>(&mut position)?;
+                for _ in 0..(data.len() / 2) {
+                    let sample = data.read_at::<i16le>(&mut position)?;
                     sample_writer.write_sample(sample);
                 }
                 sample_writer.flush()?;

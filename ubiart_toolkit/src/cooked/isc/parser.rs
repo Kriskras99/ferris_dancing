@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit_shared_types::errors::ParserError;
 
@@ -8,7 +10,10 @@ use crate::utils::{Game, UniqueGameId};
 pub fn parse(data: &[u8], ugi: UniqueGameId) -> Result<Root<'_>, ParserError> {
     let root = match ugi.game {
         game if game >= Game::JustDance2016 => {
-            let string = std::str::from_utf8(data)?;
+            let string = match String::from_utf8_lossy(data) {
+                Cow::Borrowed(string) => string,
+                Cow::Owned(string) => string.leak(),
+            };
             let root: Root = quick_xml::de::from_str(string)?;
             root
         }

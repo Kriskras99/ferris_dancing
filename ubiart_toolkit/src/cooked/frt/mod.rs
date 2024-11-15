@@ -1,7 +1,12 @@
 use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
+use ubiart_toolkit_shared_types::errors::ParserError;
 
-#[cfg(feature = "full_json_types")]
+pub fn parse(data: &[u8]) -> Result<FeedbackFXManager<'_>, ParserError> {
+    let res = crate::utils::json::parse(data, false)?;
+    Ok(res)
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct FeedbackFXManager<'a> {
@@ -11,7 +16,6 @@ pub struct FeedbackFXManager<'a> {
     pub bus_list: Vec<Buses<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Buses<'a> {

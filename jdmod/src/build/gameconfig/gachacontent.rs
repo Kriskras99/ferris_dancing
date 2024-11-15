@@ -2,11 +2,7 @@
 //! Build the gacha machine
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
-use ubiart_toolkit::{
-    cooked,
-    json_types::{self, v22::GameManagerConfig22},
-    utils::UniqueGameId,
-};
+use ubiart_toolkit::{cooked, cooked::isg::GameManagerConfigV22, utils::UniqueGameId};
 
 use crate::{
     build::{BuildFiles, BuildState},
@@ -18,7 +14,7 @@ use crate::{
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &mut GameManagerConfig22<'_>,
+    gameconfig: &mut GameManagerConfigV22<'_>,
     gacha_items: Vec<GachaItem>,
 ) -> Result<(), Error> {
     let gacha_config_file = bs
@@ -34,11 +30,10 @@ pub fn build(
         .nb_maps_threshold_before_push_gacha_screen =
         gacha_config.numbers_of_maps_before_push_gacha_screen;
 
-    let gacha_content_database =
-        json_types::v22::Template22::GachaContentDatabase(json_types::isg::GachaContentDatabase {
-            class: None,
-            collectibles: gacha_items.into_iter().map(Into::into).collect(),
-        });
+    let gacha_content_database = cooked::isg::GachaContentDatabase {
+        class: Some(cooked::isg::GachaContentDatabase::CLASS),
+        collectibles: gacha_items.into_iter().map(Into::into).collect(),
+    };
 
     let gacha_content_database_vec =
         cooked::json::create_vec_with_capacity_hint(&gacha_content_database, 16_000)?;

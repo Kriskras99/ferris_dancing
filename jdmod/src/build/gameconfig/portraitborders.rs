@@ -4,11 +4,7 @@ use std::collections::HashMap;
 
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
-use ubiart_toolkit::{
-    cooked,
-    json_types::{self, isg::PortraitBordersDatabase, v22::GameManagerConfig22},
-    utils::UniqueGameId,
-};
+use ubiart_toolkit::{cooked, cooked::isg::GameManagerConfigV22, utils::UniqueGameId};
 
 use crate::{
     build::{BuildFiles, BuildState},
@@ -20,7 +16,7 @@ use crate::{
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &GameManagerConfig22<'_>,
+    gameconfig: &GameManagerConfigV22<'_>,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let saved_portraitborders_file = bs
@@ -66,11 +62,11 @@ pub fn build(
         bf.static_files.add_file(
             bs.rel_tree
                 .portraitborders()
-                .join(pb.background_phone_path.as_str()),
+                .join(pb.background_texture_path.as_str()),
             VirtualPathBuf::from(desc.background_phone_path.as_str()),
         )?;
 
-        if let Some(foreground_phone_path) = &pb.foreground_phone_path {
+        if let Some(foreground_phone_path) = &pb.foreground_texture_path {
             bf.static_files.add_file(
                 bs.rel_tree
                     .portraitborders()
@@ -82,10 +78,10 @@ pub fn build(
         portrait_borders.push(desc);
     }
 
-    let template = json_types::v22::Template22::PortraitBordersDatabase(PortraitBordersDatabase {
-        class: None,
+    let template = cooked::isg::PortraitBordersDatabase {
+        class: Some(cooked::isg::PortraitBordersDatabase::CLASS),
         portrait_borders,
-    });
+    };
 
     let template_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(

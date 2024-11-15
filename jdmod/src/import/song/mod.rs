@@ -5,7 +5,8 @@ use std::fs::File;
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use hipstr::HipStr;
-use ubiart_toolkit::{cooked, utils::UniqueGameId};
+use tracing::error;
+use ubiart_toolkit::{cooked, cooked::tpl::types::SongDescription, utils::UniqueGameId};
 
 mod autodance;
 mod dance_timeline;
@@ -18,6 +19,7 @@ mod video;
 
 use crate::{
     types::{
+        localisation::LocaleIdMap,
         song::{Song, SongDirectoryTree, Tag},
         ImportState,
     },
@@ -28,6 +30,8 @@ use crate::{
 pub struct SongImportState<'a> {
     /// The filesystem of the game that is being pared
     pub vfs: &'a dyn VirtualFileSystem,
+    /// The map codename
+    pub map_name: HipStr<'static>,
     /// The map codename in lowercase
     pub lower_map_name: &'a str,
     /// The directory structure for this song
@@ -36,6 +40,8 @@ pub struct SongImportState<'a> {
     pub ugi: UniqueGameId,
     /// Should we be lax with parsing
     pub lax: bool,
+    /// Mapping of game locale id to mod locale id
+    pub locale_id_map: &'a LocaleIdMap,
 }
 
 /// Import the song described at `songdesc_path``
@@ -76,23 +82,41 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         return Ok(());
     }
 
-    dirs.create_dir_all()?;
-
     let sis = SongImportState {
         vfs: is.vfs,
+        map_name: map_name.clone().into_owned(),
         lower_map_name: &lower_map_name,
         dirs,
         ugi: is.ugi,
         lax: is.lax,
+        locale_id_map: &is.locale_id_map,
     };
 
-    println!("Parsing {map_name}");
+    match actual_import(&sis, songdesc) {
+        Ok(()) => {}
+        Err(err) => {
+            error!("Failed to import {}: {err}", sis.map_name);
+            sis.dirs.remove_dir_all()?;
+            if !is.lax {
+                return Err(err);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The actual import logic for a song, so that the [`import`] function can catch any errors
+fn actual_import(sis: &SongImportState<'_>, songdesc: SongDescription<'_>) -> Result<(), Error> {
+    println!("Parsing {}", sis.map_name);
+    let lower_map_name = sis.lower_map_name;
+
+    sis.dirs.create_dir_all()?;
     let main_scene_path = cook_path(
         &format!("world/maps/{lower_map_name}/{lower_map_name}_main_scene.isc"),
-        is.ugi,
+        sis.ugi,
     )?;
-    let main_scene_file = is.vfs.open(main_scene_path.as_ref())?;
-    let main_scene = cooked::isc::parse(&main_scene_file, is.ugi)?.scene;
+    let main_scene_file = sis.vfs.open(main_scene_path.as_ref())?;
+    let main_scene = cooked::isc::parse(&main_scene_file, sis.ugi)?.scene;
 
     // Import the audio preview
     let autodance_path = main_scene
@@ -102,7 +126,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         .get_actor_by_userfriendly_end("_autodance", sis.lax)?
         .lua
         .as_ref();
-    autodance::import(&sis, autodance_path)?;
+    autodance::import(sis, autodance_path)?;
 
     // Prepare for importing the timelines
     let timeline_scene = &main_scene
@@ -114,13 +138,13 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
     let dance_timeline_path = &timeline_scene
         .get_actor_by_userfriendly_end("_tml_dance", sis.lax)?
         .lua;
-    dance_timeline::import(&sis, dance_timeline_path)?;
+    dance_timeline::import(sis, dance_timeline_path)?;
 
     // Import the karaoke timeline
     let karaoke_timeline_path = &timeline_scene
         .get_actor_by_userfriendly_end("_tml_karaoke", sis.lax)?
         .lua;
-    karaoke_timeline::import(&sis, karaoke_timeline_path)?;
+    karaoke_timeline::import(sis, karaoke_timeline_path)?;
 
     // Import the mainsequence
     let mainsequence_path = &main_scene
@@ -129,7 +153,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         .as_ref()
         .get_actor_by_userfriendly_end("_MainSequence", sis.lax)?
         .lua;
-    mainsequence::import(&sis, mainsequence_path)?;
+    mainsequence::import(sis, mainsequence_path)?;
 
     // Import the audio
     let musictrack_path = &main_scene
@@ -138,7 +162,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         .as_ref()
         .get_actor_by_userfriendly("MusicTrack")?
         .lua;
-    let audiofile = musictrack::import(&sis, musictrack_path)?;
+    let audiofile = musictrack::import(sis, musictrack_path)?;
 
     // Import the video
     let video_actor = &main_scene
@@ -146,7 +170,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         .wrapped_scene
         .as_ref()
         .get_actor_by_userfriendly("VideoScreen")?;
-    let videofile = video::import(&sis, video_actor)?;
+    let videofile = video::import(sis, video_actor)?;
 
     // Import menuart
     match (
@@ -154,11 +178,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         sis.lax,
     ) {
         (Ok(subscene), _) => {
-            menuart::import(
-                &sis,
-                subscene.wrapped_scene.as_ref(),
-                &songdesc.phone_images,
-            )?;
+            menuart::import(sis, subscene.wrapped_scene.as_ref(), &songdesc.phone_images)?;
         }
         (Err(_), true) => {
             println!("Warning! Could not find menuart subscene, trying to use scene file!");
@@ -171,7 +191,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
             )?;
             let scene_file = sis.vfs.open(cooked_path.as_ref())?;
             let scene = cooked::isc::parse(&scene_file, sis.ugi)?.scene;
-            menuart::import(&sis, &scene, &songdesc.phone_images)?;
+            menuart::import(sis, &scene, &songdesc.phone_images)?;
         }
         (Err(error), false) => return Err(error.into()),
     }
@@ -195,7 +215,10 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
             .map(HipStr::as_str)
             .map(TryInto::<Tag>::try_into)
             .collect::<Result<_, _>>()?,
-        subtitle: is.locale_id_map.get(songdesc.locale_id).unwrap_or_default(),
+        subtitle: sis
+            .locale_id_map
+            .get(songdesc.locale_id)
+            .unwrap_or_default(),
         default_colors: (&songdesc.default_colors).into(),
         audiofile: HipStr::from(audiofile),
         videofile: HipStr::borrowed(videofile),

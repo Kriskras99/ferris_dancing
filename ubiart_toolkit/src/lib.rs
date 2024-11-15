@@ -17,9 +17,9 @@
 pub mod alias8;
 pub mod cooked;
 pub mod ipk;
-pub mod json_types;
 pub mod loc8;
 pub mod msm;
 pub mod secure_fat;
+pub mod shared_json_types;
 
 pub mod utils;

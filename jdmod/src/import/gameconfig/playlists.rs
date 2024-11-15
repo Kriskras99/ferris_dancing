@@ -21,8 +21,7 @@ pub fn import_v19v22(is: &ImportState<'_>, playlist_path: &str) -> Result<(), Er
     let path_playlists_config = is.dirs.playlists().join("playlists.json");
 
     let playlists_file = is.vfs.open(cook_path(playlist_path, is.ugi)?.as_ref())?;
-    let playlist_database =
-        cooked::json::parse_v22(&playlists_file, is.lax)?.into_playlists_database()?;
+    let playlist_database = cooked::json::parse_json(&playlists_file)?.into_playlist_database()?;
 
     let playlists_file = std::fs::read(&path_playlists_config).unwrap_or_else(|_| vec![b'{', b'}']);
     let mut playlists: HashMap<HipStr, Playlist> = serde_json::from_slice(&playlists_file)?;

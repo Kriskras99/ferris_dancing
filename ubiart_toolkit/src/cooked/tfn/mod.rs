@@ -1,7 +1,12 @@
 use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
+use ubiart_toolkit_shared_types::errors::ParserError;
 
-#[cfg(feature = "full_json_types")]
+pub fn parse(data: &[u8]) -> Result<FontTemplate<'_>, ParserError> {
+    let res = crate::utils::json::parse(data, false)?;
+    Ok(res)
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FontTemplate<'a> {
     #[serde(
@@ -21,7 +26,6 @@ pub struct FontTemplate<'a> {
     pub chars: Vec<Char<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Info<'a> {
@@ -52,7 +56,6 @@ pub struct Info<'a> {
     pub outline: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Common<'a> {
@@ -69,7 +72,6 @@ pub struct Common<'a> {
     pub scale_h: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Page<'a> {
@@ -85,7 +87,6 @@ pub struct Page<'a> {
     pub file: HipStr<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Char<'a> {

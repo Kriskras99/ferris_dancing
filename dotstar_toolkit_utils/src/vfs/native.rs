@@ -10,7 +10,6 @@ use std::{
 };
 
 use memmap2::Mmap;
-use tracing::instrument;
 
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs};
 
@@ -29,7 +28,6 @@ impl NativeFs {
     ///
     /// # Errors
     /// Will error if `root` does not exist
-    #[instrument]
     pub fn new(root: &Path) -> Result<Self> {
         Ok(Self {
             root: root.canonicalize()?,
@@ -47,8 +45,14 @@ impl NativeFs {
         if clean.starts_with('/') {
             clean.remove(0);
         }
-        let path = self.root.join(clean);
-        let path = path.canonicalize()?;
+        let joined_path = self.root.join(clean);
+        let path = match joined_path.canonicalize() {
+            Ok(path) => Ok(path),
+            Err(err) if err.kind() == ErrorKind::NotFound => {
+                Err(Error::new(err.kind(), format!("File not found: {path}")))
+            }
+            Err(err) => Err(err),
+        }?;
         if path.starts_with(&self.root) {
             Ok(path)
         } else {
@@ -88,13 +92,13 @@ impl NativeFs {
 
 impl VirtualFileSystem for NativeFs {
     fn open(&self, path: &VirtualPath) -> Result<VirtualFile<'static>> {
-        let path = self.canonicalize(path)?;
+        let con_path = self.canonicalize(path)?;
 
         #[allow(
             clippy::significant_drop_in_scrutinee,
             reason = "Can't reduce it further"
         )]
-        let data = match self.cache.lock().unwrap().entry(path) {
+        let data = match self.cache.lock().unwrap().entry(con_path) {
             Entry::Occupied(mut entry) => {
                 if let Some(data) = entry.get().upgrade() {
                     data
@@ -107,7 +111,13 @@ impl VirtualFileSystem for NativeFs {
                 }
             }
             Entry::Vacant(entry) => {
-                let file = File::open(entry.key())?;
+                let file = match File::open(entry.key()) {
+                    Ok(file) => Ok(file),
+                    Err(err) if err.kind() == ErrorKind::NotFound => {
+                        Err(Error::new(err.kind(), format!("File not found: {path}")))
+                    }
+                    Err(err) => Err(err),
+                }?;
                 let mmap = unsafe { Mmap::map(&file)? };
                 let data = Arc::new(mmap);
                 entry.insert(Arc::downgrade(&data));

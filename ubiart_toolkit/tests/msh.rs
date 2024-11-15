@@ -2,55 +2,55 @@
 
 use std::path::Path;
 
-use ubiart_toolkit::cooked::json;
+use ubiart_toolkit::cooked::msh;
 
 fn msh_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v16(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v17(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v17(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v17(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v18(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_nx2019(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v19(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_nx2020(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v20(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_nx2020_china(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v20c(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_nx2021(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v21(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 
 fn msh_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    json::parse_v22(&data, false)?;
+    msh::parse(&data)?;
     Ok(())
 }
 

@@ -6,8 +6,9 @@ use hipstr::HipStr;
 use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
-    json_types::{
-        isg::UnlockableAliasDescriptor, v19::UnlockableAliasDescriptor19, AliasesObjectives,
+    cooked::{
+        isg::AliasesObjectives,
+        json::{UnlockableAliasDescriptor19, UnlockableAliasDescriptor2022},
     },
     utils::LocaleId,
 };
@@ -51,7 +52,7 @@ pub enum Rarity {
     Exotic,
 }
 
-impl From<Rarity> for ubiart_toolkit::json_types::isg::Rarity {
+impl From<Rarity> for ubiart_toolkit::cooked::json::Rarity {
     fn from(value: Rarity) -> Self {
         match value {
             Rarity::Common => Self::Common,
@@ -64,15 +65,15 @@ impl From<Rarity> for ubiart_toolkit::json_types::isg::Rarity {
     }
 }
 
-impl From<ubiart_toolkit::json_types::isg::Rarity> for Rarity {
-    fn from(value: ubiart_toolkit::json_types::isg::Rarity) -> Self {
+impl From<ubiart_toolkit::cooked::json::Rarity> for Rarity {
+    fn from(value: ubiart_toolkit::cooked::json::Rarity) -> Self {
         match value {
-            ubiart_toolkit::json_types::isg::Rarity::Common => Self::Common,
-            ubiart_toolkit::json_types::isg::Rarity::Uncommon => Self::Uncommon,
-            ubiart_toolkit::json_types::isg::Rarity::Rare => Self::Rare,
-            ubiart_toolkit::json_types::isg::Rarity::Epic => Self::Epic,
-            ubiart_toolkit::json_types::isg::Rarity::Legendary => Self::Legendary,
-            ubiart_toolkit::json_types::isg::Rarity::Exotic => Self::Exotic,
+            ubiart_toolkit::cooked::json::Rarity::Common => Self::Common,
+            ubiart_toolkit::cooked::json::Rarity::Uncommon => Self::Uncommon,
+            ubiart_toolkit::cooked::json::Rarity::Rare => Self::Rare,
+            ubiart_toolkit::cooked::json::Rarity::Epic => Self::Epic,
+            ubiart_toolkit::cooked::json::Rarity::Legendary => Self::Legendary,
+            ubiart_toolkit::cooked::json::Rarity::Exotic => Self::Exotic,
         }
     }
 }
@@ -102,7 +103,7 @@ impl<'c> Alias<'c> {
     /// Convert from UbiArt representation
     #[must_use]
     pub fn from_unlockable_alias_descriptor<'a: 'c, 'b: 'c>(
-        descriptor: UnlockableAliasDescriptor<'a>,
+        descriptor: UnlockableAliasDescriptor2022<'a>,
         aliasesobjectives: &HashMap<u32, HipStr<'b>>,
         locale_id_map: &LocaleIdMap,
     ) -> Self {
@@ -156,14 +157,14 @@ impl<'c> Alias<'c> {
     pub fn into_unlockable_alias_descriptor(
         self,
         aliasesobjectives: &mut AliasesObjectives<'c>,
-    ) -> UnlockableAliasDescriptor<'c> {
+    ) -> UnlockableAliasDescriptor2022<'c> {
         let id = generate_gacha_id();
         if let Some(unlock_objective) = self.unlock_objective {
             aliasesobjectives.insert(id, unlock_objective);
         } else {
             aliasesobjectives.remove(&id);
         }
-        UnlockableAliasDescriptor {
+        UnlockableAliasDescriptor2022 {
             id,
             string_loc_id: self.name,
             string_loc_id_female: self.name_female,

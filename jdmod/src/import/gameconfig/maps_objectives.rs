@@ -3,7 +3,7 @@
 use std::fs::File;
 
 use anyhow::Error;
-use ubiart_toolkit::json_types::MapsObjectives;
+use ubiart_toolkit::cooked::isg::MapsObjectives;
 
 use crate::types::ImportState;
 

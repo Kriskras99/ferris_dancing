@@ -14,8 +14,7 @@ use ubiart_toolkit::{
 struct Cli {
     game: String,
     source: PathBuf,
-    #[arg(short, long, default_value_t = false)]
-    quiet: bool,
+    output: Option<PathBuf>,
 }
 
 fn main() {
@@ -29,6 +28,8 @@ fn main() {
         "2019" => Game::JustDance2019,
         "2018" => Game::JustDance2018,
         "2017" => Game::JustDance2017,
+        "2016" => Game::JustDance2016,
+        "2015" => Game::JustDance2015,
         _ => panic!("Unrecognized game version: {}", cli.game),
     };
 
@@ -41,9 +42,8 @@ fn main() {
     let data = File::open(&cli.source).unwrap();
     let actors = Actor::deserialize_with(&data, gp).unwrap();
 
-    println!("{actors:?}");
-
-    // for component in &actors.components {
-    //     println!("{component:#?}");
-    // }
+    if let Some(output) = cli.output {
+        let file = File::create(output).unwrap();
+        serde_json::to_writer_pretty(file, &actors).unwrap();
+    }
 }

@@ -8,7 +8,7 @@ use std::{collections::HashMap, fs::File};
 use anyhow::Error;
 use hipstr::HipStr;
 use ownable::traits::IntoOwned;
-use ubiart_toolkit::cooked;
+use ubiart_toolkit::{cooked, cooked::isg::ObjectivesDatabase};
 
 use crate::{
     types::{
@@ -21,8 +21,7 @@ use crate::{
 /// Import all objectives.
 pub fn import_v20v22(is: &ImportState<'_>, objectives_path: &str) -> Result<(), Error> {
     let objectives_file = is.vfs.open(cook_path(objectives_path, is.ugi)?.as_ref())?;
-    let objective_database =
-        cooked::json::parse_v22(&objectives_file, is.lax)?.into_objectives_database()?;
+    let objective_database = cooked::isg::parse::<ObjectivesDatabase>(&objectives_file, is.lax)?;
 
     let mut objectives = load_objectives(is)?;
 

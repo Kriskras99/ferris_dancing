@@ -4,7 +4,7 @@ use std::{collections::HashSet, fs::File};
 
 use anyhow::Error;
 use hipstr::HipStr;
-use ubiart_toolkit::json_types::OfflineRecommendation;
+use ubiart_toolkit::cooked::isg::OfflineRecommendation;
 
 use crate::types::ImportState;
 

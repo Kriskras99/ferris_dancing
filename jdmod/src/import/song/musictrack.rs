@@ -5,6 +5,7 @@ use std::{fs::File, io::Write};
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::VirtualPath;
 use test_eq::test_eq;
+use tracing::debug;
 use ubiart_toolkit::cooked;
 
 use super::SongImportState;
@@ -37,6 +38,23 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
         to.write_all(&from)?;
         audio_filename
+    } else if path.ends_with(".ogg") {
+        if sis.lax {
+            let alt_path = format!(
+                "world/maps/{}/audio/{}.ogg",
+                sis.lower_map_name, sis.lower_map_name
+            );
+            debug!("{path} not found, trying {alt_path}");
+            let Ok(from) = sis.vfs.open(alt_path.as_ref()) else {
+                return Err(anyhow!("{path} does not exist!"));
+            };
+            let audio_filename = format!("{}.ogg", sis.lower_map_name);
+            let mut to = File::create(sis.dirs.audio().join(&audio_filename))?;
+            to.write_all(&from)?;
+            audio_filename
+        } else {
+            return Err(anyhow!("{path} does not exist!"));
+        }
     } else {
         let cooked_path = cook_path(path, sis.ugi)?;
         let mut audio_filename = VirtualPath::new(&cooked_path)
@@ -54,7 +72,7 @@ pub fn import(sis: &SongImportState<'_>, musictrack_path: &str) -> Result<String
         let from = sis.vfs.open(cooked_path.as_ref())?;
         let filename = sis.dirs.audio().join(&audio_filename);
         let mut to = File::create(&filename)?;
-        let is_opus = utils::decode_audio(&from, &mut to)?;
+        let is_opus = utils::decode_audio(&from, &mut to, sis.lax)?;
         if is_opus {
             std::fs::rename(&filename, filename.with_extension("opus"))?;
             audio_filename.truncate(audio_filename.len() - 4);

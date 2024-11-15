@@ -9,6 +9,7 @@ use yoke::Yokeable;
 
 use crate::bytes::read::{ReadAt, ReadError};
 
+pub mod case_insensitive;
 pub mod layeredfs;
 pub mod native;
 pub mod path;

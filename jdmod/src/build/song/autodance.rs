@@ -4,7 +4,7 @@
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use hipstr::HipStr;
-use ubiart_toolkit::{cooked, json_types, utils::SplitPath};
+use ubiart_toolkit::{cooked, shared_json_types, utils::SplitPath};
 
 use super::SongExportState;
 use crate::{build::BuildFiles, types::song::Autodance};
@@ -126,8 +126,8 @@ fn autodance_template(ses: &SongExportState<'_>, autodance: &Autodance) -> Resul
                         class: Some(cooked::tpl::types::AutodanceRecordingStructure::CLASS),
                         records: autodance.record.iter().map(Into::into).collect(),
                     },
-                    video_structure: json_types::isg::AutodanceVideoStructure {
-                        class: Some(json_types::isg::AutodanceVideoStructure::CLASS),
+                    video_structure: shared_json_types::AutodanceVideoStructure {
+                        class: Some(shared_json_types::AutodanceVideoStructure::CLASS),
                         song_start_position: autodance.song_start_position,
                         duration: autodance.duration,
                         thumbnail_time: 0,

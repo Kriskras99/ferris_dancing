@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{
     cooked,
     cooked::tape,
+    shared_json_types,
     utils::{LocaleId, Platform},
 };
 
@@ -73,6 +74,17 @@ impl SongDirectoryTree {
             .and_then(|()| std::fs::create_dir_all(&self.dir_pictos))
             .and_then(|()| std::fs::create_dir_all(&self.dir_menuart))
             .and_then(|()| std::fs::create_dir_all(&self.dir_audio))
+    }
+
+    /// Delete the directory tree and any files it contains.
+    ///
+    /// # Errors
+    /// Will error if it fails to delete all directories.
+    pub fn remove_dir_all(&self) -> std::io::Result<()> {
+        if self.dir_root.exists() {
+            std::fs::remove_dir_all(&self.dir_root)?;
+        }
+        Ok(())
     }
 
     /// Check if the directory tree exists.
@@ -202,6 +214,8 @@ pub enum Tag {
     ChairTutorial,
     /// Cool song?
     Cool,
+    /// ??
+    Coverflow,
     /// Dance machine map
     DanceMachine,
     /// ??
@@ -214,12 +228,18 @@ pub enum Tag {
     KidsMode,
     /// ??
     KidsModeTeaser,
+    /// ??
+    Kids,
+    /// Originally from ABBA: You Can Dance
+    JdAbba,
     /// Unknown?
     JdMbs,
     /// Mashup map
     Mashup,
     /// Low intensity song
     NoSweat,
+    /// ??
+    PreLobby,
     /// Unlocked using Uplay
     Uplay2016,
     /// Unlocked using Uplay
@@ -232,6 +252,10 @@ pub enum Tag {
     Chair2Tutorial,
     /// Song that uses a sofa?
     SofaTutorial,
+    /// ??
+    ForceRumble,
+    /// ??
+    Jd20DealLullaby,
 }
 
 impl Tag {
@@ -246,6 +270,7 @@ impl Tag {
             Self::BringChairTutorial => HipStr::borrowed("bringchairtutorial"),
             Self::ChairTutorial => HipStr::borrowed("chairtutorial"),
             Self::Cool => HipStr::borrowed("cool"),
+            Self::Coverflow => HipStr::borrowed("coverflow"),
             Self::DanceMachine => HipStr::borrowed("dancemachine"),
             Self::Exclusive => HipStr::borrowed("exclusive"),
             Self::Extreme => HipStr::borrowed("extreme"),
@@ -255,12 +280,17 @@ impl Tag {
             Self::JdMbs => HipStr::borrowed("jdmbs"),
             Self::Mashup => HipStr::borrowed("mashup"),
             Self::NoSweat => HipStr::borrowed("nosweat"),
+            Self::PreLobby => HipStr::borrowed("prelobby"),
             Self::Uplay2016 => HipStr::borrowed("uplay2016"),
             Self::Uplay2017 => HipStr::borrowed("uplay2017"),
             Self::Sweat => HipStr::borrowed("sweat"),
             Self::BikeTutorial => HipStr::borrowed("biketutorial"),
             Self::Chair2Tutorial => HipStr::borrowed("chair2tutorial"),
             Self::SofaTutorial => HipStr::borrowed("SofaTutorial"),
+            Self::Kids => HipStr::borrowed("kids"),
+            Self::JdAbba => HipStr::borrowed("jdabba"),
+            Self::ForceRumble => HipStr::borrowed("forcerumble"),
+            Self::Jd20DealLullaby => HipStr::borrowed("jd20deallullaby"),
         }
     }
 }
@@ -271,27 +301,33 @@ impl TryFrom<&str> for Tag {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let value_lower = value.to_lowercase();
         match value_lower.as_str() {
-            "main" => Ok(Self::Main),
-            "kidsonly" => Ok(Self::KidsOnly),
             "alternate" => Ok(Self::Alternate),
+            "biketutorial" => Ok(Self::BikeTutorial),
             "bringchairtutorial" => Ok(Self::BringChairTutorial),
+            "chair2tutorial" => Ok(Self::Chair2Tutorial),
             "chairtutorial" => Ok(Self::ChairTutorial),
             "cool" => Ok(Self::Cool),
+            "coverflow" => Ok(Self::Coverflow),
             "dancemachine" => Ok(Self::DanceMachine),
             "exclusive" => Ok(Self::Exclusive),
             "extreme" => Ok(Self::Extreme),
             "intense" => Ok(Self::Intense),
+            "jdmbs" => Ok(Self::JdMbs),
             "kidsmode" => Ok(Self::KidsMode),
             "kidsmodeteaser" => Ok(Self::KidsModeTeaser),
-            "jdmbs" => Ok(Self::JdMbs),
+            "kidsonly" => Ok(Self::KidsOnly),
+            "main" => Ok(Self::Main),
             "mashup" => Ok(Self::Mashup),
             "nosweat" => Ok(Self::NoSweat),
+            "prelobby" => Ok(Self::PreLobby),
+            "sofatutorial" => Ok(Self::SofaTutorial),
+            "sweat" => Ok(Self::Sweat),
             "uplay2016" => Ok(Self::Uplay2016),
             "uplay2017" => Ok(Self::Uplay2017),
-            "sweat" => Ok(Self::Sweat),
-            "biketutorial" => Ok(Self::BikeTutorial),
-            "chair2tutorial" => Ok(Self::Chair2Tutorial),
-            "sofatutorial" => Ok(Self::SofaTutorial),
+            "kids" => Ok(Self::Kids),
+            "jdabba" => Ok(Self::JdAbba),
+            "forcerumble" => Ok(Self::ForceRumble),
+            "jd20deallullaby" => Ok(Self::Jd20DealLullaby),
             _ => Err(anyhow!("Unknown tag!: {value}")),
         }
     }
@@ -483,7 +519,7 @@ pub struct PlaybackEvent {
     pub speed: f32,
 }
 
-impl From<&PlaybackEvent> for cooked::tpl::types::PlaybackEvent<'static> {
+impl From<&PlaybackEvent> for shared_json_types::PlaybackEvent<'static> {
     fn from(value: &PlaybackEvent) -> Self {
         Self {
             class: Some(Self::CLASS),
@@ -496,8 +532,8 @@ impl From<&PlaybackEvent> for cooked::tpl::types::PlaybackEvent<'static> {
     }
 }
 
-impl From<&cooked::tpl::types::PlaybackEvent<'_>> for PlaybackEvent {
-    fn from(value: &cooked::tpl::types::PlaybackEvent) -> Self {
+impl From<&shared_json_types::PlaybackEvent<'_>> for PlaybackEvent {
+    fn from(value: &shared_json_types::PlaybackEvent) -> Self {
         Self {
             clip_number: value.clip_number,
             start_clip: value.start_clip,

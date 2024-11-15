@@ -11,12 +11,13 @@ use dotstar_toolkit_utils::{
 };
 use hipstr::HipStr;
 use nohash_hasher::IsEnabled;
+use serde::Serialize;
 use test_eq::{test_and, test_eq, test_or, TestFailure};
 use ubiart_toolkit_shared_types::errors::ParserError;
 
 use crate::utils::{string_id, string_id_2};
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct SplitPath<'a> {
     path: HipStr<'a>,
@@ -49,7 +50,11 @@ impl<'a> SplitPath<'a> {
             test_eq!(path.ends_with('/'), true),
             test_eq!(path.is_empty(), true)
         )?;
-        test_eq!(!path.contains('.'), true)?;
+        test_eq!(
+            !path.contains('.'),
+            true,
+            "Path: {path}, filename: {filename}"
+        )?;
         test_and!(
             test_eq!(!filename.ends_with('/'), true),
             test_eq!(!filename.starts_with('/'), true)

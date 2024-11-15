@@ -3,15 +3,12 @@
 use std::fs::File;
 
 use anyhow::Error;
-use ubiart_toolkit::json_types;
+use ubiart_toolkit::cooked::isg;
 
 use crate::types::{gameconfig::gachacontent::GachaConfig, ImportState};
 
 /// Import the gacha config if it does not exist in the mod yet
-pub fn import_v18v22(
-    is: &ImportState<'_>,
-    gachaconfig: &json_types::isg::GachaConfig,
-) -> Result<(), Error> {
+pub fn import_v18v22(is: &ImportState<'_>, gachaconfig: &isg::GachaConfig) -> Result<(), Error> {
     let gacha_config_path = is.dirs.config().join("gacha.json");
 
     if !gacha_config_path.exists() {

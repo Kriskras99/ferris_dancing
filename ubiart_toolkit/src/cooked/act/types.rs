@@ -3,12 +3,13 @@
 use std::borrow::Cow;
 
 use hipstr::HipStr;
+use serde::Serialize;
 use superstruct::superstruct;
 use ubiart_toolkit_shared_types::Color;
 
 use crate::utils::{errors::ParserError, SplitPath};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Actor<'a> {
     pub lua: SplitPath<'a>,
     pub unk1: f32,
@@ -30,7 +31,7 @@ impl PartialEq for Actor<'_> {
 
 impl Eq for Actor<'_> {}
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum Component<'a> {
     AutodanceComponent,
     BeatPulseComponent(BeatPulseComponent<'a>),
@@ -182,13 +183,13 @@ impl Component<'_> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct AaBb {
     pub min: (f32, f32),
     pub max: (f32, f32),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct BeatPulseComponent<'a> {
     pub text: HipStr<'a>,
     pub loc_id: u32,
@@ -197,16 +198,16 @@ pub struct BeatPulseComponent<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct BoxInterpolatorComponent {
     pub inner_box: AaBb,
     pub outer_box: AaBb,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CameraFeedComponent;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct CameraGraphicComponent<'a> {
     pub primitive_parameters: GFXPrimitiveParam,
     pub color_computer_tag_id: u32,
@@ -224,7 +225,7 @@ pub struct CameraGraphicComponent<'a> {
     pub material: GFXMaterialSerializable<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Carousel<'a> {
     pub main_anchor: u32,
     pub validate_action: &'static str,
@@ -246,7 +247,7 @@ pub struct Carousel<'a> {
     pub anim_items_desc: CarouselAnimItemsDesc,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CarouselAnimItemsDesc {
     pub enable: u32,
     pub show_items_at_init: u32,
@@ -254,13 +255,13 @@ pub struct CarouselAnimItemsDesc {
     pub check_items_visibility_on_anim_ends: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum CarouselBehaviour<'a> {
     Navigation(CarouselBehaviourNavigation<'a>),
     GoToElement(CarouselBehaviourGoToElement<'a>),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct CarouselBehaviourNavigation<'a> {
     pub key: &'static str,
     pub sound_context: HipStr<'a>,
@@ -274,7 +275,7 @@ pub struct CarouselBehaviourNavigation<'a> {
     pub prev_actions: Vec<&'static str>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct CarouselBehaviourGoToElement<'a> {
     pub key: &'static str,
     pub sound_context: HipStr<'a>,
@@ -286,19 +287,19 @@ pub struct CarouselBehaviourGoToElement<'a> {
     pub time_between_steps: f32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ClearColorComponent {
     pub clear_color: Color,
     pub clear_front_light_color: Color,
     pub clear_back_light_color: Color,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ConvertedTmlTapeComponent<'a> {
     pub map_name: HipStr<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct CreditsComponent<'a> {
     pub lines_number: u32,
     pub name_font_size: f32,
@@ -314,20 +315,20 @@ pub struct CreditsComponent<'a> {
     pub credits_lines: Vec<HipStr<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct FixedCameraComponent {
     pub remote: u32,
     pub offset: (f32, f32, f32),
     pub start_as_main_cam: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct FXControllerComponent {
     pub allow_bus_mix_events: u32,
     pub allow_music_events: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct GFXMaterialSerializable<'a> {
     pub atl_channel: u32,
     pub atl_path: SplitPath<'a>,
@@ -339,12 +340,12 @@ pub struct GFXMaterialSerializable<'a> {
     pub material_params: GFXMaterialSerializableParam,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct GFXMaterialSerializableParam {
     pub reflector_factor: f32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct GFXMaterialTexturePathSet<'a> {
     pub diffuse: SplitPath<'a>,
     pub back_light: SplitPath<'a>,
@@ -357,14 +358,14 @@ pub struct GFXMaterialTexturePathSet<'a> {
     pub diffuse_4: SplitPath<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct GFXPrimitiveParam {
     pub color_factor: Color,
     pub gfx_occlude_info: u32,
 }
 
 /// Data for textures
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct MaterialGraphicComponent<'a> {
     pub files: [SplitPath<'a>; 11],
     pub unk4: f32,
@@ -390,7 +391,7 @@ impl Default for MaterialGraphicComponent<'static> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct PictoTimeline<'a> {
     pub text: HipStr<'a>,
     pub loc_id: u32,
@@ -411,7 +412,7 @@ pub struct PictoTimeline<'a> {
 }
 
 /// The data for the main video player
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PleoComponent<'a> {
     /// The filename of the video to play
     pub video: SplitPath<'a>,
@@ -420,13 +421,13 @@ pub struct PleoComponent<'a> {
     pub channel_id: HipStr<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct RegistrationComponent<'a> {
     pub tag: &'static str,
     pub user_data: HipStr<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct SingleInstanceMesh3DComponent<'a> {
     pub color_computer_tag_id: u32,
     pub render_in_target: u32,
@@ -443,10 +444,10 @@ pub struct SingleInstanceMesh3DComponent<'a> {
     pub animation_player_mode: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SoundComponent;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StopCondition {
     pub waiting_time: f32,
     pub count_to_reach: u32,
@@ -455,7 +456,7 @@ pub struct StopCondition {
     pub anim_state: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct TextureGraphicComponent<'a> {
     pub primitive_parameters: GFXPrimitiveParam,
     pub color_computer_tag_id: u32,
@@ -467,7 +468,7 @@ pub struct TextureGraphicComponent<'a> {
     pub material: GFXMaterialSerializable<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct TexturePatcherComponent<'a> {
     pub unk1: SplitPath<'a>,
     pub unk2: SplitPath<'a>,
@@ -475,9 +476,9 @@ pub struct TexturePatcherComponent<'a> {
 
 #[superstruct(
     variants(V16, V1718, V1922),
-    variant_attributes(derive(Debug, PartialEq, Clone))
+    variant_attributes(derive(Debug, PartialEq, Clone, Serialize))
 )]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct UICarousel<'a> {
     #[superstruct(only(V16))]
     pub acceleration: f32,
@@ -527,7 +528,7 @@ pub struct UICarousel<'a> {
     pub anim_items_desc: CarouselAnimItemsDesc,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct UITextBox<'a> {
     pub style: u32,
     pub overriding_font_size: f32,
@@ -558,7 +559,7 @@ pub struct UITextBox<'a> {
     pub overriding_anchor: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UIWidgetElementDesc<'a> {
     pub element_path: SplitPath<'a>,
     pub name: HipStr<'a>,
@@ -567,7 +568,7 @@ pub struct UIWidgetElementDesc<'a> {
     pub bind_mode: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UIWidgetGroupHUD<'a> {
     pub text: HipStr<'a>,
     pub loc_id: u32,
@@ -576,7 +577,7 @@ pub struct UIWidgetGroupHUD<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
     pub text: HipStr<'a>,
     pub loc_id: u32,
@@ -596,7 +597,7 @@ pub struct UIWidgetGroupHUDAutodanceRecorder<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UIWidgetGroupHUDLyrics<'a> {
     pub text: HipStr<'a>,
     pub loc_id: u32,
@@ -605,7 +606,7 @@ pub struct UIWidgetGroupHUDLyrics<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UIWidgetGroupHUDPauseIcon<'a> {
     pub text: HipStr<'a>,
     pub loc_id: u32,
@@ -614,7 +615,7 @@ pub struct UIWidgetGroupHUDPauseIcon<'a> {
     pub elements: Vec<UIWidgetElementDesc<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Unknown77F7D66C<'a> {
     pub map_name: HipStr<'a>,
     pub jd_version: u32,
@@ -623,16 +624,16 @@ pub struct Unknown77F7D66C<'a> {
     pub unk4: f32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UnknownA6E4EFBA;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Unknown2CB3C8E8;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UnknownA97634C7;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ViewportUIComponent {
     pub active: u32,
     pub focale: f32,

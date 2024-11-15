@@ -4,9 +4,10 @@
 use std::fs::File;
 
 use anyhow::{anyhow, Error};
-use ubiart_toolkit::{
-    cooked,
-    json_types::{isg::ScheduledQuestSetup, v1819::ScheduledQuestDesc1819},
+use isg::ScheduledQuestDatabase;
+use ubiart_toolkit::cooked::{
+    isg,
+    isg::{ScheduledQuestDesc1819, ScheduledQuestSetup},
 };
 
 use super::objectives::{load_objectives, save_objectives};
@@ -27,8 +28,7 @@ pub fn import_v20v22(
     println!("Importing scheduled quests...");
 
     let scheduled_quests_file = is.vfs.open(cook_path(path, is.ugi)?.as_ref())?;
-    let parsed_json = cooked::json::parse_v22(&scheduled_quests_file, is.lax)?;
-    let scheduled_quests = parsed_json.into_scheduled_quests_database()?;
+    let scheduled_quests = isg::parse::<ScheduledQuestDatabase>(&scheduled_quests_file, is.lax)?;
     let quest_descriptions = scheduled_quests.scheduled_quests;
 
     let quest_config_path = is.dirs.config().join("quests.json");

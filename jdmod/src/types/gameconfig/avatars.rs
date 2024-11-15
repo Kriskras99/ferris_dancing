@@ -15,6 +15,8 @@ const fn be_false() -> bool {
 /// Description of an avatar
 #[derive(Debug, Clone, Serialize, Deserialize, IntoOwned)]
 pub struct Avatar<'a> {
+    /// The ID of this avatar, if `None` will be generated
+    pub id: Option<u32>,
     /// Which map this avatar is based on
     #[serde(borrow)]
     pub relative_song_name: HipStr<'a>,
@@ -39,9 +41,6 @@ pub struct Avatar<'a> {
     /// Path to the texture
     #[serde(borrow)]
     pub image_path: HipStr<'a>,
-    /// Path to the phone image
-    #[serde(borrow)]
-    pub image_phone_path: HipStr<'a>,
     /// Are the sound effect and image phone path a guess?
     // if it's missing it's not guessed, don't serialize if false
     #[serde(default = "be_false", skip_serializing_if = "std::ops::Not::not")]

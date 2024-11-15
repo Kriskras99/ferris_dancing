@@ -418,7 +418,7 @@ fn merge_string<'a: 'c, 'b: 'c, 'c>(
 #[allow(clippy::missing_panics_doc)]
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
+    use hipstr::HipStr;
 
     use super::Translation;
 

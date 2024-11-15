@@ -61,7 +61,7 @@ fn tpl_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> 
 datatest_stable::harness!(
     tpl_parse_wiiu2015,
     "files/wiiu2015",
-    r"dlc.*/tpl.ckd/.*",
+    r".*/tpl.ckd/.*",
     tpl_parse_wiiu2016,
     "files/wiiu2016",
     r".*/tpl.ckd/.*",

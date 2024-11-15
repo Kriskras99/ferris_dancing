@@ -1,19 +1,30 @@
 //! # Import
 //! The main code for importing games and songs
 use std::{
-    ffi::OsStr,
+    cmp::Ordering,
+    num::NonZeroUsize,
+    ops::Deref,
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, bail, Error};
 use clap::Args;
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserializeExt as _,
-    vfs::{native::NativeFs, VirtualFileSystem, VirtualPath, VirtualPathBuf},
+    vfs::{
+        case_insensitive::CaseInsensitiveFs, native::NativeFs, VirtualFileSystem, VirtualPath,
+        VirtualPathBuf,
+    },
 };
+use hipstr::HipStr;
+use tracing::trace;
 use ubiart_toolkit::{
     alias8::Alias8,
     cooked,
+    cooked::isg::{
+        GameManagerConfigV16, GameManagerConfigV17, GameManagerConfigV18, GameManagerConfigV19,
+        GameManagerConfigV20, GameManagerConfigV20C, GameManagerConfigV21, GameManagerConfigV22,
+    },
     secure_fat::vfs::SfatFilesystem,
     utils::{Game, Platform, UniqueGameId},
 };
@@ -47,9 +58,9 @@ pub struct Import {
     /// Overwrite game
     #[arg(long)]
     game: Option<Game>,
-    /// Overwrite platform
+    /// Use n threads for importing songs
     #[arg(long)]
-    platform: Option<Platform>,
+    threads: Option<NonZeroUsize>,
 }
 
 /// Wrapper around [`import`]
@@ -60,7 +71,7 @@ pub fn main(cli: &Import) -> Result<(), Error> {
         cli.lax,
         cli.songs,
         cli.game,
-        cli.platform,
+        cli.threads,
     )
 }
 
@@ -72,7 +83,7 @@ pub fn import(
     lax: bool,
     songs_only: bool,
     game: Option<Game>,
-    platform: Option<Platform>,
+    n_threads: Option<NonZeroUsize>,
 ) -> Result<(), Error> {
     // Check the directory structure
     let dir_tree = DirectoryTree::new(dir_root);
@@ -83,90 +94,35 @@ pub fn import(
     }
 
     if game_path.ends_with("secure_fat.gf") {
-        // Init the native filesystem and load the securefat as a virtual filesystem
-        let native_vfs = NativeFs::new(
-            game_path
-                .parent()
-                .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
-        )?;
-        let sfat_vfs = SfatFilesystem::new(&native_vfs, &VirtualPathBuf::from("secure_fat.gf"))?;
-
-        // TODO: Check engine version and warn user they're missing an update
-
-        let unique_game_id = sfat_vfs.unique_game_id();
-
-        // Import songs and other content from the game
-        import_vfs(&sfat_vfs, dir_tree, unique_game_id, lax, songs_only)?;
+        import_sfat(game_path, dir_tree, lax, songs_only, n_threads)?;
     } else if game_path.is_dir() {
-        let native_vfs = NativeFs::new(game_path)?;
+        let mut sources = Vec::new();
+        find_sources(game_path, &mut sources)?;
+        // TODO: Do game/platform detection for every source and sort based on that
+        sources.sort();
 
-        let game = if let Some(game) = game {
-            game
-        } else {
-            println!("No game specified, assuming {}", Game::JustDance2022);
-            Game::JustDance2022
-        };
-
-        let platform = if let Some(platform) = platform {
-            platform
-        } else {
-            println!("No platform specified, assuming {}", Platform::Nx);
-            Platform::Nx
-        };
-
-        let unique_game_id = UniqueGameId {
-            game,
-            platform,
-            id: 0,
-        };
-
-        import_vfs(&native_vfs, dir_tree, unique_game_id, lax, songs_only)?;
-    } else if game_path.extension() == Some(OsStr::new("json")) {
-        #[cfg(feature = "experimental")]
-        {
-            let parent = game_path
-                .parent()
-                .ok_or_else(|| anyhow!("File has no parent directory!"))?;
-            let filename = game_path
-                .file_name()
-                .and_then(OsStr::to_str)
-                .ok_or_else(|| anyhow!("Filename is invalid!"))?;
-            let native_vfs = NativeFs::new(parent)?;
-            let path = VirtualPath::new(filename);
-            jdnow::import(&native_vfs, path, &dir_tree)?;
+        if sources.is_empty() {
+            bail!("Did not find any sources!");
         }
-        #[cfg(not(feature = "experimental"))]
-        {
-            panic!("This feature is still in development!");
+
+        trace!("Sources: {sources:#?}");
+
+        for source in sources {
+            match source {
+                Source::Dlc(path) => import_dlcdescriptor(&path, dir_tree.clone(), lax)?,
+                Source::Sfat(path) => {
+                    import_sfat(&path, dir_tree.clone(), lax, songs_only, n_threads)?;
+                }
+                Source::GameConfig(path) => {
+                    import_gameconfig(&path, dir_tree.clone(), game, songs_only, n_threads)?;
+                }
+                Source::SongDesc(path) => import_songdesc(&path, dir_tree.clone())?,
+            }
         }
     } else if game_path.ends_with("dlcdescriptor.ckd") {
-        // Init the native filesystem and load the securefat as a virtual filesystem
-        let native_vfs = NativeFs::new(
-            game_path
-                .parent()
-                .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
-        )?;
-        let sfat_vfs = SfatFilesystem::new(&native_vfs, &VirtualPathBuf::from("secure_fat.gf"))?;
-
-        // TODO: Check engine version and warn user they're missing an update
-
-        let unique_game_id = sfat_vfs.unique_game_id();
-
-        // Collect common required items in a convenient place
-        let is = ImportState {
-            vfs: &sfat_vfs,
-            dirs: dir_tree,
-            ugi: unique_game_id,
-            locale_id_map: LocaleIdMap::default(),
-            aliases: Alias8::default(),
-            lax,
-        };
-
-        let dlcdescriptor_file = native_vfs.open(VirtualPath::new("dlcdescriptor.ckd"))?;
-        let dlcdescriptor = cooked::dlcdescriptor::DlcDescriptor::deserialize(&dlcdescriptor_file)?;
-        let mapname = dlcdescriptor.name;
-
-        song::import(&is, &format!("world/jd2015/{mapname}/songdesc.tpl"))?;
+        import_dlcdescriptor(game_path, dir_tree, lax)?;
+    } else if game_path.ends_with("songdesc.tpl.ckd") {
+        import_songdesc(game_path, dir_tree)?;
     } else {
         return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf, JD Now .json files, and raw import are supported!"));
     }
@@ -174,13 +130,208 @@ pub fn import(
     Ok(())
 }
 
+/// Import a game from a secure_fat.gf
+fn import_sfat(
+    game_path: &Path,
+    dir_tree: DirectoryTree,
+    lax: bool,
+    songs_only: bool,
+    n_threads: Option<NonZeroUsize>,
+) -> Result<(), Error> {
+    // Init the native filesystem and load the securefat as a virtual filesystem
+    let native_vfs = NativeFs::new(
+        game_path
+            .parent()
+            .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
+    )?;
+    let sfat_vfs = SfatFilesystem::new(&native_vfs, &VirtualPathBuf::from("secure_fat.gf"))?;
+
+    // TODO: Check engine version and warn user they're missing an update
+    let unique_game_id = sfat_vfs.unique_game_id();
+
+    // Import songs and other content from the game
+    import_full_game_vfs(
+        &sfat_vfs,
+        dir_tree,
+        unique_game_id,
+        lax,
+        songs_only,
+        n_threads,
+    )
+}
+
+/// Import a song from a dlcdescriptor.ckd
+fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool) -> Result<(), Error> {
+    // Init the native filesystem and load the securefat as a virtual filesystem
+    let native_vfs = NativeFs::new(
+        game_path
+            .parent()
+            .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?,
+    )?;
+    let sfat_vfs = SfatFilesystem::new(&native_vfs, &VirtualPathBuf::from("secure_fat.gf"))?;
+
+    // TODO: Check engine version and warn user they're missing an update
+
+    let unique_game_id = sfat_vfs.unique_game_id();
+
+    // Collect common required items in a convenient place
+    let is = ImportState {
+        vfs: &sfat_vfs,
+        dirs: dir_tree,
+        ugi: unique_game_id,
+        locale_id_map: LocaleIdMap::default(),
+        aliases: Alias8::default(),
+        lax,
+        n_threads: NonZeroUsize::new(1),
+    };
+
+    let dlcdescriptor_file = native_vfs.open(VirtualPath::new("dlcdescriptor.ckd"))?;
+    let dlcdescriptor = cooked::dlcdescriptor::DlcDescriptor::deserialize(&dlcdescriptor_file)?;
+    let mapname = dlcdescriptor.name;
+
+    song::import(&is, &format!("world/jd2015/{mapname}/songdesc.tpl"))?;
+    Ok(())
+}
+
+/// Import a song from songdesc.tpl.ckd
+fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree) -> Result<(), Error> {
+    trace!("Found songdesc.tpl.ckd");
+    let platform = game_path.parent() // mapname
+        .and_then(Path::parent) // maps
+        .and_then(Path::parent) // world
+        .and_then(Path::parent) // nx
+        .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
+    let root = platform.parent() // itf_cooked
+        .and_then(Path::parent) // cache
+        .and_then(Path::parent) // root
+        .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
+    let platform = platform
+        .file_name()
+        .ok_or_else(|| anyhow!("No platform name found for {}!", game_path.display()))?;
+    let platform = platform.to_string_lossy();
+    let platform = match platform.deref() {
+        "nx" => Platform::Nx,
+        "wiiu" => Platform::WiiU,
+        _ => bail!("Unsupported platform {}", platform),
+    };
+    // Init the native filesystem
+    let native_vfs = NativeFs::new(root)?;
+    let case_insenstive_vfs = CaseInsensitiveFs::new(&native_vfs)?;
+
+    trace!("Root: {root:?}, Game path: {game_path:?}");
+    let new_path = game_path
+        .strip_prefix(root)?
+        .to_str()
+        .ok_or_else(|| anyhow!("Invalid path!: {}", game_path.display()))?;
+    let new_path = &new_path[20..new_path.len() - 4];
+
+    trace!("New path: {new_path}");
+
+    let unique_game_id = UniqueGameId {
+        game: Game::JustDance2022,
+        platform,
+        id: 0,
+    };
+
+    // Collect common required items in a convenient place
+    let is = ImportState {
+        vfs: &case_insenstive_vfs,
+        dirs: dir_tree,
+        ugi: unique_game_id,
+        locale_id_map: LocaleIdMap::default(),
+        aliases: Alias8::default(),
+        lax: true,
+        n_threads: NonZeroUsize::new(1),
+    };
+
+    song::import(&is, new_path)?;
+    Ok(())
+}
+
+/// Import a game from gameconfig.isg.ckd
+fn import_gameconfig(
+    game_path: &Path,
+    dir_tree: DirectoryTree,
+    game: Option<Game>,
+    songs_only: bool,
+    n_threads: Option<NonZeroUsize>,
+) -> Result<(), Error> {
+    let platform = game_path.parent() // gameconfig
+        .and_then(Path::parent) // enginedata
+        .and_then(Path::parent) // nx
+        .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
+    let root = platform.parent() // itf_cooked
+        .and_then(Path::parent) // cache
+        .and_then(Path::parent) // root
+        .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
+    let platform = platform
+        .file_name()
+        .ok_or_else(|| anyhow!("No platform name found for {}!", game_path.display()))?;
+    let platform = platform.to_string_lossy();
+    let platform = match platform.deref() {
+        "nx" => Platform::Nx,
+        "wiiu" => Platform::WiiU,
+        _ => bail!("Unsupported platform {}", platform),
+    };
+    // Init the native filesystem
+    let native_vfs = NativeFs::new(root)?;
+    let case_insenstive_vfs = CaseInsensitiveFs::new(&native_vfs)?;
+
+    trace!("Root: {root:?}, Game path: {game_path:?}");
+
+    let game = if let Some(game) = game {
+        game
+    } else {
+        let new_path = game_path
+            .strip_prefix(root)?
+            .to_str()
+            .ok_or_else(|| anyhow!("Invalid path!: {}", game_path.display()))?;
+        let gameconfig_file = case_insenstive_vfs.open(VirtualPath::new(new_path))?;
+        if cooked::isg::parse::<GameManagerConfigV22>(&gameconfig_file, true).is_ok() {
+            Game::JustDance2022
+        } else if cooked::isg::parse::<GameManagerConfigV21>(&gameconfig_file, true).is_ok() {
+            Game::JustDance2021
+        } else if cooked::isg::parse::<GameManagerConfigV20>(&gameconfig_file, true).is_ok() {
+            Game::JustDance2020
+        } else if cooked::isg::parse::<GameManagerConfigV20C>(&gameconfig_file, true).is_ok() {
+            Game::JustDanceChina
+        } else if cooked::isg::parse::<GameManagerConfigV19>(&gameconfig_file, true).is_ok() {
+            Game::JustDance2019
+        } else if cooked::isg::parse::<GameManagerConfigV18>(&gameconfig_file, true).is_ok() {
+            Game::JustDance2018
+        } else if cooked::isg::parse::<GameManagerConfigV17>(&gameconfig_file, true).is_ok() {
+            Game::JustDance2017
+        } else if cooked::isg::parse::<GameManagerConfigV16>(&gameconfig_file, true).is_ok() {
+            Game::JustDance2016
+        } else {
+            bail!("Invalid game config file! {}", game_path.display());
+        }
+    };
+
+    let unique_game_id = UniqueGameId {
+        game,
+        platform,
+        id: 0,
+    };
+
+    import_full_game_vfs(
+        &case_insenstive_vfs,
+        dir_tree,
+        unique_game_id,
+        true,
+        songs_only,
+        n_threads,
+    )
+}
+
 /// Import a game represented as a virtual filesystem
-pub fn import_vfs(
+pub fn import_full_game_vfs(
     vfs: &dyn VirtualFileSystem,
     dirs: DirectoryTree,
     ugi: UniqueGameId,
     lax: bool,
     songs_only: bool,
+    n_threads: Option<NonZeroUsize>,
 ) -> Result<(), Error> {
     if ugi.id == 0 {
         println!("Importing {} for {}", ugi.game, ugi.platform);
@@ -206,9 +357,14 @@ pub fn import_vfs(
         locale_id_map,
         aliases,
         lax,
+        n_threads,
     };
 
-    if songs_only {
+    if is.ugi.game <= Game::JustDance2015 {
+        println!("Warning! Only importing songs. Avatars and other extras are not supported.");
+    }
+
+    if songs_only || is.ugi.game <= Game::JustDance2015 {
         // Get the gameconfig path
         let gameconfig_path = cook_path(
             &is.aliases
@@ -219,51 +375,56 @@ pub fn import_vfs(
         let gameconfig_file = is.vfs.open(gameconfig_path.as_ref())?;
 
         let songdb_scene = match ugi.game {
+            Game::JustDance2015 => HipStr::borrowed("world/skuscenes/skuscene_maps_pc_all.isc"),
             Game::JustDance2016 => {
                 let parsed_json =
-                    cooked::json::parse_v16(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV16>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             Game::JustDance2017 => {
                 let parsed_json =
-                    cooked::json::parse_v17(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV17>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             Game::JustDance2018 => {
                 let parsed_json =
-                    cooked::json::parse_v18(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV18>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             Game::JustDance2019 => {
                 let parsed_json =
-                    cooked::json::parse_v19(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV19>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             Game::JustDance2020 => {
                 let parsed_json =
-                    cooked::json::parse_v20(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV20>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             Game::JustDanceChina => {
                 let parsed_json =
-                    cooked::json::parse_v20c(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV20C>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             Game::JustDance2021 => {
                 let parsed_json =
-                    cooked::json::parse_v21(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV21>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             Game::JustDance2022 => {
                 let parsed_json =
-                    cooked::json::parse_v22(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                    cooked::isg::parse::<GameManagerConfigV22>(&gameconfig_file, true)?;
+                parsed_json.songdb_scene
             }
             _ => {
-                println!("Unknown game, trying JustDance2022");
-                let parsed_json =
-                    cooked::json::parse_v22(&gameconfig_file, true)?.into_game_manager_config()?;
-                parsed_json.songdb_scene.into_owned()
+                if lax {
+                    println!("Unknown game, assuming JustDance2022");
+                    let parsed_json =
+                        cooked::isg::parse::<GameManagerConfigV22>(&gameconfig_file, true)?;
+                    parsed_json.songdb_scene
+                } else {
+                    return Err(anyhow!("Unknown game"));
+                }
             }
         };
 
@@ -273,5 +434,92 @@ pub fn import_vfs(
         // Import gameconfig (& songs)
         gameconfig::import(&is)?;
     };
+    Ok(())
+}
+
+/// A source for the import
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Source {
+    /// dlcdescriptor.ckd file
+    Dlc(PathBuf),
+    /// secure_fat.gf file
+    Sfat(PathBuf),
+    /// cook_path(enginedata/gameconfig/gameconfig.isg) file
+    GameConfig(PathBuf),
+    /// cook_path(world/maps/../songdesc.tpl) file
+    SongDesc(PathBuf),
+}
+
+impl Ord for Source {
+    #[allow(clippy::match_same_arms, reason = "Clearer this way")]
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (Self::Sfat(left), Self::Sfat(right)) => right.cmp(left),
+            (Self::Sfat(_), _) => Ordering::Less,
+            (_, Self::Sfat(_)) => Ordering::Greater,
+            (Self::Dlc(left), Self::Dlc(right)) => right.cmp(left),
+            (Self::Dlc(_), _) => Ordering::Less,
+            (_, Self::Dlc(_)) => Ordering::Greater,
+            (Self::SongDesc(left), Self::SongDesc(right)) => right.cmp(left),
+            (Self::SongDesc(_), _) => Ordering::Less,
+            (_, Self::SongDesc(_)) => Ordering::Greater,
+            (Self::GameConfig(left), Self::GameConfig(right)) => right.cmp(left),
+        }
+    }
+}
+
+impl PartialOrd for Source {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+/// Find everything that looks like we can import it
+fn find_sources(path: &Path, sources: &mut Vec<Source>) -> Result<(), Error> {
+    trace!("Checking path: {}", path.display());
+    if path.join("dlcdescriptor.ckd").exists() {
+        sources.push(Source::Dlc(path.join("dlcdescriptor.ckd")));
+    } else if path.join("secure_fat.gf").exists() {
+        sources.push(Source::Sfat(path.join("secure_fat.gf")));
+    } else if path
+        .join("cache/itf_cooked/nx/enginedata/gameconfig/gameconfig.isg.ckd")
+        .exists()
+    {
+        sources.push(Source::GameConfig(path.join(
+            "cache/itf_cooked/nx/enginedata/gameconfig/gameconfig.isg.ckd",
+        )));
+    } else if path
+        .join("cache/itf_cooked/wiiu/enginedata/gameconfig/gameconfig.isg.ckd")
+        .exists()
+    {
+        sources.push(Source::GameConfig(path.join(
+            "cache/itf_cooked/wiiu/enginedata/gameconfig/gameconfig.isg.ckd",
+        )));
+    } else if path.join("cache/itf_cooked/nx/world/maps").exists() {
+        let maps = path.join("cache/itf_cooked/nx/world/maps");
+        trace!("Looking for maps: {}", maps.display());
+        for dir in maps.read_dir()? {
+            let path = dir?.path().join("songdesc.tpl.ckd");
+            if path.exists() {
+                sources.push(Source::SongDesc(path));
+            }
+        }
+    } else if path.join("cache/itf_cooked/wiiu/world/maps").exists() {
+        let maps = path.join("cache/itf_cooked/wiiu/world/maps");
+        trace!("Looking for maps: {}", maps.display());
+        for dir in maps.read_dir()? {
+            let path = dir?.path().join("songdesc.tpl.ckd");
+            if path.exists() {
+                sources.push(Source::SongDesc(path));
+            }
+        }
+    } else {
+        for dir in path.read_dir()? {
+            let dir = dir?;
+            if dir.file_type()?.is_dir() {
+                find_sources(&dir.path(), sources)?;
+            }
+        }
+    }
     Ok(())
 }

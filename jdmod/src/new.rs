@@ -4,6 +4,7 @@ use std::{
     ffi::OsStr,
     fs::File,
     io::ErrorKind,
+    num::NonZeroUsize,
     path::{Path, PathBuf},
 };
 
@@ -28,11 +29,14 @@ pub struct New {
     sfat_path: PathBuf,
     /// Directory to place the mod
     mod_path: PathBuf,
+    /// Use n threads for importing songs
+    #[arg(long)]
+    threads: Option<NonZeroUsize>,
 }
 
 /// Wrapper around [`new`]
 pub fn main(cli: &New) -> Result<(), Error> {
-    new(&cli.sfat_path, &cli.mod_path)
+    new(&cli.sfat_path, &cli.mod_path, cli.threads)
 }
 
 /// Create a new game at `dir_root` with the secure_fat.gf at `game_path`
@@ -43,7 +47,11 @@ pub fn main(cli: &New) -> Result<(), Error> {
 /// - Invalid secure_fat.gf or .ipks or missing .ipks
 /// - The secure_fat.gf is not for the Nintendo Switch
 #[instrument]
-pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
+pub fn new(
+    game_path: &Path,
+    dir_root: &Path,
+    n_threads: Option<NonZeroUsize>,
+) -> Result<(), Error> {
     // Check that the target directory either doesn't exist yet or is empty
     // We do not want to potentially override existing files and/or directories
     if dir_root.exists() && dir_root.read_dir()?.next().is_some() {
@@ -116,7 +124,14 @@ pub fn new(game_path: &Path, dir_root: &Path) -> Result<(), Error> {
     }
 
     // Import songs and other content from the game
-    import::import_vfs(&sfat_vfs, dir_tree, sfat_vfs.unique_game_id(), false, false)?;
+    import::import_full_game_vfs(
+        &sfat_vfs,
+        dir_tree,
+        sfat_vfs.unique_game_id(),
+        false,
+        false,
+        n_threads,
+    )?;
 
     Ok(())
 }

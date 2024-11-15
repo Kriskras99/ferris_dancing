@@ -1,6 +1,10 @@
 //! # Types
 //! This module contains all the types that are shared between the various portions of this application
-use std::path::{Path, PathBuf};
+
+use std::{
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
+};
 
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPath, VirtualPathBuf};
 use path_clean::PathClean;
@@ -38,9 +42,12 @@ pub struct ImportState<'a> {
     pub aliases: Alias8<'a>,
     /// Should we be lax with parsing
     pub lax: bool,
+    /// How many threads to use when importing songs
+    pub n_threads: Option<NonZeroUsize>,
 }
 
 /// The directory tree of a mod
+#[derive(Debug, Clone)]
 pub struct DirectoryTree {
     /// The root of the mod
     dir_root: PathBuf,

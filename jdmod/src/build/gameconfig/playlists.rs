@@ -8,7 +8,7 @@ use hipstr::HipStr;
 use test_eq::test_eq;
 use ubiart_toolkit::{
     cooked,
-    json_types::{self, v22::GameManagerConfig22},
+    cooked::{isg::GameManagerConfigV22, json::CarouselRules},
     utils::{SplitPath, UniqueGameId},
 };
 
@@ -22,7 +22,7 @@ use crate::{
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &GameManagerConfig22<'_>,
+    gameconfig: &GameManagerConfigV22<'_>,
 ) -> Result<(), Error> {
     let saved_playlists_file = bs
         .native_vfs
@@ -34,8 +34,8 @@ pub fn build(
     let mut requests = Vec::new();
 
     for (name, playlist) in saved_playlists {
-        requests.push(json_types::isg::CarouselRequestDesc::Playlists(
-            json_types::isg::CarouselPlaylistsRequestDesc {
+        requests.push(cooked::json::CarouselRequestDesc::Playlists(
+            cooked::json::CarouselPlaylistsRequestDesc {
                 playlist_id: name.clone(),
                 ..Default::default()
             },
@@ -69,11 +69,10 @@ pub fn build(
         playlists.insert(name, offline_playlist);
     }
 
-    let template =
-        json_types::v22::Template22::PlaylistDatabase(json_types::isg::PlaylistDatabase {
-            class: None,
-            playlists,
-        });
+    let template = cooked::json::PlaylistDatabase {
+        class: Some(cooked::json::PlaylistDatabase::CLASS),
+        playlists,
+    };
 
     let template_vec = cooked::json::create_vec(&template)?;
     bf.generated_files.add_file(
@@ -90,14 +89,12 @@ pub fn build(
 fn build_carousel(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    mut requests: Vec<json_types::isg::CarouselRequestDesc<'_>>,
+    mut requests: Vec<cooked::json::CarouselRequestDesc<'_>>,
     carousel_rules: &str,
 ) -> Result<(), Error> {
     let carousel_rules_path = cook_path(carousel_rules, UniqueGameId::NX2022)?;
     let template_file = bs.patched_base_vfs.open(carousel_rules_path.as_ref())?;
-    let mut carousel_rules = cooked::json::parse_v22(&template_file, false)?
-        .into_carousel_rules()?
-        .clone();
+    let mut carousel_rules: CarouselRules = cooked::json::parse(&template_file, false)?;
 
     // Remove existing playlist carousels except for 'Recommended for me',
     // then remove any playlist that's in 'Recommended for me' from requests so that there are no dupes.
@@ -117,8 +114,8 @@ fn build_carousel(
 
     // Add a new playlist carousel called 'Themed Playlists' for all other playlists
     // TODO: Investigate adding a carousel per Game
-    let category_rule = json_types::isg::CategoryRule {
-        class: Some(json_types::isg::CategoryRule::CLASS),
+    let category_rule = cooked::json::CategoryRule {
+        class: Some(cooked::json::CategoryRule::CLASS),
         act: HipStr::borrowed("ui_carousel"),
         isc: HipStr::borrowed("grp_row"),
         title: HipStr::borrowed("Themed"),
@@ -129,10 +126,7 @@ fn build_carousel(
 
     carousel_rule.categories.push(category_rule);
 
-    let carousel_vec = cooked::json::create_vec_with_capacity_hint(
-        &json_types::v22::Template22::CarouselRules(carousel_rules),
-        100_000,
-    )?;
+    let carousel_vec = cooked::json::create_vec_with_capacity_hint(&carousel_rules, 100_000)?;
     bf.generated_files
         .add_file(carousel_rules_path.into(), carousel_vec)?;
 

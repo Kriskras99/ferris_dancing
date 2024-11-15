@@ -4,7 +4,9 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::{bytes::read::BinaryDeserializeExt as _, vfs::VirtualFileSystem};
-use ubiart_toolkit::{alias8::Alias8, cooked, json_types, utils::UniqueGameId};
+use ubiart_toolkit::{
+    alias8::Alias8, cooked, cooked::isg::GameManagerConfigV22, utils::UniqueGameId,
+};
 
 use super::{BuildFiles, BuildState};
 use crate::utils::cook_path;
@@ -38,8 +40,7 @@ pub fn build(bs: &BuildState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
         UniqueGameId::NX2022,
     )?;
     let gameconfig_file = bs.patched_base_vfs.open(gameconfig_path.as_ref())?;
-    let gameconfig_template = cooked::json::parse_v22(&gameconfig_file, false)?;
-    let mut gameconfig = Box::new(gameconfig_template.into_game_manager_config()?.clone());
+    let mut gameconfig: GameManagerConfigV22 = cooked::isg::parse(&gameconfig_file, false)?;
 
     scheduled_quests::build(bs, bf, &mut gameconfig)?;
     objectives::build(bs, bf)?;
@@ -58,8 +59,7 @@ pub fn build(bs: &BuildState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
 
     gameconfig.redeem_maps = HashMap::new();
 
-    let gameconfig_vec =
-        cooked::json::create_vec(&json_types::v22::Template22::GameManagerConfig(gameconfig))?;
+    let gameconfig_vec = cooked::json::create_vec(&gameconfig)?;
     bf.generated_files
         .add_file(gameconfig_path.into(), gameconfig_vec)?;
 

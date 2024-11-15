@@ -4,10 +4,7 @@ use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use ubiart_toolkit::{
     cooked,
-    json_types::{
-        isg::LocalAliases,
-        v22::{GameManagerConfig22, Template22},
-    },
+    cooked::{isg::GameManagerConfigV22, json::LocalAliasesV2022},
     utils::UniqueGameId,
 };
 
@@ -21,7 +18,7 @@ use crate::{
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &mut GameManagerConfig22,
+    gameconfig: &mut GameManagerConfigV22,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let aliases_file = bs
@@ -42,16 +39,16 @@ pub fn build(
         aliases_vec.push(new_alias);
     }
 
-    let local_aliases = Template22::LocalAliases(LocalAliases {
-        class: None,
+    let local_aliases = LocalAliasesV2022 {
+        class: Some(LocalAliasesV2022::CLASS),
         locked_color: aliases.locked_color.clone(),
         difficulty_colors: aliases
             .rarity_color
             .iter()
-            .map(|(r, c)| (ubiart_toolkit::json_types::isg::Rarity::from(*r), c.clone()))
+            .map(|(r, c)| (ubiart_toolkit::cooked::json::Rarity::from(*r), c.clone()))
             .collect(),
         aliases: aliases_vec,
-    });
+    };
 
     let local_aliases_vec = cooked::json::create_vec_with_capacity_hint(&local_aliases, 230_000)?;
     bf.generated_files.add_file(

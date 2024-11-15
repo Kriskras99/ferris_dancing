@@ -11,20 +11,21 @@ use hipstr::HipStr;
 use test_eq::{test_any, test_eq, test_or};
 use ubiart_toolkit_shared_types::{Color, LocaleId};
 
-#[cfg(feature = "full_json_types")]
-use crate::cooked::tpl::types::PleoComponent;
 use crate::{
     cooked::tpl::types::{
-        AaBb, Actor, AsyncPlayerDescTemplate, AutodanceComponent, AutodanceData, AutodancePropData,
+        AaBb, Actor, AsyncPlayerDescTemplate, AutodanceComponent, AutodanceData,
         AutodanceRecordingStructure, AvatarDescription, AvatarDescription16, BlockDescriptor,
         BlockFlowTemplate, BlockReplacements, Country, DefaultColors, GFXMaterialSerializable,
         GFXMaterialSerializableParam, GFXMaterialTexturePathSet, MasterTape,
         MaterialGraphicComponent, MusicSection, MusicSignature, MusicTrackComponent,
-        MusicTrackData, MusicTrackStructure, Paths, PhoneImages, PlaybackEvent, PropEvent,
-        PropPlayerConfig, Record, SongDescription, SoundComponent, SoundDescriptor, SoundParams,
-        TapeEntry, TapeGroup, Template,
+        MusicTrackData, MusicTrackStructure, Paths, PhoneImages, PleoComponent,
+        PleoTextureGraphicComponent, Record, SongDescription, SoundComponent, SoundDescriptor,
+        SoundParams, TapeEntry, TapeGroup, Template,
     },
-    json_types::isg::{AutoDanceFxDesc, AutodanceVideoStructure, GFXVector4},
+    shared_json_types::{
+        AutoDanceFxDesc, AutodancePropData, AutodanceVideoStructure, GFXVector4, PlaybackEvent,
+        PropEvent, PropPlayerConfig,
+    },
     utils::{path::ExpectedPadding, InternedString, SplitPath, UniqueGameId},
 };
 
@@ -113,13 +114,11 @@ impl<'de> BinaryDeserialize<'de> for Template<'de> {
                 reader.read_at::<MusicTrackComponent>(position)?,
             )),
             "TapeCase_Template" => Ok(Template::TapeCase(reader.read_at::<MasterTape>(position)?)),
-            #[cfg(feature = "full_json_types")]
             "PleoComponent_Template" => Ok(Template::PleoComponent(
                 reader.read_at_with::<PleoComponent>(position, ctx)?,
             )),
-            #[cfg(feature = "full_json_types")]
             "PleoTextureGraphicComponent_Template" => Ok(Template::PleoTextureGraphicComponent(
-                reader.read_at::<super::extra_types::PleoTextureGraphicComponent>(position)?,
+                reader.read_at::<PleoTextureGraphicComponent>(position)?,
             )),
             "SoundComponent_Template" => Ok(Template::SoundComponent(
                 reader.read_at::<SoundComponent>(position)?,
@@ -249,7 +248,6 @@ impl BinaryDeserialize<'_> for AutoDanceFxDesc<'static> {
         let unk1 = reader.read_at::<u32be>(position)?;
         test_eq!(unk1, 0x02E4)?;
         let opacity = reader.read_at::<f32be>(position)?;
-        test_eq!(opacity, 1.0)?;
         let color_low = reader.read_at::<GFXVector4>(position)?;
         let color_mid = reader.read_at::<GFXVector4>(position)?;
         let color_high = reader.read_at::<GFXVector4>(position)?;
@@ -271,18 +269,15 @@ impl BinaryDeserialize<'_> for AutoDanceFxDesc<'static> {
         let halftone_factor = reader.read_at::<u32be>(position)?;
         test_eq!(halftone_factor, 0)?;
         let halftone_cutout_levels = reader.read_at::<f32be>(position)?;
-        test_any!(halftone_cutout_levels, [10.0, 256.0])?;
         let uv_blackout_factor = reader.read_at::<u32be>(position)?;
         test_eq!(uv_blackout_factor, 0)?;
         let uv_blackout_desaturation = reader.read_at::<f32be>(position)?;
-        test_eq!(uv_blackout_desaturation, 0.2)?;
         let uv_blackout_contrast = reader.read_at::<f32be>(position)?;
-        test_eq!(uv_blackout_contrast, 4.0)?;
         let uv_blackout_brightness = reader.read_at::<u32be>(position)?;
         test_eq!(uv_blackout_brightness, 0)?;
         let uv_blackout_color = reader.read_at::<GFXVector4>(position)?;
-        let toon_factor = reader.read_at::<u32be>(position)?;
-        test_eq!(toon_factor, 0)?;
+        let toon_factor = reader.read_at::<f32be>(position)?;
+        test_any!(toon_factor, [0.0, 1.0], "Position: {position}")?;
         let toon_cutout_levels = reader.read_at::<f32be>(position)?;
         let unk2 = reader
             .read_len_type_at::<u32be, u32be>(position)?
@@ -316,10 +311,8 @@ impl BinaryDeserialize<'_> for AutoDanceFxDesc<'static> {
         let slime_specular = reader.read_at::<f32be>(position)?;
         let slime_specular_power = reader.read_at::<f32be>(position)?;
         let overlay_blend_factor = reader.read_at::<f32be>(position)?;
-        test_any!(overlay_blend_factor, [0.0, 0.2])?;
         let overlay_blend_color = reader.read_at::<GFXVector4>(position)?;
         let background_sobel_factor = reader.read_at::<f32be>(position)?;
-        test_any!(background_sobel_factor, [0.0, 0.1])?;
         let background_sobel_color = reader.read_at::<GFXVector4>(position)?;
         let player_glow_factor = reader.read_at::<f32be>(position)?;
         test_eq!(player_glow_factor, 0.0)?;
@@ -361,9 +354,7 @@ impl BinaryDeserialize<'_> for AutoDanceFxDesc<'static> {
         let floor_speed_x = reader.read_at::<f32be>(position)?;
         test_any!(floor_speed_x, [0.0, 0.02])?;
         let floor_speed_y = reader.read_at::<f32be>(position)?;
-        test_any!(floor_speed_y, [0.0, 0.028])?;
         let floor_wave_speed = reader.read_at::<f32be>(position)?;
-        test_any!(floor_wave_speed, [0.0, 0.028])?;
         let floor_blend_mode = reader.read_at::<u32be>(position)?;
         test_eq!(floor_blend_mode, 0)?;
         let floor_plane_image_id = reader.read_at::<u32be>(position)?;
@@ -387,7 +378,6 @@ impl BinaryDeserialize<'_> for AutoDanceFxDesc<'static> {
         let max_speed = reader.read_at::<f32be>(position)?;
         let motion_power = reader.read_at::<f32be>(position)?;
         let amount = reader.read_at::<f32be>(position)?;
-        test_eq!(amount, 0.0)?;
         let image_id = reader.read_at::<u32be>(position)?;
         let start_r = reader.read_at::<f32be>(position)?;
         let start_g = reader.read_at::<f32be>(position)?;
@@ -398,7 +388,6 @@ impl BinaryDeserialize<'_> for AutoDanceFxDesc<'static> {
         let start_alpha = reader.read_at::<f32be>(position)?;
         test_eq!(start_alpha, 1.0)?;
         let end_alpha = reader.read_at::<f32be>(position)?;
-        test_eq!(end_alpha, 1.0)?;
         let textured_outline_factor = reader.read_at::<u32be>(position)?;
         test_eq!(textured_outline_factor, 0)?;
         let textured_outline_tiling = reader.read_at::<f32be>(position)?;
@@ -536,9 +525,7 @@ impl<'de> BinaryDeserialize<'de> for AutodancePropData<'de> {
         let pivot_x = reader.read_at::<f32be>(position)?;
         test_eq!(pivot_x, 0.5)?;
         let pivot_y = reader.read_at::<f32be>(position)?;
-        test_eq!(pivot_y, 0.42)?;
         let size = reader.read_at::<f32be>(position)?;
-        test_eq!(size, 1.0)?;
         let prop_part = reader.read_at::<u32be>(position)?;
         test_eq!(prop_part, 2)?;
 
@@ -633,11 +620,13 @@ impl<'de> BinaryDeserialize<'de> for AutodanceVideoStructure<'de> {
             .read_len_type_at::<u32be, PlaybackEvent>(position)?
             .collect::<Result<_, _>>()?;
         let background_effect = Box::new(reader.read_at::<AutoDanceFxDesc>(position)?);
-        let unk2 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk2, 0)?;
+        let _unk2 = reader
+            .read_len_type_at::<u32be, UnknownC>(position)?
+            .collect::<Result<Vec<_>, _>>()?;
         let player_effect = Box::new(reader.read_at::<AutoDanceFxDesc>(position)?);
-        let unk3 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk3, 0)?;
+        let _unk3 = reader
+            .read_len_type_at::<u32be, UnknownC>(position)?
+            .collect::<Result<Vec<_>, _>>()?;
         let prop_events = reader
             .read_len_type_at::<u32be, PropEvent>(position)?
             .collect::<Result<_, _>>()?;
@@ -669,6 +658,25 @@ impl<'de> BinaryDeserialize<'de> for AutodanceVideoStructure<'de> {
             props,
             props_players_config,
         })
+    }
+}
+
+struct UnknownC;
+impl BinaryDeserialize<'_> for UnknownC {
+    type Ctx = ();
+    type Output = ();
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0xC)?;
+        let _unk2 = reader.read_at::<f32be>(position)?;
+        let _unk3 = reader.read_at::<f32be>(position)?;
+
+        Ok(())
     }
 }
 
@@ -852,8 +860,6 @@ impl BinaryDeserialize<'_> for DefaultColors {
         position: &mut u64,
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        let unk1 = reader.read_at::<u32be>(position)?;
-        test_any!(unk1, 0x5D..=0x1E5, "Position: {position}")?;
         let mut theme = None;
         let mut lyrics = None;
         for default_color in reader.read_len_type_at::<u32be, (InternedString, Color)>(position)? {
@@ -1289,7 +1295,6 @@ impl BinaryDeserialize<'_> for PlaybackEvent<'static> {
     }
 }
 
-#[cfg(feature = "full_json_types")]
 impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
     type Ctx = UniqueGameId;
     type Output = Self;
@@ -1314,7 +1319,7 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
         let unk7 = reader.read_at::<u32be>(position)?;
         test_eq!(unk7, 0x0)?;
         let unk8 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk8, 0x0)?;
+        test_any!(unk8, [0x0, 0x1])?;
         let unk9 = reader.read_at::<u32be>(position)?;
         test_eq!(unk9, 0x1)?;
         let unk10 = reader.read_at::<u32be>(position)?;
@@ -1361,8 +1366,7 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
     }
 }
 
-#[cfg(feature = "full_json_types")]
-impl<'de> BinaryDeserialize<'de> for super::extra_types::PleoTextureGraphicComponent<'de> {
+impl<'de> BinaryDeserialize<'de> for PleoTextureGraphicComponent<'de> {
     type Ctx = ();
     type Output = Self;
 
@@ -1378,7 +1382,7 @@ impl<'de> BinaryDeserialize<'de> for super::extra_types::PleoTextureGraphicCompo
 
         let channel_id = reader.read_len_string_at::<u32be>(position)?;
         let auto_activate = reader.read_at::<u32be>(position)?;
-        test_eq!(auto_activate, 0)?;
+        test_any!(auto_activate, [0, 1])?;
         let use_conductor = reader.read_at::<u32be>(position)?;
         test_eq!(use_conductor, 1)?;
 
@@ -1428,7 +1432,6 @@ impl BinaryDeserialize<'_> for PropEvent<'static> {
         let start_time = reader.read_at::<u32be>(position)?;
         test_eq!(start_time, 0x0)?;
         let duration = reader.read_at::<f32be>(position)?;
-        test_eq!(duration, 49.0)?;
         let associated_props = reader
             .read_len_type_at::<u32be, u32be>(position)?
             .collect::<Result<_, _>>()?;
@@ -1507,72 +1510,36 @@ impl<'de> BinaryDeserialize<'de> for SongDescription<'de> {
         // maybe original_jd_version?
         let original_jd_version = reader.read_at::<u32be>(position)?;
         test_any!(original_jd_version, [0x5, 2015, 0xFFFF_FFFF])?;
-        let unk2 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk2, 0x0)?;
-        let unk3 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk3, 0x1)?;
-        let unk4 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk4, 0x58)?;
-        let unk5 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk5, 0x0)?;
-        let unk6 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk6, 0x0)?;
-        let unk7 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk7, 0x7)?;
-        let unk8 = reader.read_at::<u32be>(position)?;
-        test_any!(unk8, [0x2D66, 0xFFFF_FFFF])?;
-        let unk9 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk9, 0x3)?;
-        let unk10 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk10, 0x0)?;
-        let unk11 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk11, 0x0)?;
-        let unk12 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk12, 0x0)?;
-        let unk13 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk13, 0x0)?;
-        let unk14 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk14, 0xFFFF_FFFF)?;
-        let unk15 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk15, 0x0)?;
-        let unk16 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk16, 0x1)?;
+        let related_albums_len = reader.read_at::<u32be>(position)?;
+        test_any!(related_albums_len, 0x0..=0x1)?;
+        let mut related_albums = Vec::with_capacity(usize::try_from(related_albums_len)?);
+        for _ in 0..related_albums_len {
+            related_albums.push(reader.read_len_string_at::<u32be>(position)?);
+        }
+        let _unk3 = reader
+            .read_len_type_at::<u32be, Unknown58>(position)?
+            .collect::<Result<Vec<_>, _>>()?;
 
         let artist = reader.read_len_string_at::<u32be>(position)?;
         let dancer_name = reader.read_len_string_at::<u32be>(position)?;
-        test_eq!(dancer_name, "Unknown Dancer")?;
         let title = reader.read_len_string_at::<u32be>(position)?;
         let num_coach = reader.read_at::<u32be>(position)?;
         test_any!(num_coach, 0..=4)?;
         let main_coach = reader.read_at::<i32be>(position)?;
-        test_eq!(main_coach, -1)?;
+        test_any!(main_coach, -1..=0)?;
         let difficulty = reader.read_at::<u32be>(position)?;
         test_any!(difficulty, 1..=3)?;
         let background_type = reader.read_at::<u32be>(position)?;
-        test_eq!(background_type, 0x0)?;
+        test_any!(background_type, [0x0, 0x3, 0x4, 0x5])?;
         let lyrics_type = reader.read_at::<i32be>(position)?;
-        test_any!(lyrics_type, [0x0, 0x2])?;
+        test_any!(lyrics_type, -1..=2)?;
         let energy = reader.read_at::<u32be>(position)?;
         test_eq!(energy, 0x1)?;
         let unk17 = reader.read_at::<f32be>(position)?;
-        test_eq!(unk17, 0.5)?;
-        let unk18 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk18, 0x2)?;
-        let unk19 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk19, 0x10)?;
-        let unk20 = reader.read_at::<InternedString>(position)?;
-        test_eq!(unk20, "coverflow")?;
-        let unk21 = reader.read_at::<u32be>(position)?;
-        test_any!(unk21, 0x45..=0x17B, "Position: {position}")?;
-        let unk22 = reader.read_at::<u32be>(position)?;
-        test_any!(unk22, [0, 0x32, 0x96, 0x124, 0x129, 0x12C])?;
-        let unk23 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk23, 0x10)?;
-        let unk24 = reader.read_at::<InternedString>(position)?;
-        test_eq!(unk24, "prelobby")?;
-        let unk25 = reader.read_at::<u32be>(position)?;
-        test_any!(unk25, 0x9..=0x122, "Position: {position}")?;
-
+        test_any!(unk17, [0.0, 0.5])?;
+        let tags = reader
+            .read_len_type_at::<u32be, Unknown10>(position)?
+            .collect::<Result<_, _>>()?;
         let default_colors = reader.read_at::<DefaultColors>(position)?;
         let paths = reader.read_at::<Paths>(position)?;
 
@@ -1581,7 +1548,7 @@ impl<'de> BinaryDeserialize<'de> for SongDescription<'de> {
             map_name,
             jd_version,
             original_jd_version: jd_version,
-            related_albums: vec![],
+            related_albums,
             artist,
             cn_lyrics: None,
             dancer_name,
@@ -1598,7 +1565,7 @@ impl<'de> BinaryDeserialize<'de> for SongDescription<'de> {
             background_type,
             lyrics_type,
             energy: Some(energy),
-            tags: vec![],
+            tags,
             jdm_attributes: None,
             status: 0,
             locale_id: LocaleId::default(),
@@ -1609,6 +1576,72 @@ impl<'de> BinaryDeserialize<'de> for SongDescription<'de> {
             score_with_both_controllers: None,
             paths: Some(paths),
         })
+    }
+}
+
+struct Unknown58;
+impl BinaryDeserialize<'_> for Unknown58 {
+    type Ctx = ();
+    type Output = ();
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x58)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_any!(unk2, 0x0..=0x2)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_any!(unk3, [0, 1, 2, 6])?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_any!(unk4, [0x1, 0x2, 0x7])?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_or!(
+            test_any!(unk5, 0x2D35..=0x2E0F),
+            test_eq!(unk5, 0xFFFF_FFFF)
+        )?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_any!(unk6, 0x1..=0x4)?;
+        let unk7 = reader.read_at::<u32be>(position)?;
+        test_any!(unk7, [0x0, 0x14])?;
+        let unk8 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk8, 0x0)?;
+        let unk9 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk9, 0x0)?;
+        let unk10 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk10, 0x0)?;
+        let unk11 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk11, 0xFFFF_FFFF)?;
+        let unk12 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk12, 0x0)?;
+        let unk13 = reader.read_at::<u32be>(position)?;
+        test_any!(unk13, 0x0..=0x1)?;
+
+        Ok(())
+    }
+}
+
+struct Unknown10;
+impl BinaryDeserialize<'_> for Unknown10 {
+    type Ctx = ();
+    type Output = HipStr<'static>;
+
+    fn deserialize_at_with(
+        reader: &(impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x10)?;
+        let tag = reader.read_at::<InternedString>(position)?;
+        let unk21 = reader.read_at::<u32be>(position)?;
+        test_any!(unk21, 0..=514, "Position: {position}")?;
+        let unk22 = reader.read_at::<u32be>(position)?;
+        test_any!(unk22, 0..=570)?;
+
+        Ok(HipStr::borrowed(tag))
     }
 }
 
@@ -1650,25 +1683,24 @@ impl<'de> BinaryDeserialize<'de> for SoundDescriptor<'de> {
         // doesn't work for wiiu2015/dlc7/tpl.ckd/de2de3743d26a22624854df4c9d86dc9.tpl.ckd
         let _name = reader.read_at::<u32be>(position)?;
         let volume = reader.read_at::<f32be>(position)?;
-        test_any!(
-            volume,
-            [0.0, -1.5, -2.0, -4.0, -5.0, -6.0, -8.0, -10.0, -12.0]
-        )?;
         let category = reader.read_at::<InternedString>(position)?;
-        let limit_category = reader.read_at::<u32be>(position)?;
-        test_eq!(limit_category, 0xFFFF_FFFF)?;
+        let limit_category = reader.read_at::<InternedString>(position)?;
         let unk2 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk2, 0)?;
-        let unk3 = reader.read_at::<u32be>(position)?;
-        test_any!(unk3, [1, 0xFFFF_FFFF])?;
+        test_any!(unk2, 0..=1, "Position: {position}")?;
+        let unk3 = reader.read_at::<i32be>(position)?;
+        test_any!(unk3, -1..=10)?;
         let unk4 = reader.read_at::<u32be>(position)?;
         test_eq!(unk4, 0)?;
         let unk5 = reader.read_at::<u32be>(position)?;
         test_eq!(unk5, 0)?;
-        let files = reader
-            .read_len_type_at::<u32be, SplitPath>(position)?
-            .map(|r| r.map(|s| HipStr::from(s.to_string())))
-            .collect::<Result<Vec<_>, _>>()?;
+        let files_len = reader.read_at::<u32be>(position)?;
+        let mut files = Vec::with_capacity(usize::try_from(files_len)?);
+        for _ in 0..files_len {
+            let file = reader.read_at_with::<SplitPath>(position, ExpectedPadding::None)?;
+            let padding = reader.read_at::<u32be>(position)?;
+            test_any!(padding, [0x0, 0x2])?;
+            files.push(HipStr::from(file.to_string()));
+        }
         let unk6 = reader.read_at::<u32be>(position)?;
         test_eq!(unk6, 0)?;
         let unk7 = reader.read_at::<u32be>(position)?;
@@ -1680,14 +1712,14 @@ impl<'de> BinaryDeserialize<'de> for SoundDescriptor<'de> {
         let unk10 = reader.read_at::<u32be>(position)?;
         test_eq!(unk10, 0)?;
         let params = reader.read_at::<SoundParams>(position)?;
-        let unk11 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk11, 0xFFFF_FFFF)?;
+        let unk11 = reader.read_at::<i32be>(position)?;
+        test_any!(unk11, -1..=2)?;
         let unk12 = reader.read_at::<u32be>(position)?;
         test_eq!(unk12, 0xFFFF_FFFF)?;
         let unk13 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk13, 0)?;
+        test_any!(unk13, [0, 1])?;
         let unk14 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk14, 0)?;
+        test_any!(unk14, [0, 0x21C00])?;
         let unk15 = reader.read_at::<u32be>(position)?;
         test_eq!(unk15, 0)?;
 
@@ -1696,7 +1728,7 @@ impl<'de> BinaryDeserialize<'de> for SoundDescriptor<'de> {
         let out_devices = reader.read_at::<u32be>(position)?;
         test_eq!(out_devices, 0xFFFF_FFFF)?;
         let sound_play_after_destroy = reader.read_at::<u32be>(position)?;
-        test_eq!(sound_play_after_destroy, 0x0)?;
+        test_any!(sound_play_after_destroy, 0x0..=0x1)?;
 
         let name = files
             .first()
@@ -1713,7 +1745,7 @@ impl<'de> BinaryDeserialize<'de> for SoundDescriptor<'de> {
             name,
             volume,
             category: HipStr::borrowed(category),
-            limit_category: HipStr::default(),
+            limit_category: HipStr::borrowed(limit_category),
             limit_mode: 0,
             max_instances: 0,
             files,
@@ -1739,15 +1771,14 @@ impl<'de> BinaryDeserialize<'de> for SoundParams<'de> {
         let unk1 = reader.read_at::<u32be>(position)?;
         test_eq!(unk1, 0x60)?;
         let unk2 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk2, 0x2)?;
+        test_any!(unk2, 0x1..=0x2)?;
         let loop_it = reader.read_at::<u32be>(position)?;
-        test_eq!(loop_it, 0x0)?;
+        test_any!(loop_it, 0x0..=0x2)?;
         let play_mode = reader.read_at::<u32be>(position)?;
-        test_eq!(play_mode, 0x1)?;
+        test_any!(play_mode, 0x0..=0x2)?;
         let play_mode_input = reader.read_at::<u32be>(position)?;
         test_eq!(play_mode_input, 0xFFFF_FFFF)?;
         let random_vol_min = reader.read_at::<f32be>(position)?;
-        test_eq!(random_vol_min, 0.0)?;
         let random_vol_max = reader.read_at::<f32be>(position)?;
         test_eq!(random_vol_max, 0.0)?;
         let delay = reader.read_at::<u32be>(position)?;
@@ -1755,13 +1786,9 @@ impl<'de> BinaryDeserialize<'de> for SoundParams<'de> {
         let random_delay = reader.read_at::<u32be>(position)?;
         test_eq!(random_delay, 0)?;
         let random_pitch_min = reader.read_at::<f32be>(position)?;
-        test_eq!(random_pitch_min, 1.0)?;
         let random_pitch_max = reader.read_at::<f32be>(position)?;
-        test_eq!(random_pitch_max, 1.0)?;
         let fade_in_time = reader.read_at::<f32be>(position)?;
-        test_any!(fade_in_time, [0.0, 0.3, 0.5, 0.7])?;
         let fade_out_time = reader.read_at::<f32be>(position)?;
-        test_any!(fade_out_time, [0.0, 1.0, 2.0])?;
         let filter_frequency = reader.read_at::<u32be>(position)?;
         test_eq!(filter_frequency, 0)?;
         let filter_type = reader.read_at::<u32be>(position)?;

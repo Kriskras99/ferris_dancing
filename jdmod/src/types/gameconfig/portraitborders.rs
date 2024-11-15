@@ -6,7 +6,7 @@ use anyhow::{anyhow, bail, Error};
 use hipstr::HipStr;
 use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::json_types::isg::PortraitBorderDesc;
+use ubiart_toolkit::cooked::isg::PortraitBorderDesc;
 
 use super::generate_gacha_id;
 
@@ -79,12 +79,6 @@ pub struct PortraitBorder<'a> {
     /// Path to the image that should be in front of the avatar
     #[serde(borrow)]
     pub foreground_texture_path: Option<HipStr<'a>>,
-    /// Path to the image that should be behind the avatar (phone)
-    #[serde(borrow)]
-    pub background_phone_path: HipStr<'a>,
-    /// Path to the image that should be in front of the avatar (phone)
-    #[serde(borrow)]
-    pub foreground_phone_path: Option<HipStr<'a>>,
     /// Is the portraitborder unlocked by default
     pub lock_status: LockStatus,
     /// Is the portraitborder selectable by the user
@@ -113,12 +107,6 @@ impl<'a> PortraitBorder<'a> {
             } else {
                 Some(HipStr::from(format!("{name}/foreground_texture.png")))
             },
-            background_phone_path: HipStr::from(format!("{name}/background_phone.png")),
-            foreground_phone_path: if desc.foreground_phone_path.is_empty() {
-                None
-            } else {
-                Some(HipStr::from(format!("{name}/foreground_phone.png")))
-            },
             lock_status: LockStatus::try_from(desc.original_lock_status)?,
             visibility: Visibility::try_from(desc.visibility)?,
         })
@@ -144,7 +132,7 @@ impl<'a> PortraitBorder<'a> {
             background_phone_path: HipStr::from(format!(
                 "world/features/collectibles/portraitborders/{id:04}_{name}/pb_back_phone.png"
             )),
-            foreground_phone_path: if self.foreground_phone_path.is_some() {
+            foreground_phone_path: if self.foreground_texture_path.is_some() {
                 HipStr::from(format!(
                     "world/features/collectibles/portraitborders/{id:04}_{name}/pb_front_phone.png"
                 ))

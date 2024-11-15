@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Error;
 use hipstr::HipStr;
-use ubiart_toolkit::json_types::isg::SongsSearchTags;
+use ubiart_toolkit::cooked::isg::SongsSearchTags;
 
 use crate::types::{gameconfig::search_labels::SearchLabel, ImportState};
 

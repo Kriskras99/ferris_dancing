@@ -141,7 +141,7 @@ pub fn parse_soundset(
         .first()
         .ok_or_else(|| anyhow!("Template is missing proper SoundDescriptor"))?;
 
-    assert!(!descriptor.name.is_empty(), "SoundSet name is empty!");
+    test_eq!(descriptor.name.is_empty(), false, "SoundSet name is empty!")?;
     let name = HipStr::from(descriptor.name.to_string());
     let filename = descriptor
         .files
@@ -155,7 +155,7 @@ pub fn parse_soundset(
     let filename = sis.dirs.audio().join(&new_filename);
 
     let mut to = File::create(&filename)?;
-    let is_opus = utils::decode_audio(&from, &mut to)?;
+    let is_opus = utils::decode_audio(&from, &mut to, sis.lax)?;
     if is_opus {
         std::fs::rename(&filename, filename.with_extension("opus"))?;
         new_filename = format!("{name}.opus");

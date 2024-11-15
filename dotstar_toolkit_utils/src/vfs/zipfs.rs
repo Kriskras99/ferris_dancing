@@ -1,6 +1,6 @@
 //! # Zip-backed Filesystem
 //!
-//! TODO: Create a custom zip implementation based on the ReadAt trait
+//! TODO: Create a custom zip implementation based on the ReadAt trait, maybe using rc-zip
 use std::{
     collections::{hash_map::Entry, HashMap},
     io::{Error, ErrorKind, Read},

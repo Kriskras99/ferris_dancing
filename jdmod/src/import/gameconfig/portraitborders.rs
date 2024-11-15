@@ -1,9 +1,10 @@
 //! # Portraitborders
 //! Import all portraitborders
-use std::{collections::HashMap, fs::File, io::Write};
+use std::{collections::HashMap, fs::File};
 
 use anyhow::Error;
-use ubiart_toolkit::cooked;
+use cooked::isg;
+use ubiart_toolkit::{cooked, cooked::isg::PortraitBordersDatabase};
 
 use crate::{
     regex,
@@ -20,8 +21,8 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
     let new_portraitborders = is
         .vfs
         .open(cook_path(portraitborders_path, is.ugi)?.as_ref())?;
-    let template = cooked::json::parse_v22(&new_portraitborders, is.lax)?;
-    let portrait_borders_database = template.into_portrait_borders_database()?;
+    let portrait_borders_database =
+        isg::parse::<PortraitBordersDatabase>(&new_portraitborders, is.lax)?;
 
     // Load existing avatars in the mod
     let pb_config_path = is.dirs.portraitborders().join("portraitborders.json");
@@ -57,24 +58,6 @@ pub fn import_v20v22(is: &ImportState<'_>, portraitborders_path: &str) -> Result
                         .portraitborders()
                         .join(foreground_texture_path.as_str()),
                 )?;
-            }
-
-            let background_phone = is.vfs.open(desc.background_phone_path.as_str().as_ref())?;
-            let mut file = File::create(
-                is.dirs
-                    .portraitborders()
-                    .join(pb.background_phone_path.as_str()),
-            )?;
-            file.write_all(&background_phone)?;
-
-            if let Some(foreground_phone_path) = &pb.foreground_phone_path {
-                let foreground_phone = is.vfs.open(desc.foreground_phone_path.as_str().as_ref())?;
-                let mut file = File::create(
-                    is.dirs
-                        .portraitborders()
-                        .join(foreground_phone_path.as_str()),
-                )?;
-                file.write_all(&foreground_phone)?;
             }
 
             portraitborders.insert(name.to_string(), pb);

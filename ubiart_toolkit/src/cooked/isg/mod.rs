@@ -1,16 +1,615 @@
+#![allow(clippy::struct_excessive_bools, reason = "Format is dictated by the engine")]
 use std::collections::HashMap;
 
 use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
+use superstruct::superstruct;
 use ubiart_toolkit_shared_types::{Color, LocaleId};
 
-use super::{v1819::ObjectiveDesc1819, DifficultyColors, Empty};
-use crate::cooked::tpl::types::{
-    AutodancePropData, FxEvent, PlaybackEvent, PropEvent, PropPlayerConfig,
-};
+use crate::shared_json_types::{AutodanceVideoStructure, Empty, ObjectiveDesc};
 
-#[cfg(feature = "full_json_types")]
+pub type AliasesObjectives<'a> = HashMap<u32, HipStr<'a>>;
+pub type MapsGoals<'a> = HashMap<HipStr<'a>, Vec<HipStr<'a>>>;
+pub type MapsObjectives<'a> = HashMap<HipStr<'a>, HipStr<'a>>;
+pub type OfflineRecommendation<'a> = Vec<HipStr<'a>>;
+pub type AvatarsObjectives<'a> = HashMap<u32, HipStr<'a>>;
+
+pub use crate::utils::json::parse;
+
+/// For serde to set a value to default to `u32::MAX`
+const fn u32_max() -> u32 {
+    u32::MAX
+}
+
+#[superstruct(
+    variants(V22, V21, V20, V20C, V19, V18, V17, V16),
+    variant_attributes(
+        serde_as,
+        derive(Debug, Serialize, Deserialize, Clone),
+        serde(deny_unknown_fields, rename_all = "camelCase")
+    )
+)]
+pub struct GameManagerConfig<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub game_text_file_path: HipStr<'a>,
+    #[serde(borrow)]
+    pub loading: HipStr<'a>,
+    #[serde(borrow)]
+    pub game_flow_scene_path: HipStr<'a>,
+    #[serde(borrow)]
+    pub camera_shake_config: HipStr<'a>,
+    pub cut_scene_default_unskippable_duration_first_time: u32,
+    pub max_local_players: u32,
+    pub max_online_players: u32,
+    pub max_bonus_teensy: u32,
+    pub jdversion: u32,
+    pub attract_waiting_time: u32,
+    pub sweat_calories_per_second: f32,
+    pub sweat_met_value: u32,
+    pub other_met_value: u32,
+    pub sweat_magic_mult: u32,
+    pub sweat_magic_add: u32,
+    #[serde(borrow, rename = "carousel_rules")]
+    pub carousel_rules: HipStr<'a>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "alias_db_path")]
+    pub alias_db_path: HipStr<'a>,
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+    #[serde(borrow)]
+    pub jdpaths: HashMap<u32, HipStr<'a>>,
+    #[serde(borrow)]
+    pub jdblockspath: HipStr<'a>,
+    #[serde(borrow)]
+    pub jdcommontapepath: HipStr<'a>,
+    #[serde(borrow)]
+    pub picto_component_tpl_paths: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow)]
+    pub dynamic_music_track_component_tpl_path: HipStr<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub anchor_tpl_path: HipStr<'a>,
+    #[serde(borrow, rename = "songdb_scene")]
+    pub songdb_scene: HipStr<'a>,
+    #[serde(borrow, rename = "agingbot_behavioursTpl")]
+    pub agingbot_behaviours_tpl: HipStr<'a>,
+    #[serde(borrow, rename = "avatardb_scene")]
+    pub avatardb_scene: HipStr<'a>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "skindb_scene")]
+    pub skindb_scene: HipStr<'a>,
+    #[serde(borrow, rename = "flagdb_scene")]
+    pub flagdb_scene: HipStr<'a>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow)]
+    pub avatar_folder: HipStr<'a>,
+    #[superstruct(only(V17, V18, V19))]
+    #[serde(borrow)]
+    pub pin_unplayed_song: HipStr<'a>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub wdf_player_name_prefix_on_xbox_one: HipStr<'a>,
+    #[superstruct(only(V21, V22))]
+    #[serde(borrow)]
+    /// Introduced in an update for V21
+    pub wdf_player_name_prefix_on_stadia: Option<HipStr<'a>>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "wdfPlayerNamePrefixNonPS4")]
+    pub wdf_player_name_prefix_non_ps4: HipStr<'a>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub song_tags: Option<Vec<HipStr<'a>>>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub shortcut_descriptors: HashMap<HipStr<'a>, ShortcutDesc1719<'a>>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow)]
+    pub short_cut_configs: HashMap<HipStr<'a>, ShortcutSetup1619<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub space_between_shortcuts: HipStr<'a>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow)]
+    pub default_phone_images: HashMap<HipStr<'a>, HipStr<'a>>,
+    pub max_controller_sleep_time: f32,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow)]
+    pub audio_package_name: HipStr<'a>,
+    #[serde(borrow)]
+    pub package_scene_paths: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow, rename = "ed_songdb_scene")]
+    pub ed_songdb_scene: HipStr<'a>,
+    #[serde(borrow)]
+    pub cameras: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow)]
+    pub uiscenes: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow)]
+    pub banner_scenes: Vec<HipStr<'a>>,
+    #[serde(borrow)]
+    pub transition_scenes: Vec<HipStr<'a>>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub actors_to_bundle: Vec<HipStr<'a>>,
+    #[superstruct(only(V16, V17, V18))]
+    #[serde(borrow)]
+    pub genericstages: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[serde(borrow)]
+    pub popupconfigs: PopupConfigList<'a>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub clubrewardconfigs: HashMap<HipStr<'a>, ClubRewardConfig<'a>>,
+    #[serde(borrow)]
+    pub scoringparams: ScoringParams<'a>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub scoringcameraparams: ScoringCameraParams<'a>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub scoringmovespaceparams: ScoringMovespaceParams<'a>,
+    #[superstruct(only(V16, V17))]
+    #[serde(borrow)]
+    pub kinect_scoringparams: ScoringCameraParams<'a>,
+    #[serde(borrow)]
+    pub menuassetsparams: Vec<MenuAssetsCacheParams<'a>>,
+    #[serde(borrow)]
+    pub menumusicsparams: HashMap<HipStr<'a>, MenuMusicParams<'a>>,
+    #[serde(borrow)]
+    pub remotesoundparams: HashMap<HipStr<'a>, RemoteSoundParams<'a>>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub menu_music_multi_tracks: HashMap<HipStr<'a>, MenuMultiTrackItem<'a>>,
+    #[serde(borrow)]
+    pub menumusicconfig: MenuMusicConfig<'a>,
+    #[superstruct(only(V16, V17, V18))]
+    pub sweat_programs: Vec<u32>,
+    #[superstruct(only(V16, V17, V18))]
+    #[serde(borrow)]
+    pub mashupdates: HashMap<HipStr<'a>, u32>,
+    #[superstruct(only(V16, V17, V18))]
+    #[serde(borrow)]
+    pub mashupavatars: HashMap<HipStr<'a>, u32>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow)]
+    pub mojoprices: HashMap<HipStr<'a>, u32>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub rankdescriptor: RankDescriptor<'a>,
+    #[superstruct(only(V16, V17))]
+    #[serde(borrow)]
+    pub slave_phone_loc_ids: HashMap<HipStr<'a>, Vec<u32>>,
+    #[superstruct(only(V16, V17))]
+    #[serde(borrow)]
+    pub questdataentries: Vec<QuestEntry1617<'a>>,
+    #[superstruct(only(V17))]
+    #[serde(borrow)]
+    pub questplayercamslot: HashMap<HipStr<'a>, Vec<u32>>,
+    #[serde(borrow)]
+    pub unlimitedupsellsonglist: Vec<UnlimitedUpsellSongList<'a>>,
+    #[superstruct(only(V20, V21, V22))]
+    /// Not in the Japanese version of JD20
+    #[serde(borrow, rename = "defaultJDUVideoPreviewSubtitles")]
+    pub default_jdu_video_preview_subtitles: Option<UnlimitedUpsellSubtitles<'a>>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub galaxyconfig: Vec<SystemDescriptor18<'a>>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub adventure_bosses: Vec<AdventureBossDesc18<'a>>,
+    #[superstruct(only(V18, V19))]
+    #[serde(
+        borrow,
+        rename = "adventuremode_setup",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub adventuremode_setup: Option<AdventureModeSetup18<'a>>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub questconfig: Option<QuestConfig1618<'a>>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub questchallengerentries: Vec<QuestChallengerEntry1618<'a>>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    /// Only on NX
+    pub customizableitemconfig: Option<CustomizableItemConfig<'a>>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "scheduled_questSetup")]
+    pub scheduled_quest_setup: ScheduledQuestSetup<'a>,
+    #[superstruct(only(V17))]
+    #[serde(borrow)]
+    pub dancemachinerandomizeconfig: DanceMachineRandomSetup17<'a>,
+    #[superstruct(only(V17, V18, V19))]
+    #[serde(borrow)]
+    pub dancemachineglobalconfig: DanceMachineGlobalConfig1719<'a>,
+    #[superstruct(only(V17))]
+    /// Only on WiiU
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub dancemachinedebugconfig: Option<DanceMachineDebugConfig<'a>>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow)]
+    pub sweatrandomizeconfig: SweatRandomizeConfig1619<'a>,
+    #[superstruct(only(V17, V18, V19))]
+    #[serde(borrow)]
+    pub searchconfig: SearchConfig1719<'a>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    #[serde(borrow)]
+    pub challenger_evolution_template_list: Vec<ChallengerScoreEvolutionTemplate1619<'a>>,
+    #[serde(borrow)]
+    pub countryentries: Vec<CountryEntry<'a>>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub default_country_code: HipStr<'a>,
+    #[serde(borrow)]
+    pub credits_textbox_path: HipStr<'a>,
+    #[superstruct(only(V16, V17, V18))]
+    pub avatar_min_anim_hud_duration: u32,
+    #[superstruct(only(V16, V17, V18))]
+    #[serde(borrow)]
+    pub b2b_maps: Vec<HipStr<'a>>,
+    #[superstruct(only(V16, V17, V18))]
+    #[serde(borrow)]
+    pub chatmessagesparams: ChatMessagesParams1618<'a>,
+    #[superstruct(only(V16, V17, V18))]
+    #[serde(borrow)]
+    pub chat_messages: HashMap<HipStr<'a>, Vec<u32>>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub challenge_algo_order: Option<Vec<HipStr<'a>>>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub challenge_friend_score_offset: Option<f32>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub challenge_signature_score_offset: Option<f32>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub challenger_connection_time_delay: Option<f32>,
+    #[superstruct(only(V16, V17, V18, V19, V20, V20C))]
+    pub coop_score_diamonds_values: Vec<f32>,
+    #[superstruct(only(V16, V17))]
+    pub coop_jauge_anim_time: Vec<u32>,
+    #[superstruct(only(V16, V17, V18, V19))]
+    pub rival_recap_incr_score_speed: f32,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retained_most_played_among_all_played_songs_ratio: Option<f32>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked_songs_push_occurence_value: Option<u32>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unlimited_songs_push_occurence_value: Option<u32>,
+    #[superstruct(only(V16, V17))]
+    /// Only on WiiU
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub push_recap_min_played_song_count_before_unlimited: Option<u32>,
+    #[serde(borrow)]
+    pub countdown_delays: HashMap<HipStr<'a>, u32>,
+    #[serde(borrow)]
+    pub autodance_effects_list: Vec<AutoDanceEffectData<'a>>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub autodance_transition_sound_path: HipStr<'a>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    pub autodance_transition_sound_synchronise_sample: u32,
+    #[superstruct(only(V17, V18, V19))]
+    pub autodance_transition_sound_synchronise_time: u32,
+    #[superstruct(only(V16, V17))]
+    #[serde(borrow)]
+    pub coop_tweaked_texts: Vec<CoopTweakedText17<'a>>,
+    #[superstruct(only(V16, V17, V18))]
+    #[serde(borrow)]
+    pub messages_slides: HashMap<HipStr<'a>, TutorialContent<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub tutorials_contents: HashMap<HipStr<'a>, TutorialContent<'a>>,
+    #[serde(borrow)]
+    pub tutorials: Vec<TutorialDesc<'a>>,
+    #[serde(borrow)]
+    pub redeem_maps: HashMap<HipStr<'a>, Vec<HipStr<'a>>>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "UplayRewards")]
+    pub uplay_rewards: Vec<UplayReward<'a>>,
+    #[superstruct(only(V16, V17))]
+    #[serde(borrow)]
+    pub uplay_unlockable_maps: HashMap<HipStr<'a>, u32>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    pub stars_6th_step_song_score: u32,
+    #[superstruct(only(V17, V18, V19, V20, V20C))]
+    pub stars_6th_step_incoming_effect_start_relative_score: i32,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    pub stars_7th_step_song_score: u32,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    pub perfect_feedback_min_score: u32,
+    #[superstruct(only(V17))]
+    pub perfect_plus_feedback_min_score: u32,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    pub min_song_nb_for_shuffle: u32,
+    #[superstruct(only(V19))]
+    pub stars_needed_to_unlock_extreme_alt_map: u32,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub wdf_boss_entries: Vec<WDFBossEntry<'a>>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub adventure_objectives: Vec<AdventureObjective18<'a>>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow, rename = "scheduled_quests")]
+    pub scheduled_quests: Vec<ScheduledQuestDesc1819<'a>>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub itemcolorlookup: ItemColorLookUp<'a>,
+    #[superstruct(only(V17, V18, V19))]
+    #[serde(borrow)]
+    pub looped_video_config: HashMap<HipStr<'a>, VideoLoopSetup<'a>>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "defaultJDUVideoPreview")]
+    pub default_jdu_video_preview: HipStr<'a>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "defaultJDUVideoPreview_kids")]
+    pub default_jdu_video_preview_kids: HipStr<'a>,
+    #[superstruct(only(V17))]
+    pub diamond_points: Vec<u32>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    pub jd_points_per_star: Vec<u32>,
+    #[superstruct(only(V17, V18, V19, V20, V20C, V21, V22))]
+    /// Not on WiiU
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub banned_maps_in_chinese: Option<Vec<HipStr<'a>>>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub hueconfig: Option<HueConfig<'a>>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub collectiblealbum: CollectibleAlbum<'a>,
+    #[superstruct(only(V18, V19, V20, V20C, V21))]
+    #[serde(borrow)]
+    pub stickerdatabase: Vec<StickerEntry<'a>>,
+    #[superstruct(only(V18, V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub gachaconfig: GachaConfig<'a>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow)]
+    pub ftueconfig: FTUEConfig<'a>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow)]
+    pub rumbleconfig: RumbleConfig<'a>,
+    #[superstruct(only(V18, V19))]
+    pub profile_landing_stats_thresholds: Vec<(u32, u32, u32)>,
+    #[superstruct(only(V21, V22), no_getter)]
+    #[serde(borrow)]
+    pub config_files_path: ConfigFilesPathV2122<'a>,
+    #[superstruct(only(V20, V20C), no_getter)]
+    #[serde(borrow)]
+    pub config_files_path: ConfigFilesPathV20<'a>,
+    #[superstruct(only(V19), no_getter)]
+    #[serde(borrow)]
+    pub config_files_path: ConfigFilesPathV19<'a>,
+    #[superstruct(only(V18), no_getter)]
+    #[serde(borrow)]
+    pub config_files_path: ConfigFilesPathV18<'a>,
+    #[superstruct(only(V18, V19))]
+    pub news_update_interval: u32,
+    #[superstruct(only(V18, V19))]
+    pub new_update_pause_time: u32,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub watermark: HipStr<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub grid_actors_to_preload: HashMap<HipStr<'a>, GridActorsToPreload<'a>>,
+    #[superstruct(only(V19))]
+    #[serde(borrow)]
+    pub grid_descriptors: HashMap<HipStr<'a>, GridDesc<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub grid_item_descriptors: HashMap<HipStr<'a>, CarouselElementDesc<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub tabbed_grids_layout_descriptors: HashMap<HipStr<'a>, LayoutTabbedGrids<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub home_data_config: HomeDataConfig<'a>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub home_data_tips_config: Vec<HomeDataTipEntry<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub home_data_default_article_thumbnail: HipStr<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub home_data_online_incentive_article_thumbnail: HipStr<'a>,
+    #[superstruct(only(V19))]
+    #[serde(borrow, default, skip_serializing_if = "HashMap::is_empty")]
+    pub home_videos_descs: HashMap<HipStr<'a>, HomeVideoDesc<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "special_characters")]
+    pub special_characters: Vec<HipStr<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "derived_letters")]
+    pub derived_letters: HashMap<HipStr<'a>, HipStr<'a>>,
+    #[superstruct(only(V19, V20, V20C, V21, V22))]
+    #[serde(borrow, rename = "search_labels")]
+    pub search_labels: SongsSearchTags<'a>,
+    #[superstruct(only(V20, V20C))]
+    #[serde(borrow)]
+    pub groups_sound_notification_config: GroupsSoundNotificationConfig<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub mapsobjectives: MapsObjectives<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub maps_goals: MapsGoals<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    pub legacy_alias_id: u32,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(rename = "JDUAliasId")]
+    pub jdu_alias_id: u32,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+    #[serde(borrow)]
+    pub avatarsobjectives: AvatarsObjectives<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+    #[serde(borrow)]
+    pub aliasesobjectives: AliasesObjectives<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub specific_cases_check_order: Vec<HipStr<'a>>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub on_fly_notification_types: HashMap<HipStr<'a>, OnFlyNotificationTypeParams<'a>>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub bubbles_prioritized_notif_types_groups: Vec<Vec<HipStr<'a>>>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub reward_screen_prioritized_notif_types: Vec<HipStr<'a>>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    pub bubbles_pile_delay_before_exit: Vec<f32>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub new_notification_tree: HashMap<HipStr<'a>, Vec<HipStr<'a>>>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub recap_config: RecapConfig<'a>,
+    #[superstruct(only(V20, V20C, V21, V22))]
+    #[serde(borrow)]
+    pub offline_recommendation: OfflineRecommendation<'a>,
+    #[superstruct(only(V20, V21, V22))]
+    #[serde(borrow, rename = "whats_new_configs")]
+    pub whats_new_configs: Option<WhatsNewConfigs<'a>>,
+    #[superstruct(only(V21, V22))]
+    #[serde(borrow, rename = "wdf_linear_rewards_path")]
+    pub wdf_linear_rewards_path: HipStr<'a>,
+}
+
+impl<'a> GameManagerConfig<'a> {
+    pub const fn config_files_path<'b>(&'b self) -> Result<ConfigFilesPathRef<'b, 'a>, ()> {
+        match self {
+            GameManagerConfig::V22(gmc) => Ok(ConfigFilesPathRef::V2122(&gmc.config_files_path)),
+            GameManagerConfig::V21(gmc) => Ok(ConfigFilesPathRef::V2122(&gmc.config_files_path)),
+            GameManagerConfig::V20(gmc) => Ok(ConfigFilesPathRef::V20(&gmc.config_files_path)),
+            GameManagerConfig::V20C(gmc) => Ok(ConfigFilesPathRef::V20(&gmc.config_files_path)),
+            GameManagerConfig::V19(gmc) => Ok(ConfigFilesPathRef::V19(&gmc.config_files_path)),
+            GameManagerConfig::V18(gmc) => Ok(ConfigFilesPathRef::V18(&gmc.config_files_path)),
+            GameManagerConfig::V16(_) | GameManagerConfig::V17(_) => Err(()),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase", deny_unknown_fields)]
+pub struct DanceMachineDebugConfig<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub debug_list: HashMap<HipStr<'a>, Vec<HipStr<'a>>>,
+}
+
+#[superstruct(
+    variants(V2122, V20, V19, V18),
+    variant_attributes(derive(Debug, Serialize, Deserialize, Clone)),
+    enum_variant_attributes(serde(borrow))
+)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub struct ConfigFilesPath<'a> {
+    #[superstruct(only(V20, V2122))]
+    #[serde(borrow)]
+    pub gachacontent: HipStr<'a>,
+    #[superstruct(only(V20, V2122))]
+    #[serde(borrow)]
+    pub ftuesteps: HipStr<'a>,
+    #[superstruct(only(V20))]
+    #[serde(borrow)]
+    pub anthology: HipStr<'a>,
+    #[superstruct(only(V20, V2122))]
+    #[serde(borrow)]
+    pub objectives: HipStr<'a>,
+    #[superstruct(only(V19, V20, V2122))]
+    #[serde(borrow)]
+    pub playlist: HipStr<'a>,
+    #[superstruct(only(V20, V2122))]
+    #[serde(borrow)]
+    pub portraitborders: HipStr<'a>,
+    #[superstruct(only(V2122))]
+    #[serde(borrow)]
+    pub quickplayrules: HipStr<'a>,
+    #[superstruct(only(V20, V2122))]
+    #[serde(borrow)]
+    pub scheduledquests: HipStr<'a>,
+    #[superstruct(only(V18, V19))]
+    #[serde(borrow)]
+    pub dmconfig: HipStr<'a>,
+    #[superstruct(only(V19))]
+    #[serde(borrow)]
+    pub postcards: HipStr<'a>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "snake_case")]
+pub struct ScheduledQuestDatabase1819<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(borrow)]
+    pub scheduled_quests: Vec<ScheduledQuestDesc1819<'a>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "PascalCase")]
+pub struct ScheduledQuestDesc1819<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(rename = "ID")]
+    pub id: u32,
+    #[serde(rename = "Type")]
+    pub type_it: u8,
+    pub unlimited_only: bool,
+    pub mojo_reward: u32,
+    #[serde(borrow)]
+    pub objective: ObjectiveDesc<'a>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub preconditions_objectives_id: Vec<HipStr<'a>>,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<HipStr<'a>>,
+}
+
+impl ScheduledQuestDesc1819<'_> {
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_ScheduledQuestDesc");
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct AchievementsDatabase<'a> {
@@ -25,7 +624,6 @@ pub struct AchievementsDatabase<'a> {
     pub achievements: Vec<AchievementDescriptor<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct AchievementDescriptor<'a> {
@@ -39,200 +637,16 @@ pub struct AchievementDescriptor<'a> {
     pub id: u32,
     pub platform_id: u32,
     pub uplay_id: u32,
+    #[serde(
+        rename = "uplayLocID",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub uplay_loc_id: Option<u32>,
     #[serde(borrow)]
     pub unlock_objective_desc_id: HipStr<'a>,
 }
 
-#[serde_as]
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct LocalAliases<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub locked_color: HipStr<'a>,
-    #[serde(borrow)]
-    pub difficulty_colors: DifficultyColors<'a>,
-    #[serde(borrow)]
-    pub aliases: Vec<UnlockableAliasDescriptor<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct UnlockableAliasDescriptor<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub id: u32,
-    #[serde(rename = "StringLocID")]
-    pub string_loc_id: LocaleId,
-    #[serde(rename = "StringLocIDFemale")]
-    pub string_loc_id_female: LocaleId,
-    #[serde(borrow)]
-    pub string_online_localized: HipStr<'a>,
-    #[serde(borrow)]
-    pub string_online_localized_female: HipStr<'a>,
-    #[serde(borrow)]
-    pub string_placeholder: HipStr<'a>,
-    pub unlocked_by_default: bool,
-    #[serde(rename = "DescriptionLocID")]
-    pub description_loc_id: LocaleId,
-    #[serde(borrow)]
-    pub description_localized: HipStr<'a>,
-    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
-    pub unlock_objective: Option<UnlockObjectiveOnlineInfo<'a>>,
-    pub difficulty_color: Rarity,
-    pub visibility: u32,
-}
-
-impl UnlockableAliasDescriptor<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_UnlockableAliasDescriptor");
-}
-
-impl Default for UnlockableAliasDescriptor<'static> {
-    fn default() -> Self {
-        Self {
-            class: Some(UnlockableAliasDescriptor::CLASS),
-            id: Default::default(),
-            string_loc_id: LocaleId::default(),
-            string_loc_id_female: LocaleId::default(),
-            string_online_localized: HipStr::default(),
-            string_online_localized_female: HipStr::default(),
-            string_placeholder: HipStr::default(),
-            unlocked_by_default: Default::default(),
-            description_loc_id: LocaleId::default(),
-            description_localized: HipStr::default(),
-            unlock_objective: Some(UnlockObjectiveOnlineInfo::default()),
-            difficulty_color: Rarity::Common,
-            visibility: 0,
-        }
-    }
-}
-
-/// How rare is the alias
-#[repr(u8)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum Rarity {
-    /// Common
-    Common = 0,
-    /// Uncommon
-    Uncommon = 1,
-    /// Rare
-    Rare = 2,
-    /// Epic
-    Epic = 3,
-    /// Legendary
-    Legendary = 4,
-    /// Exotic
-    Exotic = 5,
-}
-
-impl<'de> Deserialize<'de> for Rarity {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        struct RarityVisitor;
-
-        impl serde::de::Visitor<'_> for RarityVisitor {
-            type Value = Rarity;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("an integer between 0 and 5")
-            }
-
-            fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                match v {
-                    0 => Ok(Rarity::Common),
-                    1 => Ok(Rarity::Uncommon),
-                    2 => Ok(Rarity::Rare),
-                    3 => Ok(Rarity::Epic),
-                    4 => Ok(Rarity::Legendary),
-                    5 => Ok(Rarity::Exotic),
-                    _ => Err(E::custom(format!("Rarity is unknown: {v}"))),
-                }
-            }
-
-            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                match v {
-                    "0" => Ok(Rarity::Common),
-                    "1" => Ok(Rarity::Uncommon),
-                    "2" => Ok(Rarity::Rare),
-                    "3" => Ok(Rarity::Epic),
-                    "4" => Ok(Rarity::Legendary),
-                    "5" => Ok(Rarity::Exotic),
-                    _ => Err(E::custom(format!("Rarity is unknown: {v}"))),
-                }
-            }
-
-            // Similar for other methods:
-            //   - visit_i16
-            //   - visit_u8
-            //   - visit_u16
-            //   - visit_u32
-            //   - visit_u64
-        }
-
-        deserializer.deserialize_any(RarityVisitor)
-    }
-}
-
-impl Serialize for Rarity {
-    #![allow(
-        clippy::as_conversions,
-        reason = "Rarity is repr(u8) and thus this is safe"
-    )]
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&format!("{}", *self as u8))
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct UnlockObjectiveOnlineInfo<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub unlock_objective_desc_id: HipStr<'a>,
-}
-
-impl UnlockObjectiveOnlineInfo<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_UnlockObjectiveOnlineInfo");
-}
-
-impl Default for UnlockObjectiveOnlineInfo<'_> {
-    fn default() -> Self {
-        Self {
-            class: Some(Self::CLASS),
-            unlock_objective_desc_id: HipStr::borrowed(""),
-        }
-    }
-}
-
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CameraShakeConfig<'a> {
@@ -247,7 +661,6 @@ pub struct CameraShakeConfig<'a> {
     pub shakes: Vec<CameraShake<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CameraShake<'a> {
@@ -272,7 +685,6 @@ pub struct CameraShake<'a> {
     pub shake_z: CameraShakeCurveParams<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CameraShakeCurveParams<'a> {
@@ -312,15 +724,34 @@ pub struct GachaContentDatabase<'a> {
     pub collectibles: Vec<CollectibleGachaItem<'a>>,
 }
 
+impl GachaContentDatabase<'_> {
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_GachaContentDatabase_Template");
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, tag = "__class")]
 pub enum CollectibleGachaItem<'a> {
+    #[serde(borrow, rename = "JD_CollectibleGachaItemAlias")]
+    Alias(CollectibleGachaItemAlias<'a>),
     #[serde(borrow, rename = "JD_CollectibleGachaItemAvatar")]
     Avatar(CollectibleGachaItemAvatar<'a>),
     #[serde(borrow, rename = "JD_CollectibleGachaItemPortraitBorder")]
     PortraitBorder(CollectibleGachaItemPortraitBorder<'a>),
-    #[serde(borrow, rename = "JD_CollectibleGachaItemAlias")]
-    Alias(CollectibleGachaItemAlias<'a>),
+    #[serde(borrow, rename = "JD_CollectibleGachaItemSticker")]
+    Sticker(CollectibleGachaItemSticker<'a>),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct CollectibleGachaItemAlias<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub alias_id: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -351,7 +782,7 @@ pub struct CollectibleGachaItemPortraitBorder<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CollectibleGachaItemAlias<'a> {
+pub struct CollectibleGachaItemSticker<'a> {
     #[serde(
         borrow,
         rename = "__class",
@@ -359,7 +790,7 @@ pub struct CollectibleGachaItemAlias<'a> {
         skip_serializing_if = "Option::is_none"
     )]
     pub class: Option<HipStr<'a>>,
-    pub alias_id: u32,
+    pub sticker_id: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1457,477 +1888,6 @@ pub struct AutoDanceEffectData16<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct AutodanceVideoStructure<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    /// Only in 2016
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub game_mode: Option<u32>,
-    pub song_start_position: f32,
-    pub duration: f32,
-    pub thumbnail_time: u32,
-    pub fade_out_duration: f32,
-    /// Only in 2016
-    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
-    pub animated_frame_path: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub ground_plane_path: HipStr<'a>,
-    #[serde(borrow)]
-    pub first_layer_triple_background_path: HipStr<'a>,
-    #[serde(borrow)]
-    pub second_layer_triple_background_path: HipStr<'a>,
-    #[serde(borrow)]
-    pub third_layer_triple_background_path: HipStr<'a>,
-    #[serde(
-        borrow,
-        rename = "playback_events",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
-    pub playback_events: Vec<PlaybackEvent<'a>>,
-    #[serde(borrow, rename = "background_effect")]
-    pub background_effect: Box<AutoDanceFxDesc<'a>>,
-    #[serde(
-        borrow,
-        rename = "background_effect_events",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
-    pub background_effect_events: Vec<FxEvent<'a>>,
-    #[serde(borrow, rename = "player_effect")]
-    pub player_effect: Box<AutoDanceFxDesc<'a>>,
-    #[serde(
-        borrow,
-        rename = "player_effect_events",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
-    pub player_effect_events: Vec<FxEvent<'a>>,
-    #[serde(
-        borrow,
-        rename = "prop_events",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
-    pub prop_events: Vec<PropEvent<'a>>,
-    #[serde(
-        borrow,
-        rename = "props",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
-    pub props: Vec<AutodancePropData<'a>>,
-    #[serde(
-        borrow,
-        rename = "props_players_config",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
-    pub props_players_config: Vec<PropPlayerConfig<'a>>,
-}
-
-impl AutodanceVideoStructure<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_AutodanceVideoStructure");
-}
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-pub struct AutoDanceFxDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub opacity: f32,
-    #[serde(borrow)]
-    pub color_low: GFXVector4<'a>,
-    #[serde(borrow)]
-    pub color_mid: GFXVector4<'a>,
-    #[serde(borrow)]
-    pub color_high: GFXVector4<'a>,
-    pub low_to_mid: f32,
-    pub low_to_mid_width: f32,
-    pub mid_to_high: f32,
-    pub mid_to_high_width: f32,
-    #[serde(borrow)]
-    pub sob_color: GFXVector4<'a>,
-    #[serde(borrow)]
-    pub out_color: GFXVector4<'a>,
-    pub thick_middle: f32,
-    pub thick_inner: f32,
-    pub thick_smooth: f32,
-    pub shv_nb_frames: u32,
-    pub parts_scale: Vec<u32>,
-    pub halftone_factor: u32,
-    pub halftone_cutout_levels: f32,
-    #[serde(rename = "UVBlackoutFactor")]
-    pub uv_blackout_factor: u32,
-    #[serde(rename = "UVBlackoutDesaturation")]
-    pub uv_blackout_desaturation: f32,
-    #[serde(rename = "UVBlackoutContrast")]
-    pub uv_blackout_contrast: f32,
-    #[serde(rename = "UVBlackoutBrightness")]
-    pub uv_blackout_brightness: u32,
-    #[serde(borrow, rename = "UVBlackoutColor")]
-    pub uv_blackout_color: GFXVector4<'a>,
-    pub toon_factor: u32,
-    pub toon_cutout_levels: f32,
-    pub refraction_factor: u32,
-    #[serde(borrow)]
-    pub refraction_tint: GFXVector4<'a>,
-    #[serde(borrow)]
-    pub refraction_scale: GFXVector4<'a>,
-    pub refraction_opacity: f32,
-    #[serde(borrow)]
-    pub colored_shiva_thresholds: GFXVector4<'a>,
-    #[serde(borrow)]
-    pub colored_shiva_color_0: GFXVector4<'a>,
-    #[serde(borrow)]
-    pub colored_shiva_color_1: GFXVector4<'a>,
-    #[serde(borrow)]
-    pub colored_shiva_color_2: GFXVector4<'a>,
-    pub saturation_modifier: f32,
-    pub slime_factor: f32,
-    #[serde(borrow)]
-    pub slime_color: GFXVector4<'a>,
-    pub slime_opacity: f32,
-    pub slime_ambient: f32,
-    pub slime_normal_tiling: f32,
-    pub slime_light_angle: f32,
-    pub slime_refraction: f32,
-    pub slime_refraction_index: f32,
-    pub slime_specular: f32,
-    pub slime_specular_power: f32,
-    pub overlay_blend_factor: f32,
-    #[serde(borrow)]
-    pub overlay_blend_color: GFXVector4<'a>,
-    pub background_sobel_factor: f32,
-    #[serde(borrow)]
-    pub background_sobel_color: GFXVector4<'a>,
-    pub player_glow_factor: f32,
-    #[serde(borrow)]
-    pub player_glow_color: GFXVector4<'a>,
-    pub swap_head_with_player: Vec<u32>,
-    pub animate_player_head: Vec<u32>,
-    pub animated_head_total_time: f32,
-    pub animated_head_rest_time: f32,
-    pub animated_head_frame_time: f32,
-    pub animated_head_max_distance: f32,
-    pub animated_head_max_angle: f32,
-    pub screen_blend_inverse_alpha_factor: u32,
-    pub screen_blend_inverse_alpha_scale_x: f32,
-    pub screen_blend_inverse_alpha_scale_y: f32,
-    pub screen_blend_inverse_alpha_trans_x: u32,
-    pub screen_blend_inverse_alpha_trans_y: u32,
-    pub tint_mul_color_factor: u32,
-    #[serde(borrow)]
-    pub tint_mul_color: GFXVector4<'a>,
-    pub floor_plane_factor: f32,
-    #[serde(borrow)]
-    pub floor_plane_tiles: GFXVector4<'a>,
-    pub floor_speed_x: f32,
-    pub floor_speed_y: f32,
-    pub floor_wave_speed: f32,
-    pub floor_blend_mode: u32,
-    #[serde(rename = "FloorPlaneImageID")]
-    pub floor_plane_image_id: u32,
-    pub start_radius: f32,
-    pub end_radius: f32,
-    pub radius_variance: f32,
-    pub radius_noise_rate: u32,
-    pub radius_noise_amp: f32,
-    pub min_spin: f32,
-    pub max_spin: f32,
-    pub dir_angle: f32,
-    pub min_wander_rate: f32,
-    pub max_wander_rate: f32,
-    pub min_wander_amp: f32,
-    pub max_wander_amp: f32,
-    pub min_speed: f32,
-    pub max_speed: f32,
-    pub motion_power: f32,
-    pub amount: f32,
-    #[serde(rename = "ImageID")]
-    pub image_id: u32,
-    pub start_r: f32,
-    pub start_g: f32,
-    pub start_b: f32,
-    pub end_r: f32,
-    pub end_g: f32,
-    pub end_b: f32,
-    pub start_alpha: f32,
-    pub end_alpha: f32,
-    pub textured_outline_factor: u32,
-    pub textured_outline_tiling: f32,
-    pub triple_layer_background_factor: u32,
-    #[serde(borrow)]
-    pub triple_layer_background_tint_color: GFXVector4<'a>,
-    pub triple_layer_background_speed_x: u32,
-    pub triple_layer_background_speed_y: u32,
-    pub trail_effect_id: u32,
-}
-
-impl AutoDanceFxDesc<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("AutoDanceFxDesc");
-}
-
-impl Default for AutoDanceFxDesc<'_> {
-    fn default() -> Self {
-        Self {
-            class: Some(Self::CLASS),
-            opacity: 1.0,
-            color_low: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 1.0,
-            },
-            color_mid: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 1.0,
-            },
-            color_high: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 1.0,
-            },
-            low_to_mid: 0.333,
-            low_to_mid_width: 0.15,
-            mid_to_high: 0.666,
-            mid_to_high_width: 0.15,
-            sob_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 1.0,
-            },
-            out_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 0.0,
-            },
-            thick_middle: 0.4,
-            thick_inner: 0.1,
-            thick_smooth: 0.1,
-            shv_nb_frames: 0,
-            parts_scale: vec![0, 0, 0, 0, 0],
-            halftone_factor: 0,
-            halftone_cutout_levels: 256.0,
-            uv_blackout_factor: 0,
-            uv_blackout_desaturation: 0.2,
-            uv_blackout_contrast: 4.0,
-            uv_blackout_brightness: 0,
-            uv_blackout_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.54902,
-                y: 0.54902,
-                z: 1.0,
-                w: 1.0,
-            },
-            toon_factor: 0,
-            toon_cutout_levels: 256.0,
-            refraction_factor: 0,
-            refraction_tint: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-                w: 1.0,
-            },
-            refraction_scale: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.03,
-                y: 0.03,
-                z: 0.03,
-                w: 0.03,
-            },
-            refraction_opacity: 0.2,
-            colored_shiva_thresholds: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.1,
-                y: 0.3,
-                z: 0.6,
-                w: 0.95,
-            },
-            colored_shiva_color_0: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-                w: 1.0,
-            },
-            colored_shiva_color_1: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-                w: 1.0,
-            },
-            colored_shiva_color_2: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-                w: 1.0,
-            },
-            saturation_modifier: 0.0,
-            slime_factor: 0.0,
-            slime_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.49902,
-                y: 0.629_176,
-                z: 0.136_039,
-                w: 1.0,
-            },
-            slime_opacity: 0.2,
-            slime_ambient: 0.2,
-            slime_normal_tiling: 7.0,
-            slime_light_angle: 0.0,
-            slime_refraction: 0.0913,
-            slime_refraction_index: 1.0837,
-            slime_specular: 1.0,
-            slime_specular_power: 10.0,
-            overlay_blend_factor: 0.0,
-            overlay_blend_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.721_569,
-                y: 0.639_216,
-                z: 0.756_863,
-                w: 1.0,
-            },
-            background_sobel_factor: 0.0,
-            background_sobel_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 1.0,
-                z: 1.0,
-                w: 1.0,
-            },
-            player_glow_factor: 0.0,
-            player_glow_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 1.0,
-                z: 1.0,
-                w: 1.0,
-            },
-            swap_head_with_player: vec![0, 1, 2, 3, 4, 5],
-            animate_player_head: vec![0, 0, 0, 0, 0, 0],
-            animated_head_total_time: 20.0,
-            animated_head_rest_time: 16.0,
-            animated_head_frame_time: 0.6,
-            animated_head_max_distance: 1.25,
-            animated_head_max_angle: 1.2,
-            screen_blend_inverse_alpha_factor: 0,
-            screen_blend_inverse_alpha_scale_x: 0.0,
-            screen_blend_inverse_alpha_scale_y: 0.0,
-            screen_blend_inverse_alpha_trans_x: 0,
-            screen_blend_inverse_alpha_trans_y: 0,
-            tint_mul_color_factor: 0,
-            tint_mul_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 1.0,
-            },
-            floor_plane_factor: 0.0,
-            floor_plane_tiles: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 8.0,
-                y: 8.0,
-                z: 0.0,
-                w: 0.0,
-            },
-            floor_speed_x: 0.0,
-            floor_speed_y: 0.0,
-            floor_wave_speed: 0.0,
-            floor_blend_mode: 0,
-            floor_plane_image_id: 0,
-            start_radius: 3.0,
-            end_radius: 2.0,
-            radius_variance: 0.5,
-            radius_noise_rate: 0,
-            radius_noise_amp: 0.0,
-            min_spin: -4.0,
-            max_spin: 4.0,
-            dir_angle: 0.0,
-            min_wander_rate: 2.0,
-            max_wander_rate: 3.0,
-            min_wander_amp: 0.1,
-            max_wander_amp: 0.2,
-            min_speed: 0.2,
-            max_speed: 0.4,
-            motion_power: 1.5,
-            amount: 0.0,
-            image_id: 7,
-            start_r: 1.0,
-            start_g: 0.1,
-            start_b: 0.1,
-            end_r: 0.1,
-            end_g: 0.2,
-            end_b: 1.0,
-            start_alpha: 1.0,
-            end_alpha: 1.0,
-            textured_outline_factor: 0,
-            textured_outline_tiling: 1.0,
-            triple_layer_background_factor: 0,
-            triple_layer_background_tint_color: GFXVector4 {
-                class: Some(GFXVector4::CLASS),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 0.0,
-            },
-            triple_layer_background_speed_x: 0,
-            triple_layer_background_speed_y: 0,
-            trail_effect_id: 0,
-        }
-    }
-}
-
-/// For serde to set a value to default to `u32::MAX`
-const fn u32_max() -> u32 {
-    u32::MAX
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct GFXVector4<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub w: f32,
-}
-
-impl GFXVector4<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("GFX_Vector4");
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CoopTweakedText17<'a> {
     #[serde(
@@ -2092,7 +2052,7 @@ pub struct AdventureObjective18<'a> {
     #[serde(rename = "ID")]
     pub id: u32,
     #[serde(borrow)]
-    pub objective: ObjectiveDesc1819<'a>,
+    pub objective: ObjectiveDesc<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -2781,7 +2741,6 @@ pub struct WhatsNewConfig<'a> {
     pub unsubscribed_grid_desc: HipStr<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CarouselManager<'a> {
@@ -2803,7 +2762,6 @@ pub struct CarouselManager<'a> {
     pub item_logic: HashMap<HipStr<'a>, HipStr<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CarouselAnimSetup<'a> {
@@ -2821,7 +2779,6 @@ pub struct CarouselAnimSetup<'a> {
     pub max_deceleration_start_ratio: f32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct CarouselDesc<'a> {
@@ -2942,6 +2899,11 @@ pub enum CarouselElementDesc<'a> {
     ActionSelectChallengeMode(JdCarouselElementDescActionSelectChallengeMode<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_SendTauntMessage")]
     ActionSendTauntMessage(JdCarouselElementDescActionBase<'a>),
+    #[serde(
+        borrow,
+        rename = "JD_CarouselElementDesc_Action_SetFocusedDancerCardAsMain"
+    )]
+    ActionSetFocusedDancerCardAsMain(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_StartPlaylist")]
     ActionStartPlaylist(JdCarouselElementDescActionBase<'a>),
     #[serde(borrow, rename = "JD_CarouselElementDesc_Action_StartQuickplay")]
@@ -3445,6 +3407,8 @@ pub struct CarouselElementDescBase<'a> {
     #[serde(borrow)]
     pub item_logic: HipStr<'a>,
     pub enabled: u32,
+    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
+    pub components: Vec<CarouselElementDescComponent<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -3623,7 +3587,8 @@ pub struct JdCarouselElementDescComponentCluster<'a> {
     #[serde(borrow)]
     pub transition: HipStr<'a>,
     #[serde(borrow)]
-    pub news_placement: HipStr<'a>,
+    /// Not in 2019
+    pub news_placement: Option<HipStr<'a>>,
     pub availability_check: u32,
 }
 
@@ -3795,7 +3760,6 @@ pub struct JdCarouselElementDescComponentCompletionDisplay<'a> {
     pub marker: HipStr<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct FontEffectList<'a> {
@@ -3810,7 +3774,6 @@ pub struct FontEffectList<'a> {
     pub effects: Vec<FontEffect<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct FontEffect<'a> {
@@ -3852,7 +3815,6 @@ pub struct FontEffect<'a> {
     pub length_bottom: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct FTUESteps<'a> {
@@ -3867,7 +3829,6 @@ pub struct FTUESteps<'a> {
     pub ftue_steps_descs: Vec<FTUEStepDesc<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct FTUEStepDesc<'a> {
@@ -3885,426 +3846,6 @@ pub struct FTUEStepDesc<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselRules<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub action_lists: HashMap<HipStr<'a>, ActionList<'a>>,
-    // Not on WiiU
-    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
-    pub song_item_lists: Option<HashMap<HipStr<'a>, SongItemList<'a>>>,
-    #[serde(borrow)]
-    pub rules: HashMap<HipStr<'a>, CarouselRule<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct ActionList<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub item_type: HipStr<'a>,
-    #[serde(borrow)]
-    pub actions: Vec<Action<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct Action<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow, rename = "type")]
-    pub type_it: HipStr<'a>,
-    #[serde(borrow)]
-    pub title: HipStr<'a>,
-    pub title_id: u32,
-    pub online_title_id: u32,
-    #[serde(borrow)]
-    pub target: HipStr<'a>,
-    #[serde(borrow)]
-    pub banner_type: HipStr<'a>,
-    #[serde(borrow)]
-    pub banner_theme: HipStr<'a>,
-    #[serde(borrow)]
-    pub banner_context: HipStr<'a>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SongItemList<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub action_list_name: HipStr<'a>,
-    #[serde(borrow)]
-    pub list: Vec<SongItem<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SongItem<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub act: HipStr<'a>,
-    #[serde(borrow)]
-    pub action_list_name: HipStr<'a>,
-    #[serde(borrow)]
-    pub isc: HipStr<'a>,
-    #[serde(borrow)]
-    pub map_name: HipStr<'a>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselRule<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub categories: Vec<CategoryRule<'a>>,
-    pub online_only: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CategoryRule<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub act: HipStr<'a>,
-    #[serde(borrow)]
-    pub isc: HipStr<'a>,
-    #[serde(borrow)]
-    pub title: HipStr<'a>,
-    pub title_id: u32,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub requests: Vec<CarouselRequestDesc<'a>>,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub filters: Vec<CarouselFilter<'a>>,
-}
-
-impl CategoryRule<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("CategoryRule");
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, tag = "__class")]
-pub enum CarouselRequestDesc<'a> {
-    #[serde(borrow, rename = "JD_CarouselCustomizableItemRequestDesc")]
-    CustomizableItem(CarouselCustomizableItemRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselUgcRequestDesc")]
-    Ugc(CarouselUgcRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselMapRequestDesc")]
-    Map(CarouselMapRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselDancerCardRequestDesc")]
-    DancerCard(CarouselDancerCardRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselFriendRequestDesc")]
-    Friend(Empty<'a>),
-    #[serde(borrow, rename = "JD_CarouselItemRequestDesc")]
-    Item(CarouselItemRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselPlaylistsRequestDesc")]
-    Playlists(CarouselPlaylistsRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselComVideoRequestDesc")]
-    ComVideo(Empty<'a>),
-    #[serde(borrow, rename = "JD_CarouselLatestChallengesRequestDesc")]
-    LatestChallenges(Empty<'a>),
-    #[serde(borrow, rename = "JD_CarouselFriendChallengesRequestDesc")]
-    FriendChallenges(Empty<'a>),
-    #[serde(borrow, rename = "JD_CarouselPhotoRequestDesc")]
-    PhotoRequest(CarouselPhotoRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselQuestRequestDesc")]
-    QuestRequest(CarouselQuestRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselMapSearchRequestDesc")]
-    MapSearch(Empty<'a>),
-    #[serde(borrow, rename = "JD_CarouselSearchRequestDesc")]
-    Search(Empty<'a>),
-    #[serde(borrow, rename = "JD_CarouselGalaxyRequestDesc")]
-    Galaxy(CarouselGalaxyRequestDesc<'a>),
-    #[serde(borrow, rename = "JD_CarouselPlaylistRequestDesc")]
-    Playlist(CarouselPlaylistRequestDesc<'a>),
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselGalaxyRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub sub_type: HipStr<'a>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselCustomizableItemRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub jdversion: i32,
-    pub lock_type: u32,
-    pub sort_by: u32,
-    pub item_type: u32,
-    pub unlocked_only: bool,
-    pub first_time_creation: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselUgcRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow, rename = "type")]
-    pub type_it: HipStr<'a>,
-    #[serde(borrow)]
-    pub action_list_name: HipStr<'a>,
-    pub uploading: bool,
-    pub offline: bool,
-    pub most_liked: bool,
-    pub most_viewed: bool,
-    pub featured: bool,
-    pub query_pid: bool,
-    pub player_pid: bool,
-    pub friend_pids: bool,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub filters: Vec<CarouselFilter<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselMapRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub action_list_name: HipStr<'a>,
-    #[serde(rename = "originalJDVersion")]
-    pub original_jd_version: u32,
-    pub coach_count: u32,
-    #[serde(borrow)]
-    pub order: HipStr<'a>,
-    pub subscribed: bool,
-    /// Not in 2016
-    #[serde(default)]
-    pub favorites: bool,
-    /// Only included in nx2019
-    pub sweat_toggle_item: Option<bool>,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub included_tags: Vec<HipStr<'a>>,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub excluded_tags: Vec<HipStr<'a>>,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub filters: Vec<CarouselFilter<'a>>,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub custom_tags: Vec<HipStr<'a>>,
-    #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
-    pub optional_tags: Vec<HipStr<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselDancerCardRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub action_list_name: HipStr<'a>,
-    pub main: bool,
-    pub create: bool,
-    // Only on WiiU
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub is_save_item: Option<bool>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselItemRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    // Not on WiiU
-    #[serde(borrow, default)]
-    pub item_list: HipStr<'a>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselPlaylistsRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub isc: HipStr<'a>,
-    #[serde(borrow)]
-    pub act: HipStr<'a>,
-    #[serde(borrow, rename = "type")]
-    pub type_it: HipStr<'a>,
-    #[serde(borrow, rename = "playlistID")]
-    pub playlist_id: HipStr<'a>,
-}
-
-impl Default for CarouselPlaylistsRequestDesc<'static> {
-    fn default() -> Self {
-        Self {
-            class: Option::default(),
-            isc: HipStr::borrowed("grp_row"),
-            act: HipStr::borrowed("ui_carousel"),
-            type_it: HipStr::borrowed("edito-pinned"),
-            playlist_id: HipStr::borrowed(""),
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselPhotoRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub action_list_name: HipStr<'a>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselPlaylistRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub action_list_name: HipStr<'a>,
-    pub create: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselQuestRequestDesc<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub start_action: HipStr<'a>,
-    pub offline: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, tag = "__class")]
-pub enum CarouselFilter<'a> {
-    #[serde(borrow, rename = "JD_CarouselFilter")]
-    Empty(Empty<'a>),
-    #[serde(borrow, rename = "JD_CarouselSubscriptionFilter")]
-    Subscription(CarouselSubscriptionFilter<'a>),
-    #[serde(borrow, rename = "JD_CarouselSkuFilter")]
-    Sku(CarouselSkuFilter<'a>),
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselSubscriptionFilter<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub subscribed: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CarouselSkuFilter<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub game_version: HipStr<'a>,
-    #[serde(borrow)]
-    pub platform: HipStr<'a>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "snake_case")]
 pub struct TRCLocalisation<'a> {
     #[serde(
@@ -4316,11 +3857,10 @@ pub struct TRCLocalisation<'a> {
     pub class: Option<HipStr<'a>>,
     #[serde(borrow, rename = "TRCLocalisationList")]
     pub trc_localisation_list: Vec<TRCLocalisationDetail<'a>>,
-    #[serde(borrow)]
+    #[serde(borrow, default, skip_serializing_if = "HashMap::is_empty")]
     pub popups_illustrations: HashMap<HipStr<'a>, HipStr<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct TRCLocalisationDetail<'a> {
@@ -4333,21 +3873,40 @@ pub struct TRCLocalisationDetail<'a> {
     pub class: Option<HipStr<'a>>,
     #[serde(rename = "TRCError")]
     pub trc_error: u32,
-    #[serde(borrow)]
-    pub illustration_id: HipStr<'a>,
+    /// Not in 2017 or earlier
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub illustration_id: Option<HipStr<'a>>,
     #[serde(borrow)]
     pub title: SmartLocId<'a>,
     #[serde(borrow)]
     pub message: SmartLocId<'a>,
     #[serde(borrow)]
     pub button_left: SmartLocId<'a>,
-    #[serde(borrow)]
-    pub button_middle: SmartLocId<'a>,
+    /// Not in 2017 or earlier
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub button_middle: Option<SmartLocId<'a>>,
     #[serde(borrow)]
     pub button_right: SmartLocId<'a>,
+    /// Not in 2018 or later
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_button: Option<u32>,
+    /// Not in 2018 or later
+    #[serde(borrow, default, skip_serializing_if = "Option::is_none")]
+    pub message_text: Option<HipStr<'a>>,
+    /// Not in 2018 or later
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message_id: Option<u32>,
+    /// Not in 2018 or later
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub button_left_id: Option<u32>,
+    /// Not in 2018 or later
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub button_right_id: Option<u32>,
+    /// Not in 2018 or later
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title_id: Option<u32>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct SmartLocId<'a> {
@@ -4375,6 +3934,10 @@ pub struct ObjectivesDatabase<'a> {
     pub class: Option<HipStr<'a>>,
     #[serde(borrow)]
     pub objective_descs: HashMap<HipStr<'a>, ObjectiveDescriptor<'a>>,
+}
+
+impl ObjectivesDatabase<'_> {
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_ObjectivesDatabase_Template");
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -5258,7 +4821,6 @@ pub struct ObjectiveDescriptorComponentStickerIdRequirement<'a> {
     pub acceptable_sticker_ids: Vec<u32>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct PadRumbleManager<'a> {
@@ -5273,7 +4835,6 @@ pub struct PadRumbleManager<'a> {
     pub rumbles: Vec<PadRumble<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct PadRumble<'a> {
@@ -5292,42 +4853,6 @@ pub struct PadRumble<'a> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct PlaylistDatabase<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub playlists: HashMap<HipStr<'a>, OfflinePlaylist<'a>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct OfflinePlaylist<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub title_id: LocaleId,
-    pub description_id: LocaleId,
-    #[serde(borrow)]
-    pub cover_path: HipStr<'a>,
-    #[serde(borrow)]
-    pub maps: Vec<HipStr<'a>>,
-}
-
-impl OfflinePlaylist<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("OfflinePlaylist");
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct PortraitBordersDatabase<'a> {
     #[serde(
         borrow,
@@ -5338,6 +4863,10 @@ pub struct PortraitBordersDatabase<'a> {
     pub class: Option<HipStr<'a>>,
     #[serde(borrow)]
     pub portrait_borders: Vec<PortraitBorderDesc<'a>>,
+}
+
+impl PortraitBordersDatabase<'_> {
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_PortraitBordersDatabase_Template");
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -5367,7 +4896,6 @@ impl PortraitBorderDesc<'_> {
     pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_PortraitBorderDesc");
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "PascalCase")]
 pub struct QuickplayRules<'a> {
@@ -5389,7 +4917,6 @@ pub struct QuickplayRules<'a> {
     pub debug_test_list: Vec<HipStr<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, tag = "__class")]
 pub enum QuickplayRule<'a> {
@@ -5415,7 +4942,6 @@ pub enum QuickplayRule<'a> {
     PromoteSameNumberOfCoachesAsNumberOfPlayers(QuickplayRuleBase<'a>),
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "PascalCase")]
 pub struct QuickplayRuleBase<'a> {
@@ -5429,7 +4955,6 @@ pub struct QuickplayRuleBase<'a> {
     pub max_number_of_previous_maps_to_consider: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "PascalCase")]
 pub struct QuickplayRuleEnforceEasyMapAtStart<'a> {
@@ -5447,7 +4972,6 @@ pub struct QuickplayRuleEnforceEasyMapAtStart<'a> {
     pub acceptable_song_difficulties: Vec<u32>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "PascalCase")]
 pub struct QuickplayRulePromoteNeverPlayedTaggedMaps<'a> {
@@ -5475,6 +4999,10 @@ pub struct ScheduledQuestDatabase<'a> {
     pub class: Option<HipStr<'a>>,
     #[serde(borrow)]
     pub scheduled_quests: Vec<ScheduledQuestDesc<'a>>,
+}
+
+impl ScheduledQuestDatabase<'_> {
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_ScheduledQuestDatabase_Template");
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -5505,7 +5033,6 @@ impl ScheduledQuestDesc<'_> {
     pub const CLASS: HipStr<'static> = HipStr::borrowed("JD_ScheduledQuestDesc");
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct SoundConfig<'a> {
@@ -5547,7 +5074,6 @@ pub struct SoundConfig<'a> {
     pub project_fade_curves: Option<Vec<ProjectFadeCurve<'a>>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct BusDef<'a> {
@@ -5568,7 +5094,6 @@ pub struct BusDef<'a> {
     pub out_devices: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct LimiterDef<'a> {
@@ -5585,7 +5110,6 @@ pub struct LimiterDef<'a> {
     pub mode: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct BusMix<'a> {
@@ -5607,7 +5131,6 @@ pub struct BusMix<'a> {
     pub bus_defs: Vec<BusDef<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct MusicTrackDef<'a> {
@@ -5624,7 +5147,6 @@ pub struct MusicTrackDef<'a> {
     pub bus_name: HipStr<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct PCMSourceDef<'a> {
@@ -5640,7 +5162,6 @@ pub struct PCMSourceDef<'a> {
     pub nb_channels: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct EventBusMix<'a> {
@@ -5659,7 +5180,6 @@ pub struct EventBusMix<'a> {
     pub bus_mix: BusMix<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct EventBusFade<'a> {
@@ -5679,7 +5199,6 @@ pub struct EventBusFade<'a> {
     pub fade_in: bool,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ProjectFadeCurve<'a> {
@@ -5696,7 +5215,6 @@ pub struct ProjectFadeCurve<'a> {
     pub decibel_volume_for_curve_at_end: i32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct UITextManager<'a> {
@@ -5718,7 +5236,6 @@ pub struct UITextManager<'a> {
     pub actor_icons: Option<Vec<ActorIcon<'a>>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, tag = "__class")]
 pub enum TextIcon<'a> {
@@ -5728,7 +5245,6 @@ pub enum TextIcon<'a> {
     TextIconShortcut(TextIconShortcut<'a>),
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct TextIconDefault<'a> {
@@ -5743,7 +5259,6 @@ pub struct TextIconDefault<'a> {
     pub data: IconActorData<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct TextIconShortcut<'a> {
@@ -5758,7 +5273,6 @@ pub struct TextIconShortcut<'a> {
     pub datas: HashMap<HipStr<'a>, IconActorData<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct IconActorData<'a> {
@@ -5774,7 +5288,6 @@ pub struct IconActorData<'a> {
     pub font_size: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ActorIcon<'a> {
@@ -5792,7 +5305,6 @@ pub struct ActorIcon<'a> {
     pub font_size: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct VibrationManager<'a> {
@@ -5807,38 +5319,6 @@ pub struct VibrationManager<'a> {
     pub vib_files_paths: Vec<HipStr<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct WDFLinearRewards<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(borrow)]
-    pub rewards: Vec<WDFReward<'a>>,
-}
-
-#[cfg(feature = "full_json_types")]
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct WDFReward<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    #[serde(rename = "type")]
-    pub type_it: u32,
-    pub id: u32,
-}
-
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ZInputConfig<'a> {
@@ -5853,7 +5333,6 @@ pub struct ZInputConfig<'a> {
     pub inputs: Vec<HipStr<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ZInputManager<'a> {
@@ -5873,7 +5352,6 @@ pub struct ZInputManager<'a> {
     pub actions: Vec<ZAction<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ZAction<'a> {
@@ -5892,7 +5370,6 @@ pub struct ZAction<'a> {
     pub input: Vec<ZInput<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "snake_case")]
 pub struct ZInput<'a> {
@@ -5912,7 +5389,6 @@ pub struct ZInput<'a> {
     pub delay: f32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "snake_case")]
@@ -5932,7 +5408,7 @@ pub struct AnthologyConfig<'a> {
     #[serde(borrow)]
     pub intro_video_path: HipStr<'a>,
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    #[serde(borrow)]
+    #[serde(borrow, default, skip_serializing_if = "HashMap::is_empty")]
     pub progression_videos_paths: HashMap<u32, HipStr<'a>>,
     #[serde(borrow)]
     pub outro_video_path: HipStr<'a>,
@@ -5941,7 +5417,6 @@ pub struct AnthologyConfig<'a> {
     pub opus_textures_paths: HashMap<u32, HipStr<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct StatsContainer<'a> {
@@ -5956,7 +5431,6 @@ pub struct StatsContainer<'a> {
     pub stats_events: Vec<StatsEvent<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct StatsEvent<'a> {
@@ -5975,7 +5449,6 @@ pub struct StatsEvent<'a> {
     pub stats_event_user_stats: Vec<UserStat<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct StatParameter<'a> {
@@ -5993,7 +5466,6 @@ pub struct StatParameter<'a> {
     pub parameter_value: Vec<VarType<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct UserStat<'a> {
@@ -6007,14 +5479,14 @@ pub struct UserStat<'a> {
     #[serde(borrow)]
     pub user_stat_name: HipStr<'a>,
     pub user_stat_behaviour: u32,
-    pub user_stat_used_on_xbox_one: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_stat_used_on_xbox_one: Option<u32>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub user_stat_parameters: Vec<StatParameter<'a>>,
     #[serde(borrow)]
     pub parameter_used_to_update_value: HipStr<'a>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct RewardContainer<'a> {
@@ -6030,7 +5502,6 @@ pub struct RewardContainer<'a> {
     pub is_silent: u32,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct RewardDetail<'a> {
@@ -6045,6 +5516,8 @@ pub struct RewardDetail<'a> {
     pub id: HipStr<'a>,
     #[serde(borrow)]
     pub name: HipStr<'a>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub update_type: Option<HipStr<'a>>,
     pub platform_id: u32,
     #[serde(borrow)]
     pub event_trigger: HipStr<'a>,
@@ -6068,7 +5541,6 @@ pub struct RewardDetail<'a> {
     pub reward_trigger: Vec<RewardTriggerSum<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct RewardTriggerSum<'a> {
@@ -6086,7 +5558,6 @@ pub struct RewardTriggerSum<'a> {
     pub values_to_check: Vec<StatParameter<'a>>,
 }
 
-#[cfg(feature = "full_json_types")]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct VarType<'a> {
@@ -6100,4 +5571,62 @@ pub struct VarType<'a> {
     #[serde(rename = "type")]
     pub type_it: u32,
     pub var: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct PostcardsDatabase<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub postcards: Vec<PostcardDesc<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct PostcardDesc<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub postcard_id: u32,
+    pub texture_thumbnail: HipStr<'a>,
+    pub texture_fullscreen: HipStr<'a>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct DanceMachineConfig<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub episodes: Vec<DMEpisodeDesc<'a>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct DMEpisodeDesc<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    #[serde(rename = "episodeID")]
+    pub episode_id: HipStr<'a>,
+    pub default_status: HipStr<'a>,
+    pub title_loc: u32,
+    pub blocks: Vec<HipStr<'a>>,
 }

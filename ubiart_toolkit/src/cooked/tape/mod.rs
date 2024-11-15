@@ -9,15 +9,14 @@ use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit_shared_types::{errors::ParserError, Color};
 
-use super::json;
 use crate::{
-    json_types::Empty,
+    shared_json_types::Empty,
     utils::{Game, UniqueGameId},
 };
 
 pub fn parse(data: &[u8], ugi: UniqueGameId) -> Result<Tape<'_>, ParserError> {
     let tape = match ugi.game {
-        game if game >= Game::JustDance2016 => json::parse(data, false)?,
+        game if game >= Game::JustDance2016 => crate::utils::json::parse(data, false)?,
         Game::JustDance2015 => Tape::deserialize_with(data, ugi)?,
         _ => todo!(),
     };

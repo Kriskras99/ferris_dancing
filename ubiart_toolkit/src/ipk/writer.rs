@@ -99,6 +99,7 @@ pub fn create(
 }
 
 /// Create an .ipk file with the specified files.
+// TODO: Add deduplication
 #[instrument(skip(writer, vfs, files))]
 pub fn write(
     mut writer: &mut (impl WriteAt + ?Sized),
@@ -171,7 +172,6 @@ pub fn write(
             || path.extension() == Some("ogg")
             || path.extension() == Some("png")
         {
-            // Skip compression for already compressed files and small files
             writer.write_slice_at(position, &file)?;
             // No compression thus compressed size is 0
             0

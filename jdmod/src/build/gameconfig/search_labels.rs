@@ -6,12 +6,12 @@ use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use hipstr::HipStr;
 use ownable::traits::IntoOwned;
-use ubiart_toolkit::json_types::{self, v22::GameManagerConfig22};
+use ubiart_toolkit::{cooked, cooked::isg::GameManagerConfigV22};
 
 use crate::{build::BuildState, types::gameconfig::search_labels::SearchLabel};
 
 /// Build the search labels
-pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Result<(), Error> {
+pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfigV22<'_>) -> Result<(), Error> {
     let search_labels_file = bs
         .native_vfs
         .open(&bs.rel_tree.config().join("search_labels.json"))?;
@@ -24,11 +24,11 @@ pub fn build(bs: &BuildState, gameconfig: &mut GameManagerConfig22<'_>) -> Resul
         .map(|(name, tags)| {
             (
                 name,
-                json_types::isg::SongSearchTags {
-                    class: Some(json_types::isg::SongSearchTags::CLASS),
+                cooked::isg::SongSearchTags {
+                    class: Some(cooked::isg::SongSearchTags::CLASS),
                     tags: tags
                         .into_iter()
-                        .map(json_types::isg::SongSearchTag::from)
+                        .map(cooked::isg::SongSearchTag::from)
                         .collect(),
                 },
             )

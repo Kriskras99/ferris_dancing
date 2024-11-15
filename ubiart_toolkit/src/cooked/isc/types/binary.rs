@@ -14,14 +14,15 @@ use ubiart_toolkit_shared_types::Color;
 use super::Root;
 use crate::{
     cooked::isc::{
-        Actor, Autodance, BlockFlowComponent, Enum, GFXMaterialSerializable,
-        GFXMaterialSerializableParam, GFXMaterialTexturePathSet, GFXPrimitiveParam, MapSceneConfig,
-        MasterTape, Material, MaterialGraphicComponent, MaterialParams, MusicTrackComponent,
-        PleoComponent, PleoTextureGraphicComponent, PrimitiveParameters, Scene, SceneConfigs,
-        SongDesc, SubSceneActor, TapeCase, TextureSet, WrappedActor, WrappedActors,
-        WrappedComponent, WrappedJdSceneConfig, WrappedMapSceneConfig,
-        WrappedMaterialGraphicComponent, WrappedPleoComponent, WrappedPleoTextureGraphicComponent,
-        WrappedScene, WrappedSceneConfigs, WrappedSubSceneActor,
+        Actor, Autodance, BlockFlowComponent, CoverflowSkuSongs, CoverflowSong, Enum,
+        GFXMaterialSerializable, GFXMaterialSerializableParam, GFXMaterialTexturePathSet,
+        GFXPrimitiveParam, MapSceneConfig, MasterTape, Material, MaterialGraphicComponent,
+        MaterialParams, MusicTrackComponent, PleoComponent, PleoTextureGraphicComponent,
+        PrimitiveParameters, Scene, SceneConfigs, SongDatabase, SongDatabaseSceneConfig, SongDesc,
+        SubSceneActor, TapeCase, TextureSet, WrappedActor, WrappedActors, WrappedComponent,
+        WrappedJdSceneConfig, WrappedMapSceneConfig, WrappedMaterialGraphicComponent,
+        WrappedPleoComponent, WrappedPleoTextureGraphicComponent, WrappedScene,
+        WrappedSceneConfigs, WrappedSongDatabaseSceneConfig, WrappedSubSceneActor,
     },
     utils::{Game, InternedString, SplitPath, UniqueGameId},
 };
@@ -145,11 +146,11 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         let relativez = reader.read_at::<f32be>(position)?;
         let scale = reader.read_at::<(f32be, f32be)>(position)?;
         let xflipped = reader.read_at::<u32be>(position)?;
-        test_eq!(xflipped, 0)?;
+        test_any!(xflipped, 0..=1)?;
         let userfriendly = reader.read_len_string_at::<u32be>(position)?;
         let pos2d = reader.read_at::<(f32be, f32be)>(position)?;
-        let unk3 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk3, 0)?;
+        let unk3 = reader.read_at::<f32be>(position)?;
+        test_any!(unk3, 0.0..=6.283_185_5, "Position: {position}")?;
         let unk4 = reader.read_at::<u32be>(position)?;
         test_eq!(unk4, 0)?;
         let unk5 = reader.read_at::<u32be>(position)?;
@@ -159,8 +160,9 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         let unk7 = reader.read_at::<u32be>(position)?;
         test_eq!(unk7, 0)?;
         let lua = reader.read_at::<SplitPath>(position)?;
-        let unk8 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk8, 0)?;
+        let _unk8 = reader
+            .read_len_type_at::<u32be, ActorUnknown2>(position)?
+            .collect::<Result<Vec<_>, _>>()?;
         let components = reader
             .read_len_type_at_with::<u32be, WrappedComponent>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -196,7 +198,7 @@ impl<'de> BinaryDeserialize<'de> for SubSceneActor<'de> {
         let relative_z = reader.read_at::<f32be>(position)?;
         let scale = reader.read_at::<(f32be, f32be)>(position)?;
         let xflipped = reader.read_at::<u32be>(position)?;
-        test_eq!(xflipped, 0)?;
+        test_any!(xflipped, 0..=1)?;
         let userfriendly = reader.read_len_string_at::<u32be>(position)?;
         let pos2d = reader.read_at::<(f32be, f32be)>(position)?;
         let unk3 = reader.read_at::<u32be>(position)?;
@@ -210,6 +212,7 @@ impl<'de> BinaryDeserialize<'de> for SubSceneActor<'de> {
         let unk7 = reader.read_at::<u32be>(position)?;
         test_eq!(unk7, 0)?;
         let lua = reader.read_at::<SplitPath>(position)?;
+        // let _unk8 = reader.read_len_type_at::<u32be, Unknown2>(position)?.collect::<Result<Vec<_>,_>>()?;
         let unk8 = reader.read_at::<u32be>(position)?;
         test_eq!(unk8, 0)?;
         let components = reader
@@ -258,6 +261,53 @@ impl<'de> BinaryDeserialize<'de> for SubSceneActor<'de> {
     }
 }
 
+struct ActorUnknown2;
+impl BinaryDeserialize<'_> for ActorUnknown2 {
+    type Ctx = ();
+    type Output = ();
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader
+            .read_len_type_at::<u32be, u32be>(position)?
+            .collect::<Result<Vec<_>, _>>()?;
+        test_any!(unk1.as_slice(), [&[][..], &[0, 1]])?;
+        let _unk2 = reader.read_len_string_at::<u32be>(position)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk3, 0)?;
+        let _unk5 = reader.read_len_string_at::<u32be>(position)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0)?;
+        let unk8 = reader.read_at::<f32be>(position)?;
+        test_any!(unk8, -0.367_015..=6.159_785)?;
+        let unk9 = reader.read_at::<f32be>(position)?;
+        test_any!(unk9, -1.410_983..=1.633_319)?;
+        let unk10 = reader.read_at::<f32be>(position)?;
+        test_any!(unk10, -1.556_146..=0.15151)?;
+        let unk11 = reader.read_at::<f32be>(position)?;
+        test_any!(unk11, 0.0..=0.169_997)?;
+        let unk12 = reader.read_at::<f32be>(position)?;
+        test_any!(unk12, 0.000_435..=1.099_898)?;
+        let unk13 = reader.read_at::<f32be>(position)?;
+        test_any!(unk13, 0.0..=1.298_109)?;
+        let unk14 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk14, 1, "Position: {position}")?;
+        let unk15 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk15, 2)?;
+        let unk16 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk16, 0)?;
+        let unk17 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk17, 0)?;
+        let unk18 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk18, 0)?;
+
+        Ok(())
+    }
+}
+
 impl<'de> BinaryDeserialize<'de> for WrappedComponent<'de> {
     type Ctx = UniqueGameId;
     type Output = Self;
@@ -274,6 +324,9 @@ impl<'de> BinaryDeserialize<'de> for WrappedComponent<'de> {
                 Ok(WrappedComponent::BlockFlowComponent(BlockFlowComponent {
                     wrapped: (),
                 }))
+            }
+            "JD_SongDatabaseComponent" => {
+                Ok(WrappedComponent::SongDatabase(SongDatabase { wrapped: () }))
             }
             "JD_SongDescComponent" => Ok(WrappedComponent::SongDesc(SongDesc { wrapped: () })),
             "MasterTape" => Ok(WrappedComponent::MasterTape(MasterTape { wrapped: () })),
@@ -346,11 +399,11 @@ impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
         let unk4 = reader.read_at::<u32be>(position)?;
         test_eq!(unk4, 0)?;
         let anchor = reader.read_at::<i32be>(position)?;
-        test_any!(anchor, [1, 6])?;
-        let unk5 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk5, 0)?;
-        let unk6 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk6, 0)?;
+        test_any!(anchor, 0..=9)?;
+        let unk5 = reader.read_at::<f32be>(position)?;
+        test_any!(unk5, -0.12..=0.0, "Position: {position}")?;
+        let unk6 = reader.read_at::<f32be>(position)?;
+        test_any!(unk6, -1.0..=1.2)?;
         let material = reader.read_at_with::<GFXMaterialSerializable>(position, ctx)?;
         let sinus_amplitude = reader.read_at::<(f32be, f32be, f32be)>(position)?;
         let sinus_speed = reader.read_at::<f32be>(position)?;
@@ -359,7 +412,7 @@ impl<'de> BinaryDeserialize<'de> for MaterialGraphicComponent<'de> {
         let angle_x = reader.read_at::<f32be>(position)?;
         test_eq!(angle_x, 0.0)?;
         let old_anchor = reader.read_at::<i32be>(position)?;
-        test_any!(old_anchor, [1, 6])?;
+        test_any!(old_anchor, 0..=9)?;
 
         let enums = vec![
             Enum {
@@ -493,6 +546,52 @@ impl<'de> BinaryDeserialize<'de> for SceneConfigs<'de> {
     }
 }
 
+impl<'de> BinaryDeserialize<'de> for SongDatabaseSceneConfig<'de> {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let sku = reader.read_len_string_at::<u32be>(position)?;
+        let territory = reader.read_len_string_at::<u32be>(position)?;
+        let rating_ui = HipStr::from(reader.read_at::<SplitPath>(position)?.to_string());
+        let coverflow_sku_songs = reader
+            .read_len_type_at::<u32be, CoverflowSong>(position)?
+            .map(|cs| cs.map(|cs| CoverflowSkuSongs { coverflow_song: cs }))
+            .collect::<Result<_, _>>()?;
+
+        Ok(Self {
+            name: HipStr::default(),
+            sku,
+            territory,
+            rating_ui,
+            enums: vec![],
+            coverflow_sku_songs,
+        })
+    }
+}
+
+impl<'de> BinaryDeserialize<'de> for CoverflowSong<'de> {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let name = reader.read_len_string_at::<u32be>(position)?;
+        let cover_path = HipStr::from(reader.read_at::<SplitPath>(position)?.to_string());
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0)?;
+
+        Ok(Self { name, cover_path })
+    }
+}
+
 impl<'de> BinaryDeserialize<'de> for WrappedJdSceneConfig<'de> {
     type Ctx = UniqueGameId;
     type Output = Self;
@@ -507,7 +606,11 @@ impl<'de> BinaryDeserialize<'de> for WrappedJdSceneConfig<'de> {
             "JD_MapSceneConfig" => Ok(WrappedJdSceneConfig::Map(WrappedMapSceneConfig {
                 wrapped: reader.read_at_with::<MapSceneConfig>(position, ctx)?,
             })),
-            "JD_SongDatabaseSceneConfig" => todo!("JD_SongDatabaseSceneConfig"),
+            "JD_SongDatabaseSceneConfig" => Ok(WrappedJdSceneConfig::SongDatabase(
+                WrappedSongDatabaseSceneConfig {
+                    wrapped: reader.read_at::<SongDatabaseSceneConfig>(position)?,
+                },
+            )),
             "JD_TransitionSceneConfig" => todo!("JD_TransitionSceneConfig"),
             "JD_UIBannerSceneConfig" => todo!("JD_UIBannerSceneConfig"),
             _ => Err(ReadError::custom(format!("Unknown SceneConfig: {name}"))),

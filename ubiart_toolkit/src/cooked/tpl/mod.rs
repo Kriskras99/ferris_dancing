@@ -18,7 +18,7 @@ use crate::{
 pub fn parse(data: &[u8], ugi: UniqueGameId, lax: bool) -> Result<Actor<'_>, ParserError> {
     match ugi.game {
         game if game >= Game::JustDance2016 => {
-            let actor = crate::cooked::json::parse(data, lax)?;
+            let actor = crate::utils::json::parse(data, lax)?;
             Ok(actor)
         }
         Game::JustDance2015 => {

@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Error;
 use hipstr::HipStr;
-use ubiart_toolkit::json_types::MapsGoals;
+use ubiart_toolkit::cooked::isg::MapsGoals;
 
 use crate::types::ImportState;
 

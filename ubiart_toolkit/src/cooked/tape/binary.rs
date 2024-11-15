@@ -22,7 +22,7 @@ use super::{
     UnknownCBB7C029Clip,
 };
 use crate::{
-    json_types::Empty,
+    shared_json_types::Empty,
     utils::{Game, SplitPath, UniqueGameId},
 };
 

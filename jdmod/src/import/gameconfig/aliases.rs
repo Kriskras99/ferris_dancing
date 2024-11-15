@@ -6,7 +6,10 @@ use anyhow::Error;
 use hipstr::HipStr;
 use ubiart_toolkit::{
     cooked,
-    json_types::{AliasesObjectives, DifficultyColors},
+    cooked::{
+        isg::AliasesObjectives,
+        json::{DifficultyColors, LocalAliasesV19, LocalAliasesV2022},
+    },
 };
 
 use crate::{
@@ -27,8 +30,7 @@ pub fn import_v20v22(
     println!("Importing aliases...");
 
     let local_aliases = is.vfs.open(cook_path(alias_db_path, is.ugi)?.as_ref())?;
-    let template = cooked::json::parse_v22(&local_aliases, is.lax)?;
-    let local_aliases = template.into_local_aliases()?;
+    let local_aliases = cooked::json::parse::<LocalAliasesV2022>(&local_aliases, is.lax)?;
 
     let mut aliases = load_aliases(
         is,
@@ -64,8 +66,7 @@ pub fn import_v19(is: &ImportState<'_>, alias_db_path: &str) -> Result<(), Error
     println!("Importing aliases...");
 
     let local_aliases = is.vfs.open(cook_path(alias_db_path, is.ugi)?.as_ref())?;
-    let template = cooked::json::parse_v19(&local_aliases, is.lax)?;
-    let local_aliases = template.into_local_aliases()?;
+    let local_aliases = cooked::json::parse::<LocalAliasesV19>(&local_aliases, is.lax)?;
 
     let mut aliases = load_aliases(
         is,

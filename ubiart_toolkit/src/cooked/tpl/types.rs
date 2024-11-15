@@ -5,9 +5,9 @@ use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit_shared_types::{errors::ParserError, Color, LocaleId};
 
-use crate::json_types::isg::AutodanceVideoStructure;
+use crate::shared_json_types::AutodanceVideoStructure;
 #[cfg(feature = "full_json_types")]
-use crate::json_types::Empty;
+use crate::shared_json_types::Empty;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE", deny_unknown_fields)]
@@ -64,6 +64,10 @@ pub enum Template<'a> {
     MaterialGraphicComponent(MaterialGraphicComponent<'a>),
     #[serde(borrow, rename = "MusicTrackComponent_Template")]
     MusicTrackComponent(MusicTrackComponent<'a>),
+    #[serde(borrow, rename = "PleoComponent_Template")]
+    PleoComponent(PleoComponent<'a>),
+    #[serde(borrow, rename = "PleoTextureGraphicComponent_Template")]
+    PleoTextureGraphicComponent(PleoTextureGraphicComponent<'a>),
     #[serde(borrow, rename = "SoundComponent_Template")]
     SoundComponent(SoundComponent<'a>),
     #[serde(borrow, rename = "TapeCase_Template")]
@@ -342,12 +346,6 @@ pub enum Template<'a> {
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "Mesh3DComponent_Template")]
     Mesh3DComponent(super::extra_types::SingleInstanceMesh3DComponent<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "PleoComponent_Template")]
-    PleoComponent(PleoComponent<'a>),
-    #[cfg(feature = "full_json_types")]
-    #[serde(borrow, rename = "PleoTextureGraphicComponent_Template")]
-    PleoTextureGraphicComponent(super::extra_types::PleoTextureGraphicComponent<'a>),
     #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "PropertyPatcher_Template")]
     PropertyPatcher(Empty<'a>),
@@ -737,80 +735,6 @@ impl Default for AvatarDescription2022<'static> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
-pub struct PlaybackEvent<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub clip_number: u32,
-    pub start_clip: f32,
-    pub start_time: f32,
-    pub duration: f32,
-    pub speed: f32,
-}
-
-impl PlaybackEvent<'_> {
-    pub const CLASS: HipStr<'static> = HipStr::borrowed("PlaybackEvent");
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct FxEvent<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub start_time: u32,
-    pub duration: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct PropEvent<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub start_time: u32,
-    pub duration: f32,
-    pub associated_props: Vec<u32>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct AutodancePropData<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub index: u32,
-    pub pivot_x: f32,
-    pub pivot_y: f32,
-    pub size: f32,
-    /// Not in 2016
-    #[serde(
-        rename = "fx_assetID",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub fx_asset_id: Option<HipStr<'a>>,
-    pub prop_part: u32,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct BlockFlowTemplate<'a> {
@@ -1000,7 +924,7 @@ pub struct SongDescription<'a> {
     /// Only in nx2017, always 1
     #[serde(skip_serializing_if = "Option::is_none")]
     pub energy: Option<u32>,
-    /// Not in 2016
+    /// Not always there in 2016
     #[serde(default)]
     pub tags: Vec<HipStr<'a>>,
     /// Only in nx2017
@@ -1033,20 +957,6 @@ pub struct Paths<'a> {
     pub asyncplayers: Option<Vec<HipStr<'a>>>,
     #[serde(borrow, alias = "Avatars")]
     pub avatars: Option<Vec<HipStr<'a>>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields, rename_all = "PascalCase")]
-pub struct PropPlayerConfig<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub index: u32,
-    pub active_props: Vec<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1488,6 +1398,46 @@ impl Default for OutlinedMaskMaterialParams<'_> {
             thickness: 1,
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PleoTextureGraphicComponent<'a> {
+    #[serde(
+        borrow,
+        rename = "__class",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub class: Option<HipStr<'a>>,
+    pub patch_level: u32,
+    pub patch_h_level: u32,
+    pub patch_v_level: u32,
+    #[serde(rename = "visualAABB")]
+    pub visual_aabb: AaBb<'a>,
+    pub renderintarget: u32,
+    pub pos_offset: (u32, u32),
+    pub angle_offset: f32,
+    pub blendmode: u32,
+    pub materialtype: u32,
+    pub self_illum_color: Color,
+    pub disable_light: u32,
+    pub force_disable_light: u32,
+    pub use_shadow: u32,
+    pub use_root_bone: u32,
+    pub shadow_size: (f32, f32),
+    pub shadow_material: Box<GFXMaterialSerializable<'a>>,
+    pub shadow_attenuation: f32,
+    pub shadow_dist: f32,
+    pub shadow_offset_pos: (u32, u32, u32),
+    pub angle_limit: u32,
+    pub material: Box<GFXMaterialSerializable<'a>>,
+    pub default_color: Color,
+    pub z_offset: u32,
+    #[serde(rename = "channelID")]
+    pub channel_id: HipStr<'a>,
+    pub auto_activate: u32,
+    pub use_conductor: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

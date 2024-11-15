@@ -4,7 +4,7 @@ use ubiart_toolkit_shared_types::Color;
 
 use crate::{
     cooked::tpl::types::{AaBb, GFXMaterialSerializable},
-    json_types::Empty,
+    shared_json_types::Empty,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -773,46 +773,6 @@ pub struct TextureGraphicComponent<'a> {
     pub speed_rot_z: u32,
     pub size: (f32, f32),
     pub z_offset: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct PleoTextureGraphicComponent<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub patch_level: u32,
-    pub patch_h_level: u32,
-    pub patch_v_level: u32,
-    #[serde(rename = "visualAABB")]
-    pub visual_aabb: AaBb<'a>,
-    pub renderintarget: u32,
-    pub pos_offset: (u32, u32),
-    pub angle_offset: f32,
-    pub blendmode: u32,
-    pub materialtype: u32,
-    pub self_illum_color: Color,
-    pub disable_light: u32,
-    pub force_disable_light: u32,
-    pub use_shadow: u32,
-    pub use_root_bone: u32,
-    pub shadow_size: (f32, f32),
-    pub shadow_material: Box<GFXMaterialSerializable<'a>>,
-    pub shadow_attenuation: f32,
-    pub shadow_dist: f32,
-    pub shadow_offset_pos: (u32, u32, u32),
-    pub angle_limit: u32,
-    pub material: Box<GFXMaterialSerializable<'a>>,
-    pub default_color: Color,
-    pub z_offset: u32,
-    #[serde(rename = "channelID")]
-    pub channel_id: HipStr<'a>,
-    pub auto_activate: u32,
-    pub use_conductor: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

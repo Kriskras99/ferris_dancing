@@ -4,6 +4,7 @@ use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
 use hipstr::HipStr;
+use tracing::{debug, warn};
 use ubiart_toolkit::{cooked, cooked::tpl::types::PhoneImages};
 
 use super::SongImportState;
@@ -13,6 +14,13 @@ use crate::{
 };
 
 /// Imports all the textures and phone images used in the menus for this song
+/* TODO: Replace import/export logic for menuart
+   The game only uses coach_{n}, cover_albumcoach, cover_generic, cover_kids, map_bkg, _online and _phone
+   cover_kids is only used in the kids menu.
+   _online can be a symlink to _generic, and _phone can be created from the decoded texture
+   if map_bkg is missing, it should try importing banner_bkg
+   if kids is missing, symlink it to generic
+*/
 pub fn import(
     sis: &SongImportState<'_>,
     menuart_scene: &cooked::isc::Scene<'_>,
@@ -56,7 +64,14 @@ pub fn import(
             let from = match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
                 (Ok(from), _) => from,
                 (Err(err), true) => {
-                    println!("Warning! {err}");
+                    if cooked_path.ends_with("_cover_online_kids.tga.ckd")
+                        || cooked_path.ends_with("_cover_albumbkg.tga.ckd")
+                        || cooked_path.ends_with("_banner_bkg.tga.ckd")
+                    {
+                        debug!("Warning! {err}");
+                    } else {
+                        warn!("{err}");
+                    }
                     continue;
                 }
                 (Err(err), false) => return Err(err.into()),
@@ -86,7 +101,7 @@ pub fn import(
         let from = match (sis.vfs.open(filename.as_str().as_ref()), sis.lax) {
             (Ok(from), _) => from,
             (Err(err), true) => {
-                println!("Warning! {err}");
+                debug!("Warning! {err}");
                 continue;
             }
             (Err(err), false) => return Err(err.into()),

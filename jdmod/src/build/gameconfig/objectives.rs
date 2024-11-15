@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use anyhow::Error;
 use dotstar_toolkit_utils::vfs::VirtualFileSystem;
 use hipstr::HipStr;
-use ubiart_toolkit::{cooked, json_types, utils::UniqueGameId};
+use ubiart_toolkit::{cooked, utils::UniqueGameId};
 
 use crate::{
     build::{BuildFiles, BuildState},
@@ -24,11 +24,10 @@ pub fn build(bs: &BuildState, bf: &mut BuildFiles) -> Result<(), Error> {
         .map(|(name, descriptor)| (name, descriptor.into()))
         .collect();
 
-    let objective_database =
-        json_types::v22::Template22::ObjectivesDatabase(json_types::isg::ObjectivesDatabase {
-            class: None,
-            objective_descs,
-        });
+    let objective_database = cooked::isg::ObjectivesDatabase {
+        class: Some(cooked::isg::ObjectivesDatabase::CLASS),
+        objective_descs,
+    };
 
     let objective_database_vec = cooked::json::create_vec(&objective_database)?;
     bf.generated_files.add_file(

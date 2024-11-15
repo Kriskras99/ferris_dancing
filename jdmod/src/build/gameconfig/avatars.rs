@@ -1,6 +1,9 @@
 //! # Avatars
 //! Build the avatars
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::atomic::{AtomicU32, Ordering},
+};
 
 use anyhow::{anyhow, Error};
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPathBuf};
@@ -10,9 +13,9 @@ use ubiart_toolkit::{
     cooked,
     cooked::{
         isc::AvatarDesc,
+        isg::GameManagerConfigV22,
         tpl::types::{AvatarDescription, AvatarDescription2022},
     },
-    json_types::v22::GameManagerConfig22,
     utils::{SplitPath, UniqueGameId},
 };
 
@@ -21,16 +24,29 @@ use crate::{
     types::gameconfig::{
         avatars::{Avatar, UnlockType},
         gachacontent::GachaItem,
-        generate_gacha_id,
     },
     utils::{cook_path, encode_texture},
 };
+
+/// Contains the last id used for items that could go into a gacha machine
+static AVATAR_ID: AtomicU32 = AtomicU32::new(10000);
+
+/// Generate a new id for content that could go into a gacha machine
+///
+/// # Panics
+/// Will panic if incrementing the id would overflow
+pub fn generate_avatar_id() -> u32 {
+    // SAFETY: The atomic u16 will make sure every call gets a different value
+    let id = AVATAR_ID.fetch_add(1, Ordering::SeqCst);
+    assert_ne!(id, u32::from(u16::MAX), "Ran out of IDs for avatars!");
+    id
+}
 
 /// Build the avatars
 pub fn build(
     bs: &BuildState,
     bf: &mut BuildFiles,
-    gameconfig: &mut GameManagerConfig22,
+    gameconfig: &mut GameManagerConfigV22,
     gacha_items: &mut Vec<GachaItem>,
 ) -> Result<(), Error> {
     let avatars_file = bs
@@ -42,8 +58,8 @@ pub fn build(
 
     // Avatars can refer to other avatars, so the IDs need to be known before we start the conversions
     let mut id_map = HashMap::with_capacity(avatars.len());
-    for name in avatars.keys() {
-        let id = generate_gacha_id();
+    for (name, avatar) in &avatars {
+        let id = avatar.id.unwrap_or_else(generate_avatar_id);
         id_map.insert(name.clone(), id);
     }
 
@@ -75,7 +91,7 @@ pub fn build(
         // Add the phone image for copying
         let phone_image = format!("world/avatars/{id:04}/avatar_phone.png");
         bf.static_files.add_file(
-            bs.rel_tree.avatars().join(avatar.image_phone_path.as_str()),
+            bs.rel_tree.avatars().join(avatar.image_path.as_str()),
             VirtualPathBuf::from(phone_image.clone()),
         )?;
 

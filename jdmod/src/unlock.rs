@@ -14,7 +14,7 @@ use crate::types::{
     gameconfig::{
         aliases::Aliases,
         avatars::{Avatar, UnlockType},
-        portraitborders::{LockStatus, PortraitBorder},
+        portraitborders::{LockStatus, PortraitBorder, Visibility},
     },
     song::{MapStatus, Song},
     DirectoryTree,
@@ -46,7 +46,13 @@ pub fn unlock(mod_path: &Path) -> Result<(), Error> {
         let song_dir = song_dir?;
         if song_dir.metadata()?.is_dir() {
             let path = song_dir.path().join("song.json");
-            let file = std::fs::read(&path)?;
+            let file = match std::fs::read(&path) {
+                Ok(file) => file,
+                Err(err) => {
+                    println!("Failed to open {}: {err}", path.display());
+                    continue;
+                }
+            };
             let mut song = serde_json::from_slice::<Song>(&file)?;
             song.status = MapStatus::Unlocked;
             serde_json::to_writer_pretty(File::create(path)?, &song)?;
@@ -83,9 +89,11 @@ pub fn unlock(mod_path: &Path) -> Result<(), Error> {
         serde_json::from_slice::<HashMap<HipStr, PortraitBorder>>(&portraitborders_file)?;
     for portraitborder in portraitborders.values_mut() {
         portraitborder.lock_status = LockStatus::UnlockedByDefault;
+        portraitborder.visibility = Visibility::Visible;
     }
     serde_json::to_writer_pretty(File::create(portraitborders_path)?, &portraitborders)?;
 
     println!("Everything is unlocked!");
+    println!("Please note that you also need to delete existing save games for this to work.");
     Ok(())
 }

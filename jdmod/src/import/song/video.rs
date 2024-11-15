@@ -39,10 +39,7 @@ pub fn import(
     }
 
     if sis.ugi.game <= Game::JustDance2015 {
-        println!(
-            "Warning: Video for {} needs to be transcoded",
-            sis.lower_map_name
-        );
+        println!("Warning: Video for {} needs to be transcoded", sis.map_name);
     }
 
     Ok(filename)

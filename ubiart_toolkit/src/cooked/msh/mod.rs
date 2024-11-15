@@ -1,5 +1,11 @@
 use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
+use ubiart_toolkit_shared_types::errors::ParserError;
+
+pub fn parse(data: &[u8]) -> Result<GFXMaterialShader<'_>, ParserError> {
+    let res = crate::utils::json::parse(data, false)?;
+    Ok(res)
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -17,8 +23,9 @@ pub struct GFXMaterialShader<'a> {
     pub alpha_ref: u32,
     pub separate_alpha: u32,
     pub texture_blend: u32,
+    // Not in 2018 and earlier
     #[serde(rename = "UseMultiChannel")]
-    pub use_multi_channel: u32,
+    pub use_multi_channel: Option<u32>,
     pub materialtype: u32,
     #[serde(borrow)]
     pub mat_params: GFXMaterialParams<'a>,
@@ -37,6 +44,10 @@ pub struct GFXMaterialShader<'a> {
     pub blend_layer_4: u32,
     #[serde(borrow, rename = "Layer4")]
     pub layer_4: MaterialLayer<'a>,
+}
+
+impl GFXMaterialShader<'_> {
+    pub const CLASS: HipStr<'static> = HipStr::borrowed("GFXMaterialShader_Template");
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -116,40 +127,4 @@ pub struct UVModifier<'a> {
     pub scale_v: f32,
     pub scale_offset_u: f32,
     pub scale_offset_v: f32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct GFXMaterialShader1618<'a> {
-    #[serde(
-        borrow,
-        rename = "__class",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub class: Option<HipStr<'a>>,
-    pub flags: u32,
-    pub render_regular: u32,
-    pub use_alpha_test: u32,
-    pub alpha_ref: u32,
-    pub separate_alpha: u32,
-    pub texture_blend: u32,
-    pub materialtype: u32,
-    #[serde(borrow)]
-    pub mat_params: GFXMaterialParams<'a>,
-    pub blendmode: u32,
-    #[serde(borrow, rename = "Layer1")]
-    pub layer_1: MaterialLayer<'a>,
-    #[serde(rename = "BlendLayer2")]
-    pub blend_layer_2: u32,
-    #[serde(borrow, rename = "Layer2")]
-    pub layer_2: MaterialLayer<'a>,
-    #[serde(rename = "BlendLayer3")]
-    pub blend_layer_3: u32,
-    #[serde(borrow, rename = "Layer3")]
-    pub layer_3: MaterialLayer<'a>,
-    #[serde(rename = "BlendLayer4")]
-    pub blend_layer_4: u32,
-    #[serde(borrow, rename = "Layer4")]
-    pub layer_4: MaterialLayer<'a>,
 }

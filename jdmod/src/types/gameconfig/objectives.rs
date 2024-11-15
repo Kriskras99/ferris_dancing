@@ -13,7 +13,7 @@ use hipstr::HipStr;
 use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use test_eq::{test_eq, test_or};
-use ubiart_toolkit::json_types;
+use ubiart_toolkit::{cooked, shared_json_types};
 
 use crate::types::{
     localisation::{LocaleId, LocaleIdMap},
@@ -126,7 +126,7 @@ impl<'a> Objective<'a> {
     /// # Errors
     /// Will error if converting the [`ObjectiveType`] fails
     pub fn from_descriptor(
-        descriptor: &json_types::isg::ObjectiveDescriptor<'a>,
+        descriptor: &cooked::isg::ObjectiveDescriptor<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Result<Self, Error> {
         Ok(Self {
@@ -143,7 +143,7 @@ impl<'a> Objective<'a> {
     /// Convert from the old UbiArt represntation
     #[must_use]
     pub fn from_old_descriptor(
-        descriptor: &json_types::v1819::ObjectiveDesc1819<'a>,
+        descriptor: &shared_json_types::ObjectiveDesc<'a>,
         unlimited_only: bool,
         locale_id_map: &LocaleIdMap,
     ) -> Self {
@@ -160,12 +160,12 @@ impl<'a> Objective<'a> {
     }
 }
 
-impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
+impl<'a> From<Objective<'a>> for cooked::isg::ObjectiveDescriptor<'a> {
     fn from(value: Objective<'a>) -> Self {
         match value.objective_type {
             ObjectiveType::AccumulateXCal(data) => {
-                json_types::isg::ObjectiveDescriptor::AccumulateXCal(
-                    json_types::isg::ObjectiveDescriptorAccumulateXCal {
+                cooked::isg::ObjectiveDescriptor::AccumulateXCal(
+                    cooked::isg::ObjectiveDescriptorAccumulateXCal {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -178,8 +178,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::AccumulateXMoves(data) => {
-                json_types::isg::ObjectiveDescriptor::AccumulateXMoves(
-                    json_types::isg::ObjectiveDescriptorAccumulateXMoves {
+                cooked::isg::ObjectiveDescriptor::AccumulateXMoves(
+                    cooked::isg::ObjectiveDescriptorAccumulateXMoves {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -196,8 +196,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::AddXSongsToAPlaylist(data) => {
-                json_types::isg::ObjectiveDescriptor::AddXSongsToAPlaylist(
-                    json_types::isg::ObjectiveDescriptorAddXSongsToAPlaylist {
+                cooked::isg::ObjectiveDescriptor::AddXSongsToAPlaylist(
+                    cooked::isg::ObjectiveDescriptorAddXSongsToAPlaylist {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -209,8 +209,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::ChangeCustoItemXTimes(data) => {
-                json_types::isg::ObjectiveDescriptor::ChangeCustoItemXTimes(
-                    json_types::isg::ObjectiveDescriptorChangeCustoItemXTimes {
+                cooked::isg::ObjectiveDescriptor::ChangeCustoItemXTimes(
+                    cooked::isg::ObjectiveDescriptorChangeCustoItemXTimes {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -222,8 +222,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::CompleteXQuests(data) => {
-                json_types::isg::ObjectiveDescriptor::CompleteXQuests(
-                    json_types::isg::ObjectiveDescriptorCompleteXQuests {
+                cooked::isg::ObjectiveDescriptor::CompleteXQuests(
+                    cooked::isg::ObjectiveDescriptorCompleteXQuests {
                         description: value.description,
                         description_raw: value.description_raw,
                         is_static: value.is_static,
@@ -233,21 +233,19 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            ObjectiveType::DanceXSeconds(data) => {
-                json_types::isg::ObjectiveDescriptor::DanceXSeconds(
-                    json_types::isg::ObjectiveDescriptorDanceXSeconds {
-                        description: value.description,
-                        description_raw: value.description_raw,
-                        is_static: value.is_static,
-                        exclude_from_upload: value.exclude_from_upload,
-                        dance_time: data.dance_time,
-                        ..Default::default()
-                    },
-                )
-            }
+            ObjectiveType::DanceXSeconds(data) => cooked::isg::ObjectiveDescriptor::DanceXSeconds(
+                cooked::isg::ObjectiveDescriptorDanceXSeconds {
+                    description: value.description,
+                    description_raw: value.description_raw,
+                    is_static: value.is_static,
+                    exclude_from_upload: value.exclude_from_upload,
+                    dance_time: data.dance_time,
+                    ..Default::default()
+                },
+            ),
             ObjectiveType::FinishXPlaylist(data) => {
-                json_types::isg::ObjectiveDescriptor::FinishXPlaylist(
-                    json_types::isg::ObjectiveDescriptorFinishXPlaylist {
+                cooked::isg::ObjectiveDescriptor::FinishXPlaylist(
+                    cooked::isg::ObjectiveDescriptorFinishXPlaylist {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -258,22 +256,20 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            ObjectiveType::GatherXStars(data) => {
-                json_types::isg::ObjectiveDescriptor::GatherXStars(
-                    json_types::isg::ObjectiveDescriptorGatherXStars {
-                        description: value.description,
-                        description_raw: value.description_raw,
-                        components: data.components.into_iter().map(Component::into).collect(),
-                        is_static: value.is_static,
-                        exclude_from_upload: value.exclude_from_upload,
-                        stars_count: data.stars_count,
-                        ..Default::default()
-                    },
-                )
-            }
+            ObjectiveType::GatherXStars(data) => cooked::isg::ObjectiveDescriptor::GatherXStars(
+                cooked::isg::ObjectiveDescriptorGatherXStars {
+                    description: value.description,
+                    description_raw: value.description_raw,
+                    components: data.components.into_iter().map(Component::into).collect(),
+                    is_static: value.is_static,
+                    exclude_from_upload: value.exclude_from_upload,
+                    stars_count: data.stars_count,
+                    ..Default::default()
+                },
+            ),
             ObjectiveType::PlayDailyQuestsForXDays(data) => {
-                json_types::isg::ObjectiveDescriptor::PlayDailyQuestsForXDays(
-                    json_types::isg::ObjectiveDescriptorPlayDailyQuestsForXDays {
+                cooked::isg::ObjectiveDescriptor::PlayDailyQuestsForXDays(
+                    cooked::isg::ObjectiveDescriptorPlayDailyQuestsForXDays {
                         description: value.description,
                         description_raw: value.description_raw,
                         is_static: value.is_static,
@@ -284,8 +280,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                 )
             }
             ObjectiveType::PlayGachaXTimes(data) => {
-                json_types::isg::ObjectiveDescriptor::PlayGachaXTimes(
-                    json_types::isg::ObjectiveDescriptorPlayGachaXTimes {
+                cooked::isg::ObjectiveDescriptor::PlayGachaXTimes(
+                    cooked::isg::ObjectiveDescriptorPlayGachaXTimes {
                         description: value.description,
                         description_raw: value.description_raw,
                         components: data.components.into_iter().map(Component::into).collect(),
@@ -297,8 +293,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            ObjectiveType::PlayXMaps(data) => json_types::isg::ObjectiveDescriptor::PlayXMaps(
-                json_types::isg::ObjectiveDescriptorPlayXMaps {
+            ObjectiveType::PlayXMaps(data) => cooked::isg::ObjectiveDescriptor::PlayXMaps(
+                cooked::isg::ObjectiveDescriptorPlayXMaps {
                     description: value.description,
                     description_raw: value.description_raw,
                     components: data.components.into_iter().map(Component::into).collect(),
@@ -308,8 +304,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                     ..Default::default()
                 },
             ),
-            ObjectiveType::ReachRankX(data) => json_types::isg::ObjectiveDescriptor::ReachRankX(
-                json_types::isg::ObjectiveDescriptorReachRankX {
+            ObjectiveType::ReachRankX(data) => cooked::isg::ObjectiveDescriptor::ReachRankX(
+                cooked::isg::ObjectiveDescriptorReachRankX {
                     description: value.description,
                     description_raw: value.description_raw,
                     is_static: value.is_static,
@@ -319,8 +315,8 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                 },
             ),
             ObjectiveType::UnlockXPortraitBorders(data) => {
-                json_types::isg::ObjectiveDescriptor::UnlockXPortraitBorders(
-                    json_types::isg::ObjectiveDescriptorUnlockXPortraitBorders {
+                cooked::isg::ObjectiveDescriptor::UnlockXPortraitBorders(
+                    cooked::isg::ObjectiveDescriptorUnlockXPortraitBorders {
                         description: value.description,
                         description_raw: value.description_raw,
                         is_static: value.is_static,
@@ -330,9 +326,9 @@ impl<'a> From<Objective<'a>> for json_types::isg::ObjectiveDescriptor<'a> {
                     },
                 )
             }
-            _ => json_types::isg::ObjectiveDescriptor::SwitchSweatMode(
+            _ => cooked::isg::ObjectiveDescriptor::SwitchSweatMode(
                 // Convert all objectives that are impossible to do with the mod to sweat mode
-                json_types::isg::ObjectiveDescriptorBase {
+                cooked::isg::ObjectiveDescriptorBase {
                     description: value.description,
                     description_raw: value.description_raw,
                     is_static: value.is_static,
@@ -423,11 +419,11 @@ impl<'a> ObjectiveType<'a> {
     /// # Errors
     /// Will error of converting the descriptor fails
     pub fn from_descriptor(
-        descriptor: &json_types::isg::ObjectiveDescriptor<'a>,
+        descriptor: &cooked::isg::ObjectiveDescriptor<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Result<Self, Error> {
         match descriptor {
-            json_types::isg::ObjectiveDescriptor::AccumulateXCal(data) => {
+            cooked::isg::ObjectiveDescriptor::AccumulateXCal(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -438,7 +434,7 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::AccumulateXMoves(data) => {
+            cooked::isg::ObjectiveDescriptor::AccumulateXMoves(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -453,8 +449,8 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::ActivateCoopMode(_) => Ok(Self::ActivateCoopMode),
-            json_types::isg::ObjectiveDescriptor::AddXSongsToAPlaylist(data) => {
+            cooked::isg::ObjectiveDescriptor::ActivateCoopMode(_) => Ok(Self::ActivateCoopMode),
+            cooked::isg::ObjectiveDescriptor::AddXSongsToAPlaylist(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -464,8 +460,8 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::BeatWDFBoss(_) => Ok(Self::BeatWDFBoss),
-            json_types::isg::ObjectiveDescriptor::ChangeCustoItemXTimes(data) => {
+            cooked::isg::ObjectiveDescriptor::BeatWDFBoss(_) => Ok(Self::BeatWDFBoss),
+            cooked::isg::ObjectiveDescriptor::ChangeCustoItemXTimes(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -475,17 +471,17 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::CompleteXQuests(data) => {
+            cooked::isg::ObjectiveDescriptor::CompleteXQuests(data) => {
                 Ok(Self::CompleteXQuests(CompleteXQuests {
                     quests_count: data.quests_count,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::DanceXSeconds(data) => {
+            cooked::isg::ObjectiveDescriptor::DanceXSeconds(data) => {
                 Ok(Self::DanceXSeconds(DanceXSeconds {
                     dance_time: data.dance_time,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::FinishXPlaylist(data) => {
+            cooked::isg::ObjectiveDescriptor::FinishXPlaylist(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -495,7 +491,7 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::GatherXStars(data) => {
+            cooked::isg::ObjectiveDescriptor::GatherXStars(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -505,21 +501,19 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::LinkedToUplay(_) => Ok(Self::LinkedToUplay),
-            json_types::isg::ObjectiveDescriptor::OpenAnthologyMode(_) => {
-                Ok(Self::OpenAnthologyMode)
-            }
-            json_types::isg::ObjectiveDescriptor::OpenPostcardsGallery(_) => {
+            cooked::isg::ObjectiveDescriptor::LinkedToUplay(_) => Ok(Self::LinkedToUplay),
+            cooked::isg::ObjectiveDescriptor::OpenAnthologyMode(_) => Ok(Self::OpenAnthologyMode),
+            cooked::isg::ObjectiveDescriptor::OpenPostcardsGallery(_) => {
                 Ok(Self::OpenPostcardsGallery)
             }
-            json_types::isg::ObjectiveDescriptor::OpenStickerAlbum(_) => Ok(Self::OpenStickerAlbum),
-            json_types::isg::ObjectiveDescriptor::OpenVideoGallery(_) => Ok(Self::OpenVideoGallery),
-            json_types::isg::ObjectiveDescriptor::PlayDailyQuestsForXDays(data) => {
+            cooked::isg::ObjectiveDescriptor::OpenStickerAlbum(_) => Ok(Self::OpenStickerAlbum),
+            cooked::isg::ObjectiveDescriptor::OpenVideoGallery(_) => Ok(Self::OpenVideoGallery),
+            cooked::isg::ObjectiveDescriptor::PlayDailyQuestsForXDays(data) => {
                 Ok(Self::PlayDailyQuestsForXDays(PlayDailyQuestsForXDays {
                     consecutive_days: data.consecutive_days,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::PlayGachaXTimes(data) => {
+            cooked::isg::ObjectiveDescriptor::PlayGachaXTimes(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -530,13 +524,13 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::PlayPreviousJD(_) => Ok(Self::PlayPreviousJD),
-            json_types::isg::ObjectiveDescriptor::PlayWDFTournament(data) => {
+            cooked::isg::ObjectiveDescriptor::PlayPreviousJD(_) => Ok(Self::PlayPreviousJD),
+            cooked::isg::ObjectiveDescriptor::PlayWDFTournament(data) => {
                 Ok(Self::PlayWDFTournament(PlayWDFTournament {
                     tournament_count: data.tournament_count.unwrap_or(1),
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::PlayXMaps(data) => {
+            cooked::isg::ObjectiveDescriptor::PlayXMaps(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -546,7 +540,7 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::PlayXWDFTournamentRounds(data) => {
+            cooked::isg::ObjectiveDescriptor::PlayXWDFTournamentRounds(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -556,25 +550,25 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::ReachRankX(data) => {
+            cooked::isg::ObjectiveDescriptor::ReachRankX(data) => {
                 Ok(Self::ReachRankX(ReachRankX {
                     rank_to_reach: data.rank_to_reach,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::RenewJDUSub(_) => Ok(Self::RenewJDUSub),
-            json_types::isg::ObjectiveDescriptor::SwitchSweatMode(_) => Ok(Self::SwitchSweatMode),
-            json_types::isg::ObjectiveDescriptor::UnlockUplayRewardAliasPack1(_) => {
+            cooked::isg::ObjectiveDescriptor::RenewJDUSub(_) => Ok(Self::RenewJDUSub),
+            cooked::isg::ObjectiveDescriptor::SwitchSweatMode(_) => Ok(Self::SwitchSweatMode),
+            cooked::isg::ObjectiveDescriptor::UnlockUplayRewardAliasPack1(_) => {
                 Ok(Self::UnlockUplayRewardAliasPack1)
             }
-            json_types::isg::ObjectiveDescriptor::UnlockUplayRewardAliasPack2(_) => {
+            cooked::isg::ObjectiveDescriptor::UnlockUplayRewardAliasPack2(_) => {
                 Ok(Self::UnlockUplayRewardAliasPack2)
             }
-            json_types::isg::ObjectiveDescriptor::UnlockXPortraitBorders(data) => {
+            cooked::isg::ObjectiveDescriptor::UnlockXPortraitBorders(data) => {
                 Ok(Self::UnlockXPortraitBorders(UnlockXPortraitBorders {
                     portrait_border_count: data.portrait_border_count,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::UnlockXStickers(data) => {
+            cooked::isg::ObjectiveDescriptor::UnlockXStickers(data) => {
                 let mut components = Vec::with_capacity(data.components.len());
                 for component in &data.components {
                     components.push(Component::from_component(component, locale_id_map)?);
@@ -585,14 +579,14 @@ impl<'a> ObjectiveType<'a> {
                     components,
                 }))
             }
-            json_types::isg::ObjectiveDescriptor::WinWDFTeamBattle(_) => Ok(Self::WinWDFTeamBattle),
+            cooked::isg::ObjectiveDescriptor::WinWDFTeamBattle(_) => Ok(Self::WinWDFTeamBattle),
         }
     }
 
     /// Convert from the old UbiArt representation
     #[must_use]
     pub fn from_old_descriptor(
-        descriptor: &json_types::v1819::ObjectiveDesc1819<'a>,
+        descriptor: &shared_json_types::ObjectiveDesc<'a>,
         unlimited_only: bool,
     ) -> (Self, bool) {
         let mut components = if unlimited_only {
@@ -605,7 +599,7 @@ impl<'a> ObjectiveType<'a> {
         };
         match descriptor {
             #[allow(clippy::match_same_arms, reason = "The comments matter")]
-            json_types::v1819::ObjectiveDesc1819::Base(data) => match data.objective_type {
+            shared_json_types::ObjectiveDesc::Base(data) => match data.objective_type {
                 0 => {
                     components.push(Component {
                         c_type: ComponentType::MapLaunchLocationRequirement(
@@ -1120,7 +1114,7 @@ impl<'a> ObjectiveType<'a> {
                     (Self::SwitchSweatMode, true)
                 }
             },
-            json_types::v1819::ObjectiveDesc1819::MinStarsReachedSongCount(data) => {
+            shared_json_types::ObjectiveDesc::MinStarsReachedSongCount(data) => {
                 if data.objective_type != 18 {
                     println!("Warning!: ObjectiveDesc1819::MinStarsReachedSongCount does not have objective type 18");
                     println!("{data:?}");
@@ -1157,7 +1151,7 @@ impl<'a> ObjectiveType<'a> {
                     true,
                 )
             }
-            json_types::v1819::ObjectiveDesc1819::PlaySpecificMap(data) => {
+            shared_json_types::ObjectiveDesc::PlaySpecificMap(data) => {
                 if data.objective_type != 10 {
                     println!("Warning!: ObjectiveDesc1819::PlaySpecificMap does not have objective type 10");
                     println!("{data:?}");
@@ -1198,7 +1192,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1819::ObjectiveDesc1819::GatherStarsWDF(data) => {
+            shared_json_types::ObjectiveDesc::GatherStarsWDF(data) => {
                 if data.objective_type != 0 {
                     println!("Warning!: ObjectiveDesc1819::GatherStarsWDF does not have objective type 0");
                     println!("{data:?}");
@@ -1231,7 +1225,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1819::ObjectiveDesc1819::SweatSongCount(data) => {
+            shared_json_types::ObjectiveDesc::SweatSongCount(data) => {
                 if data.objective_type != 11 {
                     println!("Warning!: ObjectiveDesc1819::SweatSongCount does not have objective type 11");
                     println!("{data:?}");
@@ -1264,7 +1258,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1819::ObjectiveDesc1819::WDFSongCount(data) => {
+            shared_json_types::ObjectiveDesc::WDFSongCount(data) => {
                 if data.objective_type != 11 {
                     println!(
                         "Warning!: ObjectiveDesc1819::WDFSongCount does not have objective type 11"
@@ -1299,7 +1293,7 @@ impl<'a> ObjectiveType<'a> {
                     false,
                 )
             }
-            json_types::v1819::ObjectiveDesc1819::RecommendSongCount(data) => {
+            shared_json_types::ObjectiveDesc::RecommendSongCount(data) => {
                 // Recommend songs don't exist anymore as objective type, so changed to quickplay songs
                 if data.objective_type != 19 {
                     println!("Warning!: ObjectiveDesc1819::RecommendSongCount does not have objective type 19");
@@ -1322,7 +1316,7 @@ impl<'a> ObjectiveType<'a> {
                     true,
                 )
             }
-            json_types::v1819::ObjectiveDesc1819::ClassicTournamentRank(data) => {
+            shared_json_types::ObjectiveDesc::ClassicTournamentRank(data) => {
                 // Classic Tournament doesn't exist anymore so map to regular rank
                 if data.objective_type != 54 {
                     println!("Warning!: ObjectiveDesc1819::ClassicTournamentRank does not have objective type 54");
@@ -1560,11 +1554,11 @@ impl<'a> Component<'a> {
     /// # Errors
     /// Will error if the component has invalid values
     pub fn from_component(
-        component: &json_types::isg::ObjectiveDescriptorComponent<'a>,
+        component: &cooked::isg::ObjectiveDescriptorComponent<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Result<Self, Error> {
         let c_type = match component {
-            json_types::isg::ObjectiveDescriptorComponent::CustoItemTypeRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::CustoItemTypeRequirement(data) => {
                 let mut acceptable_custo_item_types =
                     Vec::with_capacity(data.acceptable_custo_item_types.len());
                 for item in &data.acceptable_custo_item_types {
@@ -1574,7 +1568,7 @@ impl<'a> Component<'a> {
                     acceptable_custo_item_types,
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::GachaItemTypeRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::GachaItemTypeRequirement(data) => {
                 let mut acceptable_gacha_item_types =
                     Vec::with_capacity(data.acceptable_gacha_item_types.len());
                 for item in &data.acceptable_gacha_item_types {
@@ -1584,7 +1578,7 @@ impl<'a> Component<'a> {
                     acceptable_gacha_item_types,
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::MapCoachCountRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::MapCoachCountRequirement(data) => {
                 let mut acceptable_coach_counts =
                     Vec::with_capacity(data.acceptable_coach_counts.len());
                 for item in &data.acceptable_coach_counts {
@@ -1594,7 +1588,7 @@ impl<'a> Component<'a> {
                     acceptable_coach_counts,
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(data) => {
                 let mut acceptable_launch_contexts =
                     Vec::with_capacity(data.acceptable_launch_contexts.len());
                 for item in &data.acceptable_launch_contexts {
@@ -1610,7 +1604,7 @@ impl<'a> Component<'a> {
                     acceptable_launch_subcontexts,
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::MapMovesRequirement(data) => {
                 let mut acceptable_categories =
                     Vec::with_capacity(data.acceptable_categories.len());
                 for cat in &data.acceptable_categories {
@@ -1651,12 +1645,12 @@ impl<'a> Component<'a> {
                     return Err(anyhow!("MapMovesRequirement options are all false!"));
                 }
             }
-            json_types::isg::ObjectiveDescriptorComponent::MapNameRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::MapNameRequirement(data) => {
                 ComponentType::MapNameRequirement(MapNameRequirement {
                     acceptable_map_names: data.acceptable_map_names.clone(),
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::MapPlaymodeRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::MapPlaymodeRequirement(data) => {
                 ComponentType::MapPlaymodeRequirement(MapPlaymodeRequirement {
                     classic: data.classic,
                     coop: data.coop,
@@ -1667,13 +1661,13 @@ impl<'a> Component<'a> {
                     anthology: data.anthology.unwrap_or_default(),
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::MapScoreRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::MapScoreRequirement(data) => {
                 ComponentType::MapScoreRequirement(MapScoreRequirement {
                     score: data.score,
                     better_than_dancer_of_the_week: data.better_than_dancer_of_the_week,
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::MapTagsRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::MapTagsRequirement(data) => {
                 let mut acceptable_map_tags = Vec::with_capacity(data.acceptable_map_tags.len());
                 for item in &data.acceptable_map_tags {
                     acceptable_map_tags.push(Tag::try_from(item.as_ref())?);
@@ -1688,18 +1682,16 @@ impl<'a> Component<'a> {
                     unacceptable_map_tags,
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::OnlyOnline(_) => {
-                ComponentType::OnlyOnline
-            }
-            json_types::isg::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(_) => {
+            cooked::isg::ObjectiveDescriptorComponent::OnlyOnline(_) => ComponentType::OnlyOnline,
+            cooked::isg::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(_) => {
                 ComponentType::OnlyOnUnlimitedSongs
             }
-            json_types::isg::ObjectiveDescriptorComponent::PlaylistIdRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::PlaylistIdRequirement(data) => {
                 ComponentType::PlaylistIdRequirement(PlaylistIdRequirement {
                     acceptable_playlist_ids: data.acceptable_playlist_ids.clone(),
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::ScoringModeRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::ScoringModeRequirement(data) => {
                 let mut acceptable_scoring_modes =
                     Vec::with_capacity(data.acceptable_scoring_modes.len());
                 for item in &data.acceptable_scoring_modes {
@@ -1709,7 +1701,7 @@ impl<'a> Component<'a> {
                     acceptable_scoring_modes,
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::SearchLabelsRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::SearchLabelsRequirement(data) => {
                 ComponentType::SearchLabelsRequirement(SearchLabelsRequirement {
                     acceptable_labels: data
                         .acceptable_label_loc_ids
@@ -1723,7 +1715,7 @@ impl<'a> Component<'a> {
                         .collect(),
                 })
             }
-            json_types::isg::ObjectiveDescriptorComponent::StickerIdRequirement(data) => {
+            cooked::isg::ObjectiveDescriptorComponent::StickerIdRequirement(data) => {
                 ComponentType::StickerIdRequirement(StickerIdRequirement {
                     acceptable_sticker_ids: data.acceptable_sticker_ids.clone(),
                 })
@@ -1736,12 +1728,12 @@ impl<'a> Component<'a> {
     }
 }
 
-impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'a> {
+impl<'a> From<Component<'a>> for cooked::isg::ObjectiveDescriptorComponent<'a> {
     fn from(value: Component<'a>) -> Self {
         match value.c_type {
             ComponentType::CustoItemTypeRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::CustoItemTypeRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentCustoItemTypeRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::CustoItemTypeRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentCustoItemTypeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_custo_item_types: data
@@ -1754,8 +1746,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::GachaItemTypeRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::GachaItemTypeRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentGachaItemTypeRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::GachaItemTypeRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentGachaItemTypeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_gacha_item_types: data
@@ -1768,8 +1760,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapCoachCountRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapCoachCountRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapCoachCountRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapCoachCountRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapCoachCountRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_coach_counts: data
@@ -1782,8 +1774,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapLaunchLocationRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapLaunchLocationRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapLaunchLocationRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapLaunchLocationRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_launch_contexts: data
@@ -1802,8 +1794,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapNameRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapNameRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapNameRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapNameRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapNameRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_map_names: data.acceptable_map_names,
@@ -1811,8 +1803,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapPlaymodeRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapPlaymodeRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapPlaymodeRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapPlaymodeRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapPlaymodeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         classic: data.classic,
@@ -1826,8 +1818,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapScoreRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapScoreRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapScoreRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapScoreRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapScoreRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         score: data.score,
@@ -1836,8 +1828,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapTagsRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapTagsRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapTagsRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapTagsRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapTagsRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_map_tags: data
@@ -1855,23 +1847,23 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                     },
                 )
             }
-            ComponentType::OnlyOnline => json_types::isg::ObjectiveDescriptorComponent::OnlyOnline(
-                json_types::isg::ObjectiveDescriptorComponentBase {
+            ComponentType::OnlyOnline => cooked::isg::ObjectiveDescriptorComponent::OnlyOnline(
+                cooked::isg::ObjectiveDescriptorComponentBase {
                     class: None,
                     only_diff_values: value.only_diff_values,
                 },
             ),
             ComponentType::OnlyOnUnlimitedSongs => {
-                json_types::isg::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(
-                    json_types::isg::ObjectiveDescriptorComponentBase {
+                cooked::isg::ObjectiveDescriptorComponent::OnlyOnUnlimitedSongs(
+                    cooked::isg::ObjectiveDescriptorComponentBase {
                         class: None,
                         only_diff_values: value.only_diff_values,
                     },
                 )
             }
             ComponentType::PlaylistIdRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::PlaylistIdRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentPlaylistIdRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::PlaylistIdRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentPlaylistIdRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_playlist_ids: data.acceptable_playlist_ids,
@@ -1879,8 +1871,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::ScoringModeRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::ScoringModeRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentScoringModeRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::ScoringModeRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentScoringModeRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_scoring_modes: data
@@ -1893,8 +1885,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::SearchLabelsRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::SearchLabelsRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentSearchLabelsRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::SearchLabelsRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentSearchLabelsRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_label_loc_ids: data.acceptable_labels,
@@ -1903,8 +1895,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::StickerIdRequirement(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::StickerIdRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentStickerIdRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::StickerIdRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentStickerIdRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         acceptable_sticker_ids: data.acceptable_sticker_ids,
@@ -1912,8 +1904,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapRequireAllMoves(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapMovesRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapMovesRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         exact_moves_count: u32::MAX,
@@ -1932,8 +1924,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapRequireLastMove(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapMovesRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapMovesRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         exact_moves_count: 1,
@@ -1952,8 +1944,8 @@ impl<'a> From<Component<'a>> for json_types::isg::ObjectiveDescriptorComponent<'
                 )
             }
             ComponentType::MapRequireXMovesInARow(data) => {
-                json_types::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
-                    json_types::isg::ObjectiveDescriptorComponentMapMovesRequirement {
+                cooked::isg::ObjectiveDescriptorComponent::MapMovesRequirement(
+                    cooked::isg::ObjectiveDescriptorComponentMapMovesRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
                         exact_moves_count: u32::MAX,

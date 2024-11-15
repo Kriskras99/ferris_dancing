@@ -5,7 +5,7 @@ use std::path::Path;
 use anyhow::{anyhow, Error};
 use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::json_types;
+use ubiart_toolkit::cooked;
 
 use crate::types::{localisation::LocaleId, ImportState};
 
@@ -31,7 +31,7 @@ impl<'a> Playlist<'a> {
     /// Will error if the parsing of the filename fails or if the game is not supported
     pub fn from_offline_playlist(
         is: &ImportState<'_>,
-        offline_playlist: &json_types::isg::OfflinePlaylist<'a>,
+        offline_playlist: &cooked::json::OfflinePlaylist<'a>,
     ) -> Result<Self, Error> {
         let file_stem = AsRef::<Path>::as_ref(offline_playlist.cover_path.as_str())
             .file_stem()
@@ -96,13 +96,13 @@ impl<'a> Playlist<'a> {
     ///
     /// # Errors
     /// Will error if parsing the filename fails
-    pub fn into_offline_playlist(self) -> Result<json_types::isg::OfflinePlaylist<'a>, Error> {
+    pub fn into_offline_playlist(self) -> Result<cooked::json::OfflinePlaylist<'a>, Error> {
         let file_stem = AsRef::<Path>::as_ref(self.cover.as_str())
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
             .ok_or_else(|| anyhow!("Failure parsing filename!"))?;
-        Ok(json_types::isg::OfflinePlaylist {
-            class: Some(json_types::isg::OfflinePlaylist::CLASS),
+        Ok(cooked::json::OfflinePlaylist {
+            class: Some(cooked::json::OfflinePlaylist::CLASS),
             title_id: self.title,
             description_id: self.description,
             cover_path: HipStr::from(format!(

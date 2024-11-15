@@ -8,7 +8,7 @@ use std::{
 use hipstr::HipStr;
 use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
-use ubiart_toolkit::json_types;
+use ubiart_toolkit::cooked;
 
 use super::objectives::{Objective, Objectives};
 use crate::types::localisation::LocaleIdMap;
@@ -79,8 +79,8 @@ fn generate_quest_id() -> u32 {
     id
 }
 
-impl<'a> From<json_types::isg::ScheduledQuestDesc<'a>> for QuestDescription<'a> {
-    fn from(value: json_types::isg::ScheduledQuestDesc<'a>) -> Self {
+impl<'a> From<cooked::isg::ScheduledQuestDesc<'a>> for QuestDescription<'a> {
+    fn from(value: cooked::isg::ScheduledQuestDesc<'a>) -> Self {
         Self {
             quest_type: value.type_it,
             mojo_reward: value.mojo_reward,
@@ -93,10 +93,10 @@ impl<'a> From<json_types::isg::ScheduledQuestDesc<'a>> for QuestDescription<'a> 
     }
 }
 
-impl<'a> From<QuestDescription<'a>> for json_types::isg::ScheduledQuestDesc<'a> {
+impl<'a> From<QuestDescription<'a>> for cooked::isg::ScheduledQuestDesc<'a> {
     fn from(value: QuestDescription<'a>) -> Self {
-        json_types::isg::ScheduledQuestDesc {
-            class: Some(json_types::isg::ScheduledQuestDesc::CLASS),
+        cooked::isg::ScheduledQuestDesc {
+            class: Some(cooked::isg::ScheduledQuestDesc::CLASS),
             id: generate_quest_id(),
             type_it: value.quest_type,
             unlimited_only: value.unlimited_only,
@@ -112,7 +112,7 @@ impl<'a> From<QuestDescription<'a>> for json_types::isg::ScheduledQuestDesc<'a> 
 impl<'a> QuestDescription<'a> {
     /// Convert an old quest description into the modern format
     pub fn from_scheduled_quest_desc_1819(
-        description: json_types::v1819::ScheduledQuestDesc1819<'a>,
+        description: cooked::isg::ScheduledQuestDesc1819<'a>,
         objectives: &mut Objectives<'a>,
         locale_id_map: &LocaleIdMap,
     ) -> Self {
