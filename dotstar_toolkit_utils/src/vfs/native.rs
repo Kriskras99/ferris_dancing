@@ -30,7 +30,9 @@ impl NativeFs {
     /// Will error if `root` does not exist
     pub fn new(root: &Path) -> Result<Self> {
         Ok(Self {
-            root: root.canonicalize()?,
+            root: root
+                .canonicalize()
+                .map_err(|e| Error::new(e.kind(), format!("{}, {e:?}", root.display())))?,
             cache: Mutex::new(HashMap::new()),
             list: OnceLock::new(),
         })

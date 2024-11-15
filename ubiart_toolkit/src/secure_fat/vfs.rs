@@ -1,7 +1,10 @@
 //! A [`VirtualFileSystem`] implementation for [`SecureFat`]
 //!
 //! It will load the secure_fat.gf file and any IPK bundles listed therein plus the patch file.
-use std::{collections::HashMap, io::ErrorKind};
+use std::{
+    collections::HashMap,
+    io::{Error, ErrorKind},
+};
 
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserializeExt as _,
@@ -80,7 +83,7 @@ impl<'f> SfatFilesystem<'f> {
         let mut bundles = HashMap::with_capacity(sfat.bundle_count());
         let parent = path
             .parent()
-            .ok_or_else(|| std::io::Error::from(ErrorKind::InvalidData))?;
+            .ok_or_else(|| std::io::Error::other(format!("Can't find parent for {path}")))?;
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             let filename = super::bundle_name_to_filename(name, sfat.game_platform());
             let path = Self::exist_or_find_lowercase(fs, parent.with_file_name(&filename))?;
@@ -119,16 +122,17 @@ impl<'f> SfatFilesystem<'f> {
         } else {
             let parent = path
                 .parent()
-                .ok_or_else(|| std::io::Error::other("File should have a parent!"))?;
+                .ok_or_else(|| Error::other(format!("File should have a parent!: {path}")))?;
             let path_lower = path.as_str().to_lowercase();
             let mut candidates: Vec<_> = fs
-                .read_dir(parent)?
+                .read_dir(parent)
+                .map_err(|e| Error::new(e.kind(), format!("Failed to read {parent}: {e}")))?
                 .filter(|p| p.as_str().to_lowercase() == path_lower)
                 .collect();
             if candidates.len() > 1 {
-                Err(std::io::Error::other(format!("Found more than one candidate for lowercase version of '{path}': {candidates:?} ")))
+                Err(Error::other(format!("Found more than one candidate for lowercase version of '{path}': {candidates:?} ")))
             } else if candidates.is_empty() {
-                Err(std::io::Error::new(
+                Err(Error::new(
                     ErrorKind::NotFound,
                     format!("Could not find '{path}', nor the lowercase version"),
                 ))

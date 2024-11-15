@@ -1,4 +1,7 @@
-#![allow(clippy::struct_excessive_bools, reason = "Format is dictated by the engine")]
+#![allow(
+    clippy::struct_excessive_bools,
+    reason = "Format is dictated by the engine"
+)]
 mod writer;
 
 use std::collections::HashMap;

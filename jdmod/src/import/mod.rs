@@ -3,7 +3,6 @@
 use std::{
     cmp::Ordering,
     num::NonZeroUsize,
-    ops::Deref,
     path::{Path, PathBuf},
 };
 
@@ -195,35 +194,45 @@ fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool) ->
 
 /// Import a song from songdesc.tpl.ckd
 fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree) -> Result<(), Error> {
-    trace!("Found songdesc.tpl.ckd");
-    let platform = game_path.parent() // mapname
-        .and_then(Path::parent) // maps
-        .and_then(Path::parent) // world
+    let mapname = game_path
+        .parent()
+        .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?; // mapname
+    let maps_folder = mapname
+        .parent()
+        .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?; // maps
+    let platform = maps_folder.parent() // world
         .and_then(Path::parent) // nx
         .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
     let root = platform.parent() // itf_cooked
         .and_then(Path::parent) // cache
         .and_then(Path::parent) // root
         .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
-    let platform = platform
+
+    let mapname = mapname
         .file_name()
-        .ok_or_else(|| anyhow!("No platform name found for {}!", game_path.display()))?;
-    let platform = platform.to_string_lossy();
-    let platform = match platform.deref() {
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| anyhow!("Invalid map name in path: {}", game_path.display()))?;
+    let maps_folder = maps_folder
+        .file_name()
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| anyhow!("Invalid maps folder in path: {}", game_path.display()))?;
+    let platform = match platform
+        .file_name()
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| anyhow!("Invalid platform name in path: {}", game_path.display()))?
+    {
         "nx" => Platform::Nx,
         "wiiu" => Platform::WiiU,
-        _ => bail!("Unsupported platform {}", platform),
+        platform => bail!("Unsupported platform {platform}"),
     };
+
     // Init the native filesystem
     let native_vfs = NativeFs::new(root)?;
     let case_insenstive_vfs = CaseInsensitiveFs::new(&native_vfs)?;
 
     trace!("Root: {root:?}, Game path: {game_path:?}");
-    let new_path = game_path
-        .strip_prefix(root)?
-        .to_str()
-        .ok_or_else(|| anyhow!("Invalid path!: {}", game_path.display()))?;
-    let new_path = &new_path[20..new_path.len() - 4];
+
+    let new_path = format!("world/{maps_folder}/{mapname}/songdesc.tpl");
 
     trace!("New path: {new_path}");
 
@@ -244,7 +253,7 @@ fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree) -> Result<(), Erro
         n_threads: NonZeroUsize::new(1),
     };
 
-    song::import(&is, new_path)?;
+    song::import(&is, &new_path)?;
     Ok(())
 }
 
@@ -264,15 +273,17 @@ fn import_gameconfig(
         .and_then(Path::parent) // cache
         .and_then(Path::parent) // root
         .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
-    let platform = platform
+
+    let platform = match platform
         .file_name()
-        .ok_or_else(|| anyhow!("No platform name found for {}!", game_path.display()))?;
-    let platform = platform.to_string_lossy();
-    let platform = match platform.deref() {
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| anyhow!("Invalid platform name in path: {}", game_path.display()))?
+    {
         "nx" => Platform::Nx,
         "wiiu" => Platform::WiiU,
-        _ => bail!("Unsupported platform {}", platform),
+        platform => bail!("Unsupported platform {platform}"),
     };
+
     // Init the native filesystem
     let native_vfs = NativeFs::new(root)?;
     let case_insenstive_vfs = CaseInsensitiveFs::new(&native_vfs)?;
@@ -282,11 +293,15 @@ fn import_gameconfig(
     let game = if let Some(game) = game {
         game
     } else {
-        let new_path = game_path
-            .strip_prefix(root)?
-            .to_str()
-            .ok_or_else(|| anyhow!("Invalid path!: {}", game_path.display()))?;
-        let gameconfig_file = case_insenstive_vfs.open(VirtualPath::new(new_path))?;
+        let new_path = cook_path(
+            "enginedata/gameconfig/enginedata.isg",
+            UniqueGameId {
+                platform,
+                game: Game::JustDance2022,
+                id: 0,
+            },
+        )?;
+        let gameconfig_file = case_insenstive_vfs.open(VirtualPath::new(&new_path))?;
         if cooked::isg::parse::<GameManagerConfigV22>(&gameconfig_file, true).is_ok() {
             Game::JustDance2022
         } else if cooked::isg::parse::<GameManagerConfigV21>(&gameconfig_file, true).is_ok() {

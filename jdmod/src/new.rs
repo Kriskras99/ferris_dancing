@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, Context, Error};
 use clap::Args;
 use dotstar_toolkit_utils::vfs::{native::NativeFs, VirtualPathBuf};
 use tracing::instrument;
@@ -54,7 +54,13 @@ pub fn new(
 ) -> Result<(), Error> {
     // Check that the target directory either doesn't exist yet or is empty
     // We do not want to potentially override existing files and/or directories
-    if dir_root.exists() && dir_root.read_dir()?.next().is_some() {
+    if dir_root.exists()
+        && dir_root
+            .read_dir()
+            .with_context(|| format!("{}", dir_root.display()))?
+            .next()
+            .is_some()
+    {
         return Err(anyhow!("{dir_root:?} exists and is not empty!"));
     }
 
