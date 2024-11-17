@@ -583,6 +583,28 @@ impl From<&ubiart_toolkit::utils::Color> for Color {
     }
 }
 
+impl From<&str> for Color {
+    fn from(value: &str) -> Self {
+        Self {
+            transparency: u8::from_str_radix(&value[2..4], 16).unwrap_or(255),
+            red: u8::from_str_radix(&value[4..6], 16).unwrap_or(255),
+            green: u8::from_str_radix(&value[6..8], 16).unwrap_or(255),
+            blue: u8::from_str_radix(&value[8..10], 16).unwrap_or(255),
+        }
+    }
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        Self {
+            transparency: 255,
+            red: 255,
+            green: 255,
+            blue: 255,
+        }
+    }
+}
+
 /// Map a `value` in range `min` to `max` to a u8
 ///
 /// # Panics
@@ -648,6 +670,26 @@ impl From<&cooked::tpl::types::DefaultColors> for SongColors {
             one_b: value.songcolor_1b.as_ref().unwrap_or(&value.theme).into(),
             two_a: value.songcolor_2a.as_ref().unwrap_or(&value.theme).into(),
             two_b: value.songcolor_2b.as_ref().unwrap_or(&value.theme).into(),
+        }
+    }
+}
+
+impl From<&HashMap<HipStr<'_>, HipStr<'_>>> for SongColors {
+    fn from(value: &HashMap<HipStr<'_>, HipStr<'_>>) -> Self {
+        let theme = value.get("theme").map(|s| Color::from(s.as_str())).unwrap_or_default();
+        let lyrics = value.get("lyrics").map(|s| Color::from(s.as_str())).unwrap_or_default();
+        let one_a = value.get("songColor_1A").map(|s| Color::from(s.as_str())).unwrap_or_default();
+        let one_b = value.get("songColor_1B").map(|s| Color::from(s.as_str())).unwrap_or_default();
+        let two_a = value.get("songColor_2A").map(|s| Color::from(s.as_str())).unwrap_or_default();
+        let two_b = value.get("songColor_2B").map(|s| Color::from(s.as_str())).unwrap_or_default();
+
+        Self {
+            theme,
+            lyrics,
+            one_a,
+            one_b,
+            two_a,
+            two_b,
         }
     }
 }
@@ -796,11 +838,11 @@ pub struct MusicTrack {
     /// Start of the video
     pub video_start_time: f32,
     /// Unknown
-    pub preview_entry: f32,
+    pub preview_entry: u32,
     /// Preview audio track start
-    pub preview_loop_start: f32,
+    pub preview_loop_start: u32,
     /// Preview audio track end
-    pub preview_loop_end: f32,
+    pub preview_loop_end: u32,
     /// Unknown
     pub signatures: Vec<Signature>,
     /// Unknown

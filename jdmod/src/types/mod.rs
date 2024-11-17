@@ -10,7 +10,7 @@ use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPath, VirtualPathBuf}
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{alias8::Alias8, utils::UniqueGameId};
-
+use crate::import::TranscodeSettings;
 use self::localisation::LocaleIdMap;
 
 pub mod gameconfig;
@@ -44,6 +44,8 @@ pub struct ImportState<'a> {
     pub lax: bool,
     /// How many threads to use when importing songs
     pub n_threads: Option<NonZeroUsize>,
+    /// Settings for transcoding
+    pub transcode: TranscodeSettings,
 }
 
 /// The directory tree of a mod

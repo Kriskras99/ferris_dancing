@@ -21,6 +21,7 @@ use crate::{
     import,
     types::{Config, DirectoryTree},
 };
+use crate::import::TranscodeSettings;
 
 /// Create a new mod at <mod_path> using <sfat_path> as a base
 #[derive(Args, Clone)]
@@ -137,6 +138,7 @@ pub fn new(
         false,
         false,
         n_threads,
+        TranscodeSettings::default(), // NX2022 does not need transcoding
     )?;
 
     Ok(())

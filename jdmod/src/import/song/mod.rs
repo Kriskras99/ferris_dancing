@@ -25,6 +25,7 @@ use crate::{
     },
     utils::cook_path,
 };
+use crate::import::TranscodeSettings;
 
 /// State that is used a lot during the import
 pub struct SongImportState<'a> {
@@ -42,6 +43,8 @@ pub struct SongImportState<'a> {
     pub lax: bool,
     /// Mapping of game locale id to mod locale id
     pub locale_id_map: &'a LocaleIdMap,
+    /// Settings for transcoding
+    pub transcode: TranscodeSettings,
 }
 
 /// Import the song described at `songdesc_path``
@@ -90,6 +93,7 @@ pub fn import(is: &ImportState<'_>, songdesc_path: &str) -> Result<(), Error> {
         ugi: is.ugi,
         lax: is.lax,
         locale_id_map: &is.locale_id_map,
+        transcode: is.transcode,
     };
 
     match actual_import(&sis, songdesc) {

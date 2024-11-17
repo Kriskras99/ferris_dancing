@@ -16,7 +16,7 @@ members = [
     "ubiart_toolkit",
     "wii_toolkit",
     "xtx",
-#    "bluestar_toolkit",
+    "bluestar_toolkit",
 ]
 
 resolver = "2"
@@ -177,12 +177,14 @@ arbitrary = { version = "1.4.1", default-features = false, features = ["derive"]
 bindgen = { version = "0.70.1", default-features = false}
 bitflags = { version = "2.6.0", default-features = false, features = ["std"] }
 bit-vec = { version = "0.8.0", default-features = false }
+bluestar_toolkit = { path = "bluestar_toolkit" }
 cbc = { version = "0.1.2", default-features = false, features = ["std", "block-padding"] }
 cipher = { version = "0.4.4", default-features = false, features = ["std"] }
 clap = { version = "4.5.21", default-features = false, features = ["std", "help", "usage", "suggestions", "derive"] }
 crossbeam = { version = "0.8.4", default-features = false, features = ["std", "crossbeam-channel"] }
 datatest-stable = { version = "0.2.9", default-features = false }
 dotstar_toolkit_utils = { path = "dotstar_toolkit_utils" }
+ffmpeg-sidecar = { version = "2.0.2", default-features = false, features = ["download_ffmpeg"] }
 flate2 = { version = "1.0.35", default-features = false, features = ["rust_backend"] }
 gc_adpcm = { version = "0.2.0", default-features = false, features = ["std"] }
 gtx = { path = "gtx" }
@@ -214,6 +216,7 @@ simdutf8 = { version = "0.1.5", default-features = false, features = ["std", "aa
 stable_deref_trait = { version = "1.2.0", default-features = false, features = ["std"] }
 superstruct = { path = "superstruct", version = "0.8.0", default-features = false, features = [] }
 tegra_swizzle = { version = "0.4.0", default-features = false, features = ["std"]}
+tempfile = { version = "3.14.0", default-features = false, features = []}
 test_eq = { version = "0.1.1", default-features = true }
 texpresso = { version = "2.0.1", default-features = false }
 thiserror = { version = "2.0.3", default-features = false, features = ["std"] }
