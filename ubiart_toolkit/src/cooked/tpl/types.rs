@@ -806,9 +806,16 @@ pub struct Country<'a> {
     pub country_name: HipStr<'a>,
 }
 
+const fn theme_default() -> Color {
+    Color {
+        color: (1.0, 1.0, 1.0, 1.0),
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DefaultColors {
+    #[serde(default = "theme_default")]
     pub theme: Color,
     pub lyrics: Color,
     #[serde(alias = "songColor_1A", skip_serializing_if = "Option::is_none")]
@@ -1017,9 +1024,9 @@ pub struct MusicTrackStructure<'a> {
     #[serde(default)]
     pub use_fade_end_beat: bool,
     pub video_start_time: f32,
-    pub preview_entry: f32,
-    pub preview_loop_start: f32,
-    pub preview_loop_end: f32,
+    pub preview_entry: u32,
+    pub preview_loop_start: u32,
+    pub preview_loop_end: u32,
     pub volume: f32,
     #[serde(default)]
     pub fade_in_duration: u32,

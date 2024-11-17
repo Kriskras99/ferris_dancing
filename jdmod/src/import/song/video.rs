@@ -4,7 +4,7 @@ use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, utils::Game};
-
+use crate::utils::transcode_replace;
 use super::SongImportState;
 
 /// Imports the video of the song
@@ -20,7 +20,7 @@ pub fn import(
 
     let filename = "main_video.webm";
     let to_path = sis.dirs.song().join(filename);
-    let mut to = File::create(to_path)?;
+    let mut to = File::create(&to_path)?;
 
     let video_path = pleo.video.as_str();
 
@@ -38,8 +38,11 @@ pub fn import(
         to.write_all(&sis.vfs.open(video_path.as_ref())?)?;
     }
 
+    to.flush()?;
+
     if sis.ugi.game <= Game::JustDance2015 {
-        println!("Warning: Video for {} needs to be transcoded", sis.map_name);
+        println!("Transcoding video for {}", sis.map_name);
+        transcode_replace(&to_path, sis.transcode)?;
     }
 
     Ok(filename)

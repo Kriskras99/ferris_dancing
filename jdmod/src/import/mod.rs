@@ -5,7 +5,7 @@ use std::{
     num::NonZeroUsize,
     path::{Path, PathBuf},
 };
-
+use std::ffi::OsStr;
 use anyhow::{anyhow, bail, Error};
 use clap::Args;
 use dotstar_toolkit_utils::{
@@ -17,6 +17,7 @@ use dotstar_toolkit_utils::{
 };
 use hipstr::HipStr;
 use tracing::trace;
+use bluestar_toolkit;
 use ubiart_toolkit::{
     alias8::Alias8,
     cooked,
@@ -34,7 +35,6 @@ use crate::{
 };
 
 mod gameconfig;
-#[cfg(feature = "experimental")]
 mod jdnow;
 mod localisation;
 mod song;
@@ -60,6 +60,33 @@ pub struct Import {
     /// Use n threads for importing songs
     #[arg(long)]
     threads: Option<NonZeroUsize>,
+    /// Transcode options
+    #[clap(flatten)]
+    transcode: TranscodeSettings,
+}
+
+/// Settings for the FFMPEG transcoding
+#[derive(Args, Clone, Copy, Debug)]
+pub struct TranscodeSettings {
+    /// The quality setting for transcoding, lower is better
+    #[clap(long, default_value_t = 32)]
+    pub crf: u32,
+    /// Use two-pass encoding for transcoding, gives better quality
+    #[clap(long)]
+    pub one_pass: bool,
+    /// Disable transcoding, will just copy the video
+    #[clap(long)]
+    pub disable: bool,
+}
+
+impl Default for TranscodeSettings {
+    fn default() -> Self {
+        Self {
+            crf: 32,
+            one_pass: true,
+            disable: false,
+        }
+    }
 }
 
 /// Wrapper around [`import`]
@@ -71,6 +98,7 @@ pub fn main(cli: &Import) -> Result<(), Error> {
         cli.songs,
         cli.game,
         cli.threads,
+        cli.transcode
     )
 }
 
@@ -83,17 +111,39 @@ pub fn import(
     songs_only: bool,
     game: Option<Game>,
     n_threads: Option<NonZeroUsize>,
+    transcode: TranscodeSettings,
 ) -> Result<(), Error> {
     // Check the directory structure
     let dir_tree = DirectoryTree::new(dir_root);
     if !dir_tree.exists() {
-        return Err(anyhow!(
-            "Mod directory does not exist or is missing vital subdirectories!"
-        ));
+        bail!("Mod directory does not exist or is missing vital subdirectories!");
     }
 
     if game_path.ends_with("secure_fat.gf") {
-        import_sfat(game_path, dir_tree, lax, songs_only, n_threads)?;
+        import_sfat(game_path, dir_tree, lax, songs_only, n_threads, transcode)?;
+    } else if game_path.ends_with("dlcdescriptor.ckd") {
+        import_dlcdescriptor(game_path, dir_tree, lax, transcode)?;
+    } else if game_path.ends_with("songdesc.tpl.ckd") {
+        import_songdesc(game_path, dir_tree, transcode)?;
+    } else if game_path.extension() == Some(OsStr::new("json")) {
+        let json_file = std::fs::read(&game_path)?;
+        if let Ok(basic) = serde_json::from_slice::<'_, bluestar_toolkit::Song>(&json_file) {
+            let song_name = basic.name;
+
+            import_jdnow_song(&game_path, &dir_tree, &song_name, transcode)?;
+        } else if let Ok(songs) = serde_json::from_slice::<'_, Vec<bluestar_toolkit::Song>>(&json_file) {
+            for song in songs {
+                let song_name = song.name;
+                let path = game_path.parent().ok_or_else(|| anyhow!("Invalid game path"))?.join(format!("songs/{song_name}/{song_name}.extra.json"));
+                import_jdnow_song(&path, &dir_tree, &song_name, transcode)?;
+            }
+        } else if let Ok(extra) = serde_json::from_slice::<'_, bluestar_toolkit::SongDetails>(&json_file) {
+            let song_name = extra.map_name;
+
+            import_jdnow_song(&game_path, &dir_tree, &song_name, transcode)?;
+        } else {
+            bail!("Unsupported JSON file format!");
+        };
     } else if game_path.is_dir() {
         let mut sources = Vec::new();
         find_sources(game_path, &mut sources)?;
@@ -108,24 +158,35 @@ pub fn import(
 
         for source in sources {
             match source {
-                Source::Dlc(path) => import_dlcdescriptor(&path, dir_tree.clone(), lax)?,
+                Source::Dlc(path) => import_dlcdescriptor(&path, dir_tree.clone(), lax, transcode)?,
                 Source::Sfat(path) => {
-                    import_sfat(&path, dir_tree.clone(), lax, songs_only, n_threads)?;
+                    import_sfat(&path, dir_tree.clone(), lax, songs_only, n_threads, transcode)?;
                 }
                 Source::GameConfig(path) => {
-                    import_gameconfig(&path, dir_tree.clone(), game, songs_only, n_threads)?;
+                    import_gameconfig(&path, dir_tree.clone(), game, songs_only, n_threads, transcode)?;
                 }
-                Source::SongDesc(path) => import_songdesc(&path, dir_tree.clone())?,
+                Source::SongDesc(path) => import_songdesc(&path, dir_tree.clone(), transcode)?,
             }
         }
-    } else if game_path.ends_with("dlcdescriptor.ckd") {
-        import_dlcdescriptor(game_path, dir_tree, lax)?;
-    } else if game_path.ends_with("songdesc.tpl.ckd") {
-        import_songdesc(game_path, dir_tree)?;
     } else {
-        return Err(anyhow!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf, JD Now .json files, and raw import are supported!"));
+        bail!("Cannot import {game_path:?}! Input not recognized, currently only secure_fat.gf, JD Now .json files, and raw import are supported!");
     }
 
+    Ok(())
+}
+
+/// Import a individual JDNow song
+fn import_jdnow_song(
+    game_path: &Path,
+    dir_tree: &DirectoryTree,
+    map_name: &str,
+    transcode: TranscodeSettings,
+) -> Result<(), Error> {
+    let parent = game_path
+            .parent()
+            .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?;
+
+    jdnow::import_song(parent, dir_tree, map_name, transcode)?;
     Ok(())
 }
 
@@ -136,6 +197,7 @@ fn import_sfat(
     lax: bool,
     songs_only: bool,
     n_threads: Option<NonZeroUsize>,
+    transcode: TranscodeSettings,
 ) -> Result<(), Error> {
     // Init the native filesystem and load the securefat as a virtual filesystem
     let native_vfs = NativeFs::new(
@@ -156,11 +218,12 @@ fn import_sfat(
         lax,
         songs_only,
         n_threads,
+        transcode,
     )
 }
 
 /// Import a song from a dlcdescriptor.ckd
-fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool) -> Result<(), Error> {
+fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool, transcode: TranscodeSettings) -> Result<(), Error> {
     // Init the native filesystem and load the securefat as a virtual filesystem
     let native_vfs = NativeFs::new(
         game_path
@@ -182,6 +245,7 @@ fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool) ->
         aliases: Alias8::default(),
         lax,
         n_threads: NonZeroUsize::new(1),
+        transcode,
     };
 
     let dlcdescriptor_file = native_vfs.open(VirtualPath::new("dlcdescriptor.ckd"))?;
@@ -193,7 +257,7 @@ fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool) ->
 }
 
 /// Import a song from songdesc.tpl.ckd
-fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree) -> Result<(), Error> {
+fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree, transcode: TranscodeSettings) -> Result<(), Error> {
     let mapname = game_path
         .parent()
         .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?; // mapname
@@ -223,6 +287,7 @@ fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree) -> Result<(), Erro
     {
         "nx" => Platform::Nx,
         "wiiu" => Platform::WiiU,
+        "pc" => Platform::Win,
         platform => bail!("Unsupported platform {platform}"),
     };
 
@@ -251,9 +316,12 @@ fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree) -> Result<(), Erro
         aliases: Alias8::default(),
         lax: true,
         n_threads: NonZeroUsize::new(1),
+        transcode
     };
 
-    song::import(&is, &new_path)?;
+    if let Err(err) = song::import(&is, &new_path) {
+        println!("Warning: Failed to import {mapname}: {err}");
+    }
     Ok(())
 }
 
@@ -264,6 +332,7 @@ fn import_gameconfig(
     game: Option<Game>,
     songs_only: bool,
     n_threads: Option<NonZeroUsize>,
+    transcode: TranscodeSettings,
 ) -> Result<(), Error> {
     let platform = game_path.parent() // gameconfig
         .and_then(Path::parent) // enginedata
@@ -281,6 +350,7 @@ fn import_gameconfig(
     {
         "nx" => Platform::Nx,
         "wiiu" => Platform::WiiU,
+        "pc" => Platform::Win,
         platform => bail!("Unsupported platform {platform}"),
     };
 
@@ -336,6 +406,7 @@ fn import_gameconfig(
         true,
         songs_only,
         n_threads,
+        transcode,
     )
 }
 
@@ -347,6 +418,7 @@ pub fn import_full_game_vfs(
     lax: bool,
     songs_only: bool,
     n_threads: Option<NonZeroUsize>,
+    transcode: TranscodeSettings,
 ) -> Result<(), Error> {
     if ugi.id == 0 {
         println!("Importing {} for {}", ugi.game, ugi.platform);
@@ -373,6 +445,7 @@ pub fn import_full_game_vfs(
         aliases,
         lax,
         n_threads,
+        transcode,
     };
 
     if is.ugi.game <= Game::JustDance2015 {
@@ -438,7 +511,7 @@ pub fn import_full_game_vfs(
                         cooked::isg::parse::<GameManagerConfigV22>(&gameconfig_file, true)?;
                     parsed_json.songdb_scene
                 } else {
-                    return Err(anyhow!("Unknown game"));
+                    bail!("Unknown game");
                 }
             }
         };
@@ -510,6 +583,13 @@ fn find_sources(path: &Path, sources: &mut Vec<Source>) -> Result<(), Error> {
         sources.push(Source::GameConfig(path.join(
             "cache/itf_cooked/wiiu/enginedata/gameconfig/gameconfig.isg.ckd",
         )));
+    } else if path
+        .join("cache/itf_cooked/pc/enginedata/gameconfig/gameconfig.isg.ckd")
+        .exists()
+    {
+        sources.push(Source::GameConfig(path.join(
+            "cache/itf_cooked/pc/enginedata/gameconfig/gameconfig.isg.ckd",
+        )));
     } else if path.join("cache/itf_cooked/nx/world/maps").exists() {
         let maps = path.join("cache/itf_cooked/nx/world/maps");
         trace!("Looking for maps: {}", maps.display());
@@ -521,6 +601,15 @@ fn find_sources(path: &Path, sources: &mut Vec<Source>) -> Result<(), Error> {
         }
     } else if path.join("cache/itf_cooked/wiiu/world/maps").exists() {
         let maps = path.join("cache/itf_cooked/wiiu/world/maps");
+        trace!("Looking for maps: {}", maps.display());
+        for dir in maps.read_dir()? {
+            let path = dir?.path().join("songdesc.tpl.ckd");
+            if path.exists() {
+                sources.push(Source::SongDesc(path));
+            }
+        }
+    } else if path.join("cache/itf_cooked/pc/world/maps").exists() {
+        let maps = path.join("cache/itf_cooked/pc/world/maps");
         trace!("Looking for maps: {}", maps.display());
         for dir in maps.read_dir()? {
             let path = dir?.path().join("songdesc.tpl.ckd");

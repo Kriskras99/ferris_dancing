@@ -6,31 +6,27 @@ use std::{
     io::{Error, ErrorKind, Read},
     sync::{Arc, Mutex, OnceLock, Weak},
 };
-
+use std::io::Seek;
 use zip::{result::ZipError, ZipArchive};
 
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs};
-use crate::bytes::CursorAt;
 
 /// A filesystem backed by a zip-file
 #[derive(Debug)]
-pub struct ZipFs<'a> {
+pub struct ZipFs<R: Read + Seek> {
     /// Maps paths to the files
-    zip: Mutex<ZipArchive<CursorAt<VirtualFile<'a>>>>,
+    zip: Mutex<ZipArchive<R>>,
     /// Cache open files
     cache: Mutex<HashMap<VirtualPathBuf, Weak<Vec<u8>>>>,
     /// Cache the file paths
     list: OnceLock<Vec<VirtualPathBuf>>,
 }
 
-impl<'a> ZipFs<'a> {
+impl<R: Read + Seek + Send> ZipFs<R> {
     /// Create a new filesystem
-    pub fn new(zipfile: VirtualFile<'a>) -> Result<Self, Error> {
+    pub fn new(zipfile: R) -> Result<Self, Error> {
         Ok(Self {
-            zip: Mutex::new(
-                ZipArchive::new(CursorAt::new(zipfile, 0))
-                    .map_err(|e| Error::new(ErrorKind::Other, e))?,
-            ),
+            zip: Mutex::new(ZipArchive::new(zipfile)?, ),
             cache: Mutex::new(HashMap::new()),
             list: OnceLock::new(),
         })
@@ -75,7 +71,7 @@ impl<'a> ZipFs<'a> {
     }
 }
 
-impl VirtualFileSystem for ZipFs<'_> {
+impl<R: Read + Seek + Send> VirtualFileSystem for ZipFs<R> {
     fn open<'fs>(&'fs self, path: &VirtualPath) -> std::io::Result<VirtualFile<'fs>> {
         let path = path.clean();
 
