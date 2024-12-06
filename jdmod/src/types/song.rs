@@ -418,23 +418,6 @@ pub struct Song<'a> {
     pub videofile: HipStr<'a>,
 }
 
-/// Settings used by the autodance preview
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Autodance<'a> {
-    /// Soundclip to play
-    #[serde(borrow)]
-    pub autodance_sound: HipStr<'a>,
-    /// Position in the clip to start at
-    pub song_start_position: f32,
-    /// Duration to play
-    pub duration: f32,
-    /// Unknown
-    pub record: Vec<Record>,
-    /// Unknown
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub playback_events: Vec<PlaybackEvent>,
-}
-
 /// Image used in the menus
 #[derive(Serialize, Deserialize, Clone)]
 pub enum MenuArt<'a> {
@@ -676,12 +659,30 @@ impl From<&cooked::tpl::types::DefaultColors> for SongColors {
 
 impl From<&HashMap<HipStr<'_>, HipStr<'_>>> for SongColors {
     fn from(value: &HashMap<HipStr<'_>, HipStr<'_>>) -> Self {
-        let theme = value.get("theme").map(|s| Color::from(s.as_str())).unwrap_or_default();
-        let lyrics = value.get("lyrics").map(|s| Color::from(s.as_str())).unwrap_or_default();
-        let one_a = value.get("songColor_1A").map(|s| Color::from(s.as_str())).unwrap_or_default();
-        let one_b = value.get("songColor_1B").map(|s| Color::from(s.as_str())).unwrap_or_default();
-        let two_a = value.get("songColor_2A").map(|s| Color::from(s.as_str())).unwrap_or_default();
-        let two_b = value.get("songColor_2B").map(|s| Color::from(s.as_str())).unwrap_or_default();
+        let theme = value
+            .get("theme")
+            .map(|s| Color::from(s.as_str()))
+            .unwrap_or_default();
+        let lyrics = value
+            .get("lyrics")
+            .map(|s| Color::from(s.as_str()))
+            .unwrap_or_default();
+        let one_a = value
+            .get("songColor_1A")
+            .map(|s| Color::from(s.as_str()))
+            .unwrap_or_default();
+        let one_b = value
+            .get("songColor_1B")
+            .map(|s| Color::from(s.as_str()))
+            .unwrap_or_default();
+        let two_a = value
+            .get("songColor_2A")
+            .map(|s| Color::from(s.as_str()))
+            .unwrap_or_default();
+        let two_b = value
+            .get("songColor_2B")
+            .map(|s| Color::from(s.as_str()))
+            .unwrap_or_default();
 
         Self {
             theme,

@@ -8,7 +8,6 @@ use hipstr::HipStr;
 use tracing::error;
 use ubiart_toolkit::{cooked, cooked::tpl::types::SongDescription, utils::UniqueGameId};
 
-mod autodance;
 mod dance_timeline;
 mod karaoke_timeline;
 mod mainsequence;
@@ -18,6 +17,7 @@ mod musictrack;
 mod video;
 
 use crate::{
+    import::TranscodeSettings,
     types::{
         localisation::LocaleIdMap,
         song::{Song, SongDirectoryTree, Tag},
@@ -25,7 +25,6 @@ use crate::{
     },
     utils::cook_path,
 };
-use crate::import::TranscodeSettings;
 
 /// State that is used a lot during the import
 pub struct SongImportState<'a> {
@@ -122,16 +121,6 @@ fn actual_import(sis: &SongImportState<'_>, songdesc: SongDescription<'_>) -> Re
     let main_scene_file = sis.vfs.open(main_scene_path.as_ref())?;
     let main_scene = cooked::isc::parse(&main_scene_file, sis.ugi)?.scene;
 
-    // Import the audio preview
-    let autodance_path = main_scene
-        .get_subscene_by_userfriendly_end("_AUTODANCE", sis.lax)?
-        .wrapped_scene
-        .as_ref()
-        .get_actor_by_userfriendly_end("_autodance", sis.lax)?
-        .lua
-        .as_ref();
-    autodance::import(sis, autodance_path)?;
-
     // Prepare for importing the timelines
     let timeline_scene = &main_scene
         .get_subscene_by_userfriendly_end("_TML", sis.lax)?
@@ -206,7 +195,7 @@ fn actual_import(sis: &SongImportState<'_>, songdesc: SongDescription<'_>) -> Re
         artist: songdesc.artist,
         dancer_name: songdesc.dancer_name,
         title: songdesc.title,
-        credits: songdesc.credits,
+        credits: songdesc.credits.unwrap_or_default(),
         number_of_coaches: songdesc.num_coach.try_into()?,
         main_coach: (songdesc.main_coach >= 0).then(|| songdesc.main_coach.abs_diff(0)),
         difficulty: songdesc.difficulty.try_into()?,

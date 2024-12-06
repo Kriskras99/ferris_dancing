@@ -3,10 +3,10 @@
 //! TODO: Create a custom zip implementation based on the ReadAt trait, maybe using rc-zip
 use std::{
     collections::{hash_map::Entry, HashMap},
-    io::{Error, ErrorKind, Read},
+    io::{Error, ErrorKind, Read, Seek},
     sync::{Arc, Mutex, OnceLock, Weak},
 };
-use std::io::Seek;
+
 use zip::{result::ZipError, ZipArchive};
 
 use super::{VirtualFile, VirtualFileSystem, VirtualMetadata, VirtualPath, VirtualPathBuf, WalkFs};
@@ -26,7 +26,7 @@ impl<R: Read + Seek + Send> ZipFs<R> {
     /// Create a new filesystem
     pub fn new(zipfile: R) -> Result<Self, Error> {
         Ok(Self {
-            zip: Mutex::new(ZipArchive::new(zipfile)?, ),
+            zip: Mutex::new(ZipArchive::new(zipfile)?),
             cache: Mutex::new(HashMap::new()),
             list: OnceLock::new(),
         })

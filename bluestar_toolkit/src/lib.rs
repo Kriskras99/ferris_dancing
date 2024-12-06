@@ -88,7 +88,7 @@ pub struct SongDetails<'a> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Lyric<'a> {
-    pub time: i32,
+    pub time: u32,
     pub duration: u32,
     #[serde(borrow)]
     pub text: HipStr<'a>,
@@ -100,7 +100,7 @@ pub type Moves<'a> = Vec<Picto<'a>>;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Picto<'a> {
-    pub time: i32,
+    pub time: u32,
     pub duration: u32,
     #[serde(borrow)]
     pub name: HipStr<'a>,
@@ -114,12 +114,10 @@ pub struct AudioPreview {
     pub prelobby: AudoPreviewBeats,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AudoPreviewBeats {
     pub startbeat: u32,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -14,9 +14,9 @@ use crate::{
     utils::{Game, UniqueGameId},
 };
 
-pub fn parse(data: &[u8], ugi: UniqueGameId) -> Result<Tape<'_>, ParserError> {
+pub fn parse(data: &[u8], ugi: UniqueGameId, lax: bool) -> Result<Tape<'_>, ParserError> {
     let tape = match ugi.game {
-        game if game >= Game::JustDance2016 => crate::utils::json::parse(data, false)?,
+        game if game >= Game::JustDance2016 => crate::utils::json::parse(data, lax)?,
         Game::JustDance2015 => Tape::deserialize_with(data, ugi)?,
         _ => todo!(),
     };

@@ -42,7 +42,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
 
     match (sis.vfs.open(mainsequence_tml_path.as_ref()), sis.lax) {
         (Ok(tape_file), _) => {
-            let tape = tape::parse(&tape_file, sis.ugi)?;
+            let tape = tape::parse(&tape_file, sis.ugi, sis.lax)?;
 
             let mut timeline = Timeline {
                 timeline: BTreeSet::new(),
@@ -68,7 +68,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                         let ref_file = sis
                             .vfs
                             .open(cook_path(&reference.path, sis.ugi)?.as_ref())?;
-                        let ref_tape = tape::parse(&ref_file, sis.ugi)?;
+                        let ref_tape = tape::parse(&ref_file, sis.ugi, sis.lax)?;
 
                         for clip in ref_tape.clips {
                             match clip {

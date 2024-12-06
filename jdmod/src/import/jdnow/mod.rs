@@ -1,23 +1,30 @@
 //! Import functionality for Just Dance Now data
 
-use crate::import::jdnow::types::NowState;
-use crate::import::TranscodeSettings;
-use crate::types::localisation::LocaleId;
-use crate::types::song::{Autodance, Clip, Color, GoldEffectClip, KaraokeClip, MenuArt, MenuArtTexture, MotionClip, MusicTrack, PhoneImage, PictogramClip, Signature, Song, SweatDifficulty, Timeline};
-use crate::utils::{extract_audio, transcode};
-use crate::{
-    import::jdnow::types::NowTree,
-    types::{song::SongDirectoryTree, DirectoryTree},
-};
-use anyhow::{anyhow, Error};
+use std::{collections::BTreeSet, fs::File, ops::Deref, path::Path};
+
+use anyhow::{anyhow, Context, Error};
 use bluestar_toolkit::{Moves, PictoAtlas, SongDetails};
-use dotstar_toolkit_utils::vfs::{zipfs::ZipFs};
+use dotstar_toolkit_utils::vfs::zipfs::ZipFs;
 use hipstr::HipStr;
-use image::{imageops, ImageFormat};
-use std::collections::BTreeSet;
-use std::fs::File;
-use std::ops::Deref;
-use std::path::Path;
+use image::{imageops, DynamicImage, ImageFormat};
+use tracing::{debug, info, trace};
+
+use crate::{
+    import::{
+        jdnow::types::{NowState, NowTree},
+        TranscodeSettings,
+    },
+    types::{
+        localisation::LocaleId,
+        song::{
+            Clip, Color, GoldEffectClip, HideUserInterfaceClip, KaraokeClip, MenuArt,
+            MenuArtTexture, MotionClip, MusicTrack, PhoneImage, PictogramClip, Signature, Song,
+            SongDirectoryTree, SweatDifficulty, Tag, Timeline,
+        },
+        DirectoryTree,
+    },
+    utils::{extract_audio, transcode},
+};
 
 mod types;
 
@@ -35,23 +42,38 @@ pub fn import_song(
         return Ok(());
     }
 
-    let details_file = std::fs::read(tree_jdn.detail())?;
+    let details_file = std::fs::read(tree_jdn.detail())
+        .with_context(|| format!("Could not open {}", tree_jdn.detail().display()))?;
     let details: SongDetails = serde_json::from_slice(&details_file)?;
-    let zipfs = ZipFs::new(File::open(tree_jdn.bundle())?)?;
+    let zipfs = ZipFs::new(
+        File::open(tree_jdn.bundle())
+            .with_context(|| format!("Could not open {}", tree_jdn.bundle().display()))?,
+    )?;
 
-    let state = NowState {
+    let beats = details.beats.as_slice();
+    let beats = if beats[0] == 0 { &beats[1..] } else { beats };
+    let diff = (beats[1] * 48) - (beats[0] * 48);
+    let n_to_prepend = div_round(beats[0] * 48, diff);
+    assert!(n_to_prepend >= 1, "n: {n_to_prepend}");
+    let mut new_beats = Vec::with_capacity(usize::try_from(n_to_prepend)? + beats.len());
+    for i in 0..n_to_prepend {
+        new_beats.push(diff * i);
+    }
+    new_beats.extend(beats.iter().map(|b| b * 48));
+
+    let mut state = NowState {
         bundle: &zipfs,
         now: tree_jdn,
         song: tree_song,
         transcode: transcode_settings,
         details,
+        beats: new_beats,
     };
 
     state.song.create_dir_all()?;
-    create_autodance(&state)?;
-    create_dance_timeline(&state)?;
-    create_karaoke_timeline(&state)?;
-    create_mainsequence(&state)?;
+    let mut min_time = create_dance_timeline(&mut state)?;
+    min_time = min_time.min(create_karaoke_timeline(&mut state)?);
+    create_mainsequence(&state, min_time)?;
     create_musictrack(&state)?;
     let videofile = create_video(&state)?;
     let audiofile = create_audio(&state)?;
@@ -70,7 +92,7 @@ pub fn import_song(
         sweat_difficulty: SweatDifficulty::Moderate,
         related_songs: vec![],
         status: state.details.status.try_into()?,
-        tags: vec![],
+        tags: vec![Tag::Main],
         subtitle: LocaleId::default(),
         default_colors: (&state.details.default_colors).into(),
         audiofile: HipStr::from(audiofile),
@@ -83,55 +105,80 @@ pub fn import_song(
     Ok(())
 }
 
-/// Create an empty autodance
-// TODO: Find out if autodance is actually used anywhere
-fn create_autodance(state: &NowState) -> Result<(), Error> {
-    let autodance = Autodance {
-        record: vec![],
-        song_start_position: 0.0,
-        autodance_sound: "autodance.ogg".into(),
-        duration: 30.0,
-        playback_events: vec![],
-    };
+/// Convert a JDNow start time to the UbiArt time
+fn convert_starttime(beats: &mut Vec<u32>, n: u32) -> i32 {
+    let m = convert_duration(beats, n);
+    i32::try_from(m).unwrap_or(if m > 0 { i32::MAX } else { i32::MIN })
+}
 
-    let autodance_path = state.song.song().join("autodance.json");
-    let autodance_file = File::create(autodance_path)?;
-    serde_json::to_writer_pretty(autodance_file, &autodance)?;
+/// Convert a JDNow duration to the UbiArt time
+fn convert_duration(beats: &mut Vec<u32>, n: u32) -> u32 {
+    let max = beats.len();
+    let n = n * 48;
+    match beats.binary_search(&n) {
+        Ok(index) => u32::try_from(index * 24).unwrap_or(u32::MAX),
+        Err(0) => {
+            debug!("Duration out of bounds! n: {n}, first beat: {}", beats[0]);
+            0
+        }
+        Err(index) if index == max => {
+            debug!(
+                "Duration out of bounds! n: {n}, last beat: {}",
+                beats[max - 1]
+            );
+            let diff = beats[max - 1] - beats[max - 2];
+            let mut beat = beats[max - 1];
+            while n > beat {
+                beat += diff;
+                beats.push(beat);
+            }
+            convert_duration(beats, n)
+        }
+        Err(index) => {
+            let x0 = beats[index - 1];
+            let x1 = beats[index];
+            let y0 = u32::try_from((index - 1) * 24).unwrap_or(u32::MAX);
+            let y1 = u32::try_from(index * 24).unwrap_or(u32::MAX);
 
-    Ok(())
+            let m = (y0 * (x1 - n) + (y1 * (n - x0))) / (x1 - x0);
+            trace!("n: {n}, x0: {x0}, y0: {y0}, x1: {x1}, m: {m}");
+            m
+        }
+    }
 }
 
 /// Import the pictos and classifiers
-fn create_dance_timeline(state: &NowState) -> Result<(), Error> {
+fn create_dance_timeline(state: &mut NowState) -> Result<i32, Error> {
     let mut timeline = Timeline {
         timeline: BTreeSet::new(),
     };
 
     parse_picto_atlas(state)?;
-    parse_pictos(state, &mut timeline)?;
-    parse_classifiers(state, &mut timeline)?;
+    let mut min_time = parse_pictos(state, &mut timeline);
+    min_time = min_time.min(parse_classifiers(state, &mut timeline)?);
 
     let dance_timeline_path = state.song.song().join("dance_timeline.json");
 
     let timeline_file = File::create(dance_timeline_path)?;
     serde_json::to_writer_pretty(timeline_file, &timeline)?;
 
-    Ok(())
+    Ok(min_time)
 }
 
 /// Add the pictos to the timeline
-fn parse_pictos(state: &NowState, timeline: &mut Timeline) -> Result<(), Error> {
-    let video_offset = i32::try_from(state.details.video_offset)?;
+fn parse_pictos(state: &mut NowState, timeline: &mut Timeline) -> i32 {
+    let mut min_time = 0;
 
     for picto in &state.details.pictos {
-        let start_time = (picto.time - video_offset) / 20;
-        let duration = picto.duration / 20;
+        let start_time = convert_starttime(&mut state.beats, picto.time);
+        let duration = convert_duration(&mut state.beats, picto.duration);
         let clip = Clip::Pictogram(PictogramClip {
             is_active: true,
             start_time,
             duration,
             picto_filename: HipStr::from(format!("{}.png", picto.name)),
         });
+        min_time = min_time.min(clip.start_time());
 
         timeline.timeline.insert(clip);
 
@@ -147,7 +194,7 @@ fn parse_pictos(state: &NowState, timeline: &mut Timeline) -> Result<(), Error> 
         }
     }
 
-    Ok(())
+    min_time
 }
 
 /// Extract the pictos from the atlas
@@ -157,10 +204,11 @@ fn parse_picto_atlas(state: &NowState) -> Result<(), Error> {
     let width = atlas_desc.image_size.width;
     let height = atlas_desc.image_size.height;
 
-    let image = image::open(state.now.atlas())?.into_rgba8();
+    let image = image::open(state.now.atlas())?;
 
     for (name, (x, y)) in atlas_desc.images {
-        let picto = imageops::crop_imm(&image, x, y, width, height).to_image();
+        let picto = DynamicImage::from(imageops::crop_imm(&image, x, y, width, height).to_image());
+        let picto = picto.resize(1024, 512, imageops::FilterType::Lanczos3);
         let mut path = state.song.pictos().join(&name);
         path.set_extension("png");
         picto.save_with_format(path, ImageFormat::Png)?;
@@ -170,15 +218,17 @@ fn parse_picto_atlas(state: &NowState) -> Result<(), Error> {
 }
 
 /// Add the classifiers to the timeline
-fn parse_classifiers(state: &NowState, timeline: &mut Timeline) -> Result<(), Error> {
-    let video_offset = i32::try_from(state.details.video_offset)?;
+fn parse_classifiers(state: &mut NowState, timeline: &mut Timeline) -> Result<i32, Error> {
+    let mut min_time = 0;
     for coach in 0..state.details.num_coach {
-        let desc_file = state.bundle.open(&state.now.bundle_tree().classifiers_desc(coach))?;
+        let desc_file = state
+            .bundle
+            .open(&state.now.bundle_tree().classifiers_desc(coach))?;
         let desc: Moves = serde_json::from_slice(&desc_file)?;
 
         for class in desc {
-            let start_time = (class.time - video_offset) / 20;
-            let duration = class.duration / 20;
+            let start_time = convert_starttime(&mut state.beats, class.time);
+            let duration = convert_duration(&mut state.beats, class.duration);
             let clip = Clip::Motion(MotionClip {
                 is_active: true,
                 start_time,
@@ -189,38 +239,49 @@ fn parse_classifiers(state: &NowState, timeline: &mut Timeline) -> Result<(), Er
                 color: Color::default(),
             });
 
+            min_time = min_time.min(clip.start_time());
+
             timeline.timeline.insert(clip);
         }
     }
 
-    for classifier_path in state.bundle.read_dir(state.now.bundle_tree().classifiers())? {
+    for classifier_path in state
+        .bundle
+        .read_dir(state.now.bundle_tree().classifiers())?
+    {
         let classifier_file = state.bundle.open(classifier_path)?;
-        let dest = state.song.moves().join(classifier_path.file_name().ok_or_else(|| anyhow!("No filename in {classifier_path}"))?);
-        std::fs::write(dest, classifier_file.deref())?
+        let dest = state.song.moves().join(
+            classifier_path
+                .file_name()
+                .ok_or_else(|| anyhow!("No filename in {classifier_path}"))?,
+        );
+        std::fs::write(dest, classifier_file.deref())?;
     }
 
-    Ok(())
+    Ok(min_time)
 }
 
 /// Import the lyrics
-fn create_karaoke_timeline(state: &NowState) -> Result<(), Error> {
+fn create_karaoke_timeline(state: &mut NowState) -> Result<i32, Error> {
     let mut timeline = Timeline {
         timeline: BTreeSet::new(),
     };
 
-    let video_offset = i32::try_from(state.details.video_offset)?;
+    let mut min_time = 0;
 
     for lyric in &state.details.lyrics {
+        let start_time = convert_starttime(&mut state.beats, lyric.time);
+        let duration = convert_duration(&mut state.beats, lyric.duration);
         let clip = Clip::Karaoke(KaraokeClip {
             is_active: true,
-            start_time: (lyric.time - video_offset) / 20,
-            duration: lyric.duration / 20,
+            start_time,
+            duration,
             pitch: 0.0,
             lyrics: lyric.text.clone(),
             is_end_of_line: lyric.is_line_ending == 1,
             content_type: 1,
-
         });
+        min_time = min_time.min(clip.start_time());
         timeline.timeline.insert(clip);
     }
 
@@ -229,14 +290,24 @@ fn create_karaoke_timeline(state: &NowState) -> Result<(), Error> {
     let timeline_file = File::create(karaoke_timeline_path)?;
     serde_json::to_writer_pretty(timeline_file, &timeline)?;
 
-    Ok(())
+    Ok(min_time)
 }
 
 /// Create empty mainsequence
-fn create_mainsequence(state: &NowState) -> Result<(), Error> {
-    let timeline = Timeline {
+fn create_mainsequence(state: &NowState, min_time: i32) -> Result<(), Error> {
+    let mut timeline = Timeline {
         timeline: BTreeSet::new(),
     };
+
+    if min_time > 100 {
+        let clip = Clip::HideUserInterface(HideUserInterfaceClip {
+            is_active: true,
+            start_time: 0,
+            duration: u32::try_from(min_time - 100).unwrap_or_else(|_| unreachable!()),
+            event_type: 18,
+        });
+        timeline.timeline.insert(clip);
+    }
 
     let mainsequence_path = state.song.song().join("mainsequence.json");
 
@@ -249,21 +320,27 @@ fn create_mainsequence(state: &NowState) -> Result<(), Error> {
 /// Create the musictrack
 // TODO: Figure out start/end beat, sections
 fn create_musictrack(state: &NowState) -> Result<(), Error> {
-    let video_offset = state.details.video_offset;
     let start_beat = state.details.audio_preview.coverflow.startbeat;
+    let beats_len = u32::try_from(state.details.beats.len()).unwrap_or(u32::MAX) * 24;
     let musictrack = MusicTrack {
         start_beat: 0,
-        end_beat: 0,
-        video_start_time: -1.0 * ((video_offset as f32) / 1000.0),
+        end_beat: beats_len,
+        video_start_time: 0.0,
         preview_entry: start_beat,
         preview_loop_start: start_beat,
-        preview_loop_end: u32::try_from(state.details.beats.len()).unwrap_or(u32::MAX).min(start_beat + 150),
+        preview_loop_end: beats_len.min(start_beat + 150),
         signatures: vec![Signature {
             marker: 0,
             beats: 4,
         }],
         sections: vec![],
-        markers: state.details.beats.iter().copied().map(|b| (b - video_offset) * 48).collect(),
+        markers: state
+            .details
+            .beats
+            .iter()
+            .copied()
+            .map(|b| b * 48)
+            .collect(),
     };
 
     let musictrack_path = state.song.song().join("musictrack.json");
@@ -290,113 +367,127 @@ fn create_video(state: &NowState) -> Result<&'static str, Error> {
 fn create_audio(state: &NowState) -> Result<String, Error> {
     let filename = format!("{}.opus", state.details.map_name);
     let from = state.now.video();
-    let to_path = state.song.song().join(&filename);
+    let to_path = state.song.audio().join(&filename);
 
     extract_audio(from, &to_path)?;
 
     Ok(filename)
-
 }
 
 /// Create the menuart
 fn create_menuart(state: &NowState) -> Result<(), Error> {
     let mut menuart = Vec::new();
 
-    let cover = state.now.cover();
-    std::fs::copy(cover, state.song.menuart().join("cover_generic.png"))?;
+    let orig_cover = image::open(state.now.cover())?;
+    let cover = orig_cover.resize(1024, 1024, imageops::FilterType::Lanczos3);
+    cover.save(state.song.menuart().join("cover_generic.png"))?;
     menuart.push(MenuArt::Texture(MenuArtTexture {
         name: HipStr::borrowed("cover_generic"),
         filename: HipStr::borrowed("cover_generic.png"),
         scale: (0.3, 0.3),
         pos2d: (266.08755, 197.62996),
-        disable_shadow: 4294967295,
+        disable_shadow: 4_294_967_295,
         anchor: 1,
     }));
-    std::fs::copy(cover, state.song.menuart().join("cover_online_Kids.png"))?;
+    cover.save(state.song.menuart().join("cover_online_Kids.png"))?;
     menuart.push(MenuArt::Texture(MenuArtTexture {
         name: HipStr::borrowed("cover_online_Kids"),
         filename: HipStr::borrowed("cover_online_Kids.png"),
         scale: (0.3, 0.3),
         pos2d: (-150.0, 0.0),
-        disable_shadow: 4294967295,
+        disable_shadow: 4_294_967_295,
         anchor: 1,
     }));
-    std::fs::copy(cover, state.song.menuart().join("cover_online.png"))?;
+    cover.save(state.song.menuart().join("cover_online.png"))?;
     menuart.push(MenuArt::Texture(MenuArtTexture {
         name: HipStr::borrowed("cover_online"),
         filename: HipStr::borrowed("cover_online.png"),
         scale: (0.3, 0.3),
         pos2d: (-150.0, 0.0),
-        disable_shadow: 4294967295,
+        disable_shadow: 4_294_967_295,
         anchor: 1,
     }));
-    std::fs::copy(cover, state.song.menuart().join("cover_phone.png"))?;
+    let cover = orig_cover.resize(1024, 1024, imageops::FilterType::Lanczos3);
+    cover.save(state.song.menuart().join("cover_phone.jpg"))?;
     menuart.push(MenuArt::Phone(PhoneImage {
-        name: HipStr::borrowed("cover_phone"),
-        filename: HipStr::borrowed("cover_phone.png"),
+        name: HipStr::borrowed("cover"),
+        filename: HipStr::borrowed("cover_phone.jpg"),
     }));
 
-
-    let coach_1 = state.now.coach(1);
-    std::fs::copy(&coach_1, state.song.menuart().join("coach_1.png"))?;
-    std::fs::copy(&coach_1, state.song.menuart().join("coach1_phone.png"))?;
+    let orig_coach_1 = image::open(state.now.coach(1))?;
+    let coach_1 = orig_coach_1.resize(1024, 1024, imageops::FilterType::Lanczos3);
+    coach_1.save(state.song.menuart().join("coach_1.png"))?;
+    let coach_1 = orig_coach_1.resize(256, 256, imageops::FilterType::Lanczos3);
+    coach_1.save(state.song.menuart().join("coach1_phone.png"))?;
 
     menuart.push(MenuArt::Texture(MenuArtTexture {
         name: HipStr::borrowed("coach_1"),
         filename: HipStr::borrowed("coach_1.png"),
-        scale: (0.290211, 0.290211),
+        scale: (0.290_211, 0.290_211),
         pos2d: (212.7845, 663.6802),
-        disable_shadow: 4294967295,
+        disable_shadow: 4_294_967_295,
         anchor: 6,
     }));
     menuart.push(MenuArt::Phone(PhoneImage {
-        name: HipStr::borrowed("coach1_phone"),
+        name: HipStr::borrowed("coach1"),
         filename: HipStr::borrowed("coach1_phone.png"),
     }));
 
     for coach in 2..=state.details.num_coach {
-        let path = state.now.coach(coach);
-        std::fs::copy(&path, state.song.menuart().join(format!("coach_{coach}.png")))?;
-        std::fs::copy(path, state.song.menuart().join(format!("coach{coach}_phone.png")))?;
+        let orig_coach = image::open(state.now.coach(coach))?;
+        let coach_image = orig_coach.resize(1024, 1024, imageops::FilterType::Lanczos3);
+        coach_image.save(state.song.menuart().join(format!("coach_{coach}.png")))?;
+        let coach_image = orig_coach.resize(256, 256, imageops::FilterType::Lanczos3);
+        coach_image.save(state.song.menuart().join(format!("coach{coach}_phone.png")))?;
 
         menuart.push(MenuArt::Texture(MenuArtTexture {
             name: HipStr::from(format!("coach_{coach}")),
             filename: HipStr::from(format!("coach_{coach}.png")),
-            scale: (0.290211, 0.290211),
+            scale: (0.290_211, 0.290_211),
             pos2d: (524.3811, 670.82983),
-            disable_shadow: 4294967295,
+            disable_shadow: 4_294_967_295,
             anchor: 6,
         }));
         menuart.push(MenuArt::Phone(PhoneImage {
-            name: HipStr::from(format!("coach{coach}_phone")),
-            filename: HipStr::from(format!("coach_{coach}_phone.png")),
+            name: HipStr::from(format!("coach{coach}")),
+            filename: HipStr::from(format!("coach{coach}_phone.png")),
         }));
     }
 
-    std::fs::copy(coach_1, state.song.menuart().join("cover_albumcoach.png"))?;
+    let cover_albumcoach = orig_coach_1.resize(1024, 1024, imageops::FilterType::Lanczos3);
+    cover_albumcoach.save(state.song.menuart().join("cover_albumcoach.png"))?;
     menuart.push(MenuArt::Texture(MenuArtTexture {
         name: HipStr::borrowed("cover_albumcoach"),
         filename: HipStr::borrowed("cover_albumcoach.png"),
         scale: (0.3, 0.3),
         pos2d: (738.1063, 359.61203),
-        disable_shadow: 4294967295,
+        disable_shadow: 4_294_967_295,
         anchor: 1,
     }));
 
-    let map_bkg = state.now.map_bkg();
-    std::fs::copy(&map_bkg, state.song.menuart().join("map_bkg.png"))?;
-    menuart.push(MenuArt::Texture(MenuArtTexture {
-        name: HipStr::borrowed("map_bkg"),
-        filename: HipStr::borrowed("map_bkg.png"),
-        scale: (256.0, 128.0),
-        pos2d: (1487.41, 350.0),
-        disable_shadow: 1,
-        anchor: 1,
-    }));
+    if let Ok(map_bkg) = image::open(state.now.map_bkg()) {
+        map_bkg.save(state.song.menuart().join("map_bkg.png"))?;
+        menuart.push(MenuArt::Texture(MenuArtTexture {
+            name: HipStr::borrowed("map_bkg"),
+            filename: HipStr::borrowed("map_bkg.png"),
+            scale: (256.0, 128.0),
+            pos2d: (1487.41, 350.0),
+            disable_shadow: 1,
+            anchor: 1,
+        }));
+    } else {
+        info!("Failed to import map_bkg for {}", state.details.map_name);
+    }
 
     let menuart_path = state.song.menuart().join("menuart.json");
     let menuart_file = File::create(menuart_path)?;
     serde_json::to_writer_pretty(menuart_file, &menuart)?;
 
     Ok(())
+}
+
+/// Divide the divisor by the dividend, rounding the result to
+/// the nearest whole integer
+const fn div_round(divisor: u32, dividend: u32) -> u32 {
+    (dividend + (divisor >> 1)) / divisor
 }

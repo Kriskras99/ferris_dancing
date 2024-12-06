@@ -75,7 +75,7 @@ pub fn build(
 
     bf.static_files.add_file(
         video_path,
-        videoscoach_dir.join(format!("{lower_map_name}.webm")),
+        videoscoach_dir.join(format!("{lower_map_name}.vp9.720.webm")),
     )?;
 
     Ok(video_scene.scene.into())

@@ -886,6 +886,9 @@ pub struct PathCreationFormat<'a> {
 const fn default_sweat_difficulty() -> u32 {
     1
 }
+const fn default_dancer_name() -> HipStr<'static> {
+    HipStr::borrowed("Unknown Dancer")
+}
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct SongDescription<'a> {
@@ -907,15 +910,21 @@ pub struct SongDescription<'a> {
     /// Only in Chinese version
     #[serde(rename = "CN_Lyrics", default, skip_serializing_if = "Option::is_none")]
     pub cn_lyrics: Option<HipStr<'a>>,
+    #[serde(default = "default_dancer_name")]
     pub dancer_name: HipStr<'a>,
     pub title: HipStr<'a>,
-    pub credits: HipStr<'a>,
+    /// Missing in some mods
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub credits: Option<HipStr<'a>>,
     /// Only in Chinese version
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_title: Option<HipStr<'a>>,
     /// Only in Chinese version
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_credits: Option<HipStr<'a>>,
+    /// Only in Chinese version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sub_artist: Option<HipStr<'a>>,
     pub phone_images: PhoneImages<'a>,
     pub num_coach: u32,
     pub main_coach: i32,

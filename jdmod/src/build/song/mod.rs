@@ -222,7 +222,7 @@ fn main_scene<'a>(
             (0.0, 0.0),
         ),
         (graph_scene, "GRAPH", "graph", "graph", 2, (0.0, 0.0)),
-        (tml_scene, "TML", "tml", "timeline", 2, (0.0, 0.0)),
+        (tml_scene, "TML", "timeline", "tml", 2, (0.0, 0.0)),
         (video_scene, "VIDEO", "videoscoach", "video", 2, (0.0, 0.0)),
         (
             menuart_scene,

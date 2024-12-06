@@ -4,8 +4,9 @@ use std::{fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
 use ubiart_toolkit::{cooked, utils::Game};
-use crate::utils::transcode_replace;
+
 use super::SongImportState;
+use crate::utils::transcode_replace;
 
 /// Imports the video of the song
 pub fn import(

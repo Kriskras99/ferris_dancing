@@ -10,8 +10,9 @@ use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPath, VirtualPathBuf}
 use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit::{alias8::Alias8, utils::UniqueGameId};
-use crate::import::TranscodeSettings;
+
 use self::localisation::LocaleIdMap;
+use crate::import::TranscodeSettings;
 
 pub mod gameconfig;
 pub mod localisation;

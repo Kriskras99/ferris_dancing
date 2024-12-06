@@ -30,7 +30,7 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
     let dance_tml_path = cook_path(tape_case_path, sis.ugi)?;
 
     let tape_file = sis.vfs.open(dance_tml_path.as_ref())?;
-    let tape = tape::parse(&tape_file, sis.ugi)?;
+    let tape = tape::parse(&tape_file, sis.ugi, sis.lax)?;
 
     let mut timeline = Timeline {
         timeline: BTreeSet::new(),
