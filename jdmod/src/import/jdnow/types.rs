@@ -1,10 +1,11 @@
 //! Types used to work with Just Dance Now data
 
 use std::path::{Path, PathBuf};
+
 use bluestar_toolkit::SongDetails;
 use dotstar_toolkit_utils::vfs::{VirtualFileSystem, VirtualPath, VirtualPathBuf};
-use crate::import::TranscodeSettings;
-use crate::types::song::SongDirectoryTree;
+
+use crate::{import::TranscodeSettings, types::song::SongDirectoryTree};
 
 /// Directory and file structure of a song from Just Dance Now
 pub struct NowTree {
@@ -126,6 +127,7 @@ impl NowBundleTree {
     }
 }
 
+/// State needed for parsing a JDNow song
 pub struct NowState<'a> {
     /// Filesystem with the import files
     pub bundle: &'a dyn VirtualFileSystem,
@@ -137,4 +139,6 @@ pub struct NowState<'a> {
     pub transcode: TranscodeSettings,
     /// Codename for the map
     pub details: SongDetails<'a>,
+    /// The converted beats
+    pub beats: Vec<u32>,
 }

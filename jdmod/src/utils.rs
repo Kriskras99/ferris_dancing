@@ -1,9 +1,11 @@
 //! Various utilities like texture encoding/decoding and dealing with paths
-use std::io::{Seek, Write};
-use std::path::Path;
-use std::sync::LazyLock;
+use std::{
+    io::{Seek, Write},
+    path::Path,
+    sync::LazyLock,
+};
+
 use anyhow::{anyhow, bail, Error};
-use ffmpeg_sidecar::command::FfmpegCommand;
 use dotstar_toolkit_utils::{
     bytes::{
         primitives::i16le,
@@ -13,6 +15,7 @@ use dotstar_toolkit_utils::{
     },
     vfs::{VirtualFileSystem, VirtualPath},
 };
+use ffmpeg_sidecar::command::FfmpegCommand;
 use hipstr::HipStr;
 use hound::SampleFormat;
 use image::{imageops, RgbaImage};
@@ -20,7 +23,7 @@ use nx_opus::{mux_from_opus, mux_to_opus};
 use regex::Regex;
 use rubato::Resampler;
 use test_eq::test_eq;
-use tracing::debug;
+use tracing::{debug, trace};
 use ubiart_toolkit::{
     cooked::{
         png::Png,
@@ -28,6 +31,7 @@ use ubiart_toolkit::{
     },
     utils::{Game, Platform, UniqueGameId},
 };
+
 use crate::import::TranscodeSettings;
 
 /// Cook a path so it stars with 'cache/itf_cooked/...'
@@ -566,7 +570,9 @@ pub fn resample_audio<W: Write + Seek>(
     output.finalize().unwrap();
 }
 
-static FFMPEG: LazyLock<anyhow::Result<()>> = LazyLock::new(|| ffmpeg_sidecar::download::auto_download());
+/// Only download FFMPEG once
+static FFMPEG: LazyLock<anyhow::Result<()>> =
+    LazyLock::new(ffmpeg_sidecar::download::auto_download);
 
 /// Transcode an input video to VP9 and replace it.
 ///
@@ -576,7 +582,8 @@ pub fn transcode_replace(path: &Path, settings: TranscodeSettings) -> Result<(),
         bail!("Could not find or download ffmpeg!")
     };
 
-    if settings.disable {
+    if settings.disable_transcoding {
+        println!("Skipping transcode");
         // Skip transcoding when disabled
         return Ok(());
     }
@@ -595,21 +602,36 @@ pub fn transcode_replace(path: &Path, settings: TranscodeSettings) -> Result<(),
 }
 
 /// Transcode the video at source and put it at the destination
-pub fn transcode(source: &Path, destination: &Path, settings: TranscodeSettings) -> Result<(), Error> {
+pub fn transcode(
+    source: &Path,
+    destination: &Path,
+    settings: TranscodeSettings,
+) -> Result<(), Error> {
     if FFMPEG.is_err() {
         bail!("Could not find or download ffmpeg!")
     };
-    let source = source.to_str().ok_or_else(|| anyhow!("Invalid path: {}", source.display()))?;
-    let destination = destination.to_str().ok_or_else(|| anyhow!("Invalid path: {}", destination.display()))?;
+    if !source.exists() {
+        bail!("{} does not exist!", source.display());
+    }
+    let source = source
+        .to_str()
+        .ok_or_else(|| anyhow!("Invalid path: {}", source.display()))?;
+    let destination = destination
+        .to_str()
+        .ok_or_else(|| anyhow!("Invalid path: {}", destination.display()))?;
 
-    if settings.disable {
+    if settings.disable_transcoding {
+        println!("Skipping transcode");
         // Skip transcoding when disabled
         std::fs::copy(source, destination)?;
         return Ok(());
     }
 
     let log_file = tempfile::NamedTempFile::new()?;
-    let log_file_path = log_file.path().to_str().ok_or_else(|| anyhow!("Invalid path: {}", log_file.path().display()))?;
+    let log_file_path = log_file
+        .path()
+        .to_str()
+        .ok_or_else(|| anyhow!("Invalid path: {}", log_file.path().display()))?;
 
     if !settings.one_pass {
         let output = if cfg!(target_os = "windows") {
@@ -618,7 +640,7 @@ pub fn transcode(source: &Path, destination: &Path, settings: TranscodeSettings)
             "/dev/null"
         };
 
-        FfmpegCommand::new()
+        let mut child = FfmpegCommand::new()
             .hide_banner()  // Don't show the copyright/configuration banner
             .input(source)    // Set the input file
             .codec_video("libvpx-vp9")  // Use the VP9 encoder
@@ -633,12 +655,16 @@ pub fn transcode(source: &Path, destination: &Path, settings: TranscodeSettings)
             .arg("0")
             .arg("-y")  // Overwrite existing file (/dev/null|NUL)
             .output(output) // Set the output to null
-            .spawn()?   // Start transcoding
-            .wait() // Wait for transcoding to finish
+            .spawn()?; // Start transcoding
+        child
+            .iter()?
+            .filter_progress()
+            .for_each(|progress| trace!("{}", progress.raw_log_message));
+        child.wait() // Wait for transcoding to finish
             .map_err(|_| anyhow!("Transcoding failed"))?;
         debug!("Finished first pass");
 
-        FfmpegCommand::new()
+        let mut child = FfmpegCommand::new()
             .hide_banner()  // Don't show the copyright/configuration banner
             .input(source)    // Set the input file
             .codec_video("libvpx-vp9")  // Use the VP9 encoder
@@ -653,25 +679,33 @@ pub fn transcode(source: &Path, destination: &Path, settings: TranscodeSettings)
             .arg("-b:v")    // Set an unlimited bitrate
             .arg("0")
             .output(destination)    // Write to the temp file
-            .spawn()?   // Start transcoding
-            .wait() // Wait for transcoding to finish
+            .spawn()?; // Start transcoding
+        child
+            .iter()?
+            .filter_progress()
+            .for_each(|progress| trace!("{}", progress.raw_log_message));
+        child.wait() // Wait for transcoding to finish
             .map_err(|_| anyhow!("Transcoding failed"))?;
         debug!("Finished second pass");
-
     } else {
-        FfmpegCommand::new()
+        let mut child = FfmpegCommand::new()
             .hide_banner()  // Don't show the copyright/configuration banner
             .input(source)    // Set the input file
             .codec_video("libvpx-vp9")  // Use the VP9 encoder
             .crf(settings.crf)  // Set the quality (default is 32)
             .no_audio() // Don't copy/transcode the audio
+            .overwrite()
             .arg("-speed")  // Go a bit faster, sacrificing a bit of quality
-            .arg("4")
+            .arg("2")
             .arg("-b:v")    // Set an unlimited bitrate
             .arg("0")
             .output(destination)    // Write to the temp file
-            .spawn()?   // Start transcoding
-            .wait() // Wait for transcoding to finish
+            .spawn()?; // Start transcoding
+        child
+            .iter()?
+            .filter_progress()
+            .for_each(|progress| debug!("{}", progress.raw_log_message));
+        child.wait() // Wait for transcoding to finish
             .map_err(|_| anyhow!("Transcoding failed"))?;
     }
     // Close the temp file
@@ -687,20 +721,31 @@ pub fn extract_audio(source: &Path, destination: &Path) -> Result<(), Error> {
     if FFMPEG.is_err() {
         bail!("Could not find or download ffmpeg!")
     };
-    ffmpeg_sidecar::download::auto_download()?;
-    let source = source.to_str().ok_or_else(|| anyhow!("Invalid path: {}", source.display()))?;
-    let destination = destination.to_str().ok_or_else(|| anyhow!("Invalid path: {}", destination.display()))?;
+    trace!(
+        "Extracting audio from {} to {}",
+        source.display(),
+        destination.display()
+    );
+    let source = source
+        .to_str()
+        .ok_or_else(|| anyhow!("Invalid path: {}", source.display()))?;
+    let destination = destination
+        .to_str()
+        .ok_or_else(|| anyhow!("Invalid path: {}", destination.display()))?;
 
-    FfmpegCommand::new()
+    let mut child = FfmpegCommand::new()
         .hide_banner()  // Don't show the copyright/configuration banner
         .input(source)    // Set the input file
         .codec_video("libopus")  // Use the libopus encoder
         .no_video() // Don't copy/transcode the video
         .output(destination)    // Write to the destination path
-        .spawn()?   // Start transcoding
-        .wait() // Wait for transcoding to finish
+        .spawn()?; // Start transcoding
+    child
+        .iter()?
+        .filter_progress()
+        .for_each(|progress| debug!("{}", progress.raw_log_message));
+    child.wait() // Wait for transcoding to finish
         .map_err(|_| anyhow!("Transcoding failed"))?;
 
     Ok(())
 }
-

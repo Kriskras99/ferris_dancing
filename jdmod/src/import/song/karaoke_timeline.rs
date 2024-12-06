@@ -31,7 +31,7 @@ pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<
         let karaoke_tml_path = cook_path(karaoke_tml_path, sis.ugi)?;
 
         let tape_file = sis.vfs.open(karaoke_tml_path.as_ref())?;
-        let tape = cooked::tape::parse(&tape_file, sis.ugi)?;
+        let tape = cooked::tape::parse(&tape_file, sis.ugi, sis.lax)?;
 
         let timeline = Timeline {
             timeline: tape

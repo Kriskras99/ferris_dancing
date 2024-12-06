@@ -2,11 +2,13 @@
 //! The main code for importing games and songs
 use std::{
     cmp::Ordering,
+    ffi::OsStr,
     num::NonZeroUsize,
     path::{Path, PathBuf},
 };
-use std::ffi::OsStr;
+
 use anyhow::{anyhow, bail, Error};
+use bluestar_toolkit;
 use clap::Args;
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserializeExt as _,
@@ -17,7 +19,6 @@ use dotstar_toolkit_utils::{
 };
 use hipstr::HipStr;
 use tracing::trace;
-use bluestar_toolkit;
 use ubiart_toolkit::{
     alias8::Alias8,
     cooked,
@@ -71,12 +72,12 @@ pub struct TranscodeSettings {
     /// The quality setting for transcoding, lower is better
     #[clap(long, default_value_t = 32)]
     pub crf: u32,
-    /// Use two-pass encoding for transcoding, gives better quality
+    /// Disable two-pass encoding for transcoding, faster but lower quality
     #[clap(long)]
     pub one_pass: bool,
     /// Disable transcoding, will just copy the video
     #[clap(long)]
-    pub disable: bool,
+    pub disable_transcoding: bool,
 }
 
 impl Default for TranscodeSettings {
@@ -84,7 +85,7 @@ impl Default for TranscodeSettings {
         Self {
             crf: 32,
             one_pass: true,
-            disable: false,
+            disable_transcoding: false,
         }
     }
 }
@@ -98,7 +99,7 @@ pub fn main(cli: &Import) -> Result<(), Error> {
         cli.songs,
         cli.game,
         cli.threads,
-        cli.transcode
+        cli.transcode,
     )
 }
 
@@ -119,6 +120,10 @@ pub fn import(
         bail!("Mod directory does not exist or is missing vital subdirectories!");
     }
 
+    if !game_path.exists() {
+        bail!("{} does not exist!", game_path.display());
+    }
+
     if game_path.ends_with("secure_fat.gf") {
         import_sfat(game_path, dir_tree, lax, songs_only, n_threads, transcode)?;
     } else if game_path.ends_with("dlcdescriptor.ckd") {
@@ -126,21 +131,28 @@ pub fn import(
     } else if game_path.ends_with("songdesc.tpl.ckd") {
         import_songdesc(game_path, dir_tree, transcode)?;
     } else if game_path.extension() == Some(OsStr::new("json")) {
-        let json_file = std::fs::read(&game_path)?;
+        let json_file = std::fs::read(game_path)?;
         if let Ok(basic) = serde_json::from_slice::<'_, bluestar_toolkit::Song>(&json_file) {
-            let song_name = basic.name;
+            let song_name = basic.id;
 
-            import_jdnow_song(&game_path, &dir_tree, &song_name, transcode)?;
-        } else if let Ok(songs) = serde_json::from_slice::<'_, Vec<bluestar_toolkit::Song>>(&json_file) {
+            import_jdnow_song(game_path, &dir_tree, &song_name, transcode)?;
+        } else if let Ok(songs) =
+            serde_json::from_slice::<'_, Vec<bluestar_toolkit::Song>>(&json_file)
+        {
             for song in songs {
-                let song_name = song.name;
-                let path = game_path.parent().ok_or_else(|| anyhow!("Invalid game path"))?.join(format!("songs/{song_name}/{song_name}.extra.json"));
+                let song_name = song.id;
+                let path = game_path
+                    .parent()
+                    .ok_or_else(|| anyhow!("Invalid game path"))?
+                    .join(format!("songs/{song_name}/{song_name}.extra.json"));
                 import_jdnow_song(&path, &dir_tree, &song_name, transcode)?;
             }
-        } else if let Ok(extra) = serde_json::from_slice::<'_, bluestar_toolkit::SongDetails>(&json_file) {
+        } else if let Ok(extra) =
+            serde_json::from_slice::<'_, bluestar_toolkit::SongDetails>(&json_file)
+        {
             let song_name = extra.map_name;
 
-            import_jdnow_song(&game_path, &dir_tree, &song_name, transcode)?;
+            import_jdnow_song(game_path, &dir_tree, &song_name, transcode)?;
         } else {
             bail!("Unsupported JSON file format!");
         };
@@ -157,15 +169,31 @@ pub fn import(
         trace!("Sources: {sources:#?}");
 
         for source in sources {
-            match source {
-                Source::Dlc(path) => import_dlcdescriptor(&path, dir_tree.clone(), lax, transcode)?,
-                Source::Sfat(path) => {
-                    import_sfat(&path, dir_tree.clone(), lax, songs_only, n_threads, transcode)?;
+            let result = match &source {
+                Source::Dlc(path) => import_dlcdescriptor(path, dir_tree.clone(), lax, transcode),
+                Source::Sfat(path) => import_sfat(
+                    path,
+                    dir_tree.clone(),
+                    lax,
+                    songs_only,
+                    n_threads,
+                    transcode,
+                ),
+                Source::Now(path, song_name) => {
+                    jdnow::import_song(path, &dir_tree, song_name, transcode)
                 }
-                Source::GameConfig(path) => {
-                    import_gameconfig(&path, dir_tree.clone(), game, songs_only, n_threads, transcode)?;
-                }
-                Source::SongDesc(path) => import_songdesc(&path, dir_tree.clone(), transcode)?,
+                Source::GameConfig(path) => import_gameconfig(
+                    path,
+                    dir_tree.clone(),
+                    game,
+                    songs_only,
+                    n_threads,
+                    transcode,
+                ),
+                Source::SongDesc(path) => import_songdesc(path, dir_tree.clone(), transcode),
+            };
+            if let Err(error) = result {
+                println!("Failed to import {}: {error:?}", source.path().display());
             }
         }
     } else {
@@ -183,8 +211,8 @@ fn import_jdnow_song(
     transcode: TranscodeSettings,
 ) -> Result<(), Error> {
     let parent = game_path
-            .parent()
-            .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?;
+        .parent()
+        .ok_or_else(|| anyhow!("No parent directory for secure_fat.gf!"))?;
 
     jdnow::import_song(parent, dir_tree, map_name, transcode)?;
     Ok(())
@@ -223,7 +251,12 @@ fn import_sfat(
 }
 
 /// Import a song from a dlcdescriptor.ckd
-fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool, transcode: TranscodeSettings) -> Result<(), Error> {
+fn import_dlcdescriptor(
+    game_path: &Path,
+    dir_tree: DirectoryTree,
+    lax: bool,
+    transcode: TranscodeSettings,
+) -> Result<(), Error> {
     // Init the native filesystem and load the securefat as a virtual filesystem
     let native_vfs = NativeFs::new(
         game_path
@@ -257,7 +290,11 @@ fn import_dlcdescriptor(game_path: &Path, dir_tree: DirectoryTree, lax: bool, tr
 }
 
 /// Import a song from songdesc.tpl.ckd
-fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree, transcode: TranscodeSettings) -> Result<(), Error> {
+fn import_songdesc(
+    game_path: &Path,
+    dir_tree: DirectoryTree,
+    transcode: TranscodeSettings,
+) -> Result<(), Error> {
     let mapname = game_path
         .parent()
         .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?; // mapname
@@ -316,7 +353,7 @@ fn import_songdesc(game_path: &Path, dir_tree: DirectoryTree, transcode: Transco
         aliases: Alias8::default(),
         lax: true,
         n_threads: NonZeroUsize::new(1),
-        transcode
+        transcode,
     };
 
     if let Err(err) = song::import(&is, &new_path) {
@@ -532,10 +569,25 @@ enum Source {
     Dlc(PathBuf),
     /// secure_fat.gf file
     Sfat(PathBuf),
+    /// JD Now directory and map name
+    Now(PathBuf, HipStr<'static>),
     /// cook_path(enginedata/gameconfig/gameconfig.isg) file
     GameConfig(PathBuf),
     /// cook_path(world/maps/../songdesc.tpl) file
     SongDesc(PathBuf),
+}
+
+impl Source {
+    /// The path for this source
+    pub fn path(&self) -> &Path {
+        match self {
+            Self::Dlc(path)
+            | Self::Sfat(path)
+            | Self::Now(path, _)
+            | Self::GameConfig(path)
+            | Self::SongDesc(path) => path.as_path(),
+        }
+    }
 }
 
 impl Ord for Source {
@@ -548,6 +600,12 @@ impl Ord for Source {
             (Self::Dlc(left), Self::Dlc(right)) => right.cmp(left),
             (Self::Dlc(_), _) => Ordering::Less,
             (_, Self::Dlc(_)) => Ordering::Greater,
+            (Self::Now(lpath, lname), Self::Now(rpath, rname)) if lpath == rpath => {
+                rname.cmp(lname)
+            }
+            (Self::Now(lpath, _), Self::Now(rpath, _)) => rpath.cmp(lpath),
+            (Self::Now(_, _), _) => Ordering::Less,
+            (_, Self::Now(_, _)) => Ordering::Greater,
             (Self::SongDesc(left), Self::SongDesc(right)) => right.cmp(left),
             (Self::SongDesc(_), _) => Ordering::Less,
             (_, Self::SongDesc(_)) => Ordering::Greater,
@@ -618,11 +676,42 @@ fn find_sources(path: &Path, sources: &mut Vec<Source>) -> Result<(), Error> {
             }
         }
     } else {
-        for dir in path.read_dir()? {
-            let dir = dir?;
-            if dir.file_type()?.is_dir() {
-                find_sources(&dir.path(), sources)?;
+        let paths: Vec<_> = path.read_dir()?.filter_map(Result::ok).collect();
+        for file in paths
+            .iter()
+            .filter(|p| p.file_type().map(|t| t.is_file()).unwrap_or(false))
+        {
+            if file.path().extension() == Some(OsStr::new("json")) {
+                let json_path = file.path();
+                let json_file = std::fs::read(&json_path)?;
+                if let Ok(basic) = serde_json::from_slice::<'_, bluestar_toolkit::Song>(&json_file)
+                {
+                    let song_name = basic.id;
+                    sources.push(Source::Now(path.to_path_buf(), song_name.into_owned()));
+                    return Ok(());
+                } else if let Ok(songs) =
+                    serde_json::from_slice::<'_, Vec<bluestar_toolkit::Song>>(&json_file)
+                {
+                    for song in songs {
+                        let song_name = song.id;
+                        let path = path.join(format!("songs/{song_name}/"));
+                        sources.push(Source::Now(path, song_name.into_owned()));
+                    }
+                    return Ok(());
+                } else if let Ok(extra) =
+                    serde_json::from_slice::<'_, bluestar_toolkit::SongDetails>(&json_file)
+                {
+                    let song_name = extra.map_name;
+                    sources.push(Source::Now(path.to_path_buf(), song_name.into_owned()));
+                    return Ok(());
+                };
             }
+        }
+        for dir in paths
+            .iter()
+            .filter(|p| p.file_type().map(|t| t.is_dir()).unwrap_or(false))
+        {
+            find_sources(&dir.path(), sources)?;
         }
     }
     Ok(())

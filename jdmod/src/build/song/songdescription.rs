@@ -48,9 +48,10 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
                 cn_lyrics: None,
                 dancer_name: ses.song.dancer_name.clone(),
                 title: ses.song.title.clone(),
-                credits: ses.song.credits.clone(),
+                credits: Some(ses.song.credits.clone()),
                 sub_title: None,
                 sub_credits: None,
+                sub_artist: None,
                 phone_images,
                 num_coach: ses.song.number_of_coaches.into(),
                 main_coach: ses
