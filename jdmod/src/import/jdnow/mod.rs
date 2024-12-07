@@ -53,8 +53,7 @@ pub fn import_song(
     let beats = details.beats.as_slice();
     let beats = if beats[0] == 0 { &beats[1..] } else { beats };
     let diff = (beats[1] * 48) - (beats[0] * 48);
-    let n_to_prepend = div_round(beats[0] * 48, diff);
-    assert!(n_to_prepend >= 1, "n: {n_to_prepend}");
+    let n_to_prepend = div_round(beats[0] * 48, diff).max(1);
     let mut new_beats = Vec::with_capacity(usize::try_from(n_to_prepend)? + beats.len());
     for i in 0..n_to_prepend {
         new_beats.push(diff * i);
