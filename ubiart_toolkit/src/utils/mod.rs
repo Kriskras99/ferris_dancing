@@ -13,6 +13,7 @@ use dotstar_toolkit_utils::bytes::{
 };
 pub use path::{PathId, SplitPath};
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 use ubiart_toolkit_shared_types::errors::ParserError;
 pub use ubiart_toolkit_shared_types::{errors, Color, LocaleId};
 
@@ -318,17 +319,26 @@ impl TryFrom<u32> for UniqueGameId {
 }
 
 impl BinaryDeserialize<'_> for UniqueGameId {
-    type Ctx = ();
+    type Ctx = bool;
     type Output = Self;
 
     fn deserialize_at_with(
         reader: &(impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: (),
+        lax: bool,
     ) -> Result<Self, ReadError> {
         let value = reader.read_at::<u32be>(position)?;
-        Self::try_from(value)
-            .map_err(|_| ReadError::custom(format!("Unknown game platform: {value:x}")))
+        let result = Self::try_from(value)
+            .map_err(|_| ReadError::custom(format!("Unknown game platform: {value:x}")));
+        if result.is_err() && lax {
+            warn!("Unknown game platform: {value:x}");
+            return Ok(UniqueGameId {
+                game: Game::Unknown,
+                platform: Platform::Nx,
+                id: value,
+            });
+        }
+        result
     }
 }
 

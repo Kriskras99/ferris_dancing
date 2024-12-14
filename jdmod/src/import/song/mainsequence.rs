@@ -1,10 +1,11 @@
 //! # Main sequence
 //! Imports the mainsequence and files referenced in it
 use std::{collections::BTreeSet, fs::File};
-
+use std::io::ErrorKind;
 use anyhow::{anyhow, Error};
 use hipstr::HipStr;
 use test_eq::test_eq;
+use tracing::trace;
 use ubiart_toolkit::{cooked, cooked::tape, utils::Game};
 
 use super::SongImportState;
@@ -110,8 +111,8 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
             let mainsequence_file = File::create(mainsequence_path)?;
             serde_json::to_writer_pretty(mainsequence_file, &timeline)?;
         }
-        (Err(error), true) => {
-            println!("Warning! {error}");
+        (Err(error), true) if error.kind() == ErrorKind::NotFound => {
+            trace!("Failed to open {}", mainsequence_tml_path);
             let timeline = Timeline {
                 timeline: BTreeSet::new(),
             };
@@ -121,7 +122,7 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
             let mainsequence_file = File::create(mainsequence_path)?;
             serde_json::to_writer_pretty(mainsequence_file, &timeline)?;
         }
-        (Err(error), false) => return Err(error.into()),
+        (Err(error), _) => return Err(error.into()),
     };
 
     Ok(())
