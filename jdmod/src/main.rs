@@ -13,6 +13,7 @@ use std::process::ExitCode;
 
 // use jdmod::check::Check;
 use clap::{Parser, Subcommand};
+use tracing::level_filters::LevelFilter;
 use jdmod::{
     bundle::Bundle, export::Build, extract::Extract, import::Import, new::New, unlock::Unlock,
 };
@@ -69,7 +70,11 @@ fn main() -> ExitCode {
         .without_time();
     tracing_subscriber::registry()
         .with(fmt_layer)
-        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(
+            tracing_subscriber::EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
         .init();
 
     let result = match cli.commands {

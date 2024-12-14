@@ -6,7 +6,7 @@ use dotstar_toolkit_utils::bytes::{
 };
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 use test_eq::{test_any, test_eq};
-
+use tracing::warn;
 use super::{
     Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR, UNK1, UNK2, UNK3,
     UNK6,
@@ -14,13 +14,13 @@ use super::{
 use crate::utils::{Game, PathId, Platform, SplitPath, UniqueGameId};
 
 impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
-    type Ctx = ();
+    type Ctx = bool;
     type Output = Self;
 
     fn deserialize_at_with(
         reader: &'de (impl ReadAtExt + ?Sized),
         position: &mut u64,
-        _ctx: (),
+        lax: bool,
     ) -> Result<Self, ReadError> {
         // Read the header
         let magic = reader.read_at::<u32be>(position)?;
@@ -36,14 +36,14 @@ impl<'de> BinaryDeserialize<'de> for Bundle<'de> {
         let unk3 = reader.read_at::<u32be>(position)?;
         test_any!(unk3, UNK3)?;
         let unk4 = reader.read_at::<u32be>(position)?;
-        let game_platform = reader.read_at::<UniqueGameId>(position)?;
+        let game_platform = reader.read_at_with::<UniqueGameId>(position, lax)?;
         let engine_version = reader.read_at::<u32be>(position)?;
         let num_files_2 = reader.read_at::<u32be>(position)?;
 
         // Sanity check
         test_eq!(num_files, num_files_2)?;
         if platform != game_platform.platform {
-            println!("Header: Warning! Platform (0x{:x} ({platform:?})) does not match GamePlatformId (0x{:x} ({game_platform}))!", u32::from(platform), u32::from(game_platform));
+            warn!("Header: Platform (0x{:x} ({platform:?})) does not match GamePlatformId (0x{:x} ({game_platform}))!", u32::from(platform), u32::from(game_platform));
         }
 
         // Prepare for storing a lot of file info

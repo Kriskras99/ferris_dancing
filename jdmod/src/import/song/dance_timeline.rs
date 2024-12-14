@@ -4,6 +4,7 @@ use std::{collections::BTreeSet, fs::File, io::Write};
 
 use anyhow::{anyhow, Error};
 use test_eq::test_eq;
+use tracing::{trace, warn};
 use ubiart_toolkit::{cooked, cooked::tape};
 
 use super::{montage, SongImportState};
@@ -65,8 +66,11 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                             .join(new_motion.classifier_filename.as_str()),
                     )?;
                     to.write_all(&from)?;
+                } else if new_motion.classifier_filename.ends_with(".gesture") {
+                    // We don't care about gesture (PS4) files
+                    trace!("Did not find classifier {} at {classifier_path}!", new_motion.classifier_filename);
                 } else {
-                    println!("Warning! Missing classifier {classifier_path}!");
+                    warn!("Did not find classifier {} at {classifier_path}!", new_motion.classifier_filename);
                 }
                 Clip::Motion(new_motion)
             }

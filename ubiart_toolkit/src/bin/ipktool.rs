@@ -12,10 +12,15 @@ use std::{
 };
 
 use clap::Parser;
+use tracing::{debug, info, warn};
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use dotstar_toolkit_utils::{
     bytes::read::BinaryDeserializeExt as _,
     vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
 };
+use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
 use ubiart_toolkit::{
     ipk::{self, Bundle},
     utils::{
@@ -47,6 +52,25 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        // Display source code file paths
+        .with_file(false)
+        // Display source code line numbers
+        .with_line_number(false)
+        // Display the thread ID an event was recorded on
+        .with_thread_ids(true)
+        // Don't display the event's target (module path)
+        .with_target(true)
+        .without_time();
+    tracing_subscriber::registry()
+        .with(fmt_layer)
+        .with(
+            tracing_subscriber::EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .init();
+
     let source = &cli.source;
 
     if cli.compress {
@@ -58,10 +82,10 @@ fn main() {
         create_ipk(source, &destination).unwrap();
     } else {
         let file = File::open(source).unwrap();
-        let ipk = Bundle::deserialize(&file).unwrap();
+        let ipk = Bundle::deserialize_with(&file, cli.lax).unwrap();
 
         if cli.check {
-            check_ipk(&ipk, source);
+            check_ipk(&ipk, source, cli.lax);
         }
 
         if cli.list {
@@ -85,7 +109,7 @@ pub fn list_ipk(ipk: &Bundle) {
     let mut n: usize = 0;
     for fil in ipk.files.values() {
         let path = &fil.path;
-        println!(
+        info!(
             "{path} [0x{:x}] ({} | {})",
             u32::from(path.id()),
             if fil.is_cooked { 'C' } else { 'U' },
@@ -94,8 +118,8 @@ pub fn list_ipk(ipk: &Bundle) {
         dirs.insert(fil.path.parent());
         n += 1;
     }
-    println!("{} directories, {n} files", dirs.len());
-    println!(
+    info!("{} directories, {n} files", dirs.len());
+    info!(
         "Version: 0x{:x}, Engine: 0x{:x}, U4: 0x{:x}, GP: {:?}",
         ipk.version, ipk.engine_version, ipk.unk4, ipk.game_platform,
     );
@@ -130,29 +154,51 @@ pub fn unpack_ipk(ipk: &Bundle, destination: &Path, overwrite: bool) -> Result<(
                 }
             }
         } else {
-            println!("File already exists!: {filepath:?}");
+            warn!("File already exists!: {filepath:?}");
         }
     }
     Ok(())
 }
 
-pub fn check_ipk(ipk: &Bundle, filename: &Path) {
-    println!("GamePlatform: {:#?}", ipk.game_platform);
+pub fn check_ipk(ipk: &Bundle, filename: &Path, lax: bool) {
+    info!("GamePlatform: {:#?}", ipk.game_platform);
     if ipk.version != 5 {
-        println!("{filename:?}: Unknown IPK version!: 0x{:x}", ipk.version);
+        if lax {
+            debug!("{filename:?}: Unknown IPK version!: 0x{:x}", ipk.version);
+        } else {
+            warn!("{filename:?}: Unknown IPK version!: 0x{:x}", ipk.version);
+        }
     }
 
     for packed_file in ipk.files.values() {
         if packed_file.is_cooked && !packed_file.path.contains("itf_cooked") {
-            println!(
-                "  Metadata says cooked but PackedFile does not have 'itf_cooked' in path!: {} {}",
-                packed_file.is_cooked, packed_file.path
-            );
+            if lax {
+                debug!(
+                    "  Metadata says cooked but PackedFile does not have 'itf_cooked' in path!: {} {}",
+                    packed_file.is_cooked, packed_file.path
+                );
+
+            } else {
+                info!(
+                    "  Metadata says cooked but PackedFile does not have 'itf_cooked' in path!: {} {}",
+                    packed_file.is_cooked, packed_file.path
+                );
+
+            }
         } else if !packed_file.is_cooked && packed_file.path.contains("itf_cooked") {
-            println!(
-                "  Metadata says not cooked but PackedFile does have 'itf_cooked' in path!: {} {}",
-                packed_file.is_cooked, packed_file.path
-            );
+            if lax {
+                debug!(
+                    "  Metadata says not cooked but PackedFile does have 'itf_cooked' in path!: {} {}",
+                    packed_file.is_cooked, packed_file.path
+                );
+
+            } else {
+                info!(
+                    "  Metadata says not cooked but PackedFile does have 'itf_cooked' in path!: {} {}",
+                    packed_file.is_cooked, packed_file.path
+                );
+
+            }
         }
     }
 }

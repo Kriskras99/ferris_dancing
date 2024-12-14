@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::Deserialize;
 use test_eq::{test_eq, TestFailure};
-use tracing::debug;
+use tracing::trace;
 use ubiart_toolkit_shared_types::errors::ParserError;
 
 /// Remove the '\0' from the end of the `buffer`
@@ -11,7 +11,7 @@ pub fn clean_buffer_json(buffer: &[u8], lax: bool) -> Result<&[u8], TestFailure>
     match (result, lax) {
         (Ok(()), _) => Ok(&buffer[..buffer.len() - 1]),
         (Err(error), true) => {
-            debug!("Warning! Ignoring TestError: {error:?}");
+            trace!("Warning! Ignoring TestError: {error:?}");
             Ok(buffer)
         }
         (Err(error), false) => Err(error),
