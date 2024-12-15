@@ -17,7 +17,7 @@ use ubiart_toolkit::{cooked, shared_json_types};
 
 use crate::types::{
     localisation::{LocaleId, LocaleIdMap},
-    song::{NumberOfCoaches, Tag},
+    song::NumberOfCoaches,
 };
 
 // TODO: Replace with BiMap which allows mapping multiple strings to one objective
@@ -1668,18 +1668,9 @@ impl<'a> Component<'a> {
                 })
             }
             cooked::isg::ObjectiveDescriptorComponent::MapTagsRequirement(data) => {
-                let mut acceptable_map_tags = Vec::with_capacity(data.acceptable_map_tags.len());
-                for item in &data.acceptable_map_tags {
-                    acceptable_map_tags.push(Tag::try_from(item.as_ref())?);
-                }
-                let mut unacceptable_map_tags =
-                    Vec::with_capacity(data.unacceptable_map_tags.len());
-                for item in &data.unacceptable_map_tags {
-                    unacceptable_map_tags.push(Tag::try_from(item.as_ref())?);
-                }
                 ComponentType::MapTagsRequirement(MapTagsRequirement {
-                    acceptable_map_tags,
-                    unacceptable_map_tags,
+                    acceptable_map_tags: data.acceptable_map_tags.clone(),
+                    unacceptable_map_tags: data.unacceptable_map_tags.clone(),
                 })
             }
             cooked::isg::ObjectiveDescriptorComponent::OnlyOnline(_) => ComponentType::OnlyOnline,
@@ -1832,18 +1823,8 @@ impl<'a> From<Component<'a>> for cooked::isg::ObjectiveDescriptorComponent<'a> {
                     cooked::isg::ObjectiveDescriptorComponentMapTagsRequirement {
                         class: None,
                         only_diff_values: value.only_diff_values,
-                        acceptable_map_tags: data
-                            .acceptable_map_tags
-                            .iter()
-                            .copied()
-                            .map(Tag::to_cow)
-                            .collect(),
-                        unacceptable_map_tags: data
-                            .unacceptable_map_tags
-                            .iter()
-                            .copied()
-                            .map(Tag::to_cow)
-                            .collect(),
+                        acceptable_map_tags: data.acceptable_map_tags.clone(),
+                        unacceptable_map_tags: data.unacceptable_map_tags.clone(),
                     },
                 )
             }
@@ -1992,7 +1973,8 @@ pub enum ComponentType<'a> {
     /// Require a minium score
     MapScoreRequirement(MapScoreRequirement),
     /// Require certain tags
-    MapTagsRequirement(MapTagsRequirement),
+    #[serde(borrow)]
+    MapTagsRequirement(MapTagsRequirement<'a>),
     /// Require to be online
     OnlyOnline,
     /// Require Unlimited songs
@@ -2240,11 +2222,13 @@ impl Default for MapScoreRequirement {
 
 /// Require specific tags
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Hash, PartialEq, Eq, IntoOwned)]
-pub struct MapTagsRequirement {
+pub struct MapTagsRequirement<'a> {
     /// Acceptable tags
-    pub acceptable_map_tags: Vec<Tag>,
+    #[serde(borrow)]
+    pub acceptable_map_tags: Vec<HipStr<'a>>,
     /// Forbidden tags
-    pub unacceptable_map_tags: Vec<Tag>,
+    #[serde(borrow)]
+    pub unacceptable_map_tags: Vec<HipStr<'a>>,
 }
 
 /// Require a specifc playlist

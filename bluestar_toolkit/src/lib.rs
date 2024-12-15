@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Song<'a> {
+    #[allow(clippy::pub_underscore_fields, reason = "Required by file format")]
     #[serde(borrow)]
     pub _id: HipStr<'a>,
     #[serde(borrow)]

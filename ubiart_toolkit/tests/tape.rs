@@ -5,57 +5,57 @@ use std::path::Path;
 use ubiart_toolkit::{cooked::tape, utils::UniqueGameId};
 
 fn tape_parse_wiiu2015(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::WIIU2015)?;
+    tape::parse(&data, UniqueGameId::WIIU2015, false)?;
     Ok(())
 }
 
 fn tape_parse_wiiu2016(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::WIIU2016)?;
+    tape::parse(&data, UniqueGameId::WIIU2016, false)?;
     Ok(())
 }
 
 fn tape_parse_nx2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX2017)?;
+    tape::parse(&data, UniqueGameId::NX2017, false)?;
     Ok(())
 }
 
 fn tape_parse_wiiu2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::WIIU2017)?;
+    tape::parse(&data, UniqueGameId::WIIU2017, false)?;
     Ok(())
 }
 
 fn tape_parse_win2017(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::WIN2017)?;
+    tape::parse(&data, UniqueGameId::WIN2017, false)?;
     Ok(())
 }
 
 fn tape_parse_nx2018(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX2018)?;
+    tape::parse(&data, UniqueGameId::NX2018, false)?;
     Ok(())
 }
 
 fn tape_parse_nx2019(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX2019V2)?;
+    tape::parse(&data, UniqueGameId::NX2019V2, false)?;
     Ok(())
 }
 
 fn tape_parse_nx2020(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX2020)?;
+    tape::parse(&data, UniqueGameId::NX2020, false)?;
     Ok(())
 }
 
 fn tape_parse_nx2020_china(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX_CHINA)?;
+    tape::parse(&data, UniqueGameId::NX_CHINA, false)?;
     Ok(())
 }
 
 fn tape_parse_nx2021(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX2022)?;
+    tape::parse(&data, UniqueGameId::NX2022, false)?;
     Ok(())
 }
 
 fn tape_parse_nx2022(_path: &Path, data: Vec<u8>) -> datatest_stable::Result<()> {
-    tape::parse(&data, UniqueGameId::NX2022)?;
+    tape::parse(&data, UniqueGameId::NX2022, false)?;
     Ok(())
 }
 

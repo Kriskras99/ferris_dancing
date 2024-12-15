@@ -1,11 +1,8 @@
 use std::{collections::HashMap, fmt::Debug};
-use std::fmt::Formatter;
+
 use hipstr::HipStr;
 use ownable::IntoOwned;
-use serde::{Deserialize, Deserializer, Serialize};
-use serde::de::{Error, Visitor};
-use serde_with::{serde_as, DeserializeAs};
-use tracing::{error, trace};
+use serde::{Deserialize, Serialize};
 use ubiart_toolkit_shared_types::{errors::ParserError, Color, LocaleId};
 
 use crate::shared_json_types::AutodanceVideoStructure;
@@ -928,6 +925,8 @@ pub struct SongDescription<'a> {
     /// Only in Chinese version
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_artist: Option<HipStr<'a>>,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub phone_images: PhoneImages<'a>,
     pub num_coach: u32,
     pub main_coach: i32,
@@ -1010,65 +1009,7 @@ impl MusicTrackData<'_> {
     pub const CLASS: HipStr<'static> = HipStr::borrowed("MusicTrackData");
 }
 
-#[allow(dead_code)]
-struct FloatOrU32 {}
-
-impl<'de> DeserializeAs<'de, u32> for FloatOrU32 {
-    fn deserialize_as<D>(deserializer: D) -> Result<u32, D::Error>
-    where
-        D: Deserializer<'de>
-    {
-        struct FloatIntVisitor {}
-        impl <'de> Visitor<'de> for FloatIntVisitor {
-            type Value = u32;
-
-            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
-                error!("Called expecting");
-                formatter.write_str("a float or integer between 0 and 2^32-1")
-            }
-
-            fn visit_u32<E>(self, v: u32) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                error!("Called visit_u32: {v}");
-                Ok(v)
-            }
-
-            fn visit_f32<E>(self, v: f32) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                error!("Called visit_f32: {v}");
-                trace!("Got f32 {v} instead of u32");
-                let v = v.round();
-                if v < 0.0 || v > 4_294_967_295.0 {
-                    Err(E::custom(format!("float value {} is out of range", v)))
-                } else {
-                    Ok(v as u32)
-                }
-            }
-
-            fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                error!("Called visit_f64: {v}");
-                trace!("Got f64 {v} instead of u32");
-                let v = v.round();
-                if v < 0.0 || v > 4_294_967_295.0 {
-                    Err(E::custom(format!("float value {} is out of range", v)))
-                } else {
-                    Ok(v as u32)
-                }
-            }
-        }
-        deserializer.deserialize_any(FloatIntVisitor {})
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
-#[serde_as]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MusicTrackStructure<'a> {
     #[serde(
@@ -1078,7 +1019,9 @@ pub struct MusicTrackStructure<'a> {
         skip_serializing_if = "Option::is_none"
     )]
     pub class: Option<HipStr<'a>>,
-    #[serde_as(as = "Vec<FloatOrU32>")]
+    /// In certain mods this is a float, but the code always parses
+    /// it as a u32. Any value after the decimal point is ignored.
+    #[serde(deserialize_with = "crate::utils::json::deserialize_vec_f32_or_u32")]
     pub markers: Vec<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub signatures: Vec<MusicSignature<'a>>,

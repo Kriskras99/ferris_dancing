@@ -23,6 +23,10 @@ pub fn parse(data: &[u8], ugi: UniqueGameId, lax: bool) -> Result<Tape<'_>, Pars
     Ok(tape)
 }
 
+const fn default_tape_bar_count() -> u32 {
+    1
+}
+
 #[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Tape<'a> {
@@ -35,8 +39,14 @@ pub struct Tape<'a> {
     pub class: Option<HipStr<'a>>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub clips: Vec<Clip<'a>>,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub tape_clock: u32,
+    // Sometimes missing in mods
+    #[serde(default = "default_tape_bar_count")]
     pub tape_bar_count: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub free_resources_after_play: u32,
     #[serde(borrow)]
     pub map_name: HipStr<'a>,
@@ -132,6 +142,10 @@ pub enum Clip<'a> {
     Unknown5C944B01(Unknown5C944B01Clip<'a>),
 }
 
+const fn is_active_default() -> u8 {
+    1
+}
+
 #[derive(IntoOwned, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ActorEnableClip<'a> {
@@ -143,10 +157,16 @@ pub struct ActorEnableClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -165,10 +185,16 @@ pub struct AlphaClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -188,10 +214,16 @@ pub struct CameraFeedClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -212,10 +244,16 @@ pub struct ColorClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -239,10 +277,16 @@ pub struct CommunityDancerClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow)]
     pub dancer_country_code: HipStr<'a>,
     pub dancer_avatar_id: u32,
@@ -261,10 +305,16 @@ pub struct FXClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -285,16 +335,23 @@ pub struct GameplayEventClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub target_actors: Vec<TargetActor<'a>>,
     pub event_type: u32,
-    #[serde(borrow)]
+    // Sometimes missing in mods
+    #[serde(borrow, default)]
     pub custom_param: HipStr<'a>,
 }
 
@@ -309,10 +366,16 @@ pub struct GoldEffectClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default)]
     pub effect_type: u8,
 }
@@ -328,16 +391,23 @@ pub struct HideUserInterfaceClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u32>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub target_actors: Vec<TargetActor<'a>>,
     pub event_type: u32,
-    #[serde(borrow)]
+    // Sometimes missing in mods
+    #[serde(borrow, default)]
     pub custom_param: HipStr<'a>,
 }
 
@@ -352,13 +422,21 @@ pub struct KaraokeClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     pub pitch: f32,
     #[serde(borrow)]
     pub lyrics: HipStr<'a>,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub is_end_of_line: u8,
     pub content_type: u32,
     pub start_time_tolerance: u32,
@@ -377,10 +455,16 @@ pub struct MaterialGraphicDiffuseAlphaClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -403,10 +487,16 @@ pub struct MaterialGraphicDiffuseColorClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -433,10 +523,16 @@ pub struct MaterialGraphicEnableLayerClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -458,10 +554,16 @@ pub struct MaterialGraphicUVAnimRotationClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -488,10 +590,16 @@ pub struct MaterialGraphicUVRotationClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -518,10 +626,16 @@ pub struct MaterialGraphicUVScaleClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -550,10 +664,16 @@ pub struct MaterialGraphicUVScrollClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -578,10 +698,16 @@ pub struct MaterialGraphicUVTranslationClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -606,13 +732,21 @@ pub struct MotionClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow)]
     pub classifier_path: HipStr<'a>,
     pub gold_move: u8,
+    // Sometimes CoachID (instead of CoachId) in mods
+    #[serde(alias = "CoachID")]
     pub coach_id: u8,
     pub move_type: u8,
     pub color: Color,
@@ -630,16 +764,24 @@ pub struct MotionPlatformSpecific<'a> {
         skip_serializing_if = "Option::is_none"
     )]
     pub class: Option<HipStr<'a>>,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub score_scale: f32,
-    pub score_smoothing: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
+    pub score_smoothing: f32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub scoring_mode: Option<u32>,
+    pub scoring_mode: Option<f32>,
     /// Not used in nx2019 or later
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub low_threshold: Option<f32>,
     /// Not used in nx2019 or later
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub high_threshold: Option<f32>,
+}
+
+const fn default_coach_count() -> u32 {
+    u32::MAX
 }
 
 #[derive(IntoOwned, Serialize, Deserialize, Debug)]
@@ -653,10 +795,16 @@ pub struct PictogramClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow)]
     pub picto_path: HipStr<'a>,
     /// Only in nx2017-nx2018, only has non-empty values in nx2018
@@ -665,6 +813,8 @@ pub struct PictogramClip<'a> {
     /// Only in nx2017-nx2018
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub atl_index: Option<u32>,
+    // Sometimes missing in mods
+    #[serde(default = "default_coach_count")]
     pub coach_count: u32,
 }
 
@@ -679,10 +829,16 @@ pub struct ProportionClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -704,10 +860,16 @@ pub struct Proportion3DClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -731,10 +893,16 @@ pub struct RotationClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -758,10 +926,16 @@ pub struct SizeClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -783,10 +957,16 @@ pub struct SlotClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     pub bpm: f32,
     #[serde(borrow)]
     pub signature: HipStr<'a>,
@@ -805,10 +985,16 @@ pub struct SpawnActorClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow)]
     pub actor_path: HipStr<'a>,
     #[serde(borrow)]
@@ -829,10 +1015,16 @@ pub struct SoundSetClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow)]
     pub sound_set_path: HipStr<'a>,
     pub sound_channel: i32,
@@ -853,10 +1045,16 @@ pub struct SoundwichClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -877,10 +1075,16 @@ pub struct SoundwichClipWithId<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -903,10 +1107,16 @@ pub struct TapeLauncherClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -934,10 +1144,16 @@ pub struct TapeReferenceClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow)]
     pub path: HipStr<'a>,
     #[serde(rename = "Loop")]
@@ -955,10 +1171,16 @@ pub struct TextClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -977,10 +1199,16 @@ pub struct TextAreaSizeClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -1006,10 +1234,16 @@ pub struct TranslationClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_indices: Vec<u8>,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
@@ -1033,10 +1267,16 @@ pub struct VibrationClip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow)]
     pub vibration_file_path: HipStr<'a>,
     #[serde(rename = "Loop")]
@@ -1082,10 +1322,16 @@ pub struct Unknown59FCC733Clip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub target_actors: Vec<TargetActor<'a>>,
     #[serde(borrow)]
@@ -1109,10 +1355,16 @@ pub struct UnknownCBB7C029Clip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     #[serde(borrow, default, skip_serializing_if = "Vec::is_empty")]
     pub target_actors: Vec<TargetActor<'a>>,
     pub unk2_stringid: u32,
@@ -1132,10 +1384,16 @@ pub struct Unknown5C944B01Clip<'a> {
     )]
     pub class: Option<HipStr<'a>>,
     pub id: u32,
+    // Sometimes missing in mods
+    #[serde(default)]
     pub track_id: u32,
+    // Sometimes missing in mods
+    #[serde(default = "is_active_default")]
     pub is_active: u8,
+    // Sometimes a float in mods
+    #[serde(deserialize_with = "crate::utils::json::deserialize_f32_or_i32")]
     pub start_time: i32,
-    pub duration: u32,
+    pub duration: i32,
     pub string: HipStr<'a>,
 }
 

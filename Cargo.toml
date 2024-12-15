@@ -164,7 +164,8 @@ option_if_let_else = "allow" # much less readable than the original
 too_many_lines = "allow" # parsers and writers are large and not easy to split
 module_name_repetitions = "allow" # they're named like that for a reason
 if_not_else = "allow" # code is easier to follow without the lint
-struct_field_names = "allow"
+struct_field_names = "allow" # most naming is set by the file formats
+case_sensitive_file_extension_comparisons = "allow" # not relevant for this application
 
 # TODO: Too much undocumented stuff in ubiart_toolkit
 #missing_docs = "deny"
@@ -191,7 +192,7 @@ gtx = { path = "gtx" }
 hash32 = { version = "0.3.1", default-features = false }
 hipstr= { path = "hipstr", default-features = false, features = ["std", "serde"]}
 hound = { version = "3.5.1", default-features = false }
-image = { version = "0.25.5", default-features = false, features = ["png", "jpeg"] }
+image = { version = "0.25.5", default-features = false, features = ["png", "jpeg", "tga"] }
 image_dds = { version = "0.6.2", default-features = false, features = ["ddsfile", "image"]}
 itertools = { version = "0.13.0", default-features = false }
 memmap2 = { version = "0.9.5", default-features = false, features = ["stable_deref_trait"] }

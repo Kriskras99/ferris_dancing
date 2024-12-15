@@ -12,15 +12,12 @@ use std::{
 };
 
 use clap::Parser;
-use tracing::{debug, info, warn};
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
 use dotstar_toolkit_utils::{
-    bytes::read::BinaryDeserializeExt as _,
+    bytes::read::BinaryDeserialize,
     vfs::{native::NativeFs, VirtualFileSystem, VirtualPathBuf},
 };
-use dotstar_toolkit_utils::bytes::read::BinaryDeserialize;
+use tracing::{debug, info, level_filters::LevelFilter, warn};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use ubiart_toolkit::{
     ipk::{self, Bundle},
     utils::{
@@ -177,13 +174,11 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path, lax: bool) {
                     "  Metadata says cooked but PackedFile does not have 'itf_cooked' in path!: {} {}",
                     packed_file.is_cooked, packed_file.path
                 );
-
             } else {
                 info!(
                     "  Metadata says cooked but PackedFile does not have 'itf_cooked' in path!: {} {}",
                     packed_file.is_cooked, packed_file.path
                 );
-
             }
         } else if !packed_file.is_cooked && packed_file.path.contains("itf_cooked") {
             if lax {
@@ -191,13 +186,11 @@ pub fn check_ipk(ipk: &Bundle, filename: &Path, lax: bool) {
                     "  Metadata says not cooked but PackedFile does have 'itf_cooked' in path!: {} {}",
                     packed_file.is_cooked, packed_file.path
                 );
-
             } else {
                 info!(
                     "  Metadata says not cooked but PackedFile does have 'itf_cooked' in path!: {} {}",
                     packed_file.is_cooked, packed_file.path
                 );
-
             }
         }
     }

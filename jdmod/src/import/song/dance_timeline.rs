@@ -1,10 +1,14 @@
 //! # Dance Timeline
 //! Imports the dance timeline, pictos, and classifiers
-use std::{collections::BTreeSet, fs::File, io::Write};
+use std::{
+    collections::BTreeSet,
+    fs::File,
+    io::{ErrorKind, Write},
+};
 
 use anyhow::{anyhow, Error};
 use test_eq::test_eq;
-use tracing::{trace, warn};
+use tracing::{debug, trace, warn};
 use ubiart_toolkit::{cooked, cooked::tape};
 
 use super::{montage, SongImportState};
@@ -66,11 +70,17 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                             .join(new_motion.classifier_filename.as_str()),
                     )?;
                     to.write_all(&from)?;
-                } else if new_motion.classifier_filename.ends_with(".gesture") {
-                    // We don't care about gesture (PS4) files
-                    trace!("Did not find classifier {} at {classifier_path}!", new_motion.classifier_filename);
+                } else if !new_motion.classifier_filename.ends_with(".msm") {
+                    // We don't care about any other classifiers than msm
+                    trace!(
+                        "Did not find classifier {} at {classifier_path}!",
+                        new_motion.classifier_filename
+                    );
                 } else {
-                    warn!("Did not find classifier {} at {classifier_path}!", new_motion.classifier_filename);
+                    warn!(
+                        "Did not find classifier {} at {classifier_path}!",
+                        new_motion.classifier_filename
+                    );
                 }
                 Clip::Motion(new_motion)
             }
@@ -85,12 +95,27 @@ pub fn import(sis: &SongImportState<'_>, dance_timeline_path: &str) -> Result<()
                     let cooked_path = cook_path(&picto_path, sis.ugi)?;
                     match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
                         (Ok(from), _) => {
-                            let decooked_picto = decode_texture(&from, sis.ugi)?;
-                            let path = sis.dirs.pictos().join(new_picto.picto_filename.as_str());
-                            decooked_picto.save(path)?;
+                            match (decode_texture(&from, sis.ugi), sis.lax) {
+                                (Ok(decooked_picto), _) => {
+                                    let path =
+                                        sis.dirs.pictos().join(new_picto.picto_filename.as_str());
+                                    decooked_picto.save(path)?;
+                                }
+                                (Err(err), true) => {
+                                    warn!(
+                                        "Failed to import {cooked_path}, texture decoding failed"
+                                    );
+                                    debug!("{err}");
+                                    continue;
+                                }
+                                (Err(err), _) => return Err(err),
+                            };
                         }
-                        (Err(error), true) => println!("Warning! {error}"),
-                        (Err(error), false) => return Err(error.into()),
+                        (Err(error), true) if error.kind() == ErrorKind::NotFound => {
+                            warn!("Failed to import {cooked_path}, file does not exist");
+                            trace!("{error}");
+                        }
+                        (Err(error), _) => return Err(error.into()),
                     };
                 }
                 Clip::Pictogram(new_picto)

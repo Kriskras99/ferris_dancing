@@ -1,11 +1,11 @@
 //! # Main sequence
 //! Imports the mainsequence and files referenced in it
-use std::{collections::BTreeSet, fs::File};
-use std::io::ErrorKind;
+use std::{collections::BTreeSet, fs::File, io::ErrorKind};
+
 use anyhow::{anyhow, Error};
 use hipstr::HipStr;
 use test_eq::test_eq;
-use tracing::trace;
+use tracing::{debug, trace, warn};
 use ubiart_toolkit::{cooked, cooked::tape, utils::Game};
 
 use super::SongImportState;
@@ -56,7 +56,8 @@ pub fn import(sis: &SongImportState<'_>, mainsequence_path: &str) -> Result<(), 
                         match (parse_soundset(sis, &soundset), sis.lax) {
                             (Ok(clip), _) => clip,
                             (Err(error), true) => {
-                                println!("Warning! {error}");
+                                warn!("Failed to import soundset");
+                                debug!("{error}");
                                 continue;
                             }
                             (Err(error), false) => return Err(error),
@@ -142,13 +143,18 @@ pub fn parse_soundset(
         .first()
         .ok_or_else(|| anyhow!("Template is missing proper SoundDescriptor"))?;
 
-    test_eq!(descriptor.name.is_empty(), false, "SoundSet name is empty!")?;
-    let name = HipStr::from(descriptor.name.to_string());
+    test_eq!(descriptor.files.len(), 1, "Too few/many files in soundset!")?;
     let filename = descriptor
         .files
         .first()
         .ok_or_else(|| anyhow!("No file path in SoundDescriptor!"))?
-        .as_ref();
+        .as_str();
+    let name = if descriptor.name.is_empty() {
+        let name = filename.rsplit_once('/').unwrap_or(("", filename)).1;
+        HipStr::from(name.to_string())
+    } else {
+        descriptor.name.clone().into_owned()
+    };
 
     let cooked_path = cook_path(filename, sis.ugi)?;
     let from = sis.vfs.open(cooked_path.as_ref())?;

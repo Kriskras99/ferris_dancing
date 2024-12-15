@@ -7,6 +7,7 @@ use dotstar_toolkit_utils::bytes::{
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 use test_eq::{test_any, test_eq};
 use tracing::warn;
+
 use super::{
     Bundle, Compressed, Data, IpkFile, Uncompressed, IS_COOKED, MAGIC, SEPARATOR, UNK1, UNK2, UNK3,
     UNK6,

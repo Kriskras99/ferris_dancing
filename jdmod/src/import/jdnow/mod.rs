@@ -19,7 +19,7 @@ use crate::{
         song::{
             Clip, Color, GoldEffectClip, HideUserInterfaceClip, KaraokeClip, MenuArt,
             MenuArtTexture, MotionClip, MusicTrack, PhoneImage, PictogramClip, Signature, Song,
-            SongDirectoryTree, SweatDifficulty, Tag, Timeline,
+            SongDirectoryTree, SweatDifficulty, Timeline,
         },
         DirectoryTree,
     },
@@ -91,7 +91,8 @@ pub fn import_song(
         sweat_difficulty: SweatDifficulty::Moderate,
         related_songs: vec![],
         status: state.details.status.try_into()?,
-        tags: vec![Tag::Main],
+        // TODO: Add kids tag for kids songs
+        tags: vec![HipStr::borrowed("main")],
         subtitle: LocaleId::default(),
         default_colors: (&state.details.default_colors).into(),
         audiofile: HipStr::from(audiofile),
@@ -104,18 +105,15 @@ pub fn import_song(
     Ok(())
 }
 
-/// Convert a JDNow start time to the UbiArt time
-fn convert_starttime(beats: &mut Vec<u32>, n: u32) -> i32 {
-    let m = convert_duration(beats, n);
-    i32::try_from(m).unwrap_or(if m > 0 { i32::MAX } else { i32::MIN })
-}
-
 /// Convert a JDNow duration to the UbiArt time
-fn convert_duration(beats: &mut Vec<u32>, n: u32) -> u32 {
+fn convert_duration(beats: &mut Vec<u32>, n: u32) -> i32 {
     let max = beats.len();
     let n = n * 48;
     match beats.binary_search(&n) {
-        Ok(index) => u32::try_from(index * 24).unwrap_or(u32::MAX),
+        Ok(index) => {
+            let m = index * 24;
+            i32::try_from(m).unwrap_or(if m > 0 { i32::MAX } else { i32::MIN })
+        }
         Err(0) => {
             debug!("Duration out of bounds! n: {n}, first beat: {}", beats[0]);
             0
@@ -141,7 +139,7 @@ fn convert_duration(beats: &mut Vec<u32>, n: u32) -> u32 {
 
             let m = (y0 * (x1 - n) + (y1 * (n - x0))) / (x1 - x0);
             trace!("n: {n}, x0: {x0}, y0: {y0}, x1: {x1}, m: {m}");
-            m
+            i32::try_from(m).unwrap_or(if m > 0 { i32::MAX } else { i32::MIN })
         }
     }
 }
@@ -169,7 +167,7 @@ fn parse_pictos(state: &mut NowState, timeline: &mut Timeline) -> i32 {
     let mut min_time = 0;
 
     for picto in &state.details.pictos {
-        let start_time = convert_starttime(&mut state.beats, picto.time);
+        let start_time = convert_duration(&mut state.beats, picto.time);
         let duration = convert_duration(&mut state.beats, picto.duration);
         let clip = Clip::Pictogram(PictogramClip {
             is_active: true,
@@ -226,7 +224,7 @@ fn parse_classifiers(state: &mut NowState, timeline: &mut Timeline) -> Result<i3
         let desc: Moves = serde_json::from_slice(&desc_file)?;
 
         for class in desc {
-            let start_time = convert_starttime(&mut state.beats, class.time);
+            let start_time = convert_duration(&mut state.beats, class.time);
             let duration = convert_duration(&mut state.beats, class.duration);
             let clip = Clip::Motion(MotionClip {
                 is_active: true,
@@ -269,7 +267,7 @@ fn create_karaoke_timeline(state: &mut NowState) -> Result<i32, Error> {
     let mut min_time = 0;
 
     for lyric in &state.details.lyrics {
-        let start_time = convert_starttime(&mut state.beats, lyric.time);
+        let start_time = convert_duration(&mut state.beats, lyric.time);
         let duration = convert_duration(&mut state.beats, lyric.duration);
         let clip = Clip::Karaoke(KaraokeClip {
             is_active: true,
@@ -302,7 +300,7 @@ fn create_mainsequence(state: &NowState, min_time: i32) -> Result<(), Error> {
         let clip = Clip::HideUserInterface(HideUserInterfaceClip {
             is_active: true,
             start_time: 0,
-            duration: u32::try_from(min_time - 100).unwrap_or_else(|_| unreachable!()),
+            duration: min_time - 100,
             event_type: 18,
         });
         timeline.timeline.insert(clip);
