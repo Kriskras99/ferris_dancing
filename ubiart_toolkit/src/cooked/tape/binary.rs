@@ -215,7 +215,7 @@ impl<'a> BinaryDeserialize<'a> for AlphaClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -252,7 +252,7 @@ impl<'a> BinaryDeserialize<'a> for ColorClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -293,7 +293,7 @@ impl<'a> BinaryDeserialize<'a> for CommunityDancerClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let dancer_country_code = reader.read_len_string_at::<u32be>(position)?;
         let dancer_avatar_id = reader.read_at::<u32be>(position)?;
         let dancer_name = reader.read_len_string_at::<u32be>(position)?;
@@ -329,7 +329,7 @@ impl<'a> BinaryDeserialize<'a> for FXClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -368,7 +368,7 @@ impl<'a> BinaryDeserialize<'a> for GameplayEventClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -406,7 +406,7 @@ impl<'a> BinaryDeserialize<'a> for GoldEffectClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let effect_type = reader.read_at::<u32be>(position)?;
         Ok(Self {
             class: None,
@@ -437,7 +437,7 @@ impl<'a> BinaryDeserialize<'a> for HideUserInterfaceClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -476,7 +476,7 @@ impl<'a> BinaryDeserialize<'a> for KaraokeClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let pitch = reader.read_at::<f32be>(position)?;
         let lyrics = reader.read_len_string_at::<u32be>(position)?;
         let is_end_of_line = reader.read_at::<u32be>(position)?;
@@ -520,7 +520,7 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicDiffuseAlphaClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -561,7 +561,7 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicDiffuseColorClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -606,7 +606,7 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicEnableLayerClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -647,7 +647,7 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVRotationClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -692,7 +692,7 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVScaleClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -739,7 +739,7 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVScrollClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -782,7 +782,7 @@ impl<'a> BinaryDeserialize<'a> for MaterialGraphicUVTranslationClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -826,7 +826,7 @@ impl<'a> BinaryDeserialize<'a> for MotionClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let classifier_path = reader.read_at::<SplitPath>(position)?;
         let gold_move = reader.read_at::<u32be>(position)?;
         let coach_id = reader.read_at::<u32be>(position)?;
@@ -882,8 +882,10 @@ impl<'a> BinaryDeserialize<'a> for MotionPlatformSpecific<'a> {
         let unk1 = reader.read_at::<u32be>(position)?;
         test_eq!(unk1, 0xC)?;
         let score_scale = reader.read_at::<f32be>(position)?;
-        let scoring_mode = reader.read_at::<u32be>(position)?;
-        let score_smoothing = reader.read_at::<u32be>(position)?;
+        let scoring_mode = reader.read_at::<f32be>(position)?;
+        test_any!(scoring_mode, [0.0, 2.0])?;
+        let score_smoothing = reader.read_at::<f32be>(position)?;
+        test_eq!(score_smoothing, 0.0)?;
         Ok(Self {
             class: None,
             score_scale,
@@ -912,7 +914,7 @@ impl<'a> BinaryDeserialize<'a> for PictogramClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let picto_path = reader.read_at::<SplitPath>(position)?;
         let coach_count = reader.read_at::<u32be>(position)?;
         Ok(Self {
@@ -947,7 +949,7 @@ impl<'a> BinaryDeserialize<'a> for ProportionClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -986,7 +988,7 @@ impl<'a> BinaryDeserialize<'a> for RotationClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -1027,7 +1029,7 @@ impl<'a> BinaryDeserialize<'a> for SizeClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -1066,7 +1068,7 @@ impl<'a> BinaryDeserialize<'a> for SlotClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let bpm = reader.read_at::<f32be>(position)?;
         let signature = reader.read_len_string_at::<u32be>(position)?;
         let guid = reader.read_len_string_at::<u32be>(position)?;
@@ -1102,7 +1104,7 @@ impl<'a> BinaryDeserialize<'a> for SpawnActorClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let actor_path = reader.read_at::<SplitPath>(position)?.to_string().into();
         let actor_name = reader.read_len_string_at::<u32be>(position)?;
         let spawn_x = reader.read_at::<f32be>(position)?;
@@ -1150,7 +1152,7 @@ impl<'a> BinaryDeserialize<'a> for SoundSetClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let sound_set_path = reader.read_at::<SplitPath>(position)?;
         let sound_channel = reader.read_at::<i32be>(position)?;
         let stops_on_end = reader.read_at::<u32be>(position)?;
@@ -1190,7 +1192,7 @@ impl<'a> BinaryDeserialize<'a> for TapeLauncherClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -1232,7 +1234,7 @@ impl<'a> BinaryDeserialize<'a> for TapeReferenceClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let path = reader.read_at::<SplitPath>(position)?;
         let loop_it = reader.read_at::<u32be>(position)?;
         let unk2 = reader.read_at::<u32be>(position)?;
@@ -1267,7 +1269,7 @@ impl<'a> BinaryDeserialize<'a> for TextClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -1304,7 +1306,7 @@ impl<'a> BinaryDeserialize<'a> for TranslationClip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -1345,7 +1347,7 @@ impl<'a> BinaryDeserialize<'a> for Unknown59FCC733Clip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -1387,7 +1389,7 @@ impl<'a> BinaryDeserialize<'a> for UnknownCBB7C029Clip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let target_actors = reader
             .read_len_type_at_with::<u32be, TargetActor>(position, ctx)?
             .collect::<Result<_, _>>()?;
@@ -1429,7 +1431,7 @@ impl<'a> BinaryDeserialize<'a> for Unknown5C944B01Clip<'a> {
         let track_id = reader.read_at::<u32be>(position)?;
         let is_active = reader.read_at::<u32be>(position)?;
         let start_time = reader.read_at::<i32be>(position)?;
-        let duration = reader.read_at::<u32be>(position)?;
+        let duration = reader.read_at::<i32be>(position)?;
         let string = reader.read_len_string_at::<u32be>(position)?;
 
         Ok(Self {

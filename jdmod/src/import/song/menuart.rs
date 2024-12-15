@@ -1,10 +1,13 @@
 //! # Menuart
 //! Imports all the textures and phone images used in the menus for this song
-use std::{fs::File, io::Write};
+use std::{
+    fs::File,
+    io::{ErrorKind, Write},
+};
 
 use anyhow::{anyhow, Error};
 use hipstr::HipStr;
-use tracing::{debug, warn};
+use tracing::{debug, trace, warn};
 use ubiart_toolkit::{cooked, cooked::tpl::types::PhoneImages};
 
 use super::SongImportState;
@@ -63,48 +66,53 @@ pub fn import(
 
             let from = match (sis.vfs.open(cooked_path.as_ref()), sis.lax) {
                 (Ok(from), _) => from,
-                (Err(err), true) => {
-                    if cooked_path.ends_with("_cover_online_kids.tga.ckd")
-                        || cooked_path.ends_with("_cover_albumbkg.tga.ckd")
-                        || cooked_path.ends_with("_banner_bkg.tga.ckd")
-                    {
-                        debug!("Warning! {err}");
-                    } else {
-                        warn!("{err}");
-                    }
+                (Err(err), true) if err.kind() == ErrorKind::NotFound => {
+                    warn!("Failed to import {cooked_path}, file not found");
+                    trace!("{err}");
                     continue;
                 }
-                (Err(err), false) => return Err(err.into()),
+                (Err(err), _) => return Err(err.into()),
             };
 
-            let decooked_picto = decode_texture(&from, sis.ugi)?;
-            let to_filename = format!("{name}.png");
-            let path = sis.dirs.menuart().join(&to_filename);
-            decooked_picto.save(path)?;
+            match (decode_texture(&from, sis.ugi), sis.lax) {
+                (Ok(decooked_picto), _) => {
+                    let to_filename = format!("{name}.png");
+                    let path = sis.dirs.menuart().join(&to_filename);
+                    decooked_picto.save(path)?;
 
-            menuart.push(MenuArt::Texture(MenuArtTexture {
-                scale: actor.scale,
-                pos2d: actor.pos2d,
-                name: name.clone(),
-                filename: HipStr::from(to_filename),
-                disable_shadow: mgc.disable_shadow,
-                anchor: mgc
-                    .enums
-                    .first()
-                    .ok_or_else(|| anyhow!("No enums!"))?
-                    .selection,
-            }));
+                    menuart.push(MenuArt::Texture(MenuArtTexture {
+                        scale: actor.scale,
+                        pos2d: actor.pos2d,
+                        name: name.clone(),
+                        filename: HipStr::from(to_filename),
+                        disable_shadow: mgc.disable_shadow,
+                        anchor: mgc
+                            .enums
+                            .first()
+                            .ok_or_else(|| anyhow!("No enums!"))?
+                            .selection,
+                    }));
+                }
+                (Err(err), true) => {
+                    warn!("Failed to import {cooked_path}, texture decoding failed");
+                    debug!("{err}");
+                }
+                (Err(err), false) => {
+                    return Err(err);
+                }
+            }
         }
     }
 
     for (name, filename) in phone_images {
         let from = match (sis.vfs.open(filename.as_str().as_ref()), sis.lax) {
             (Ok(from), _) => from,
-            (Err(err), true) => {
-                debug!("Warning! {err}");
+            (Err(err), true) if err.kind() == ErrorKind::NotFound => {
+                warn!("Failed to import {filename}, file not found");
+                trace!("{err}");
                 continue;
             }
-            (Err(err), false) => return Err(err.into()),
+            (Err(err), _) => return Err(err.into()),
         };
         let mut new_filename = name.to_lowercase();
         new_filename.push_str("_phone.");

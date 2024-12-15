@@ -7,7 +7,7 @@ use hipstr::HipStr;
 use ubiart_toolkit::{cooked, utils::SplitPath};
 
 use super::SongExportState;
-use crate::{build::BuildFiles, types::song::Tag};
+use crate::build::BuildFiles;
 
 /// Builds the songdesc files
 pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error> {
@@ -63,7 +63,7 @@ pub fn build(ses: &SongExportState<'_>, bf: &mut BuildFiles) -> Result<(), Error
                 sweat_difficulty: ses.song.sweat_difficulty.into(),
                 background_type: 0,
                 lyrics_type: 0,
-                tags: ses.song.tags.iter().copied().map(Tag::to_cow).collect(),
+                tags: ses.song.tags.clone(),
                 status: ses.song.status.normalize().into(),
                 locale_id: ses.song.subtitle,
                 mojo_value: 0,

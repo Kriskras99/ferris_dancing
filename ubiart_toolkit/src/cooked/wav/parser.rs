@@ -30,7 +30,18 @@ impl<'de> BinaryDeserialize<'de> for Wav<'de> {
         let magic = reader.read_at::<u32be>(position)?;
         test_eq!(magic, Self::MAGIC)?;
         let unk1 = reader.read_at::<u32be>(position)?;
-        test_any!(unk1, [0x0800_0000, 0x0A00_0000, 0x0B00_0000, 0x0A, 0x09])?;
+        test_any!(
+            unk1,
+            [
+                0x0800_0000,
+                0x0900_0000,
+                0x0A00_0000,
+                0x0B00_0000,
+                0x0A,
+                0x09
+            ]
+        )?;
+        // One mod contains 'plan' platform??
         let platform = reader.read_at::<WavPlatform>(position)?;
         let codec = reader.read_at::<Codec>(position)?;
 

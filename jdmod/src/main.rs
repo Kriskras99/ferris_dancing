@@ -13,10 +13,10 @@ use std::process::ExitCode;
 
 // use jdmod::check::Check;
 use clap::{Parser, Subcommand};
-use tracing::level_filters::LevelFilter;
 use jdmod::{
     bundle::Bundle, export::Build, extract::Extract, import::Import, new::New, unlock::Unlock,
 };
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
 /// The command line interface generated with Clap derive
@@ -66,7 +66,7 @@ fn main() -> ExitCode {
         // Display the thread ID an event was recorded on
         .with_thread_ids(true)
         // Don't display the event's target (module path)
-        .with_target(true)
+        .with_target(false)
         .without_time();
     tracing_subscriber::registry()
         .with(fmt_layer)

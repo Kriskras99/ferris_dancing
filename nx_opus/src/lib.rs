@@ -291,7 +291,7 @@ impl BinaryDeserialize<'_> for NxOpusHeader {
         test_eq!(version, 0)?;
         let channels = reader.read_at::<u8>(position)?;
         let frame_size = reader.read_at::<u16le>(position)?;
-        test_eq!(frame_size, 0)?;
+        test_any!(frame_size, [0, 8])?;
         let sample_rate = reader.read_at::<u32le>(position)?;
         let data_offset = reader.read_at::<u32le>(position)?;
         test_eq!(data_offset, 32)?; // from the start of the data block

@@ -332,7 +332,7 @@ impl BinaryDeserialize<'_> for UniqueGameId {
             .map_err(|_| ReadError::custom(format!("Unknown game platform: {value:x}")));
         if result.is_err() && lax {
             warn!("Unknown game platform: {value:x}");
-            return Ok(UniqueGameId {
+            return Ok(Self {
                 game: Game::Unknown,
                 platform: Platform::Nx,
                 id: value,
@@ -412,6 +412,36 @@ pub enum Platform {
     Wii = 0x5,
     WiiU = 0x8,
     Nx = 0xB,
+}
+
+impl Ord for Platform {
+    #[allow(clippy::match_same_arms, reason = "Clearer this way")]
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (Self::Nx, Self::Nx) => Ordering::Equal,
+            (Self::Nx, _) => Ordering::Greater,
+            (_, Self::Nx) => Ordering::Less,
+            (Self::WiiU, Self::WiiU) => Ordering::Equal,
+            (Self::WiiU, _) => Ordering::Greater,
+            (_, Self::WiiU) => Ordering::Less,
+            (Self::Win, Self::Win) => Ordering::Equal,
+            (Self::Win, _) => Ordering::Greater,
+            (_, Self::Win) => Ordering::Less,
+            (Self::Ps4, Self::Ps4) => Ordering::Equal,
+            (Self::Ps4, _) => Ordering::Greater,
+            (_, Self::Ps4) => Ordering::Less,
+            (Self::X360, Self::X360) => Ordering::Equal,
+            (Self::X360, _) => Ordering::Greater,
+            (_, Self::X360) => Ordering::Less,
+            (Self::Wii, Self::Wii) => Ordering::Equal,
+        }
+    }
+}
+
+impl PartialOrd for Platform {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Display for Platform {

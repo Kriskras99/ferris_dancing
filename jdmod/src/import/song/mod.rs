@@ -20,7 +20,7 @@ use crate::{
     import::TranscodeSettings,
     types::{
         localisation::LocaleIdMap,
-        song::{Song, SongDirectoryTree, Tag},
+        song::{Song, SongDirectoryTree},
         ImportState,
     },
     utils::cook_path,
@@ -202,12 +202,7 @@ fn actual_import(sis: &SongImportState<'_>, songdesc: SongDescription<'_>) -> Re
         sweat_difficulty: songdesc.sweat_difficulty.try_into()?,
         related_songs: songdesc.related_albums,
         status: songdesc.status.try_into()?,
-        tags: songdesc
-            .tags
-            .iter()
-            .map(HipStr::as_str)
-            .map(TryInto::<Tag>::try_into)
-            .collect::<Result<_, _>>()?,
+        tags: songdesc.tags.clone(),
         subtitle: sis
             .locale_id_map
             .get(songdesc.locale_id)

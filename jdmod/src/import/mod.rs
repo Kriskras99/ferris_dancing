@@ -104,7 +104,7 @@ pub fn main(cli: &Import) -> Result<(), Error> {
 }
 
 /// Import a game at `game_path` into the mod at `dir_root`
-#[tracing::instrument]
+#[tracing::instrument(skip(game_path, dir_root, lax, songs_only, game, n_threads, transcode))]
 pub fn import(
     game_path: &Path,
     dir_root: &Path,
@@ -380,6 +380,9 @@ fn import_gameconfig(
         .and_then(Path::parent) // root
         .ok_or_else(|| anyhow!("No root found for {}!", game_path.display()))?;
 
+    println!("Platform: {platform:?}");
+    println!("Root: {root:?}");
+
     let platform = match platform
         .file_name()
         .and_then(|s| s.to_str())
@@ -401,7 +404,7 @@ fn import_gameconfig(
         game
     } else {
         let new_path = cook_path(
-            "enginedata/gameconfig/enginedata.isg",
+            "enginedata/gameconfig/gameconfig.isg",
             UniqueGameId {
                 platform,
                 game: Game::JustDance2022,

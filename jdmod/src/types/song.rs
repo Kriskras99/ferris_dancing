@@ -199,140 +199,6 @@ impl RelativeSongDirectoryTree {
     }
 }
 
-/// Possible tags for a song
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, IntoOwned)]
-pub enum Tag {
-    /// Song from the main content
-    Main,
-    /// Kids song
-    KidsOnly,
-    /// Alternate version of a song
-    Alternate,
-    /// Song that uses a (wheel)chair
-    BringChairTutorial,
-    /// Song that uses a (wheel)chair
-    ChairTutorial,
-    /// Cool song?
-    Cool,
-    /// ??
-    Coverflow,
-    /// Dance machine map
-    DanceMachine,
-    /// ??
-    Exclusive,
-    /// Extreme difficulty song
-    Extreme,
-    /// Intense song
-    Intense,
-    /// ??
-    KidsMode,
-    /// ??
-    KidsModeTeaser,
-    /// ??
-    Kids,
-    /// Originally from ABBA: You Can Dance
-    JdAbba,
-    /// Unknown?
-    JdMbs,
-    /// Mashup map
-    Mashup,
-    /// Low intensity song
-    NoSweat,
-    /// ??
-    PreLobby,
-    /// Unlocked using Uplay
-    Uplay2016,
-    /// Unlocked using Uplay
-    Uplay2017,
-    /// High intensity song
-    Sweat,
-    /// Song that uses a bike?
-    BikeTutorial,
-    /// Song that uses a (wheel)chair
-    Chair2Tutorial,
-    /// Song that uses a sofa?
-    SofaTutorial,
-    /// ??
-    ForceRumble,
-    /// ??
-    Jd20DealLullaby,
-}
-
-impl Tag {
-    // TODO: Add normalisation?
-    /// Convert the tag to a static str
-    #[must_use]
-    pub const fn to_cow(self) -> HipStr<'static> {
-        match self {
-            Self::Main => HipStr::borrowed("main"),
-            Self::KidsOnly => HipStr::borrowed("kidsonly"),
-            Self::Alternate => HipStr::borrowed("alternate"),
-            Self::BringChairTutorial => HipStr::borrowed("bringchairtutorial"),
-            Self::ChairTutorial => HipStr::borrowed("chairtutorial"),
-            Self::Cool => HipStr::borrowed("cool"),
-            Self::Coverflow => HipStr::borrowed("coverflow"),
-            Self::DanceMachine => HipStr::borrowed("dancemachine"),
-            Self::Exclusive => HipStr::borrowed("exclusive"),
-            Self::Extreme => HipStr::borrowed("extreme"),
-            Self::Intense => HipStr::borrowed("intense"),
-            Self::KidsMode => HipStr::borrowed("kidsmode"),
-            Self::KidsModeTeaser => HipStr::borrowed("kidsmodeteaser"),
-            Self::JdMbs => HipStr::borrowed("jdmbs"),
-            Self::Mashup => HipStr::borrowed("mashup"),
-            Self::NoSweat => HipStr::borrowed("nosweat"),
-            Self::PreLobby => HipStr::borrowed("prelobby"),
-            Self::Uplay2016 => HipStr::borrowed("uplay2016"),
-            Self::Uplay2017 => HipStr::borrowed("uplay2017"),
-            Self::Sweat => HipStr::borrowed("sweat"),
-            Self::BikeTutorial => HipStr::borrowed("biketutorial"),
-            Self::Chair2Tutorial => HipStr::borrowed("chair2tutorial"),
-            Self::SofaTutorial => HipStr::borrowed("SofaTutorial"),
-            Self::Kids => HipStr::borrowed("kids"),
-            Self::JdAbba => HipStr::borrowed("jdabba"),
-            Self::ForceRumble => HipStr::borrowed("forcerumble"),
-            Self::Jd20DealLullaby => HipStr::borrowed("jd20deallullaby"),
-        }
-    }
-}
-
-impl TryFrom<&str> for Tag {
-    type Error = Error;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let value_lower = value.to_lowercase();
-        match value_lower.as_str() {
-            "alternate" => Ok(Self::Alternate),
-            "biketutorial" => Ok(Self::BikeTutorial),
-            "bringchairtutorial" => Ok(Self::BringChairTutorial),
-            "chair2tutorial" => Ok(Self::Chair2Tutorial),
-            "chairtutorial" => Ok(Self::ChairTutorial),
-            "cool" => Ok(Self::Cool),
-            "coverflow" => Ok(Self::Coverflow),
-            "dancemachine" => Ok(Self::DanceMachine),
-            "exclusive" => Ok(Self::Exclusive),
-            "extreme" => Ok(Self::Extreme),
-            "intense" => Ok(Self::Intense),
-            "jdmbs" => Ok(Self::JdMbs),
-            "kidsmode" => Ok(Self::KidsMode),
-            "kidsmodeteaser" => Ok(Self::KidsModeTeaser),
-            "kidsonly" => Ok(Self::KidsOnly),
-            "main" => Ok(Self::Main),
-            "mashup" => Ok(Self::Mashup),
-            "nosweat" => Ok(Self::NoSweat),
-            "prelobby" => Ok(Self::PreLobby),
-            "sofatutorial" => Ok(Self::SofaTutorial),
-            "sweat" => Ok(Self::Sweat),
-            "uplay2016" => Ok(Self::Uplay2016),
-            "uplay2017" => Ok(Self::Uplay2017),
-            "kids" => Ok(Self::Kids),
-            "jdabba" => Ok(Self::JdAbba),
-            "forcerumble" => Ok(Self::ForceRumble),
-            "jd20deallullaby" => Ok(Self::Jd20DealLullaby),
-            _ => Err(anyhow!("Unknown tag!: {value}")),
-        }
-    }
-}
-
 /// Number of coaches for this song
 #[repr(u8)]
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Hash, PartialEq, Eq, IntoOwned)]
@@ -405,7 +271,7 @@ pub struct Song<'a> {
     /// How is the song unlocked
     pub status: MapStatus,
     /// Tags related to this song
-    pub tags: Vec<Tag>,
+    pub tags: Vec<HipStr<'a>>,
     /// Subtitle locale id (like: Extreme Version)
     pub subtitle: LocaleId,
     /// Theme colors of the song
@@ -1075,7 +941,7 @@ impl<'a> Clip<'a> {
 
     /// The duration of a clip
     #[must_use]
-    pub const fn duration(&self) -> u32 {
+    pub const fn duration(&self) -> i32 {
         match self {
             Clip::Alpha(data) => data.duration,
             Clip::Color(data) => data.duration,
@@ -1128,7 +994,7 @@ pub struct AlphaClip {
     /// When this clip starts
     pub start_time: i32,
     /// Duration of the clip
-    pub duration: u32,
+    pub duration: i32,
     /// Unknown
     pub actor_indices: Vec<u8>,
     /// Unknown
@@ -1179,7 +1045,7 @@ pub struct ColorClip {
     /// When to start the vibration
     pub start_time: i32,
     /// Duration of the vibration
-    pub duration: u32,
+    pub duration: i32,
     /// The actors to color
     pub actor_indices: Vec<u8>,
     /// Red color curve
@@ -1245,7 +1111,7 @@ pub struct GameplayEventClip<'a> {
     /// When this clip starts
     pub start_time: i32,
     /// Duration of the clip
-    pub duration: u32,
+    pub duration: i32,
     /// Unknown
     pub actor_indices: Vec<u8>,
     /// Unknown
@@ -1297,7 +1163,7 @@ pub struct GoldEffectClip {
     /// When to show the gold move effect
     pub start_time: i32,
     /// Duration to show the gold move effect for
-    pub duration: u32,
+    pub duration: i32,
     /// Unknown
     pub effect_type: u8,
 }
@@ -1338,7 +1204,7 @@ pub struct HideUserInterfaceClip {
     /// When to hide the user interface
     pub start_time: i32,
     /// Duration to hide the user interface for
-    pub duration: u32,
+    pub duration: i32,
     /// Unknown
     pub event_type: u32,
 }
@@ -1382,7 +1248,7 @@ pub struct KaraokeClip<'a> {
     /// When to show the lyric
     pub start_time: i32,
     /// Duration to show the lyric for
-    pub duration: u32,
+    pub duration: i32,
     /// Expected pitch of the lyric (for use with microphone enabled systems)
     pub pitch: f32,
     /// The lyric
@@ -1481,7 +1347,7 @@ pub struct MaterialGraphicEnableLayerClip {
     /// When this clip starts
     pub start_time: i32,
     /// Duration of the clip
-    pub duration: u32,
+    pub duration: i32,
     /// Unknown
     pub actor_indices: Vec<u8>,
     /// Unknown
@@ -1536,7 +1402,7 @@ pub struct MotionClip<'a> {
     /// When to the move start
     pub start_time: i32,
     /// Duration of the move
-    pub duration: u32,
+    pub duration: i32,
     /// The classifier (.msm file for NX/WiiU/Phone)
     #[serde(borrow)]
     pub classifier_filename: HipStr<'a>,
@@ -1590,7 +1456,9 @@ impl MotionClip<'_> {
         let mut classifier_path = String::with_capacity(classifier_path.len() + 5);
         classifier_path.push_str(left);
         match (right.ends_with(".gesture"), platform) {
-            (false, Platform::Nx | Platform::WiiU | Platform::Win) => classifier_path.push_str("/wiiu"),
+            (false, Platform::Nx | Platform::WiiU | Platform::Win) => {
+                classifier_path.push_str("/wiiu");
+            }
             (true, _) => classifier_path.push_str("/orbis"),
             _ => unimplemented!("Not implemented for {}", platform),
         }
@@ -1603,8 +1471,9 @@ impl<'a> TryFrom<tape::MotionClip<'a>> for MotionClip<'a> {
     type Error = Error;
 
     fn try_from(value: tape::MotionClip<'a>) -> Result<Self, Self::Error> {
-        let regex = regex!(r".*/[a-z0-9]*_(.*\.msm|.*\.gesture)$");
-        let classifier_filename = hipstr_regex_single_capture(regex, &value.classifier_path)?;
+        let class = value.classifier_path.as_str();
+        let classifier_filename =
+            HipStr::from(class.rsplit_once('/').unwrap_or(("", class)).1.to_string());
 
         Ok(Self {
             is_active: value.is_active == 1,
@@ -1626,7 +1495,7 @@ pub struct PictogramClip<'a> {
     /// When to show the picto
     pub start_time: i32,
     /// Duration to show the picto for
-    pub duration: u32,
+    pub duration: i32,
     /// The picto texture
     #[serde(borrow)]
     pub picto_filename: HipStr<'a>,
@@ -1664,7 +1533,8 @@ impl<'a> TryFrom<tape::PictogramClip<'a>> for PictogramClip<'a> {
     type Error = Error;
 
     fn try_from(value: tape::PictogramClip<'a>) -> Result<Self, Self::Error> {
-        let regex = regex!(r".*/(.*\.png)$");
+        // Normally all picto filenames end in .png, but some mods have the filename ending in .tga
+        let regex = regex!(r".*/(.*\.(?:png|tga))$");
         let picto_filename = hipstr_regex_single_capture(regex, &value.picto_path)?;
 
         Ok(Self {
@@ -1684,7 +1554,7 @@ pub struct ProportionClip {
     /// When to start the vibration
     pub start_time: i32,
     /// Duration of the vibration
-    pub duration: u32,
+    pub duration: i32,
     /// The actors to resize
     pub actor_indices: Vec<u8>,
     /// X curve
@@ -1742,7 +1612,7 @@ pub struct RotationClip {
     /// When to start the vibration
     pub start_time: i32,
     /// Duration of the vibration
-    pub duration: u32,
+    pub duration: i32,
     /// The actors to resize
     pub actor_indices: Vec<u8>,
     /// X curve
@@ -1808,7 +1678,7 @@ pub struct SoundSetClip<'a> {
     /// When to start the audio clip
     pub start_time: i32,
     /// Duration of the audio
-    pub duration: u32,
+    pub duration: i32,
     /// The audio file
     #[serde(borrow)]
     pub audio_filename: HipStr<'a>,
@@ -1849,7 +1719,7 @@ pub struct TranslationClip {
     /// When to start the vibration
     pub start_time: i32,
     /// Duration of the vibration
-    pub duration: u32,
+    pub duration: i32,
     /// The actors to resize
     pub actor_indices: Vec<u8>,
     /// X curve
@@ -1915,7 +1785,7 @@ pub struct VibrationClip<'a> {
     /// When to start the vibration
     pub start_time: i32,
     /// Duration of the vibration
-    pub duration: u32,
+    pub duration: i32,
     /// The vibration file
     #[serde(borrow)]
     pub vibration: HipStr<'a>,
