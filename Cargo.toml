@@ -4,14 +4,12 @@
 members = [
     "dotstar_toolkit_utils",
     "gtx",
-    "hipstr",
     "jdmod",
 #    "msadpcm",
     "nx_opus",
     "rgbcx-rs", 
     "rgbcx-sys",
     "rgbcx",
-    "superstruct",
     "ubiart_toolkit_shared_types", 
     "ubiart_toolkit",
     "wii_toolkit",
@@ -190,7 +188,7 @@ flate2 = { version = "1.0.35", default-features = false, features = ["rust_backe
 gc_adpcm = { version = "0.2.0", default-features = false, features = ["std"] }
 gtx = { path = "gtx" }
 hash32 = { version = "0.3.1", default-features = false }
-hipstr= { path = "hipstr", default-features = false, features = ["std", "serde"]}
+hipstr= { git = "https://github.com/Kriskras99/hipstr.git", default-features = false, features = ["std", "serde"]}
 hound = { version = "3.5.1", default-features = false }
 image = { version = "0.25.5", default-features = false, features = ["png", "jpeg", "tga"] }
 image_dds = { version = "0.6.2", default-features = false, features = ["ddsfile", "image"]}
@@ -215,7 +213,7 @@ serde_with = { version = "3.11.0", default-features = false, features = ["std", 
 simd-json = { version = "0.14.3", default-features = false, features = ["runtime-detection", "swar-number-parsing"]}
 simdutf8 = { version = "0.1.5", default-features = false, features = ["std", "aarch64_neon"]}
 stable_deref_trait = { version = "1.2.0", default-features = false, features = ["std"] }
-superstruct = { path = "superstruct", version = "0.8.0", default-features = false, features = [] }
+superstruct = { git = "https://github.com/Kriskras99/superstruct.git", branch = "enum-variant-attributes", version = "0.8.0", default-features = false, features = [] }
 tegra_swizzle = { version = "0.4.0", default-features = false, features = ["std"]}
 tempfile = { version = "3.14.0", default-features = false, features = []}
 test_eq = { version = "0.2.0", default-features = false, features = ["line-info"] }
