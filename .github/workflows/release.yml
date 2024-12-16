@@ -28,8 +28,8 @@ jobs:
       - name: Check that tag version and Cargo.toml version are the same
         shell: bash
         run: |
-          if ! grep -q "version = \"$VERSION\"" Cargo.toml; then
-            echo "version does not match Cargo.toml" >&2
+          if ! grep -q "version = \"$VERSION\"" jdmod/Cargo.toml; then
+            echo "version does not match jdmod/Cargo.toml" >&2
             exit 1
           fi
       - name: Create GitHub release
@@ -94,7 +94,7 @@ jobs:
     - name: Build release binary
       shell: bash
       run: |
-        ${{ env.CARGO }} build --verbose --release ${{ env.TARGET_FLAGS }}
+        ${{ env.CARGO }} build --verbose --release --bin jdmod ${{ env.TARGET_FLAGS }}
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
           bin="target/${{ matrix.target }}/release/jdmod.exe"
         else
