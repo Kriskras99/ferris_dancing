@@ -32,6 +32,8 @@ jdmod import path/to/game/files/to/import path/to/where/you/placed/the/mod
 Every game, dlc, and song you want to import should be in seperate directories.
 
 ## FAQ
+### When I try to open it, nothing happens!
+This is a CLI application and only works in the terminal.
 
 ### Just Dance X is not listed! Is it supported?
 **No**, currently only games using the UbiArt engine are supported. Any game not listed here uses a different game engine.
