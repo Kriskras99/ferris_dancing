@@ -4,7 +4,7 @@ Tools and library for parsing and writing various UbiArt files.
 Supports the following formats (Nintendo Switch games only!)
 
 | File extension | Tool       | Remarks                          |
-| -------------- | ---------- | -------------------------------- |
+|----------------|------------|----------------------------------|
 | .act.ckd       | acttool    |                                  |
 | .alias8        | alias8tool |                                  |
 | .ipk           | ipktool    | Supports extraction and creation |

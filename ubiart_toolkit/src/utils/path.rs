@@ -18,7 +18,6 @@ use ubiart_toolkit_shared_types::errors::ParserError;
 use crate::utils::{string_id, string_id_2};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct SplitPath<'a> {
     path: HipStr<'a>,
     filename: HipStr<'a>,

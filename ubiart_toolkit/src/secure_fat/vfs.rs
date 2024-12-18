@@ -69,27 +69,23 @@ impl<'f> SfatFilesystem<'f> {
 
     /// Create a new virtual filesystem from a secure_fat.gf at `path`
     pub fn new(fs: &'f dyn VirtualFileSystem, path: &VirtualPath) -> std::io::Result<Self> {
-        let sfat_file = fs.open(path).map_err(|error| {
-            std::io::Error::other(format!("Failed to open {path:?}: {error:?}"))
-        })?;
-        let sfat = SecureFat::deserialize(&sfat_file).map_err(|error| {
-            std::io::Error::other(format!("Failed to parse secure_fat.gf: {error:?}"))
-        })?;
+        let sfat_file = fs
+            .open(path)
+            .map_err(|error| Error::other(format!("Failed to open {path:?}: {error:?}")))?;
+        let sfat = SecureFat::deserialize(&sfat_file)
+            .map_err(|error| Error::other(format!("Failed to parse secure_fat.gf: {error:?}")))?;
         if sfat.bundle_count() == 0 {
-            return Err(std::io::Error::other(
-                "secure_fat.gf does not have any IPKs",
-            ));
+            return Err(Error::other("secure_fat.gf does not have any IPKs"));
         }
         let mut bundles = HashMap::with_capacity(sfat.bundle_count());
         let parent = path
             .parent()
-            .ok_or_else(|| std::io::Error::other(format!("Can't find parent for {path}")))?;
+            .ok_or_else(|| Error::other(format!("Can't find parent for {path}")))?;
         for (bundle_id, name) in sfat.bundle_ids_and_names() {
             let filename = super::bundle_name_to_filename(name, sfat.game_platform());
             let path = Self::exist_or_find_lowercase(fs, parent.with_file_name(&filename))?;
-            let ipk = IpkFilesystem::new(fs, &path).map_err(|error| {
-                std::io::Error::other(format!("Failed to parse {path:?}: {error:?}"))
-            })?;
+            let ipk = IpkFilesystem::new(fs, &path)
+                .map_err(|error| Error::other(format!("Failed to parse {path:?}: {error:?}")))?;
             bundles.insert(*bundle_id, ipk);
         }
         let filename = super::bundle_name_to_filename("patch", sfat.game_platform());
@@ -164,9 +160,9 @@ impl VirtualFileSystem for SfatFilesystem<'_> {
                             return Ok(file);
                         }
                     }
-                    Err(std::io::Error::new(ErrorKind::NotFound, format!("Could not open {path:?}, file is listed in file table but does not exist in bundle!")))
+                    Err(Error::new(ErrorKind::NotFound, format!("Could not open {path:?}, file is listed in file table but does not exist in bundle!")))
                 }
-                None => Err(std::io::Error::new(
+                None => Err(Error::new(
                     ErrorKind::NotFound,
                     format!("Could not open {path:?}, file not found!"),
                 )),
@@ -194,9 +190,9 @@ impl VirtualFileSystem for SfatFilesystem<'_> {
                             return Ok(metadata);
                         }
                     }
-                    Err(std::io::Error::new(ErrorKind::NotFound, format!("Could not get metadata for {path:?}, file is listed in file table but does not exist in bundle!")))
+                    Err(Error::new(ErrorKind::NotFound, format!("Could not get metadata for {path:?}, file is listed in file table but does not exist in bundle!")))
                 }
-                None => Err(std::io::Error::new(
+                None => Err(Error::new(
                     ErrorKind::NotFound,
                     format!("Could not get metadata for {path:?}, file not found!"),
                 )),

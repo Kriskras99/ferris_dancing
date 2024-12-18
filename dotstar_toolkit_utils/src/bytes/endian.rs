@@ -80,6 +80,7 @@ impl Endian {
     /// Change the endianness of the bytes to match the target endian
     ///
     /// Assumes the byte slice is an n-byte integer
+    #[allow(clippy::wrong_self_convention, reason = "Matches to_native")]
     #[inline]
     pub fn from_native(&self, bytes: &mut [u8]) {
         self.to_native(bytes);

@@ -692,7 +692,7 @@ impl BinarySerialize for u32bebool {
     }
 }
 pub enum u32lebool {}
-impl BinaryDeserialize<'_> for crate::bytes::primitives::u32lebool {
+impl BinaryDeserialize<'_> for u32lebool {
     type Ctx = ();
     type Output = bool;
 

@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+
 use serde::Deserialize;
 use test_eq::{test_eq, TestFailure};
 use tracing::{error, trace};
@@ -66,7 +67,12 @@ where
             formatter.write_str("a sequence of floats or integers between 0 and 2^32-1")
         }
 
-        #[allow(clippy::as_conversions, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "Only way and this is checked")]
+        #[allow(
+            clippy::as_conversions,
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "Only way and this is checked"
+        )]
         fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
         where
             A: SeqAccess<'de>,
@@ -99,7 +105,11 @@ enum FloatOrI32 {
     I32(i32),
 }
 
-#[allow(clippy::as_conversions, clippy::cast_possible_truncation, reason = "Only way and this is checked")]
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_possible_truncation,
+    reason = "Only way and this is checked"
+)]
 pub fn deserialize_f32_or_i32<'de, D>(deserializer: D) -> Result<i32, D::Error>
 where
     D: serde::Deserializer<'de>,

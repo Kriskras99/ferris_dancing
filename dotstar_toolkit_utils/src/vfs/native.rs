@@ -2,7 +2,7 @@
 //! This implements the virtual filesystem for the local filesystem (aka [`std::fs`])
 use std::{
     collections::{hash_map::Entry, HashMap},
-    fs::{self, File},
+    fs::File,
     io::{Error, ErrorKind, Result},
     path::{Path, PathBuf},
     sync::{Arc, Mutex, OnceLock, Weak},
@@ -131,7 +131,7 @@ impl VirtualFileSystem for NativeFs {
     }
 
     fn metadata(&self, path: &VirtualPath) -> Result<VirtualMetadata> {
-        let metadata = fs::metadata(self.canonicalize(path)?)?;
+        let metadata = std::fs::metadata(self.canonicalize(path)?)?;
         let file_size = metadata.len();
         let created = metadata
             .created()

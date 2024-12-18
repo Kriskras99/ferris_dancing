@@ -43,7 +43,7 @@ pub fn import(sis: &SongImportState<'_>, karaoke_timeline_path: &str) -> Result<
 
         let tape_file = match (sis.vfs.open(karaoke_tml_path.as_ref()), sis.lax) {
             (Ok(file), _) => file,
-            (Err(err), true) if err.kind() == std::io::ErrorKind::NotFound => {
+            (Err(err), true) if err.kind() == ErrorKind::NotFound => {
                 warn!("Failed to import lyrics, file not found");
                 trace!("{err}");
                 let karaoke_timeline_path = sis.dirs.song().join("karaoke_timeline.json");

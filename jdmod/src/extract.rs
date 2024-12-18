@@ -1,7 +1,7 @@
 //! # Extract
 //! Code for extracting a UbiArt archive (ipk or gf)
 use std::{
-    fs::{self, File},
+    fs::File,
     io::Write,
     path::{Path, PathBuf},
 };
@@ -40,7 +40,7 @@ pub fn main(extract: Extract) -> Result<(), Error> {
     test_eq!(source.try_exists()?, true, "Source does not exist!")?;
     test_eq!(source.is_file(), true, "Source is not a file!")?;
     let source = source.canonicalize()?;
-    let destination = extract.destination.unwrap_or(fs::canonicalize(".")?);
+    let destination = extract.destination.unwrap_or(std::fs::canonicalize(".")?);
     // Create the export directory
     if destination.exists() && destination.read_dir()?.next().is_some() {
         return Err(anyhow!("Target directory exists and is not empty!"));
@@ -171,8 +171,8 @@ fn save_file(
     data: &[u8],
     destination: &Path,
     conflicts: FileConflictStrategy,
-) -> Result<(), anyhow::Error> {
-    fs::create_dir_all(
+) -> Result<(), Error> {
+    std::fs::create_dir_all(
         destination
             .parent()
             .ok_or_else(|| anyhow!("File should have a parent directory!"))?,

@@ -18,7 +18,7 @@ use crate::shared_json_types::{Empty, ObjectiveDesc};
 pub use crate::utils::json::parse;
 
 pub fn parse_json(data: &[u8], lax: bool) -> Result<Json<'_>, ParserError> {
-    let res = crate::utils::json::parse(data, lax)?;
+    let res = parse(data, lax)?;
     Ok(res)
 }
 
