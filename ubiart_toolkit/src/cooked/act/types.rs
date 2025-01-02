@@ -12,11 +12,13 @@ use crate::utils::{errors::ParserError, SplitPath};
 #[derive(Debug, Clone, Serialize)]
 pub struct Actor<'a> {
     pub lua: SplitPath<'a>,
+    pub components: Vec<Component<'a>>,
     pub unk1: f32,
     pub unk2: f32,
     pub unk2_5: f32,
     pub unk3_5: u32,
-    pub components: Vec<Component<'a>>,
+    pub unk4: Vec<u32>,
+    pub footer: bool,
 }
 
 impl PartialEq for Actor<'_> {

@@ -15,6 +15,8 @@ struct Cli {
     game: String,
     source: PathBuf,
     output: Option<PathBuf>,
+    #[clap(short, long)]
+    quiet: bool,
 }
 
 fn main() {
@@ -41,6 +43,10 @@ fn main() {
 
     let data = File::open(&cli.source).unwrap();
     let actors = Actor::deserialize_with(&data, gp).unwrap();
+
+    if !cli.quiet {
+        println!("{actors:#?}");
+    }
 
     if let Some(output) = cli.output {
         let file = File::create(output).unwrap();

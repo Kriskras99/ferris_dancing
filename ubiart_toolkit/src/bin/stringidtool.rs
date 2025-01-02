@@ -1,47 +1,51 @@
 use std::{
     fs::File,
-    io::{stdin, BufRead, BufReader, IsTerminal},
-    path::PathBuf,
+    io::{stdin, BufRead, BufReader},
+    path::Path,
 };
 
 use clap::Parser;
-use ubiart_toolkit::utils::string_id;
+use dotstar_toolkit_utils::bytes::read::BinaryDeserializeExt;
+use ubiart_toolkit::utils::{string_id, InternedString};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(long)]
-    file: Option<PathBuf>,
-    string: Option<String>,
+    /// Decode from a hex value instead of encoding
+    #[arg(short, long)]
+    decode: bool,
+    /// Can be a string, path to a file, or '-' for stdin
+    input: String,
 }
 
 fn main() {
     let cli = Cli::parse();
 
-    let is_pipe = !stdin().is_terminal();
-    let have_file = cli.file.is_some();
-    let have_string = cli.string.is_some();
-    let total = u8::from(is_pipe) + u8::from(have_file) + u8::from(have_string);
-
-    assert_eq!(
-        total, 1,
-        "Only do one of the following: use --file, specify a string, or pipe to stdin!"
-    );
-
-    if let Some(file) = cli.file {
-        let file = File::open(file).unwrap();
-        let bufread = BufReader::new(file);
-        for line in bufread.lines() {
-            let line = line.unwrap();
-            println!("0x{:08x}: {}", string_id(&line), line);
+    if cli.decode {
+        let without_prefix = cli.input.trim_start_matches("0x");
+        let bin = u32::from_str_radix(without_prefix, 16)
+            .unwrap()
+            .to_be_bytes();
+        match InternedString::deserialize(bin.as_slice()) {
+            Ok(id) => println!("{id}"),
+            Err(_) => println!("Unknown!"),
         }
-    } else if let Some(string) = cli.string {
-        println!("0x{:08x}: {}", string_id(&string), string);
     } else {
-        let bufread = BufReader::new(stdin());
-        for line in bufread.lines() {
-            let line = line.unwrap();
-            println!("0x{:08x}: {}", string_id(&line), line);
+        if Path::new(&cli.input).exists() {
+            let file = File::open(&cli.input).unwrap();
+            let bufread = BufReader::new(file);
+            for line in bufread.lines() {
+                let line = line.unwrap();
+                println!("0x{:08x}: {}", string_id(&line), line);
+            }
+        } else if cli.input == "-" {
+            let bufread = BufReader::new(stdin());
+            for line in bufread.lines() {
+                let line = line.unwrap();
+                println!("0x{:08x}: {}", string_id(&line), line);
+            }
+        } else {
+            println!("0x{:08x}: {}", string_id(&cli.input), cli.input);
         }
     }
 }

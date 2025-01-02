@@ -336,6 +336,8 @@ fn tml_actor(ses: &SongExportState<'_>, k_or_d: KorD) -> Result<Vec<u8>, Error> 
         unk2: 1.0,
         unk2_5: 1.0,
         unk3_5: 0,
+        unk4: vec![0],
+        footer: false,
         components: vec![cooked::act::Component::TapeCaseComponent],
     };
 

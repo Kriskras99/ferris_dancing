@@ -11,6 +11,8 @@ use hipstr::HipStr;
 use test_eq::{test_any, test_eq, test_or};
 use ubiart_toolkit_shared_types::{Color, LocaleId};
 
+#[cfg(feature = "full_json_types")]
+use crate::shared_json_types::Empty;
 use crate::{
     cooked::tpl::types::{
         AaBb, Actor, AsyncPlayerDescTemplate, AutodanceComponent, AutodanceData,
@@ -20,7 +22,8 @@ use crate::{
         MaterialGraphicComponent, MusicSection, MusicSignature, MusicTrackComponent,
         MusicTrackData, MusicTrackStructure, Paths, PhoneImages, PleoComponent,
         PleoTextureGraphicComponent, Record, SongDescription, SoundComponent, SoundDescriptor,
-        SoundParams, TapeEntry, TapeGroup, Template,
+        SoundParams, TapeEntry, TapeGroup, Template, Unknown0F928FB7, Unknown34, Unknown64,
+        Unknown70, UnknownA3557351, UnknownFC758052,
     },
     shared_json_types::{
         AutoDanceFxDesc, AutodancePropData, AutodanceVideoStructure, GFXVector4, PlaybackEvent,
@@ -64,6 +67,10 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         let components = reader
             .read_len_type_at_with::<u32be, Template>(position, ctx)?
             .collect::<Result<_, _>>()?;
+
+        if let Ok(len) = reader.len() {
+            test_eq!(*position, len)?;
+        }
 
         Ok(Self {
             class: Self::CLASS,
@@ -122,6 +129,22 @@ impl<'de> BinaryDeserialize<'de> for Template<'de> {
             )),
             "SoundComponent_Template" => Ok(Template::SoundComponent(
                 reader.read_at::<SoundComponent>(position)?,
+            )),
+            #[cfg(feature = "full_json_types")]
+            "JD_RegistrationComponent_Template" => Ok(Template::RegistrationComponent(
+                reader.read_at::<RegistrationComponent>(position)?,
+            )),
+            #[cfg(feature = "full_json_types")]
+            "Unknown interned string 0xA355_7351 (*.anm)" => Ok(Template::UnknownA3557351(
+                reader.read_at::<UnknownA3557351>(position)?,
+            )),
+            #[cfg(feature = "full_json_types")]
+            "Unknown interned string 0x0F92_8FB7" => Ok(Template::Unknown0F928FB7(
+                reader.read_at::<Unknown0F928FB7>(position)?,
+            )),
+            #[cfg(feature = "full_json_types")]
+            "Unknown interned string 0xFC75_8052" => Ok(Template::UnknownFC758052(
+                reader.read_at::<UnknownFC758052>(position)?,
             )),
             _ => todo!("{class}"),
         }
@@ -693,36 +716,35 @@ impl<'de> BinaryDeserialize<'de> for AvatarDescription16<'de> {
         test_eq!(unk1, 0x54)?;
         let jd_version = reader.read_at::<u32be>(position)?;
         test_eq!(jd_version, 2015)?;
-        let unk2 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk2, 0)?;
+        let relative_song_name = reader.read_len_string_at::<u32be>(position)?;
         let actor_path = HipStr::from(reader.read_at::<SplitPath>(position)?.to_string());
-        let unk3 = reader.read_at::<u32be>(position)?;
-        test_any!(unk3, 2000..=2010)?;
-        let unk4 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk4, 3)?;
-        let unk5 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk5, 0)?;
-        let unk6 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk6, 0xFFFF_FFFF)?;
-        let unk7 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk7, 0xFFFF_FFFF)?;
-        let unk8 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk8, 1)?;
+        let avatar_id = reader.read_at::<u32be>(position)?;
+        test_any!(avatar_id, 1..=2010)?;
+        let status = reader.read_at::<u32be>(position)?;
+        test_any!(status, [1, 3])?;
+        let unlock_type = reader.read_at::<u32be>(position)?;
+        test_any!(unlock_type, 0..=7)?;
+        let mojo_price = reader.read_at::<i32be>(position)?;
+        test_any!(mojo_price, -1..=50)?;
+        let wdf_level = reader.read_at::<i32be>(position)?;
+        test_any!(wdf_level, -1..=5000)?;
+        let count_in_progression = reader.read_at::<u32be>(position)?;
+        test_any!(count_in_progression, 0..=1)?;
 
         Ok(Self {
             class: None,
             jd_version,
-            relative_song_name: HipStr::default(),
+            relative_song_name,
             relative_quest_id: HipStr::default(),
             relative_game_mode_name: HipStr::default(),
             actor_path,
-            avatar_id: 0,
+            avatar_id,
             phone_image: HipStr::default(),
-            status: 0,
-            unlock_type: 0,
-            mojo_price: 0,
-            wdf_level: 0,
-            count_in_progression: 0,
+            status,
+            unlock_type,
+            mojo_price,
+            wdf_level,
+            count_in_progression,
         })
     }
 }
@@ -749,11 +771,11 @@ impl<'de> BinaryDeserialize<'de> for BlockDescriptor<'de> {
         let playing_speed = reader.read_at::<f32be>(position)?;
         test_eq!(playing_speed, 1.0)?;
         let is_entry_point = reader.read_at::<u32be>(position)?;
-        test_eq!(is_entry_point, 0x0)?;
+        test_any!(is_entry_point, 0..=1)?;
         let is_empty_block = reader.read_at::<u32be>(position)?;
         test_any!(is_empty_block, 0..=1)?;
         let is_no_score_block = reader.read_at::<u32be>(position)?;
-        test_eq!(is_no_score_block, 0x0)?;
+        test_any!(is_no_score_block, 0..=1)?;
         let guid = reader.read_len_string_at::<u32be>(position)?;
 
         Ok(Self {
@@ -1173,7 +1195,7 @@ impl<'de> BinaryDeserialize<'de> for MusicTrackData<'de> {
         let structure = reader.read_at::<MusicTrackStructure>(position)?;
         let path = HipStr::from(reader.read_at::<SplitPath>(position)?.to_string());
         let unk2 = reader.read_at::<f32be>(position)?;
-        test_any!(unk2, [0.0, -2.0, -3.1, -5.2, -5.3], "Position: {position}")?;
+        test_any!(unk2, -5.3..=0.0, "Position: {position}")?;
 
         Ok(Self {
             class: None,
@@ -1208,7 +1230,7 @@ impl<'de> BinaryDeserialize<'de> for MusicTrackStructure<'de> {
         let end_beat = reader.read_at::<u32be>(position)?;
         let video_start_time = reader.read_at::<f32be>(position)?;
         let volume = reader.read_at::<f32be>(position)?;
-        test_eq!(volume, 0.0)?;
+        test_eq!(volume, 0.0, "Position: {position}")?;
 
         Ok(Self {
             class: None,
@@ -1317,13 +1339,13 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
         let unk6 = reader.read_at::<u32be>(position)?;
         test_eq!(unk6, 0x0)?;
         let unk7 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk7, 0x0)?;
+        test_any!(unk7, 0..=1)?;
         let unk8 = reader.read_at::<u32be>(position)?;
-        test_any!(unk8, [0x0, 0x1])?;
+        test_any!(unk8, 0..=1)?;
         let unk9 = reader.read_at::<u32be>(position)?;
         test_eq!(unk9, 0x1)?;
         let unk10 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk10, 0x1)?;
+        test_any!(unk10, 0..=1)?;
         let unk11 = reader.read_at::<u32be>(position)?;
         test_eq!(unk11, 0x0)?;
         let unk12 = reader.read_at::<u32be>(position)?;
@@ -1332,7 +1354,7 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
         let unk13 = reader.read_at::<u32be>(position)?;
         test_eq!(unk13, 0x0)?;
         let unk14 = reader.read_at::<u32be>(position)?;
-        test_eq!(unk14, 0x1)?;
+        test_any!(unk14, 0..=1)?;
         let unk15 = reader.read_at::<u32be>(position)?;
         test_eq!(unk15, 0x0)?;
         let unk16 = reader.read_at::<u32be>(position)?;
@@ -1342,7 +1364,10 @@ impl<'de> BinaryDeserialize<'de> for PleoComponent<'de> {
         let unk18 = reader.read_at::<u32be>(position)?;
         test_eq!(unk18, 0x0)?;
         let audio_bus = reader.read_at::<InternedString>(position)?;
-        test_eq!(audio_bus, "video")?;
+        test_any!(
+            audio_bus,
+            ["video", "VIDEO_DLC", "VIDEO_DWS", "video_autodance"]
+        )?;
 
         Ok(Self {
             class: None,
@@ -1382,9 +1407,9 @@ impl<'de> BinaryDeserialize<'de> for PleoTextureGraphicComponent<'de> {
 
         let channel_id = reader.read_len_string_at::<u32be>(position)?;
         let auto_activate = reader.read_at::<u32be>(position)?;
-        test_any!(auto_activate, [0, 1])?;
+        test_any!(auto_activate, 0..=1)?;
         let use_conductor = reader.read_at::<u32be>(position)?;
-        test_eq!(use_conductor, 1)?;
+        test_any!(use_conductor, 0..=1)?;
 
         Ok(Self {
             class: None,
@@ -1490,6 +1515,24 @@ impl BinaryDeserialize<'_> for Record<'static> {
             start,
             duration,
         })
+    }
+}
+
+#[cfg(feature = "full_json_types")]
+struct RegistrationComponent;
+#[cfg(feature = "full_json_types")]
+impl BinaryDeserialize<'_> for RegistrationComponent {
+    type Ctx = ();
+    type Output = Empty<'static>;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x10)?;
+        Ok(Empty { class: None })
     }
 }
 
@@ -1975,5 +2018,304 @@ impl<'de> BinaryDeserialize<'de> for CoreGraphicComponent<'de> {
             default_color,
             z_offset,
         })
+    }
+}
+
+impl<'de> BinaryDeserialize<'de> for UnknownA3557351<'de> {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x32C)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk2, 0x0)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_any!(unk3, [0x2, 0x4])?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_any!(unk4, [0x2, 0x4])?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0x10)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0x0)?;
+        let unk7 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk7, 0x0)?;
+        let unk8 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk8, 0x0)?;
+        let unk9 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk9, 0x0)?;
+        let unk10 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk10, 0x0)?;
+        let unk11 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk11, 0x0)?;
+        let unk12 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk12, 0x0)?;
+        let unk13 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk13, 0x0)?;
+        let unk14 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk14, 0x2)?;
+        let unk15 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk15, 0x0)?;
+        let unk16 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk16, 0x0)?;
+        let unk17 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk17, 0x0)?;
+        let unk18 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk18, 0x0)?;
+        let unk19 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk19, 0x0)?;
+        let unk20 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk20, 0x0)?;
+        let unk21 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk21, 0x0)?;
+        let unk22 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk22, 0x0)?;
+        let unk23 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk23, 0x0)?;
+        let unk24 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk24, 1.8)?;
+        let unk25 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk25, 0.3)?;
+
+        let material = reader.read_at::<GFXMaterialSerializable>(position)?;
+
+        let unk26 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk26, 1.0)?;
+        let unk27 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk27, 4.0)?;
+        let unk28 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk28, 0x0)?;
+        let unk29 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk29, 0x0)?;
+        let unk30 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk30, 0x0)?;
+        let unk31 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk31, 0x0)?;
+        let unk32 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk32, 0x0)?;
+        let unk33 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk33, 0x0)?;
+        let unk34 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk34, 0x1)?;
+        let unk35 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk35, 0x0)?;
+        let unk36 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk36, 0xFFFF_FFFF)?;
+
+        // Start of new class?
+        let unk37 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk37, 0x11C)?;
+        let unk38 = reader
+            .read_len_type_at::<u32be, Unknown70>(position)?
+            .collect::<Result<_, _>>()?;
+        let unk39 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk39, 0x0)?;
+        let unk40 = reader.read_at::<u32be>(position)?;
+
+        // Start of a new class?
+        test_eq!(unk40, 0x90)?;
+        let unk41 = reader.read_at::<SplitPath>(position)?;
+        let unk45 = reader
+            .read_len_type_at::<u32be, Unknown64>(position)?
+            .collect::<Result<_, _>>()?;
+        let unk46 = reader
+            .read_len_type_at::<u32be, Unknown34>(position)?
+            .collect::<Result<_, _>>()?;
+        let unk47 = reader.read_at::<u32be>(position)?;
+        test_any!(unk47, 0..=1)?;
+        let unk48 = reader.read_at::<u32be>(position)?;
+        test_any!(unk48, 0..=1)?;
+        let unk49 = reader.read_at::<u32be>(position)?;
+        test_any!(unk49, 0..=1)?;
+        let unk50 = reader.read_at::<InternedString>(position)?;
+        let unk51 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk51, 0xFFFF_FFFF)?;
+        let unk52 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk52, 1.0)?;
+        let unk53 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk53, 1.0)?;
+        let unk54 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk54, 1.0)?;
+        let unk55 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk55, 1.0)?;
+        let unk56 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk56, 0x0)?;
+        let unk57 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk57, 0x0)?;
+        let unk58 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk58, 0x0)?;
+        let unk59 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk59, 0x0)?;
+        let unk60 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk60, 0x0)?;
+        let unk61 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk61, 0x0)?;
+        let unk62 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk62, 0x0)?;
+        let unk63 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk63, 0x0)?;
+        let unk64 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk64, 0x0)?;
+        let unk65 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk65, 1.0)?;
+        let unk66 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk66, 1.0)?;
+        let unk67 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk67, 0x0)?;
+
+        Ok(Self {
+            material,
+            unk38,
+            unk41,
+            unk45,
+            unk46,
+            unk50,
+        })
+    }
+}
+
+impl<'de> BinaryDeserialize<'de> for Unknown70<'de> {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x70)?;
+        let unk2 = reader.read_at::<InternedString>(position)?;
+        let unk3 = reader.read_at::<SplitPath>(position)?;
+        let unk4 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk4, 1.0)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_any!(unk5, 0..=1)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0x1)?;
+        let unk7 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk7, 0x0)?;
+        let unk8 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk8, 0x0)?;
+        let unk9 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk9, 0xFFFF_FFFF)?;
+        let unk10 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk10, 0xFFFF_FFFF)?;
+        let unk11 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk11, 0x0)?;
+        let unk12 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk12, 0x0)?;
+        let unk13 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk13, 0x0)?;
+        let unk14 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk14, 1.0)?;
+        let unk15 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk15, 0x1)?;
+        let unk16 = reader.read_at::<f32be>(position)?;
+        test_eq!(unk16, 1.0)?;
+        let unk17 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk17, 0x0)?;
+
+        Ok(Self { unk2, unk3 })
+    }
+}
+
+impl<'de> BinaryDeserialize<'de> for Unknown64<'de> {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x64)?;
+        let unk2 = reader.read_at::<InternedString>(position)?;
+        let unk3 = reader.read_at::<SplitPath>(position)?;
+        let unk4 = reader.read_at::<GFXMaterialTexturePathSet>(position)?;
+        let unk5 = reader.read_at::<SplitPath>(position)?;
+
+        Ok(Self {
+            unk2,
+            unk3,
+            unk4,
+            unk5,
+        })
+    }
+}
+
+impl<'de> BinaryDeserialize<'de> for Unknown34<'de> {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'de (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x34)?;
+        let unk2 = reader.read_at::<InternedString>(position)?;
+        let unk3 = reader.read_at::<SplitPath>(position)?;
+        let unk4 = reader.read_len_slice_at::<u32be>(position)?;
+        test_eq!(unk4.len(), 0x10)?;
+
+        Ok(Self { unk2, unk3, unk4 })
+    }
+}
+
+impl BinaryDeserialize<'_> for Unknown0F928FB7 {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x14)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk2, 0x0)?;
+        Ok(Self {})
+    }
+}
+
+impl BinaryDeserialize<'_> for UnknownFC758052 {
+    type Ctx = ();
+    type Output = Self;
+
+    fn deserialize_at_with(
+        reader: &'_ (impl ReadAtExt + ?Sized),
+        position: &mut u64,
+        _ctx: Self::Ctx,
+    ) -> Result<Self::Output, ReadError> {
+        let unk1 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk1, 0x50)?;
+        let unk2 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk2, 0x0)?;
+        let unk3 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk3, 0x0)?;
+        let unk4 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk4, 0xFFFF_FFFF)?;
+        let unk5 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk5, 0x0)?;
+        let unk6 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk6, 0x0)?;
+        let unk7 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk7, 0x0)?;
+        let unk8 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk8, 0xFFFF_FFFF)?;
+        let unk9 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk9, 0x0)?;
+        let unk10 = reader.read_at::<u32be>(position)?;
+        test_eq!(unk10, 0xFFFF_FFFF)?;
+
+        Ok(Self {})
     }
 }

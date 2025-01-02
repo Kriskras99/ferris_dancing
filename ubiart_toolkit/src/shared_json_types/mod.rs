@@ -482,7 +482,7 @@ pub struct Empty<'a> {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    class: Option<HipStr<'a>>,
+    pub class: Option<HipStr<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

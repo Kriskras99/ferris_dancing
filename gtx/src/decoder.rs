@@ -5,8 +5,9 @@ use dotstar_toolkit_utils::bytes::{
     read::{BinaryDeserialize, ReadAtExt, ReadError},
 };
 use image::{
+    buffer::ConvertBuffer,
     error::{DecodingError, ImageFormatHint},
-    ColorType, ImageDecoder, ImageError, ImageResult,
+    ColorType, GrayAlphaImage, GrayImage, ImageDecoder, ImageError, ImageResult, RgbaImage,
 };
 use test_eq::{test_eq, test_le, TestFailure};
 use thiserror::Error;
@@ -173,6 +174,16 @@ impl<R: ReadAtExt> ImageDecoder for GtxDecoder<R> {
                 texpresso::Format::Bc3.decompress(&deswizzled, width_usize, height_usize, buf);
             }
             Format::TcsR8G8B8A8Srgb | Format::TcsR8G8B8A8Unorm => buf.copy_from_slice(&deswizzled),
+            Format::TcR8G8Unorm => {
+                let gray = GrayAlphaImage::from_raw(hdr.width, hdr.height, deswizzled).unwrap();
+                let color: RgbaImage = gray.convert();
+                buf.copy_from_slice(color.as_raw());
+            }
+            Format::TcR8Unorm => {
+                let gray = GrayImage::from_raw(hdr.width, hdr.height, deswizzled).unwrap();
+                let color: RgbaImage = gray.convert();
+                buf.copy_from_slice(color.as_raw());
+            }
             _ => unimplemented!("Decoding of {:?} is not yet implemented", hdr.format),
         }
 

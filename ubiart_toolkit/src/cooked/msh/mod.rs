@@ -1,3 +1,4 @@
+/// msh.ckd: Material SHader?
 use hipstr::HipStr;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit_shared_types::errors::ParserError;

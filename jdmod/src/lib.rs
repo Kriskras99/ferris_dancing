@@ -13,7 +13,6 @@ use clap::ValueEnum;
 
 pub mod build;
 pub mod bundle;
-// pub mod check;
 pub mod export;
 pub mod extract;
 pub mod import;

@@ -100,6 +100,8 @@ fn video_player_actor(ses: &SongExportState<'_>, map_preview: bool) -> Result<Ve
         unk2: 1.0,
         unk2_5: 1.0,
         unk3_5: 0,
+        unk4: vec![0],
+        footer: false,
         components: vec![cooked::act::Component::PleoComponent(
             cooked::act::PleoComponent {
                 video: SplitPath::new(

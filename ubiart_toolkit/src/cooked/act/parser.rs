@@ -41,17 +41,10 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
         let unk3_5 = reader.read_at::<u32be>(position)?;
         test_any!(unk3_5, [0, 0xFFFF_FFFF])?;
 
-        if ugi.game >= Game::JustDance2019 {
-            let unk4 = reader.read_at::<u64be>(position)?;
-            test_eq!(unk4, 0x1_0000_0000u64)?;
-        } else {
-            let unk4 = reader.read_at::<u32be>(position)?;
-            test_any!(unk4, [0x1u32, 0x0])?;
-            if unk4 == 0x1 {
-                let unk4_5 = reader.read_at::<u32be>(position)?;
-                test_eq!(unk4_5, 0u32)?;
-            }
-        }
+        let unk4: Vec<_> = reader
+            .read_len_type_at::<u32be, u32be>(position)?
+            .collect::<Result<_, _>>()?;
+        test_any!(unk4.as_slice(), [&[][..], &[0][..]])?;
 
         let unk5 = reader.read_at::<u32be>(position)?;
         test_eq!(unk5, 0u32)?;
@@ -77,20 +70,27 @@ impl<'de> BinaryDeserialize<'de> for Actor<'de> {
             .read_len_type_at_with::<u32be, Component>(position, ugi)?
             .collect::<Result<_, _>>()?;
 
-        if let Ok(len) = reader.len() {
+        let footer = if let Ok(len) = reader.len() {
             if len != *position {
                 reader.read_at_with::<UnknownFooter>(position, ugi)?;
+                test_eq!(len, *position)?;
+                true
+            } else {
+                false
             }
-            test_eq!(len, *position)?;
-        }
+        } else {
+            false
+        };
 
         Ok(Actor {
             lua,
+            components,
             unk1,
             unk2,
             unk2_5,
             unk3_5,
-            components,
+            unk4,
+            footer,
         })
     }
 }
@@ -343,14 +343,13 @@ impl BinaryDeserialize<'_> for AaBb {
         position: &mut u64,
         _ctx: Self::Ctx,
     ) -> Result<Self::Output, ReadError> {
-        let min_left = reader.read_at::<f32be>(position)?;
-        let min_right = reader.read_at::<f32be>(position)?;
-        let max_left = reader.read_at::<f32be>(position)?;
-        let max_right = reader.read_at::<f32be>(position)?;
-        Ok(Self {
-            min: (min_left, min_right),
-            max: (max_left, max_right),
-        })
+        let min = reader.read_at::<(f32be, f32be)>(position)?;
+        test_any!(min.0, -1000.0..500.0)?;
+        test_any!(min.1, -500.0..150.0)?;
+        let max = reader.read_at::<(f32be, f32be)>(position)?;
+        test_any!(min.0, -5000.0..1000.0)?;
+        test_any!(min.1, -150.0..500.0)?;
+        Ok(Self { min, max })
     }
 }
 

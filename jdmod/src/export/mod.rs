@@ -1,6 +1,7 @@
 //! # Export
 //! Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
 use std::{
+    fs::File,
     num::NonZeroUsize,
     path::{Path, PathBuf},
 };
@@ -48,6 +49,64 @@ pub fn main(cli: &Build) -> Result<(), Error> {
     export(&cli.source, &cli.destination, cli.threads)
 }
 
+const TO_STUB: &[&'static str] = &[
+    "adventurerkids_nx.ipk.stub",
+    "baiana_nx.ipk.stub",
+    "balletkids_nx.ipk.stub",
+    "believer_nx.ipk.stub",
+    "blackmamalt_nx.ipk.stub",
+    "blackmam_nx.ipk.stub",
+    "boombayahalt_nx.ipk.stub",
+    "boombayah_nx.ipk.stub",
+    "bosswitch_nx.ipk.stub",
+    "buildab_nx.ipk.stub",
+    "chacarron_nx.ipk.stub",
+    "chandelieralt_nx.ipk.stub",
+    "chandelier_nx.ipk.stub",
+    "chefkids_nx.ipk.stub",
+    "chinaalt_nx.ipk.stub",
+    "china_nx.ipk.stub",
+    "fearlesspiratekids_nx.ipk.stub",
+    "firemenkids_nx.ipk.stub",
+    "flashpose_nx.ipk.stub",
+    "freedfromdesire_nx.ipk.stub",
+    "funk_nx.ipk.stub",
+    "funkyrobotkids_nx.ipk.stub",
+    "girllikemealt_nx.ipk.stub",
+    "girllikeme_nx.ipk.stub",
+    "happierthanever_nx.ipk.stub",
+    "human_nx.ipk.stub",
+    "imouttalove_nx.ipk.stub",
+    "jerusalema_nx.ipk.stub",
+    "joppingalt_nx.ipk.stub",
+    "jopping_nx.ipk.stub",
+    "judas_nx.ipk.stub",
+    "levelup_nx.ipk.stub",
+    "levitatingalt_nx.ipk.stub",
+    "levitating_nx.ipk.stub",
+    "lovestory_nx.ipk.stub",
+    "medievalkids_nx.ipk.stub",
+    "mightyreal_nx.ipk.stub",
+    "monstersacademykids_nx.ipk.stub",
+    "mood_nx.ipk.stub",
+    "mrbluesky_nx.ipk.stub",
+    "nailshipsjd_nx.ipk.stub",
+    "nailships_nx.ipk.stub",
+    "popstars_nx.ipk.stub",
+    "rockyourbody_nx.ipk.stub",
+    "saveyourtears_nx.ipk.stub",
+    "siargo_nx.ipk.stub",
+    "smalltownboy_nx.ipk.stub",
+    "stopdropandroll_nx.ipk.stub",
+    "suacaraalt_nx.ipk.stub",
+    "suacara_nx.ipk.stub",
+    "tgif_nx.ipk.stub",
+    "thinkaboutthings_nx.ipk.stub",
+    "whorunaltretake_nx.ipk.stub",
+    "whorun_nx.ipk.stub",
+    "youcandance_nx.ipk.stub",
+];
+
 /// Builds the mod into a format that Just Dance 2022 can understand and then bundles it into .ipk files
 ///
 /// # Panics
@@ -72,6 +131,10 @@ pub fn export(
         }
     } else {
         std::fs::create_dir(destination)?;
+    }
+
+    for stub in TO_STUB {
+        File::create(destination.join(stub))?;
     }
 
     // Do everything through a virtual filesystem with the mod directory as the root

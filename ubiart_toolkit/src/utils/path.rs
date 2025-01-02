@@ -11,15 +11,17 @@ use dotstar_toolkit_utils::{
 };
 use hipstr::HipStr;
 use nohash_hasher::IsEnabled;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use test_eq::{test_and, test_eq, test_or, TestFailure};
 use ubiart_toolkit_shared_types::errors::ParserError;
 
 use crate::utils::{string_id, string_id_2};
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SplitPath<'a> {
+    #[serde(borrow)]
     path: HipStr<'a>,
+    #[serde(borrow)]
     filename: HipStr<'a>,
 }
 

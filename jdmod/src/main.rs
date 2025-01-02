@@ -11,7 +11,6 @@
 
 use std::process::ExitCode;
 
-// use jdmod::check::Check;
 use clap::{Parser, Subcommand};
 use jdmod::{
     bundle::Bundle, export::Build, extract::Extract, import::Import, new::New, unlock::Unlock,
@@ -39,8 +38,6 @@ enum Commands {
     Extract(Extract),
     /// Export the mod
     Export(Build),
-    // /// Check the completeness of the mod
-    // Check(Check),
     /// Bundle files into a .ipk
     Bundle(Bundle),
     /// Unlock all songs, avatars, etc…
@@ -82,7 +79,6 @@ fn main() -> ExitCode {
         Commands::Import(data) => jdmod::import::main(&data),
         Commands::Extract(data) => jdmod::extract::main(data),
         Commands::Export(data) => jdmod::export::main(&data),
-        // Commands::Check(data) => jdmod::check::main(&data),
         Commands::Bundle(data) => jdmod::bundle::main(&data),
         Commands::Unlock(data) => jdmod::unlock::main(&data),
     };

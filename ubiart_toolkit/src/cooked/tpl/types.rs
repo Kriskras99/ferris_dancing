@@ -1,13 +1,13 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 
 use hipstr::HipStr;
 use ownable::IntoOwned;
 use serde::{Deserialize, Serialize};
 use ubiart_toolkit_shared_types::{errors::ParserError, Color, LocaleId};
 
-use crate::shared_json_types::AutodanceVideoStructure;
 #[cfg(feature = "full_json_types")]
 use crate::shared_json_types::Empty;
+use crate::{shared_json_types::AutodanceVideoStructure, utils::SplitPath};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE", deny_unknown_fields)]
@@ -323,6 +323,12 @@ pub enum Template<'a> {
     #[serde(borrow, rename = "JD_UIWidgetGroupHUD_Template")]
     UIWidgetGroupHUD(super::extra_types::ModeType<'a>),
     #[cfg(feature = "full_json_types")]
+    UnknownA3557351(UnknownA3557351<'a>),
+    #[cfg(feature = "full_json_types")]
+    Unknown0F928FB7(Unknown0F928FB7),
+    #[cfg(feature = "full_json_types")]
+    UnknownFC758052(UnknownFC758052),
+    #[cfg(feature = "full_json_types")]
     #[serde(borrow, rename = "JD_WDFBossSpawnerComponent_Template")]
     WDFBossSpawnerComponent(Empty<'a>),
     #[cfg(feature = "full_json_types")]
@@ -594,8 +600,8 @@ pub struct AvatarDescription16<'a> {
     pub phone_image: HipStr<'a>,
     pub status: u32,
     pub unlock_type: u32,
-    pub mojo_price: u32,
-    pub wdf_level: u32,
+    pub mojo_price: i32,
+    pub wdf_level: i32,
     pub count_in_progression: u32,
 }
 
@@ -1615,3 +1621,55 @@ impl Default for SoundParams<'_> {
         }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UnknownA3557351<'a> {
+    #[serde(borrow)]
+    pub material: GFXMaterialSerializable<'a>,
+    #[serde(borrow)]
+    pub unk38: Vec<Unknown70<'a>>,
+    #[serde(borrow)]
+    pub unk41: SplitPath<'a>,
+    #[serde(borrow)]
+    pub unk45: Vec<Unknown64<'a>>,
+    #[serde(borrow)]
+    pub unk46: Vec<Unknown34<'a>>,
+    #[serde(borrow)]
+    pub unk50: &'a str,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Unknown70<'a> {
+    #[serde(borrow)]
+    pub unk2: &'a str,
+    #[serde(borrow)]
+    pub unk3: SplitPath<'a>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Unknown64<'a> {
+    #[serde(borrow)]
+    pub unk2: &'a str,
+    #[serde(borrow)]
+    pub unk3: SplitPath<'a>,
+    #[serde(borrow)]
+    pub unk4: GFXMaterialTexturePathSet<'a>,
+    #[serde(borrow)]
+    pub unk5: SplitPath<'a>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Unknown34<'a> {
+    #[serde(borrow)]
+    pub unk2: &'a str,
+    #[serde(borrow)]
+    pub unk3: SplitPath<'a>,
+    #[serde(borrow)]
+    pub unk4: Cow<'a, [u8]>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Unknown0F928FB7 {}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UnknownFC758052 {}

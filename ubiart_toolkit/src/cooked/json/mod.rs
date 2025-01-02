@@ -580,7 +580,7 @@ pub struct UnlockableAliasDescriptor19<'a> {
     pub class: Option<HipStr<'a>>,
     #[serde(rename = "StringLocID")]
     pub string_loc_id: LocaleId,
-    #[serde(borrow)]
+    #[serde(default, borrow)]
     pub string_online_localized: HipStr<'a>,
     #[serde(borrow)]
     pub string_placeholder: HipStr<'a>,

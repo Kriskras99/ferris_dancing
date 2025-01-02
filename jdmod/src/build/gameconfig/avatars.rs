@@ -178,6 +178,8 @@ fn desc_actor(avatar_dir: &str) -> Result<Vec<u8>, Error> {
         unk2: 1.0,
         unk2_5: 1.0,
         unk3_5: 0,
+        unk4: vec![0],
+        footer: false,
         components: vec![
             cooked::act::Component::MaterialGraphicComponent(
                 cooked::act::MaterialGraphicComponent {

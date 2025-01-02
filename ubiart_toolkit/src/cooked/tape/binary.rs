@@ -883,7 +883,7 @@ impl<'a> BinaryDeserialize<'a> for MotionPlatformSpecific<'a> {
         test_eq!(unk1, 0xC)?;
         let score_scale = reader.read_at::<f32be>(position)?;
         let scoring_mode = reader.read_at::<f32be>(position)?;
-        test_any!(scoring_mode, [0.0, 2.0])?;
+        test_any!(scoring_mode, 0.0..=2.0)?;
         let score_smoothing = reader.read_at::<f32be>(position)?;
         test_eq!(score_smoothing, 0.0)?;
         Ok(Self {
